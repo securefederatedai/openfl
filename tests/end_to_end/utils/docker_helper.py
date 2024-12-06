@@ -23,9 +23,9 @@ def remove_docker_network():
         return
 
     for network in networks:
-        log.info(f"Removing network: {network.name}")
+        log.debug(f"Removing network: {network.name}")
         network.remove()
-    log.info("Docker network removed successfully")
+    log.debug("Docker network removed successfully")
 
 
 def create_docker_network():
@@ -38,9 +38,9 @@ def create_docker_network():
         log.info(f"Network {constants.DOCKER_NETWORK_NAME} already exists")
         return
 
-    log.info(f"Creating network: {constants.DOCKER_NETWORK_NAME}")
+    log.debug(f"Creating network: {constants.DOCKER_NETWORK_NAME}")
     network = client.networks.create(constants.DOCKER_NETWORK_NAME)
-    log.info(f"Network {network.name} created successfully")
+    log.debug(f"Network {network.name} created successfully")
 
 
 def check_docker_image():
@@ -52,7 +52,7 @@ def check_docker_image():
     if not images:
         log.error(f"Image {constants.DEFAULT_OPENFL_IMAGE} does not exist")
         raise Exception(f"Image {constants.DEFAULT_OPENFL_IMAGE} does not exist")
-    log.info(f"Image {constants.DEFAULT_OPENFL_IMAGE} exists")
+    log.debug(f"Image {constants.DEFAULT_OPENFL_IMAGE} exists")
 
 
 def start_docker_container(
@@ -73,27 +73,38 @@ def start_docker_container(
     """
     client = get_docker_client()
 
-    working_directory = os.path.join(os.getenv("HOME"), results_dir, workspace_template, container_name, "workspace")
+    local_base_directory = os.path.join(
+        os.getenv("HOME"), results_dir, workspace_template
+    )
+    local_participant_directory = os.path.join(
+        local_base_directory, container_name, "workspace"
+    )
 
     # Docker container bind path
-    bind_path = f"/{results_dir}/{workspace_template}"
+    docker_base_path = f"/{results_dir}/{workspace_template}"
+    docker_participant_path = f"{docker_base_path}/{container_name}/workspace"
 
-    participant_workspace_path = f"{bind_path}/{container_name}/workspace"
+    volumes = {
+        local_participant_directory: {"bind": docker_participant_path, "mode": "rw"},
+    }
 
-    log.info(f"Bind path: {bind_path} and participant workspace path: {participant_workspace_path} and working_directory: {working_directory}")
+    log.info(f"Volumes: {volumes}")
 
     # Start a container from the image
     container = client.containers.run(
         image,
         detach=True,
-        user='root',
+        user="root",
         auto_remove=False,
         tty=True,
         name=container_name,
-        network='openfl',
-        volumes={working_directory: {'bind': bind_path, 'mode': 'rw'}},
-        environment={"WORKSPACE_PATH": participant_workspace_path, "WORKSPACE_TEMPLATE": workspace_template},
-        use_config_proxy=False, # Do not use proxy for docker container
+        network="openfl",
+        volumes=volumes,
+        environment={
+            "WORKSPACE_PATH": docker_participant_path,
+            "WORKSPACE_TEMPLATE": workspace_template,
+        },
+        use_config_proxy=False,  # Do not use proxy for docker container
     )
 
     log.info(f"Container for {container_name} started with ID: {container.id}")
@@ -115,13 +126,13 @@ def cleanup_docker_containers():
     """
     Cleanup the docker containers meant for openfl.
     """
-    log.info("Cleaning up docker containers")
+    log.debug("Cleaning up docker containers")
 
     client = get_docker_client()
 
     # List all containers related to openfl
-    agg_containers = client.containers.list(all=True, filters={'name':'aggregator'})
-    col_containers = client.containers.list(all=True, filters={'name':'collaborator*'})
+    agg_containers = client.containers.list(all=True, filters={"name": "aggregator"})
+    col_containers = client.containers.list(all=True, filters={"name": "collaborator*"})
 
     # itp_tool_container = docker_client.containers.get(itp_tool_container_id)
     containers = agg_containers + col_containers

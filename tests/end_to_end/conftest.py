@@ -228,14 +228,10 @@ def fx_federation(request):
             # Create persistent store
             # Start the aggregator container and set its container_id in model_owner
             model_owner.setup_agg_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
-
         model_owner.create_workspace(os.path.join(request.config.results_dir, model_name))
     except Exception as e:
         log.error(f"Failed to create the workspace: {e}")
         raise e
-
-    # Workspace zip file name to be exported later
-    workspace_zip = os.path.join(workspace_path, "workspace.zip")
 
     # Modify the plan
     try:
@@ -289,6 +285,7 @@ def fx_federation(request):
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
     model_owner.export_workspace()
+    local_agg_ws_path = os.path.join(os.getenv("HOME"), request.config.results_dir, model_name, "aggregator", "workspace")
 
     for i in range(request.config.num_collaborators):
         collaborator = col_model.Collaborator(
@@ -300,7 +297,10 @@ def fx_federation(request):
 
         if test_env == "docker":
             collaborator.setup_col_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
-        collaborator.import_workspace(workspace_zip)
+        
+        local_col_ws_path = os.path.join(os.getenv("HOME"), request.config.results_dir, model_name, collaborator.name, "workspace")
+        fh.copy_file_between_participants(local_agg_ws_path, local_col_ws_path, "workspace.zip")
+        collaborator.import_workspace()
         collaborator.create_collaborator()
         collaborators.append(collaborator)
 

@@ -86,7 +86,7 @@ class Collaborator():
             log.error(f"{error_msg}: {e}")
             raise e
     
-    def import_pki(self, agg_workspace_path):
+    def import_pki(self, zip_name):
         """
         Import and certify the CSR for the collaborator
         Args:
@@ -94,11 +94,10 @@ class Collaborator():
         Returns:
             bool: True if successful, else False
         """
+        # Assumption - zip file is present in the collaborator workspace
         try:
-            zip_name = f"agg_to_col_{self.collaborator_name}_signed_cert.zip"
-            signed_zip = os.path.join(agg_workspace_path, zip_name)
-            cmd = f"fx collaborator certify --import {signed_zip}"
-            error_msg = f"Failed to create {self.collaborator_name}"
+            cmd = f"fx collaborator certify --import {zip_name}"
+            error_msg = f"Failed to import and certify the CSR for {self.collaborator_name}"
             return_code, output, error = fh.run_command(
                 cmd,
                 error_msg=error_msg,
@@ -107,24 +106,25 @@ class Collaborator():
             )
             fh.verify_cmd_output(
                 output, return_code, error, error_msg,
-                f"Successfully imported and certified the CSR for {self.collaborator_name} with zip path {signed_zip}"
+                f"Successfully imported and certified the CSR for {self.collaborator_name} with zip {zip_name}"
             )
 
         except Exception as e:
-            log.error(f"Failed to import and certify the CSR: {e}")
+            log.error(f"{error_msg}: {e}")
             raise e
         return True
 
-    def start(self):
+    def start(self, res_file):
         """
         Start the collaborator
+        Args:
+            res_file (str): Path to the log file (local path)
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
             error_msg = f"Failed to start {self.collaborator_name}"
-            res_file = os.path.join(self.workspace_path, f"{self.name}.log")
             fh.run_command(
                 f"fx collaborator start -n {self.collaborator_name}",
                 error_msg=error_msg,
@@ -132,6 +132,7 @@ class Collaborator():
                 workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
+                print_output=True,
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
@@ -179,15 +180,16 @@ class Collaborator():
             log.error(f"Failed to setup {self.collaborator_name} docker environment: {e}")
             raise e
         
-    def import_workspace(self, workspace_zip):
+    def import_workspace(self):
         """
         Import the workspace
         Args:
-            workspace_zip (str): Path to the workspace zip file including the file name
+            agg_workspace_path (str): Workspace path of model owner or aggregator
         """
         try:
-            cmd = f"fx workspace import --archive {workspace_zip}"
-            error_msg = "Failed to export the workspace"
+            # Assumption - workspace.zip is present in the collaborator workspace
+            cmd = f"fx workspace import --archive {self.workspace_path}/workspace.zip"
+            error_msg = "Failed to import the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
                 error_msg=error_msg,

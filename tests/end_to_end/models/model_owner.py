@@ -45,17 +45,16 @@ class ModelOwner():
         self.log_memory_usage = log_memory_usage
         self.container_id = container_id
         
-    def create_workspace(self, workspace_path):
+    def create_workspace(self, path):
         """
         Create the workspace for the model
-        Args:
-            workspace_path (str): Path where the workspace will be created. By default points to aggregator workspace
         """
         try:
-            log.info(f"Creating workspace for model {self.model_name} and workspace path: {workspace_path}")
+            log.info(f"Creating workspace for model {self.model_name} and workspace path: {self.workspace_path}")
             error_msg = "Failed to create the workspace"
             return_code, output, error = fh.run_command(
-                f"fx workspace create --prefix {workspace_path} --template {self.model_name}",
+                # f"fx workspace create --prefix {path.lstrip('/')} --template {self.model_name}",
+                f"fx workspace create --prefix {self.workspace_path.lstrip('/')} --template {self.model_name}",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path="", # No workspace path required for this command
@@ -68,8 +67,6 @@ class ModelOwner():
                 raise_exception=True
             )
 
-            self.workspace_path = workspace_path
-            log.info(f"Workspace path: {self.workspace_path}")
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
@@ -93,18 +90,17 @@ class ModelOwner():
             raise FileNotFoundError(f"Workspace {workspace_name} does not exist in {results_dir}")
         return self.workspace_path
 
-    def certify_collaborator(self, col_name, col_workspace_path):
+    def certify_collaborator(self, zip_name):
         """
         Sign the CSR for the collaborator
         Args:
             col_name (str): Name of the collaborator
             col_workspace_path (str): Workspace path of the collaborator
         """
+        # Assumption - CSR is already created by the collaborator and copied to the aggregator workspace
         try:
-            zip_name = f"col_{col_name}_to_agg_cert_request.zip"
-            col_zip = os.path.join(col_workspace_path, zip_name)
-            cmd = f"fx collaborator certify --request-pkg {col_zip} -s"
-            error_msg = f"Failed to sign the CSR for {col_name}"
+            cmd = f"fx collaborator certify --request-pkg {zip_name} -s"
+            error_msg = f"Failed to sign the CSR {zip_name}"
             return_code, output, error = fh.run_command(
                 cmd,
                 error_msg=error_msg,
@@ -116,7 +112,7 @@ class ModelOwner():
                 return_code,
                 error,
                 error_msg,
-                f"Successfully signed the CSR for {col_name} with zip path {col_zip}"
+                f"Successfully signed the CSR {zip_name}"
             )
 
         except Exception as e:
@@ -293,6 +289,7 @@ class ModelOwner():
             workspace_template (str): Model name for which federation is being setup
         """
         try:
+            log.info("Cleaning up residual containers and networks followed by creation of new ones..")
             # Cleanup docker containers
             dh.cleanup_docker_containers()
             dh.remove_docker_network()
@@ -317,7 +314,6 @@ class ModelOwner():
         Export the workspace
         """
         try:
-            log.info(self.workspace_path)
             cmd = "fx workspace export"
             error_msg = "Failed to export the workspace"
             return_code, output, error = fh.run_command(

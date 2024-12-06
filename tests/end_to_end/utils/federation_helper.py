@@ -13,7 +13,7 @@ import tests.end_to_end.utils.ssh_helper as sh
 log = logging.getLogger(__name__)
 
 
-def setup_pki(fed_obj):
+def setup_pki(fed_obj, results_dir, model_name):
     """
     Setup PKI for trusted communication within the federation
 
@@ -25,17 +25,23 @@ def setup_pki(fed_obj):
     success = False
     # PKI setup for aggregator is done at fixture level
     # Collaborator and model owner operations
+    local_agg_ws_path = os.path.join(os.getenv("HOME"), results_dir, model_name, "aggregator", "workspace")
+
     for collaborator in fed_obj.collaborators:
         try:
             log.info(f"Performing operations for {collaborator.collaborator_name}")
             collaborator.generate_sign_request()
+            col_to_agg_zip_name = f"col_{collaborator.name}_to_agg_cert_request.zip"
+            local_col_ws_path = os.path.join(os.getenv("HOME"), results_dir, model_name, collaborator.name, "workspace")
+            copy_file_between_participants(local_col_ws_path, local_agg_ws_path, col_to_agg_zip_name)
             # Below step will add collaborator entries in cols.yaml file of aggregator workspace.
-            fed_obj.model_owner.certify_collaborator(collaborator.collaborator_name, collaborator.workspace_path)
-            collaborator.import_pki(fed_obj.aggregator.workspace_path)
+            fed_obj.model_owner.certify_collaborator(col_to_agg_zip_name)
+            agg_to_col_zip_name = f"agg_to_col_{collaborator.name}_signed_cert.zip"
+            copy_file_between_participants(local_agg_ws_path, local_col_ws_path, agg_to_col_zip_name)
+            collaborator.import_pki(agg_to_col_zip_name)
         except Exception as e:
             log.error(f"Failed to perform PKI setup for {collaborator.collaborator_name}: {e}")
             raise e
-    
     # Additional - copy cols.yaml file from aggregator to collaborator workspaces
     # This is for local environment.
     if os.getenv("TEST_ENV") != "docker":
@@ -68,19 +74,55 @@ def copy_cols_yaml(src_workspace_path, dest_workspace_path):
     log.info(f"File cols.yaml copied successfully from {src_workspace_path} to {dest_workspace_path}")
 
 
-def run_federation(fed_obj):
+def copy_cols_yaml(src_workspace_path, dest_workspace_path):
+    """
+    Copy cols.yaml file from source workspace to destination workspace
+    Args:
+        src_workspace_path (str): Source workspace path
+        dest_workspace_path (str): Destination workspace path
+    """
+    src_file = os.path.join(src_workspace_path, "plan", "cols.yaml")
+    dest_file = os.path.join(dest_workspace_path, "plan", "cols.yaml")
+    cmd = f"cp {src_file} {dest_file}"
+    return_code, output, error = sh.run_command(cmd)
+    if return_code != 0:
+        log.error(f"Failed to copy cols.yaml file: {error}")
+        raise Exception(f"Failed to copy cols.yaml file: {error}")
+    log.info(f"File cols.yaml copied successfully from {src_workspace_path} to {dest_workspace_path}")
+
+
+def copy_file_between_participants(src_path, dest_path, file_name):
+    """
+    Copy file between participants
+    Args:
+        src_path (str): Source path
+        dest_path (str): Destination path
+        file_name (str): File name only (without path)
+    """
+    cmd = f"cp {src_path}/{file_name} {dest_path}"
+    return_code, output, error = sh.run_command(cmd)
+    if return_code != 0:
+        log.error(f"Failed to copy file: {error}")
+        raise Exception(f"Failed to copy file: {error}")
+    log.info(f"File {file_name} copied successfully from {src_path} to {dest_path}")
+
+
+def run_federation(fed_obj, results_dir, model_name):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
+        results_dir (str): Results directory (local path)
     Returns:
         list: List of response files for all the participants
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
+    # Result file to be created on local machine under respective participant workspace
     futures = [
         executor.submit(
-            participant.start
+            participant.start,
+            os.path.join(os.getenv("HOME"), results_dir, model_name, participant.name, "workspace", f"{participant.name}.log")
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -230,8 +272,8 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     """
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
-
-    if os.getenv("TEST_ENV") == "docker" and container_id:
+    is_docker = True if os.getenv("TEST_ENV") == "docker" else False
+    if is_docker and container_id:
         log.debug("Running command in docker container")
         if len(workspace_path):
             docker_command = f"docker exec -w {workspace_path} {container_id} sh -c "
@@ -254,9 +296,7 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
         log.info(f"Running command: {command}")
 
     log.debug("Running command on local machine")
-    if run_in_background:
-        bg_file = os.path.join(workspace_path, bg_file)
-        log.info(f"\nFile path finally:{bg_file}\n")
+    if run_in_background and not is_docker:
         bg_file = open(bg_file, "w", buffering=1)
         sh.run_command_background(
             command,
