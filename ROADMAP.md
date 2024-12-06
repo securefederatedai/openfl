@@ -1,9 +1,9 @@
 # OpenFL Project Roadmap
 
-This document is intended to give users and contributors an idea of the OpenFL product team's current priorities, features we plan to incorporate over the short, medium, and long term, and call out opportunities for the community to get involved.
+This document is intended to give users and contributors an idea of the OpenFL team's current priorities, features we plan to incorporate over the short, medium, and long term, and call out opportunities for the community to get involved.
 
 ## When will this document be updated?
-At a minimum once each product release - which we expect to be on quarterly cadence, with the goal of transitioning to monthly releases in 2025.
+At a minimum once each product release - which we expect to be on quarterly cadence.
 
 ## 1. Features and interfaces
 
@@ -13,7 +13,7 @@ The Interactive API was originally designed to be a high-level API for OpenFL, b
 In OpenFL 1.5, we introduced the Workflow API as an experimental feature, which can be used to specify the federated learning flow, independently of the underlying computing infrastructure. The Workflow API facilitates a seamless transition from local simulation to a federated setting. Additionally, this approach offers greater control over the sequence and content of the FL experiment steps, which enables more complex experiments beyond just horizontal FL. Workflow API also provides more granular privacy controls, allowing the model owner to explicitly permit or forbid the transfer of specific attributes over the network.
 
 ### 1.2 Consolidating interfaces
-Today we support four interfaces: TaskRunner API, Workflow API, native Python API, and Interactive API. These are all distinct APIs, and are not particularly interoperable. The strategic vision is to consolidate OpenFL around the Workflow API due to its focus on the needs of the data scientist as the main user of the framework. Over the upcoming 1.x releases, we plan to gradually deprecate and eliminate the legacy APIs, including Python Native API, Interactive API, and ultimately the Task Runner API. OpenFL 2.0 will offer Workflow API exclusively, backed by various runtimes that enable transitioning from a local simulation to a distributed FL experiment, and even setting up a permanent federation (currently only possible via Interactive API).
+OpenFL has supported multiple ways of running FL experiments for a long time, many of which are not interoperable: TaskRunner API, Workflow API, Python Native API, and Interactive API. The strategic vision is to consolidate OpenFL around the Workflow API, as it focuses on meeting the needs of the data scientist, who is the main user of the framework. Over the upcoming 1.x releases, we plan to gradually deprecate and eliminate the legacy Python Native API and Interactive API. OpenFL 2.0 will be centered around the Workflow API, facilitating a seamless transition from local simulations to distributed FL experiments, and even enabling the setup of permanent federations, which is currently only possible through the Interactive API.
 
 ### 1.3 Component standardization and framework interoperability
 
@@ -30,7 +30,7 @@ This causes community fragmentation and distracts from some of the bigger proble
 
 ### OpenFL 1.7 (Q1 2025)
 This release is focused on enabling a great developer experience for OpenFL users:
-1. Introducing the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/workflow_interface.html#runtimes-future-plans) for Workflow API, which allows running FL workflows in a distributed setting (after local simulation with the LocalRuntime).
+1. Introducing the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans) for Workflow API, which allows running FL workflows in a distributed setting (after local simulation with the LocalRuntime).
 2. Adding support for federated XGBoost in OpenFL. See the example [XGBoost workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/xgb_higgs) based on Task Runner API.
 3. Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). The current release contains an initial set of changes that enable OpenFL compatibility with the broader confidential containers ecosystem.
 4. Streamlining the Federated Evaluation experiments with TaskRunner API
