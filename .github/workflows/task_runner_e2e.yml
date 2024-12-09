@@ -88,9 +88,6 @@ jobs:
         id: tar_files
         if: ${{ always() }}
         run: |
-          pwd
-          ls -lrt $HOME/
-          ls -lrt results/
           tar -cvf result.tar $HOME/results
 
       - name: Upload Artifacts
@@ -159,9 +156,6 @@ jobs:
         id: tar_files
         if: ${{ always() }}
         run: |
-          pwd
-          ls -lrt $HOME/
-          ls -lrt results/
           tar -cvf result.tar $HOME/results
 
       - name: Upload Artifacts
@@ -230,9 +224,6 @@ jobs:
         id: tar_files
         if: ${{ always() }}
         run: |
-          pwd
-          ls -lrt $HOME/
-          ls -lrt results/
           tar -cvf result.tar $HOME/results
 
       - name: Upload Artifacts

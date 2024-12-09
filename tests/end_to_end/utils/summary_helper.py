@@ -9,7 +9,10 @@ import tests.end_to_end.utils.constants as constants
 
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding='utf-8')
-tree = ET.parse("results/results.xml", parser=parser)
+
+# Assumption - result directory is present in the home directory
+results_dir = os.path.join(os.getenv("HOME"), "results")
+tree = ET.parse(f"{results_dir}/results.xml", parser=parser)
 
 # Get the root element
 testsuites = tree.getroot()
@@ -125,7 +128,7 @@ def main():
         print(f"Invalid model name: {model_name}. Skipping writing to GitHub step summary")
         return
 
-    agg_log_file = os.path.join("results", model_name, "aggregator", "workspace", "aggregator.log")
+    agg_log_file = os.path.join(results_dir, model_name, "aggregator", "workspace", "aggregator.log")
     agg_accuracy = get_aggregated_accuracy(agg_log_file)
 
     # Write the results to GitHub step summary file
