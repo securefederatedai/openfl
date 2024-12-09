@@ -95,6 +95,8 @@ def start_docker_container(
         volumes=volumes,
         environment={
             "WORKSPACE_PATH": docker_participant_path,
+            "NO_PROXY": "aggregator",
+            "no_proxy": "aggregator",
         },
         use_config_proxy=False,  # Do not use proxy for docker container
     )
