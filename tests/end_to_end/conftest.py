@@ -215,17 +215,10 @@ def fx_federation(request):
     Note: As this is a function level fixture, thus no import is required at test level.
     """
     collaborators = []
-    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
-
-    agg_workspace_path = os.path.join(workspace_path, "aggregator", "workspace")
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    # Cleanup docker containers
-    dh.cleanup_docker_containers()
-    dh.remove_docker_network()
-
-    # Create docker network openfl
-    dh.create_docker_network()
+    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+    agg_workspace_path = os.path.join(workspace_path, "aggregator", "workspace")
 
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
@@ -264,19 +257,17 @@ def fx_federation(request):
         log.error(f"Failed to modify the plan: {e}")
         raise e
 
-    if not request.config.use_tls:
-        log.info("Disabling TLS for communication")
-        try:
-            model_owner.register_collaborators(plan_path, request.config.num_collaborators)
-        except Exception as e:
-            log.error(f"Failed to register the collaborators: {e}")
-            raise e
-    else:
-        log.info("Enabling TLS for communication")
+    if request.config.use_tls:
         try:
             model_owner.certify_workspace()
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
+            raise e
+    else:
+        try:
+            model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+        except Exception as e:
+            log.error(f"Failed to register the collaborators: {e}")
             raise e
 
     # Initialize the plan
@@ -295,11 +286,12 @@ def fx_federation(request):
         container_id=model_owner.container_id, # None in case of non-docker environment
     )
 
-    # Generate the certs
-    aggregator.generate_sign_request()
+    if request.config.use_tls:
+        # Generate the certs
+        aggregator.generate_sign_request()
 
-    # Certify the aggregator
-    model_owner.certify_aggregator(agg_domain_name)
+        # Certify the aggregator
+        model_owner.certify_aggregator(agg_domain_name)
 
     # Export the workspace
     # By default the workspace will be exported to workspace.zip

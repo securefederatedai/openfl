@@ -51,9 +51,13 @@ class ModelOwner():
         try:
             log.info(f"Creating workspace for model {self.model_name} at the path: {self.workspace_path}")
             error_msg = "Failed to create the workspace"
+
+            # Docker environment requires the path to be relative
+            ws_path = self.workspace_path.lstrip('/') if os.getenv("TEST_ENV") == "docker" else self.workspace_path
+
             return_code, output, error = fh.run_command(
                 # f"fx workspace create --prefix {path.lstrip('/')} --template {self.model_name}",
-                f"fx workspace create --prefix {self.workspace_path.lstrip('/')} --template {self.model_name}",
+                f"fx workspace create --prefix {ws_path} --template {self.model_name}",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path="", # No workspace path required for this command

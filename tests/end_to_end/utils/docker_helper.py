@@ -83,8 +83,6 @@ def start_docker_container(
         local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
     }
 
-    log.debug(f"Volumes: {volumes}")
-
     # Start a container from the image
     container = client.containers.run(
         image,

@@ -71,22 +71,14 @@ def setup_collaborator_pki(fed_obj, collaborator):
 
     try:
         collaborator.import_pki(agg_to_col_zip_name)
+        copy_file_between_participants(
+                os.path.join(local_agg_ws_path, "plan"),
+                os.path.join(local_col_ws_path, "plan"),
+                file_name="cols.yaml"
+            )
     except Exception as e:
         log.error(f"Failed to import PKI for {collaborator.name}: {e}")
         raise e
-
-    # Additional - copy cols.yaml file from aggregator to collaborator workspaces
-    # This is for local environment.
-    if os.getenv("TEST_ENV") != "docker":
-        try:
-            copy_file_between_participants(
-                local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=os.path.join(local_col_ws_path, "plan"),
-                file_name="cols.yaml"
-            )
-        except Exception as e:
-            log.error(f"Failed to copy cols.yaml file for {collaborator.name}: {e}")
-            raise e
 
     log.info(f"PKI setup successfully for {collaborator.name}")
     return True
@@ -129,6 +121,9 @@ def run_federation(fed_obj):
     results = [f.result() for f in futures]
     log.info(f"Results from all the collaborators for installation of dependencies: {results}")
 
+    if not all(results):
+        raise Exception("Failed to install dependencies on one or more collaborators")
+
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
     futures = [
         executor.submit(
@@ -140,6 +135,8 @@ def run_federation(fed_obj):
 
     # Result will contain response files for all the participants.
     results = [f.result() for f in futures]
+    if not all(results):
+        raise Exception("Failed to start one or more participants")
     return results
 
 
@@ -189,7 +186,8 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     Returns:
         bool: True if successful, else False
     """
-    # Wait for the successful output message to appear in the log till timeout
+    time.sleep(20) # Wait for some time before checking the log file
+    # Set timeout based on the number of rounds and time for each round
     timeout = 300 + ( time_for_each_round * num_rounds ) # in seconds
     log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
 
@@ -245,6 +243,13 @@ def federation_env_setup_and_validate(request):
     if test_env == "docker":
         # First check if openfl image is available
         dh.check_docker_image()
+        # Cleanup docker containers
+        dh.cleanup_docker_containers()
+        dh.remove_docker_network()
+
+        # Create docker network openfl
+        dh.create_docker_network()
+
         local_bind_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
         # Absolute path is required for docker
         workspace_path = os.path.join("/", request.config.results_dir, request.config.model_name)
@@ -373,18 +378,6 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     return return_code, output, error
 
 
-def modify_plan_for_docker(
-    container_name,
-    workspace_path,
-    new_rounds=None,
-    num_collaborators=None,
-    disable_client_auth=False,
-    disable_tls=False,
-    log_memory_usage=False
-):
-    return
-
-
 # This functionality is common across multiple participants, thus moved to a common file
 def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_exception=True):
     """
@@ -434,15 +427,12 @@ def setup_collaborator(count, workspace_path, local_bind_path, container_id=None
 
     try:
         if os.getenv("TEST_ENV") == "docker":
-            if container_id:
-                collaborator.container_id = container_id
-            else:
-                container = dh.start_docker_container(
-                    container_name=collaborator.name,
-                    workspace_path=workspace_path,
-                    local_bind_path=local_bind_path,
-                )
-                collaborator.container_id = container.id
+            container = dh.start_docker_container(
+                container_name=collaborator.name,
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
+            )
+            collaborator.container_id = container.id
     except Exception as e:
         log.error(f"Failed to start {collaborator.name} docker environment: {e}")
         raise e
