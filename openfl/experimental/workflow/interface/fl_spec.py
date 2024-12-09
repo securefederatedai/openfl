@@ -36,6 +36,7 @@ class FLSpec:
         _initial_state (FLSpec or None): The saved initial state of the FLSpec instance.
         _foreach_methods (list): A list of methods to be applied iteratively.
         _checkpoint (bool): A flag indicating whether checkpointing is enabled.
+        _runtime (RuntimeType): The runtime of the flow.
     """
 
     _clones = []

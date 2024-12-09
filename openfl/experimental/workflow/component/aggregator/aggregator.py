@@ -193,7 +193,8 @@ class Aggregator:
 
     async def run_flow(self) -> FLSpec:
         """
-        Start the execution and run flow until transition.
+        Start the execution and run flow until completion.
+        Returns the updated flow to the user.
 
         Returns:
             flow (FLSpec): Updated instance.

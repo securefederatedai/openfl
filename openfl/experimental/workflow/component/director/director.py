@@ -225,11 +225,14 @@ class Director:
         aggregator = self.experiments_registry[experiment_name].aggregator
         while True:
             if not aggregator.stdout_queue.empty():
+                # Yield the next item from the queue
                 yield aggregator.stdout_queue.get()
-                continue
-            if aggregator.all_quit_jobs_sent() and aggregator.stdout_queue.empty():
-                return
-            yield None
+            elif aggregator.all_quit_jobs_sent():
+                # Stop Iteration if all jobs have quit and the queue is empty
+                break
+            else:
+                # Yeild none if the queue is empty but the experiment is still running.
+                yield None
 
     def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data.

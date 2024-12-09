@@ -7,6 +7,7 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Iterable, List, Optional, Tuple, Union
 
@@ -17,14 +18,14 @@ from openfl.utilities.workspace import ExperimentWorkspace
 logger = logging.getLogger(__name__)
 
 
-class Status:
+class Status(Enum):
     """Experiment's statuses."""
 
-    PENDING = "pending"
-    FINISHED = "finished"
-    IN_PROGRESS = "in_progress"
-    FAILED = "failed"
-    REJECTED = "rejected"
+    PENDING = auto()
+    FINISHED = auto()
+    IN_PROGRESS = auto()
+    FAILED = auto()
+    REJECTED = auto()
 
 
 class Experiment:
@@ -216,7 +217,7 @@ class ExperimentsRegistry:
         self.__dict = {}
 
     @property
-    def active_experiment(self) -> Union[Experiment, None]:
+    def active(self) -> Union[Experiment, None]:
         """Get active experiment.
 
         Returns:
@@ -228,7 +229,7 @@ class ExperimentsRegistry:
         return self.__dict[self.__active_experiment_name]
 
     @property
-    def pending_experiments(self) -> List[str]:
+    def pending(self) -> List[str]:
         """Get queue of not started experiments.
 
         Returns:
@@ -316,16 +317,16 @@ class ExperimentsRegistry:
     async def get_next_experiment(self):
         """Context manager.
 
-        On enter get experiment from pending_experiments. On exit put finished
+        On enter get experiment from pending experiments. On exit put finished
         experiment to archive_experiments.
         """
         while True:
-            if self.active_experiment is None and self.pending_experiments:
+            if self.active is None and self.pending:
                 break
             await asyncio.sleep(10)
 
         try:
-            self.__active_experiment_name = self.pending_experiments.pop(0)
-            yield self.active_experiment
+            self.__active_experiment_name = self.pending.pop(0)
+            yield self.active
         finally:
             self.finish_active()

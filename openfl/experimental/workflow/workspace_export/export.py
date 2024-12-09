@@ -294,7 +294,7 @@ class WorkspaceExport:
         return instance.generate_experiment_archive()
 
     @classmethod
-    def export_agg_based_workflow(cls, notebook_path: str, output_workspace: str) -> None:
+    def export_agg_based_workspace(cls, notebook_path: str, output_workspace: str) -> None:
         """Exports workspace for Aggregator based workflow.
 
         Args:
