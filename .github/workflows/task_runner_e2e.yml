@@ -267,7 +267,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .
-      #     pip install -r test-requirements.txt
+          pip install -r test-requirements.txt
 
       - name: Run Task Runner E2E tests with TLS via Docker
         id: run_tests
