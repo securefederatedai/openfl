@@ -93,12 +93,12 @@ class ModelOwner():
             raise FileNotFoundError(f"Workspace {workspace_name} does not exist in {results_dir}")
         return self.workspace_path
 
-    def certify_collaborator(self, zip_name):
+    def certify_collaborator(self, collaborator_name, zip_name):
         """
         Sign the CSR for the collaborator
         Args:
-            col_name (str): Name of the collaborator
-            col_workspace_path (str): Workspace path of the collaborator
+            collaborator_name (str): Collaborator name
+            zip_name (str): Zip file name
         """
         # Assumption - CSR is already created by the collaborator and copied to the aggregator workspace
         try:
@@ -110,6 +110,9 @@ class ModelOwner():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
+            file_not_found = [line for line in output if "FileNotFoundError" in line]
+            log.info(f"Line containing error: {file_not_found}")
+
             fh.verify_cmd_output(
                 output,
                 return_code,
@@ -121,6 +124,7 @@ class ModelOwner():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
+        return True
     
     def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
         """

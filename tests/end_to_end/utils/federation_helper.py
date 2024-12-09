@@ -24,63 +24,105 @@ def setup_pki(fed_obj):
         bool: True if successful, else False
     """
     # PKI setup for aggregator is done at fixture level
-    # Collaborator and model owner operations
-    executor = concurrent.futures.ThreadPoolExecutor()
-    futures = [
-        executor.submit(
-            setup_collaborator_pki,
-            fed_obj,
-            collaborator,
-        )
-        for collaborator in fed_obj.collaborators
-    ]
-    log.info("Setup of PKI done for all the collaborators")
-    results = [f.result() for f in futures]
-    return all(results)
-
-
-def setup_collaborator_pki(fed_obj, collaborator):
-    """
-    Setup PKI for collaborator
-    Args:
-        fed_obj (object): Federation fixture object
-        collaborator (object): Collaborator object
-    """
     local_agg_ws_path = os.path.join(fed_obj.local_bind_path, "aggregator", "workspace")
-    local_col_ws_path = os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace")
-    col_to_agg_zip_name = f"col_{collaborator.name}_to_agg_cert_request.zip"
-    agg_to_col_zip_name = f"agg_to_col_{collaborator.name}_signed_cert.zip"
-        
+
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    # Performing all the operations step by step
+    # This is to avoid problems during parallel execution 
+    # in case one or more collaborator operations delay for some reason
+    # Generate sign request for all the collaborators
     try:
-        log.info(f"Performing operations for {collaborator.name}")
-        # Generate sign request for collaborator and if successful, copy the file to aggregator workspace locally
-        collaborator.generate_sign_request()
-        copy_file_between_participants(local_col_ws_path, local_agg_ws_path, col_to_agg_zip_name)
+        results = [
+            executor.submit(
+                collaborator.generate_sign_request,
+            )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to generate sign request for one or more collaborators")
+
     except Exception as e:
-        log.error(f"Failed to generate sign request for {collaborator.name}: {e}")
         raise e
 
+    # Copy the generated sign request zip from all the collaborators to aggregator
     try:
-        # Certify the collaborator entries in aggregator workspace and if succesful, copy the file to collaborator workspace locally
-        # Below step will add collaborator entries in cols.yaml file of aggregator workspace.
-        fed_obj.model_owner.certify_collaborator(col_to_agg_zip_name)
-        copy_file_between_participants(local_agg_ws_path, local_col_ws_path, agg_to_col_zip_name)
+        results = [
+            executor.submit(
+                copy_file_between_participants,
+                local_src_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace"),
+                local_dest_path=local_agg_ws_path,
+                file_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
+            )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to copy sign request zip from one or more collaborators to aggregator")
     except Exception as e:
-        log.error(f"Failed to certify collaborator entries for {collaborator.name}: {e}")
         raise e
 
+    # Certify the collaborator sign requests
     try:
-        collaborator.import_pki(agg_to_col_zip_name)
-        copy_file_between_participants(
-                os.path.join(local_agg_ws_path, "plan"),
-                os.path.join(local_col_ws_path, "plan"),
+        results = [
+            executor.submit(
+                fed_obj.model_owner.certify_collaborator,
+                collaborator_name=collaborator.name,
+                zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
+            )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to certify sign request for one or more collaborators")
+    except Exception as e:
+        raise e
+
+    # Copy the signed certificates from aggregator to all the collaborators
+    try:
+        results = [
+            executor.submit(
+                copy_file_between_participants,
+                local_src_path=local_agg_ws_path,
+                local_dest_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace"),
+                file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
+            )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to copy signed certificates from aggregator to one or more collaborators")
+    except Exception as e:
+        raise e
+
+    # Import and certify the CSR for all the collaborators
+    try:
+        results = [
+            executor.submit(
+                collaborator.import_pki,
+                zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
+            )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to import and certify the CSR for one or more collaborators")
+    except Exception as e:
+        raise e
+
+    # Copy the cols.yaml file from aggregator to all the collaborators
+    # File cols.yaml is updated after PKI setup
+    try:
+        results = [
+            executor.submit(
+                copy_file_between_participants,
+                local_src_path=os.path.join(local_agg_ws_path, "plan"),
+                local_dest_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace", "plan"),
                 file_name="cols.yaml"
             )
+            for collaborator in fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to copy cols.yaml file from aggregator to one or more collaborators")
     except Exception as e:
-        log.error(f"Failed to import PKI for {collaborator.name}: {e}")
         raise e
 
-    log.info(f"PKI setup successfully for {collaborator.name}")
     return True
 
 
@@ -98,6 +140,7 @@ def copy_file_between_participants(local_src_path, local_dest_path, file_name):
         log.error(f"Failed to copy file: {error}")
         raise Exception(f"Failed to copy file: {error}")
     log.info(f"File {file_name} copied successfully from {local_src_path} to {local_dest_path}")
+    return True
 
 
 def run_federation(fed_obj):

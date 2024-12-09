@@ -87,7 +87,10 @@ jobs:
       - name: Tar files
         id: tar_files
         if: ${{ always() }}
-        run: tar -cvf result.tar results
+        run: |
+          pwd
+          ls -lrt results/
+          tar -cvf result.tar results
 
       - name: Upload Artifacts
         id: upload_artifacts

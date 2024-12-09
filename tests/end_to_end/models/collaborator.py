@@ -61,6 +61,7 @@ class Collaborator():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
+        return True
 
     def create_collaborator(self):
         """
