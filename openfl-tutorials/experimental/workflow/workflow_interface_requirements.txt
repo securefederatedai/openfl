@@ -7,3 +7,4 @@ nbdev==2.3.12
 ray==2.9.2
 torch
 torchvision
+nbformat==5.10.4
