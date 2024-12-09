@@ -150,14 +150,14 @@ class ModelOwner():
         data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
 
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
-        data["network"]["settings"]["disable_client_auth"] = disable_client_auth
-        data["network"]["settings"]["tls"] = not disable_tls
+        data["network"]["settings"]["require_client_auth"] = not disable_client_auth
+        data["network"]["settings"]["use_tls"] = not disable_tls
 
         with open(plan_file, "w+") as write_file:
             yaml.dump(data, write_file)
 
         log.info(f"Modified the plan with provided parameters.")
-    
+
     def initialize_plan(self, agg_domain_name):
         """
         Initialize the plan
