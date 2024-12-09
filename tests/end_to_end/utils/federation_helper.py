@@ -62,19 +62,16 @@ def setup_pki(fed_obj):
         raise e
 
     # Certify the collaborator sign requests
-    try:
-        results = [
-            executor.submit(
-                fed_obj.model_owner.certify_collaborator,
+    # DO NOT run this in parallel as it causes command to fail with FileNotFoundError for a different collaborator
+    for collaborator in fed_obj.collaborators:
+        try:
+            fed_obj.model_owner.certify_collaborator(
                 collaborator_name=collaborator.name,
                 zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
             )
-            for collaborator in fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception("Failed to certify sign request for one or more collaborators")
-    except Exception as e:
-        raise e
+        except Exception as e:
+            log.error(f"Failed to certify sign request for {collaborator.name}: {e}")
+            raise e
 
     # Copy the signed certificates from aggregator to all the collaborators
     try:

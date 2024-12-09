@@ -120,13 +120,8 @@ class ModelOwner():
             )
 
         except Exception as e:
-            # Handle FileNotFoundError exception
-            # This might happen when the function is called in parallel for multiple collaborators.
-            if "FileNotFoundError" in str(e):
-                log.info(f"Ignore this error: [{error_msg}]")
-            else:
-                log.error(f"{error_msg}: {e}")
-                raise e
+            log.error(f"{error_msg}: {e}")
+            raise e
         return True
     
     def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
