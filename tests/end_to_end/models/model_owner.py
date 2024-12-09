@@ -130,7 +130,6 @@ class ModelOwner():
         """
         # Copy the cols.yaml file from remote machine to local machine for docker environment
         plan_file = os.path.join(plan_path, "plan.yaml")
-        log.info(f"Plan file: {plan_file}")
 
         # Open the file and modify the entries
         self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train

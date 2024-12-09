@@ -57,9 +57,8 @@ def setup_collaborator_pki(fed_obj, collaborator):
         collaborator.generate_sign_request()
         copy_file_between_participants(local_col_ws_path, local_agg_ws_path, col_to_agg_zip_name)
     except Exception as e:
-        error_msg = f"Failed to generate sign request for {collaborator.name}: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to generate sign request for {collaborator.name}: {e}")
+        raise e
 
     try:
         # Certify the collaborator entries in aggregator workspace and if succesful, copy the file to collaborator workspace locally
@@ -67,16 +66,14 @@ def setup_collaborator_pki(fed_obj, collaborator):
         fed_obj.model_owner.certify_collaborator(col_to_agg_zip_name)
         copy_file_between_participants(local_agg_ws_path, local_col_ws_path, agg_to_col_zip_name)
     except Exception as e:
-        error_msg = f"Failed to certify collaborator entries for {collaborator.name}: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to certify collaborator entries for {collaborator.name}: {e}")
+        raise e
 
     try:
         collaborator.import_pki(agg_to_col_zip_name)
     except Exception as e:
-        error_msg = f"Failed to import PKI for {collaborator.name}: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to import PKI for {collaborator.name}: {e}")
+        raise e
 
     # Additional - copy cols.yaml file from aggregator to collaborator workspaces
     # This is for local environment.
@@ -88,9 +85,8 @@ def setup_collaborator_pki(fed_obj, collaborator):
                 file_name="cols.yaml"
             )
         except Exception as e:
-            error_msg = f"Failed to copy cols.yaml file for {collaborator.name}: {e}"
-            log.error(error_msg)
-            raise error_msg
+            log.error(f"Failed to copy cols.yaml file for {collaborator.name}: {e}")
+            raise e
 
     log.info(f"PKI setup successfully for {collaborator.name}")
     return True
@@ -238,21 +234,10 @@ def federation_env_setup_and_validate(request):
     # Determine the test type based on the markers
     markers = [m.name for m in request.node.iter_markers()]
     os.environ["TEST_ENV"] = test_env = "docker" if "docker" in markers else "task_runner"
-    log.info(f"Running the test in {test_env} environment")
 
     # Validate the model name and create the workspace name
     if not request.config.model_name.upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
-
-    log.info(
-        f"Running federation setup using {test_env} API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {request.config.num_rounds}\n"
-        f"\tModel name: {request.config.model_name}\n"
-        f"\tClient authentication: {request.config.require_client_auth}\n"
-        f"\tTLS: {request.config.use_tls}\n"
-        f"\tMemory Logs: {request.config.log_memory_usage}"
-    )
 
     # Set the workspace path
     home_dir = os.getenv("HOME")
@@ -268,7 +253,17 @@ def federation_env_setup_and_validate(request):
         local_bind_path = workspace_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
         agg_domain_name = "localhost"
 
-    log.info(f"Model owner/aggregator workspace path: {workspace_path}")
+    log.info(
+        f"Running federation setup using {test_env} API on single machine with below configurations:\n"
+        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
+        f"\tNumber of rounds: {request.config.num_rounds}\n"
+        f"\tModel name: {request.config.model_name}\n"
+        f"\tClient authentication: {request.config.require_client_auth}\n"
+        f"\tTLS: {request.config.use_tls}\n"
+        f"\tMemory Logs: {request.config.log_memory_usage}\n"
+        f"\tResults directory: {request.config.results_dir}\n"
+        f"\tWorkspace path: {workspace_path}"
+    )
     return test_env, request.config.model_name, workspace_path, local_bind_path, agg_domain_name
 
 
@@ -288,7 +283,7 @@ def add_local_workspace_permission(local_bind_path):
         if return_code != 0:
             raise Exception(f"Failed to add local permission to workspace: {error}")
 
-        log.info(f"Recursive Permission added to workspace on local machine: {agg_workspace_path}")
+        log.debug(f"Recursive permission added to workspace on local machine: {agg_workspace_path}")
     except Exception as e:
         log.error(f"Failed to add local permission to workspace: {e}")
         raise e
@@ -307,7 +302,7 @@ def create_persistent_store(participant_name, local_bind_path):
         f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; " \
         "sudo chmod -R 755 $WORKING_DIRECTORY"
     )
-    log.info(f"Creating persistent store: {cmd_persistent_store}")
+    log.debug(f"Creating persistent store")
     return_code, output, error = run_command(
         cmd_persistent_store,
         workspace_path=os.getenv("HOME"),
@@ -431,12 +426,11 @@ def setup_collaborator(count, workspace_path, local_bind_path, container_id=None
             data_directory_path=count + 1,
             workspace_path=f"{workspace_path}/collaborator{count+1}/workspace",
         )
-        # create_persistent_store(collaborator.name, local_bind_path)
+        create_persistent_store(collaborator.name, local_bind_path)
 
     except Exception as e:
-        error_msg = f"Failed to create persistent store for {collaborator.name}: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to create persistent store for {collaborator.name}: {e}")
+        raise e
 
     try:
         if os.getenv("TEST_ENV") == "docker":
@@ -450,24 +444,21 @@ def setup_collaborator(count, workspace_path, local_bind_path, container_id=None
                 )
                 collaborator.container_id = container.id
     except Exception as e:
-        error_msg = f"Failed to start {collaborator.name} docker environment: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to start {collaborator.name} docker environment: {e}")
+        raise e
 
     try:
         local_col_ws_path = os.path.join(local_bind_path, collaborator.name, "workspace")
         copy_file_between_participants(local_agg_ws_path, local_col_ws_path, "workspace.zip")
         collaborator.import_workspace()
     except Exception as e:
-        error_msg = f"Failed to import workspace for {collaborator.name}: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to import workspace for {collaborator.name}: {e}")
+        raise e
 
     try:
         collaborator.create_collaborator()
     except Exception as e:
-        error_msg = f"Failed to create collaborator: {e}"
-        log.error(error_msg)
-        raise error_msg
+        log.error(f"Failed to create collaborator: {e}")
+        raise e
 
     return collaborator

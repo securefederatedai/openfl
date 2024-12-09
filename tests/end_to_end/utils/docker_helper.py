@@ -19,7 +19,7 @@ def remove_docker_network():
     client = get_docker_client()
     networks = client.networks.list(names=[constants.DOCKER_NETWORK_NAME])
     if not networks:
-        log.info(f"Network {constants.DOCKER_NETWORK_NAME} does not exist")
+        log.debug(f"Network {constants.DOCKER_NETWORK_NAME} does not exist")
         return
 
     for network in networks:
@@ -40,7 +40,7 @@ def create_docker_network():
 
     log.debug(f"Creating network: {constants.DOCKER_NETWORK_NAME}")
     network = client.networks.create(constants.DOCKER_NETWORK_NAME)
-    log.debug(f"Network {network.name} created successfully")
+    log.info(f"Network {network.name} created successfully")
 
 
 def check_docker_image():
@@ -83,7 +83,7 @@ def start_docker_container(
         local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
     }
 
-    log.info(f"Volumes: {volumes}")
+    log.debug(f"Volumes: {volumes}")
 
     # Start a container from the image
     container = client.containers.run(
@@ -138,4 +138,5 @@ def cleanup_docker_containers():
         container.remove()
         container_names.append(container.name)
 
-    log.info(f"Docker containers {container_names} cleaned up successfully")
+    if containers:
+        log.info(f"Docker containers {container_names} cleaned up successfully")
