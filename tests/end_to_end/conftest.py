@@ -65,14 +65,15 @@ def setup_logging(pytestconfig):
     Returns:
         logger: logger object
     """
-    results_dir = pytestconfig.getini("results_dir")
+    tmp_results_dir = pytestconfig.getini("results_dir")
     log_level = pytestconfig.getini("log_level")
 
+    results_dir = os.path.join(os.getenv("HOME"), tmp_results_dir)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(os.path.join(os.getenv("HOME"), results_dir, "deployment.log"), log_level)
+    configure_logging(results_dir, "deployment.log", log_level)
     return logging.getLogger()
 
 
