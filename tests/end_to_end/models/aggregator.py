@@ -59,22 +59,20 @@ class Aggregator():
         """
         Start the aggregator
         Args:
-            res_file (str): Path to the log file (local path)
+            res_file (str): Result file to track the logs
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.name}")
-            cmd = f"fx aggregator start"
             error_msg = "Failed to start the aggregator"
             fh.run_command(
-                cmd,
+                "fx aggregator start",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                print_output=True,
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."

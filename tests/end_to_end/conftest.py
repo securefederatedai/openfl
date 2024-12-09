@@ -7,18 +7,19 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 import logging
+import concurrent.futures
 
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils.conftest_helper import parse_arguments
+import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
-import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.models import aggregator as agg_model, collaborator as col_model, model_owner as mo_model
+from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, workspace_path",
+    "model_owner, aggregator, collaborators, workspace_path, local_bind_path", 
 )
 
 def pytest_addoption(parser):
@@ -214,28 +215,46 @@ def fx_federation(request):
     Note: As this is a function level fixture, thus no import is required at test level.
     """
     collaborators = []
-    test_env, model_name, workspace_path, col_workspace_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+
+    agg_workspace_path = os.path.join(workspace_path, "aggregator", "workspace")
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    # Cleanup docker containers
+    dh.cleanup_docker_containers()
+    dh.remove_docker_network()
+
+    # Create docker network openfl
+    dh.create_docker_network()
 
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
-    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=workspace_path)
+    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path)
 
     # Create workspace for given model name
     try:
-        fh.create_persistent_store(model_owner, results_dir=request.config.results_dir, workspace_template=model_name)
+        fh.create_persistent_store(model_owner.name, local_bind_path)
         if test_env == "docker":
             # Create docker network openfl
             # Create persistent store
             # Start the aggregator container and set its container_id in model_owner
-            model_owner.setup_agg_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
-        model_owner.create_workspace(os.path.join(request.config.results_dir, model_name))
+            container = dh.start_docker_container(
+                container_name="aggregator",
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
+            )
+            model_owner.container_id = container.id
+        model_owner.create_workspace()
+        fh.add_local_workspace_permission(local_bind_path)
     except Exception as e:
         log.error(f"Failed to create the workspace: {e}")
         raise e
 
     # Modify the plan
+    plan_path = os.path.join(local_bind_path, "aggregator", "workspace", "plan")
     try:
         model_owner.modify_plan(
+            plan_path=plan_path,
             new_rounds=request.config.num_rounds,
             num_collaborators=request.config.num_collaborators,
             disable_client_auth=not request.config.require_client_auth,
@@ -248,7 +267,7 @@ def fx_federation(request):
     if not request.config.use_tls:
         log.info("Disabling TLS for communication")
         try:
-            model_owner.register_collaborators(request.config.num_collaborators)
+            model_owner.register_collaborators(plan_path, request.config.num_collaborators)
         except Exception as e:
             log.error(f"Failed to register the collaborators: {e}")
             raise e
@@ -272,7 +291,7 @@ def fx_federation(request):
     # But, for collaborators, it is different
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
-        workspace_path=workspace_path,
+        workspace_path=agg_workspace_path,
         container_id=model_owner.container_id, # None in case of non-docker environment
     )
 
@@ -285,24 +304,17 @@ def fx_federation(request):
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
     model_owner.export_workspace()
-    local_agg_ws_path = os.path.join(os.getenv("HOME"), request.config.results_dir, model_name, "aggregator", "workspace")
-
-    for i in range(request.config.num_collaborators):
-        collaborator = col_model.Collaborator(
-            collaborator_name=f"collaborator{i+1}",
-            data_directory_path=i + 1,
-            workspace_path=f"{col_workspace_path}/collaborator{i+1}/workspace",
+    
+    futures = [
+        executor.submit(
+            fh.setup_collaborator,
+            count=i,
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path,
         )
-        fh.create_persistent_store(collaborator, results_dir=request.config.results_dir, workspace_template=model_name)
-
-        if test_env == "docker":
-            collaborator.setup_col_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
-        
-        local_col_ws_path = os.path.join(os.getenv("HOME"), request.config.results_dir, model_name, collaborator.name, "workspace")
-        fh.copy_file_between_participants(local_agg_ws_path, local_col_ws_path, "workspace.zip")
-        collaborator.import_workspace()
-        collaborator.create_collaborator()
-        collaborators.append(collaborator)
+        for i in range(request.config.num_collaborators)
+    ]
+    collaborators = [f.result() for f in futures]
 
     # Return the federation fixture
     return federation_fixture(
@@ -310,4 +322,5 @@ def fx_federation(request):
         aggregator=aggregator,
         collaborators=collaborators,
         workspace_path=workspace_path,
+        local_bind_path=local_bind_path,
     )

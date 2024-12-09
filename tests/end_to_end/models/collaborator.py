@@ -118,7 +118,7 @@ class Collaborator():
         """
         Start the collaborator
         Args:
-            res_file (str): Path to the log file (local path)
+            res_file (str): Result file to track the logs
         Returns:
             str: Path to the log file
         """
@@ -132,7 +132,6 @@ class Collaborator():
                 workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                print_output=True,
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
@@ -157,21 +156,23 @@ class Collaborator():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, f"Installed dependencies for {self.collaborator_name}")
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
         return True
 
-    def setup_col_docker_env(self, results_dir, workspace_template):
+    def setup_col_docker_env(self, workspace_path, local_bind_path):
         """
         Setup the collaborator docker environment
+        Args:
+            workspace_path (str): Workspace path
+            local_bind_path (str): Local bind path
         """
         try:
             container = dh.start_docker_container(
                 container_name=self.collaborator_name,
-                results_dir=results_dir,
-                workspace_template=workspace_template,
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
             )
             self.container_id = container.id
 
@@ -195,7 +196,6 @@ class Collaborator():
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=os.path.join(self.workspace_path, ".."), # Import the workspace to the parent directory
-                print_output=True,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, f"Imported the workspace for {self.collaborator_name}")
 

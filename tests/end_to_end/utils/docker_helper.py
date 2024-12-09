@@ -57,35 +57,30 @@ def check_docker_image():
 
 def start_docker_container(
     container_name,
-    results_dir,
-    workspace_template,
+    workspace_path,
+    local_bind_path,
     image=constants.DEFAULT_OPENFL_IMAGE,
 ):
     """
     Start the docker container with provided name.
     Args:
         container_name: Name of the container
-        results_dir: Results directory
-        workspace_template: Model name (workspace template)
+        workspace_path: Workspace path
+        local_bind_path: Local bind path
         image: Docker image to use
     Returns:
         container: Docker container object
     """
     client = get_docker_client()
 
-    local_base_directory = os.path.join(
-        os.getenv("HOME"), results_dir, workspace_template
-    )
-    local_participant_directory = os.path.join(
-        local_base_directory, container_name, "workspace"
-    )
+    # Local bind path
+    local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
 
     # Docker container bind path
-    docker_base_path = f"/{results_dir}/{workspace_template}"
-    docker_participant_path = f"{docker_base_path}/{container_name}/workspace"
+    docker_participant_path = f"{workspace_path}/{container_name}/workspace"
 
     volumes = {
-        local_participant_directory: {"bind": docker_participant_path, "mode": "rw"},
+        local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
     }
 
     log.info(f"Volumes: {volumes}")
@@ -102,7 +97,6 @@ def start_docker_container(
         volumes=volumes,
         environment={
             "WORKSPACE_PATH": docker_participant_path,
-            "WORKSPACE_TEMPLATE": workspace_template,
         },
         use_config_proxy=False,  # Do not use proxy for docker container
     )

@@ -39,18 +39,17 @@ class ModelOwner():
         self.aggregator = None
         self.collaborators = []
         self.workspace_path = workspace_path
-        self.plan_path = None
         self.num_collaborators = constants.NUM_COLLABORATORS
         self.rounds_to_train = constants.NUM_ROUNDS
         self.log_memory_usage = log_memory_usage
         self.container_id = container_id
         
-    def create_workspace(self, path):
+    def create_workspace(self):
         """
         Create the workspace for the model
         """
         try:
-            log.info(f"Creating workspace for model {self.model_name} and workspace path: {self.workspace_path}")
+            log.info(f"Creating workspace for model {self.model_name} at the path: {self.workspace_path}")
             error_msg = "Failed to create the workspace"
             return_code, output, error = fh.run_command(
                 # f"fx workspace create --prefix {path.lstrip('/')} --template {self.model_name}",
@@ -119,48 +118,38 @@ class ModelOwner():
             log.error(f"{error_msg}: {e}")
             raise e
     
-    def modify_plan(self, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
+    def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
         """
         Modify the plan to train the model
         Args:
+            plan_path (str): Path to the plan file
             new_rounds (int): Number of rounds to train
             num_collaborators (int): Number of collaborators
             disable_client_auth (bool): Disable client authentication
             disable_tls (bool): Disable TLS communication
         """
         # Copy the cols.yaml file from remote machine to local machine for docker environment
-        if os.getenv("TEST_ENV") == "docker":
-            fh.modify_plan_for_docker(
-                container_name="aggregator",
-                workspace_path=self.workspace_path,
-                new_rounds=new_rounds,
-                num_collaborators=num_collaborators,
-                disable_client_auth=disable_client_auth,
-                disable_tls=disable_tls,
-                log_memory_usage=self.log_memory_usage
-            )
-        else:
-            self.plan_path = os.path.join(self.workspace_path, "plan", "plan.yaml")
-            log.info(f"Plan path: {self.plan_path}")
+        plan_file = os.path.join(plan_path, "plan.yaml")
+        log.info(f"Plan file: {plan_file}")
 
-            # Open the file and modify the entries
-            self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train
-            self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
+        # Open the file and modify the entries
+        self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train
+        self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
 
-            with open(self.plan_path) as fp:
-                data = yaml.load(fp, Loader=yaml.FullLoader)
+        with open(plan_file) as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
 
-            data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
-            # Memory Leak related
-            data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
-            data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+        data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
+        # Memory Leak related
+        data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+        data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
 
-            data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
-            data["network"]["settings"]["disable_client_auth"] = disable_client_auth
-            data["network"]["settings"]["tls"] = not disable_tls
+        data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+        data["network"]["settings"]["disable_client_auth"] = disable_client_auth
+        data["network"]["settings"]["tls"] = not disable_tls
 
-            with open(self.plan_path, "w+") as write_file:
-                yaml.dump(data, write_file)
+        with open(plan_file, "w+") as write_file:
+            yaml.dump(data, write_file)
 
         log.info(f"Modified the plan with provided parameters.")
     
@@ -221,24 +210,23 @@ class ModelOwner():
             raise e
         return True
 
-    def register_collaborators(self, num_collaborators=None):
+    def register_collaborators(self, plan_path, num_collaborators=None):
         """
         Register the collaborators
         Args:
+            plan_path (str): Path to the plan file
             num_collaborators (int, Optional): Number of collaborators
         Returns:
             bool: True if successful, else False
         """
         log.info(f"Registering the collaborators..")
-        cols_path = os.path.join(self.workspace_path, "plan")
-
-        self.cols_path = os.path.join(cols_path, "cols.yaml")
+        cols_file = os.path.join(plan_path, "cols.yaml")
         self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
 
         try:
             # Straightforward writing to the yaml file is not recommended here
             # As the file might contain spaces and tabs which can cause issues
-            with open(self.cols_path, "r", encoding="utf-8") as f:
+            with open(cols_file, "r", encoding="utf-8") as f:
                 doc = yaml.load(f, Loader=yaml.FullLoader)
 
             if "collaborators" not in doc.keys() or not doc["collaborators"]:
@@ -247,11 +235,11 @@ class ModelOwner():
             for i in range(num_collaborators):
                 col_name = "collaborator" + str(i+1)
                 doc["collaborators"].append(col_name)
-                with open(self.cols_path, "w", encoding="utf-8") as f:
+                with open(cols_file, "w", encoding="utf-8") as f:
                     yaml.dump(doc, f)
 
             log.info(
-                f"Successfully registered collaborators in {self.cols_path}"
+                f"Successfully registered collaborators in {cols_file}"
             )
         except Exception as e:
             log.error(f"Failed to register the collaborators: {e}")
@@ -280,34 +268,6 @@ class ModelOwner():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-    
-    def setup_agg_docker_env(self, results_dir, workspace_template):
-        """
-        Setup the aggregator docker environment
-        Args:
-            results_dir (str): Results directory path
-            workspace_template (str): Model name for which federation is being setup
-        """
-        try:
-            log.info("Cleaning up residual containers and networks followed by creation of new ones..")
-            # Cleanup docker containers
-            dh.cleanup_docker_containers()
-            dh.remove_docker_network()
-
-            # Create docker network openfl
-            dh.create_docker_network()
-
-            container = dh.start_docker_container(
-                container_name="aggregator",
-                results_dir=results_dir,
-                workspace_template=workspace_template,
-            )
-            self.container_id = container.id
-
-            log.info(f"Setup of aggregator docker environment is complete")
-        except Exception as e:
-            log.error(f"Failed to setup the aggregator docker environment: {e}")
-            raise e
 
     def export_workspace(self):
         """
@@ -321,7 +281,6 @@ class ModelOwner():
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
-                print_output=True,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
 

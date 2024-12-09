@@ -18,10 +18,10 @@ def test_torch_cnn_mnist(request, fx_federation):
 
     # Setup PKI for trusted communication within the federation
     if request.config.use_tls:
-        assert fed_helper.setup_pki(fx_federation, request.config.results_dir, request.config.model_name), "Failed to setup PKI for trusted communication"
+        assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
-    results = fed_helper.run_federation(fx_federation, request.config.results_dir, request.config.model_name)
+    results = fed_helper.run_federation(fx_federation)
     log.info(f"Results: {results}")
 
     # Verify the completion of the federation run
