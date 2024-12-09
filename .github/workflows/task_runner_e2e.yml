@@ -269,7 +269,16 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
+      - name: Create openfl image
+        id: create_openfl_image
+        run: |
+          pwd
+          echo "Creating openfl image. This may take a few minutes..."
+          cd openfl-docker
+          docker build -f Dockerfile.base -t openfl .
+
       - name: Run Task Runner E2E tests with TLS via Docker
+        if: steps.create_openfl_image.outcome == 'success'
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/docker_tests.py \
