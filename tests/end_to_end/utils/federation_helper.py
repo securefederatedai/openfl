@@ -231,7 +231,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     """
     time.sleep(20) # Wait for some time before checking the log file
     # Set timeout based on the number of rounds and time for each round
-    timeout = 300 + ( time_for_each_round * num_rounds ) # in seconds
+    timeout = 600 + ( time_for_each_round * num_rounds ) # in seconds
     log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
 
     # In case of docker environment, get the logs from local path which is mounted to the container
@@ -242,15 +242,19 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     log.info(f"Result file is: {result_file}")
 
     with open(result_file, 'r') as file:
-        content = file.read()
+        lines = file.readlines()
+        content = list(filter(str.rstrip, lines))
+
     start_time = time.time()
     while (
         constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
     ):
         with open(result_file, 'r') as file:
-            content = file.read()
-        # Print last 2 lines of the log file on screen to track the progress
-        log.info(f"{participant.name}: {content.splitlines()[-1:]}")
+            lines = file.readlines()
+            content = list(filter(str.rstrip, lines))
+
+        # Print last line of the log file on screen to track the progress
+        log.info(f"{participant.name}: {content[-1:]}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
