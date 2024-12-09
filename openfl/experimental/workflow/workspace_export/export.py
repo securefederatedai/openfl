@@ -13,6 +13,7 @@ from logging import getLogger
 from pathlib import Path
 from shutil import copytree
 
+import astor
 import nbformat
 import yaml
 from nbdev.export import nb_export
@@ -193,13 +194,13 @@ class WorkspaceExport:
                                 # Use the variable name as the argument value
                                 instantiation_args["args"][arg.id] = arg.id
                             elif isinstance(arg, ast.Constant):
-                                instantiation_args["args"][arg.s] = ast.unparse(arg)
+                                instantiation_args["args"][arg.s] = astor.to_source(arg)
                             else:
-                                instantiation_args["args"][arg.arg] = ast.unparse(arg).strip()
+                                instantiation_args["args"][arg.arg] = astor.to_source(arg).strip()
 
                         for kwarg in node.keywords:
                             # Iterate through keyword arguments
-                            value = ast.unparse(kwarg.value).strip()
+                            value = astor.to_source(kwarg.value).strip()
 
                             # If paranthese or brackets around the value is
                             # found and it's not tuple or list remove
