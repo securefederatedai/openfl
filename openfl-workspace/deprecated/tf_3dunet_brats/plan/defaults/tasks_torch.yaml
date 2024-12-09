@@ -1,0 +1,19 @@
+aggregated_model_validation:
+  function : validate
+  kwargs   :
+    apply   : global
+    metrics :
+      - acc
+  
+locally_tuned_model_validation:
+  function  : validate
+  kwargs    :
+    apply: local
+    metrics :
+      - acc
+  
+train:
+  function : train_batches
+  kwargs   :
+    metrics     :
+    - loss

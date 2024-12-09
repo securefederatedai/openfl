@@ -1,0 +1,9 @@
+template: openfl.federation.Network
+settings:
+    agg_addr                   : auto
+    agg_port                   : auto
+    hash_salt                  : auto
+    disable_tls                : False
+    client_reconnect_interval  : 5
+    disable_client_auth        : False
+    cert_folder                : cert
