@@ -17,7 +17,6 @@ def test_torch_cnn_mnist(request, fx_federation):
     log.info("Testing torch_cnn_mnist model")
 
     # Setup PKI for trusted communication within the federation
-    log.info(f"Use TLS ?: {request.config.use_tls}")
     if request.config.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
@@ -33,7 +32,6 @@ def test_keras_cnn_mnist(request, fx_federation):
     log.info("Testing keras_cnn_mnist model")
 
     # Setup PKI for trusted communication within the federation
-    log.info(f"Use TLS ?: {request.config.use_tls}")
     if request.config.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
@@ -52,7 +50,6 @@ def test_torch_cnn_histology(request, fx_federation):
     log.info("Testing torch_cnn_histology model")
 
     # Setup PKI for trusted communication within the federation
-    log.info(f"Use TLS ?: {request.config.use_tls}")
     if request.config.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
