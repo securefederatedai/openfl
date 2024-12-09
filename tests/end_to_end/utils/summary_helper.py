@@ -125,8 +125,7 @@ def main():
         print(f"Invalid model name: {model_name}. Skipping writing to GitHub step summary")
         return
 
-    workspace_name = "workspace_" + model_name
-    agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
+    agg_log_file = os.path.join("results", model_name, "aggregator", "workspace", "aggregator.log")
     agg_accuracy = get_aggregated_accuracy(agg_log_file)
 
     # Write the results to GitHub step summary file

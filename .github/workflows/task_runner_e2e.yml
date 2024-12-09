@@ -89,6 +89,7 @@ jobs:
         if: ${{ always() }}
         run: |
           pwd
+          ls -lrt $HOME/
           ls -lrt results/
           tar -cvf result.tar results
 

@@ -110,8 +110,6 @@ class ModelOwner():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            file_not_found = [line for line in output if "FileNotFoundError" in line]
-            log.info(f"Line containing error: {file_not_found}")
 
             fh.verify_cmd_output(
                 output,
@@ -122,8 +120,13 @@ class ModelOwner():
             )
 
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
+            # Handle FileNotFoundError exception
+            # This might happen when the function is called in parallel for multiple collaborators.
+            if "FileNotFoundError" in str(e):
+                log.info(f"Ignore this error: [{error_msg}]")
+            else:
+                log.error(f"{error_msg}: {e}")
+                raise e
         return True
     
     def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
