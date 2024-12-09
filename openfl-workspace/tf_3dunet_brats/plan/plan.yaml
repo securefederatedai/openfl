@@ -36,15 +36,6 @@ data_loader:
   template: src.tf_brats_dataloader.TensorFlowBratsDataLoader
 network:
   defaults: plan/defaults/network.yaml
-  settings:
-    agg_addr: DESKTOP-AOKV1IJ.localdomain
-    agg_port: auto
-    cert_folder: cert
-    client_reconnect_interval: 5
-    disable_client_auth: false
-    disable_tls: false
-    hash_salt: auto
-  template: openfl.federation.Network
 task_runner:
   defaults: plan/defaults/task_runner.yaml
   settings:
@@ -80,4 +71,3 @@ tasks:
       epochs: 1
       metrics:
       - loss
-      num_batches: 1
