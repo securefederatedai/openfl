@@ -82,7 +82,6 @@ class Collaborator:
         compression_pipeline=None,
         db_store_rounds=1,
         log_memory_usage=False,
-        **kwargs,
     ):
         """Initialize the Collaborator object.
 
@@ -104,7 +103,6 @@ class Collaborator:
                 Defaults to None.
             db_store_rounds (int, optional): The number of rounds to store in
                 the database. Defaults to 1.
-            **kwargs: Variable length argument list.
         """
         self.single_col_cert_common_name = None
 
