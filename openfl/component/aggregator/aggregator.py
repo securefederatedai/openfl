@@ -109,14 +109,16 @@ class Aggregator:
             callbacks: List of callbacks to be used during the experiment.
         """
         self.round_number = 0
-        self.single_col_cert_common_name = single_col_cert_common_name
 
-        if self.single_col_cert_common_name is not None:
-            self._log_big_warning()
-        else:
-            # FIXME: '' instead of None is just for protobuf compatibility.
-            # Cleaner solution?
-            self.single_col_cert_common_name = ""
+        if single_col_cert_common_name:
+            logger.warning(
+                "You are running in single collaborator certificate mode. "
+                "This mode is intended for development settings only and does not "
+                "provide proper Public Key Infrastructure (PKI) security. "
+                "Please use this mode with caution."
+            )
+        # FIXME: "" instead of None is for protobuf compatibility.
+        self.single_col_cert_common_name = single_col_cert_common_name or ""
 
         self.straggler_handling_policy = (
             straggler_handling_policy or CutoffTimeBasedStragglerHandling()
@@ -151,7 +153,7 @@ class Aggregator:
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
-        if initial_tensor_dict is not None:
+        if initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
                 tensor_dict=initial_tensor_dict,
@@ -313,9 +315,7 @@ class Aggregator:
         Returns:
             bool: True if it's time to quit, False otherwise.
         """
-        if self.round_number >= self.rounds_to_train:
-            return True
-        return False
+        return self.round_number >= self.rounds_to_train
 
     def get_tasks(self, collaborator_name):
         """RPC called by a collaborator to determine which tasks to perform.
@@ -1019,18 +1019,9 @@ class Aggregator:
         if all_tasks_completed:
             self.collaborators_done.append(collaborator_name)
             logger.info(
-                f"Round: {self.round_number}, Collaborators that have completed all tasks: "
+                f"Round {self.round_number}: Collaborators that have completed all tasks: "
                 f"{self.collaborators_done}"
             )
-
-    def _log_big_warning(self):
-        """Warn user about single collaborator cert mode."""
-        logger.warning(
-            f"\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
-            f" NOT PROPER PKI AND "
-            f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
-            f" WARNED!!!"
-        )
 
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution.
@@ -1055,76 +1046,3 @@ class Aggregator:
                 collaborator_name,
             )
             self.quit_job_sent_to.append(collaborator_name)
-
-
-the_dragon = """
-
- ,@@.@@+@@##@,@@@@.`@@#@+  *@@@@ #@##@  `@@#@# @@@@@   @@    @@@@` #@@@ :@@ `@#`@@@#.@
-  @@ #@ ,@ +. @@.@* #@ :`   @+*@ .@`+.   @@ *@::@`@@   @@#  @@  #`;@`.@@ @@@`@`#@* +:@`
-  @@@@@ ,@@@  @@@@  +@@+    @@@@ .@@@    @@ .@+:@@@:  .;+@` @@ ,;,#@` @@ @@@@@ ,@@@* @
-  @@ #@ ,@`*. @@.@@ #@ ,;  `@+,@#.@.*`   @@ ,@::@`@@` @@@@# @@`:@;*@+ @@ @`:@@`@ *@@ `
- .@@`@@,+@+;@.@@ @@`@@;*@  ;@@#@:*@+;@  `@@;@@ #@**@+;@ `@@:`@@@@  @@@@.`@+ .@ +@+@*,@
-  `` ``     ` ``  .     `     `      `     `    `  .` `  ``   ``    ``   `       .   `
-
-
-
-                                            .**
-                                      ;`  `****:
-                                     @**`*******
-                         ***        +***********;
-                        ,@***;` .*:,;************
-                        ;***********@@***********
-                        ;************************,
-                        `*************************
-                         *************************
-                         ,************************
-                          **#*********************
-                          *@****`     :**********;
-                          +**;          .********.
-                          ;*;            `*******#:                       `,:
-                                          ****@@@++::                ,,;***.
-                                          *@@@**;#;:         +:      **++*,
-                                          @***#@@@:          +*;     ,****
-                                          @*@+****           ***`     ****,
-                                         ,@#******.  ,       ****     **;,**.
-                                         * ******** :,       ;*:*+    **  :,**
-                                        #  ********::      *,.*:**`   *      ,*;
-                                        .  *********:      .+,*:;*:   :      `:**
-                                       ;   :********:       ***::**   `       ` **
-                                       +   :****::***  ,    *;;::**`             :*
-                                      ``   .****::;**:::    *;::::*;              ;*
-                                      *     *****::***:.    **::::**               ;:
-                                      #     *****;:****     ;*::;***               ,*`
-                                      ;     ************`  ,**:****;               ::*
-                                      :     *************;:;*;*++:                   *.
-                                      :     *****************;*                      `*
-                                     `.    `*****************;  :                     *.
-                                     .`    .*+************+****;:                     :*
-                                     `.    :;+***********+******;`    :              .,*
-                                      ;    ::*+*******************. `::              .`:.
-                                      +    :::**********************;;:`                *
-                                      +    ,::;*************;:::*******.                *
-                                      #    `:::+*************:::;********  :,           *
-                                      @     :::***************;:;*********;:,           *
-                                      @     ::::******:*********************:         ,:*
-                                      @     .:::******:;*********************,         :*
-                                      #      :::******::******###@*******;;****        *,
-                                      #      .::;*****::*****#****@*****;:::***;  ``  **
-                                      *       ::;***********+*****+#******::*****,,,,**
-                                      :        :;***********#******#******************
-                                      .`       `;***********#******+****+************
-                                      `,        ***#**@**+***+*****+**************;`
-                                       ;         *++**#******#+****+`      `.,..
-                                       +         `@***#*******#****#
-                                       +          +***@********+**+:
-                                       *         .+**+;**;;;**;#**#
-                                      ,`         ****@         +*+:
-                                      #          +**+         :+**
-                                      @         ;**+,       ,***+
-                                      #      #@+****      *#****+
-                                     `;     @+***+@      `#**+#++
-                                     #      #*#@##,      .++:.,#
-                                    `*      @#            +.
-                                  @@@
-                                 # `@
-                                  ,                                                        """
