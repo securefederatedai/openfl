@@ -241,20 +241,20 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     
     log.info(f"Result file is: {result_file}")
 
-    with open(result_file, 'r') as file:
-        lines = file.readlines()
-        content = list(filter(str.rstrip, lines))
+    # Do not open file here as it will be opened in the loop below
+    # Also it takes time for the federation run to start and write the logs
+    content = [""]
 
     start_time = time.time()
     while (
         constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
     ):
         with open(result_file, 'r') as file:
-            lines = file.readlines()
-            content = list(filter(str.rstrip, lines))
+            lines = [line.strip() for line in file.readlines()]
+        content = list(filter(str.rstrip, lines))[-1:]
 
         # Print last line of the log file on screen to track the progress
-        log.info(f"{participant.name}: {content[-1:]}")
+        log.info(f"{participant.name}: {content}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
