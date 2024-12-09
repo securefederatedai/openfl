@@ -1,9 +1,9 @@
 aggregator:
   defaults: plan/defaults/aggregator.yaml
   settings:
-    best_state_path: save/tf_3dunet_brats_best.pbuf
-    init_state_path: save/tf_3dunet_brats_init.pbuf
-    last_state_path: save/tf_3dunet_brats_latest.pbuf
+    best_state_path: save/best.pbuf
+    init_state_path: save/init.pbuf
+    last_state_path: save/latest.pbuf
     db_store_rounds: 2
     rounds_to_train: 10
   template: openfl.component.Aggregator
@@ -33,7 +33,7 @@ data_loader:
     num_classes: 1
     number_input_channels: 1
     percent_train: 0.8
-  template: src.tf_brats_dataloader.TensorFlowBratsDataLoader
+  template: src.dataloader.TensorFlowBratsDataLoader
 network:
   defaults: plan/defaults/network.yaml
 task_runner:
@@ -44,7 +44,7 @@ task_runner:
     depth: 4
     initial_filters: 16
     use_upsampling: false
-  template: src.tf_3dunet_model.TensorFlow3dUNet
+  template: src.taskrunner.TensorFlow3dUNet
 tasks:
   aggregated_model_validation:
     function: validate

@@ -30,7 +30,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.tf_cnn.TensorFlowCNN
+  template : src.taskrunner.TensorFlowCNN
 
 network :
   defaults : plan/defaults/network.yaml

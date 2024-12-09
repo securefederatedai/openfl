@@ -3,14 +3,13 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow as tf
-
 from openfl.federated import KerasTaskRunner
 from .define_model import build_model
 from .define_model import dice_coef
 from .define_model import dice_loss
 from .define_model import soft_dice_coef
 
+import keras
 
 class TensorFlow3dUNet(KerasTaskRunner):
     """Initialize.
@@ -80,7 +79,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
                             initial_filters=initial_filters,
                             batch_norm=batch_norm)
 
-        self.optimizer = tf.keras.optimizers.legacy.Adam()
+        self.optimizer = keras.optimizers.Adam()
 
         model.compile(
             loss=dice_loss,
@@ -91,7 +90,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
         self.tvars = model.layers
         print(f'layer names: {[var.name for var in self.tvars]}')
 
-        self.opt_vars = self.optimizer.variables()
+        self.opt_vars = self.optimizer.variables
         print(f'optimizer vars: {self.opt_vars}')
 
         # Two opt_vars for one tvar: gradient and square sum for RMSprop.
@@ -193,11 +192,11 @@ if __name__ == '__main__':
                         )
 
     model.compile(loss=dice_loss,
-                  optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.01),
+                  optimizer=keras.optimizers.legacy.Adam(learning_rate=0.01),
                   metrics=[dice_coef, soft_dice_coef]
                   )
 
-    checkpoint = tf.keras.callbacks.ModelCheckpoint(args.saved_model_name,
+    checkpoint = keras.callbacks.ModelCheckpoint(args.saved_model_name,
                                                     verbose=1,
                                                     save_best_only=True)
 
@@ -205,7 +204,7 @@ if __name__ == '__main__':
     import datetime
     logs_dir = os.path.join('tensorboard_logs',
                             datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
-    tb_logs = tf.keras.callbacks.TensorBoard(log_dir=logs_dir)
+    tb_logs = keras.callbacks.TensorBoard(log_dir=logs_dir)
 
     callbacks = [checkpoint, tb_logs]
 
