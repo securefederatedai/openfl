@@ -56,7 +56,14 @@ class ModelOwner():
             ws_path = self.workspace_path.lstrip('/') if os.getenv("TEST_ENV") == "docker" else self.workspace_path
 
             return_code, output, error = fh.run_command(
-                f"printenv; fx workspace create --prefix {ws_path} --template {self.model_name}",
+                f"printenv",
+                error_msg=error_msg,
+                container_id=self.container_id,
+                workspace_path="", # No workspace path required for this command
+                print_output=True
+            )
+            return_code, output, error = fh.run_command(
+                f"fx workspace create --prefix {ws_path} --template {self.model_name}",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path="", # No workspace path required for this command

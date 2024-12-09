@@ -72,7 +72,7 @@ def setup_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(os.path.join(results_dir, "deployment.log"), log_level)
+    configure_logging(os.path.join(os.getenv("HOME"), results_dir, "deployment.log"), log_level)
     return logging.getLogger()
 
 
