@@ -111,7 +111,8 @@ def setup_pki(fed_obj):
                 copy_file_between_participants,
                 local_src_path=os.path.join(local_agg_ws_path, "plan"),
                 local_dest_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace", "plan"),
-                file_name="cols.yaml"
+                file_name="cols.yaml",
+                run_with_sudo=True,
             )
             for collaborator in fed_obj.collaborators
         ]
@@ -123,15 +124,17 @@ def setup_pki(fed_obj):
     return True
 
 
-def copy_file_between_participants(local_src_path, local_dest_path, file_name):
+def copy_file_between_participants(local_src_path, local_dest_path, file_name, run_with_sudo=False):
     """
     Copy file between participants
     Args:
         local_src_path (str): Source path on local machine
         local_dest_path (str): Destination path on local machine
         file_name (str): File name only (without path)
+        run_with_sudo (bool): Run the command with sudo
     """
-    cmd = f"cp {local_src_path}/{file_name} {local_dest_path}"
+    cmd = "sudo cp" if run_with_sudo else "cp"
+    cmd += f" {local_src_path}/{file_name} {local_dest_path}"
     return_code, output, error = sh.run_command(cmd)
     if return_code != 0:
         log.error(f"Failed to copy file: {error}")
