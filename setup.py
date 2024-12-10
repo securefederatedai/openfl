@@ -91,7 +91,6 @@ setup(
         'pandas',
         'scikit-learn',
         'flatten_json',
-        'tensorboardX',
         'protobuf>=4.22,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
     ],
