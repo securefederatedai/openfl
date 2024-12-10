@@ -181,7 +181,8 @@ class Collaborator:
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
             self.logger.info(f"Publish memory usage: {memory_details}")
-            write_memory_usage_to_file(memory_details, f"{self.collaborator_name}_memory_usage.json")
+            write_memory_usage_to_file(memory_details,
+                                       f"{self.collaborator_name}_memory_usage.json")
 
         self.logger.info("End of Federation reached. Exiting...")
 
