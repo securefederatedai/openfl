@@ -59,10 +59,18 @@ python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_roun
 
 ```
 results
-    ├── <workspace_name>    # Based on the workspace name provided during test run.
+    ├── <workspace_name>    # Same as model name used for testing.
+        ├── aggregator
+            ├── workspace   # containing aggregator specific files and folders
+        ├── collaborator1
+            ├── workspace   # containing collaborator1 specific files and folders
+        ├── ....
+        ├── collaborator<n>
+            ├── workspace   # containing collaborator<n> specific files and folders
     ├── results.xml         # Output file in JUNIT.
     └── deployment.log      # Log file containing step by step test progress.
 ```
+Folders excluded for all the participants - cert and data.
 
 ## Contribution
 
