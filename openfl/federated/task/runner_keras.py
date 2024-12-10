@@ -194,7 +194,7 @@ class KerasTaskRunner(TaskRunner):
                     f"Param_metrics = {metrics}"
                 )
 
-        history = self.model.fit(batch_generator, verbose=1, **kwargs)
+        history = self.model.fit(batch_generator, verbose=2, **kwargs)
         results = []
         for metric in metrics:
             value = np.mean([history.history[metric]])
@@ -226,6 +226,7 @@ class KerasTaskRunner(TaskRunner):
 
         self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
         results = self.model.get_metrics_result()
+
         # TODO if there are new metrics in the flplan that were not included in
         #  the originally compiled model, that behavior is not currently
         #  handled.

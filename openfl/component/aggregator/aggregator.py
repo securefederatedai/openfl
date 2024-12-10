@@ -79,7 +79,7 @@ class Aggregator:
         write_logs=False,
         log_memory_usage=False,
         log_metric_callback=None,
-        **kwargs,
+        initial_tensor_dict=None,
     ):
         """Initializes the Aggregator.
 
@@ -110,15 +110,18 @@ class Aggregator:
                 to None.
             **kwargs: Additional keyword arguments.
         """
+        self.logger = getLogger(__name__)
         self.round_number = 0
-        self.single_col_cert_common_name = single_col_cert_common_name
 
-        if self.single_col_cert_common_name is not None:
-            self._log_big_warning()
-        else:
-            # FIXME: '' instead of None is just for protobuf compatibility.
-            # Cleaner solution?
-            self.single_col_cert_common_name = ""
+        if single_col_cert_common_name:
+            self.logger.warning(
+                "You are running in single collaborator certificate mode. "
+                "This mode is intended for development settings only and does not "
+                "provide proper Public Key Infrastructure (PKI) security. "
+                "Please use this mode with caution."
+            )
+        # FIXME: "" instead of None is for protobuf compatibility.
+        self.single_col_cert_common_name = single_col_cert_common_name or ""
 
         self.straggler_handling_policy = (
             straggler_handling_policy or CutoffTimeBasedStragglerHandling()
@@ -143,7 +146,6 @@ class Aggregator:
         self.db_store_rounds = db_store_rounds
 
         # Gathered together logging-related objects
-        self.logger = getLogger(__name__)
         self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
 
@@ -166,10 +168,10 @@ class Aggregator:
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
-        if kwargs.get("initial_tensor_dict", None) is not None:
-            self._load_initial_tensors_from_dict(kwargs["initial_tensor_dict"])
+        if initial_tensor_dict:
+            self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
-                tensor_dict=kwargs["initial_tensor_dict"],
+                tensor_dict=initial_tensor_dict,
                 round_number=0,
                 tensor_pipe=self.compression_pipeline,
             )
@@ -326,9 +328,7 @@ class Aggregator:
         Returns:
             bool: True if it's time to quit, False otherwise.
         """
-        if self.round_number >= self.rounds_to_train:
-            return True
-        return False
+        return self.round_number >= self.rounds_to_train
 
     def get_tasks(self, collaborator_name):
         """RPC called by a collaborator to determine which tasks to perform.
@@ -1056,18 +1056,9 @@ class Aggregator:
         if all_tasks_completed:
             self.collaborators_done.append(collaborator_name)
             self.logger.info(
-                f"Round: {self.round_number}, Collaborators that have completed all tasks: "
+                f"Round {self.round_number}: Collaborators that have completed all tasks: "
                 f"{self.collaborators_done}"
             )
-
-    def _log_big_warning(self):
-        """Warn user about single collaborator cert mode."""
-        self.logger.warning(
-            f"\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
-            f" NOT PROPER PKI AND "
-            f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
-            f" WARNED!!!"
-        )
 
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution.
@@ -1092,76 +1083,3 @@ class Aggregator:
                 collaborator_name,
             )
             self.quit_job_sent_to.append(collaborator_name)
-
-
-the_dragon = """
-
- ,@@.@@+@@##@,@@@@.`@@#@+  *@@@@ #@##@  `@@#@# @@@@@   @@    @@@@` #@@@ :@@ `@#`@@@#.@
-  @@ #@ ,@ +. @@.@* #@ :`   @+*@ .@`+.   @@ *@::@`@@   @@#  @@  #`;@`.@@ @@@`@`#@* +:@`
-  @@@@@ ,@@@  @@@@  +@@+    @@@@ .@@@    @@ .@+:@@@:  .;+@` @@ ,;,#@` @@ @@@@@ ,@@@* @
-  @@ #@ ,@`*. @@.@@ #@ ,;  `@+,@#.@.*`   @@ ,@::@`@@` @@@@# @@`:@;*@+ @@ @`:@@`@ *@@ `
- .@@`@@,+@+;@.@@ @@`@@;*@  ;@@#@:*@+;@  `@@;@@ #@**@+;@ `@@:`@@@@  @@@@.`@+ .@ +@+@*,@
-  `` ``     ` ``  .     `     `      `     `    `  .` `  ``   ``    ``   `       .   `
-
-
-
-                                            .**
-                                      ;`  `****:
-                                     @**`*******
-                         ***        +***********;
-                        ,@***;` .*:,;************
-                        ;***********@@***********
-                        ;************************,
-                        `*************************
-                         *************************
-                         ,************************
-                          **#*********************
-                          *@****`     :**********;
-                          +**;          .********.
-                          ;*;            `*******#:                       `,:
-                                          ****@@@++::                ,,;***.
-                                          *@@@**;#;:         +:      **++*,
-                                          @***#@@@:          +*;     ,****
-                                          @*@+****           ***`     ****,
-                                         ,@#******.  ,       ****     **;,**.
-                                         * ******** :,       ;*:*+    **  :,**
-                                        #  ********::      *,.*:**`   *      ,*;
-                                        .  *********:      .+,*:;*:   :      `:**
-                                       ;   :********:       ***::**   `       ` **
-                                       +   :****::***  ,    *;;::**`             :*
-                                      ``   .****::;**:::    *;::::*;              ;*
-                                      *     *****::***:.    **::::**               ;:
-                                      #     *****;:****     ;*::;***               ,*`
-                                      ;     ************`  ,**:****;               ::*
-                                      :     *************;:;*;*++:                   *.
-                                      :     *****************;*                      `*
-                                     `.    `*****************;  :                     *.
-                                     .`    .*+************+****;:                     :*
-                                     `.    :;+***********+******;`    :              .,*
-                                      ;    ::*+*******************. `::              .`:.
-                                      +    :::**********************;;:`                *
-                                      +    ,::;*************;:::*******.                *
-                                      #    `:::+*************:::;********  :,           *
-                                      @     :::***************;:;*********;:,           *
-                                      @     ::::******:*********************:         ,:*
-                                      @     .:::******:;*********************,         :*
-                                      #      :::******::******###@*******;;****        *,
-                                      #      .::;*****::*****#****@*****;:::***;  ``  **
-                                      *       ::;***********+*****+#******::*****,,,,**
-                                      :        :;***********#******#******************
-                                      .`       `;***********#******+****+************
-                                      `,        ***#**@**+***+*****+**************;`
-                                       ;         *++**#******#+****+`      `.,..
-                                       +         `@***#*******#****#
-                                       +          +***@********+**+:
-                                       *         .+**+;**;;;**;#**#
-                                      ,`         ****@         +*+:
-                                      #          +**+         :+**
-                                      @         ;**+,       ,***+
-                                      #      #@+****      *#****+
-                                     `;     @+***+@      `#**+#++
-                                     #      #*#@##,      .++:.,#
-                                    `*      @#            +.
-                                  @@@
-                                 # `@
-                                  ,                                                        """
