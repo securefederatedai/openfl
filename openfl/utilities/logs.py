@@ -6,6 +6,7 @@
 
 import logging
 import os
+import json
 
 import psutil
 from rich.console import Console
@@ -92,3 +93,19 @@ def get_memory_usage() -> dict:
         },
     }
     return memory_usage
+
+
+def write_memory_usage_to_file(memory_usage_dict, file_name):
+    """
+    Write memory usage details to a file.
+
+    Args:
+        memory_usage_dict (dict): The memory usage details to write.
+        file_name (str): The name of the file to write to.
+
+    Returns:
+        None
+    """
+    file_path = os.path.join("logs", file_name)
+    with open(file_path, "w") as f:
+        json.dump(memory_usage_dict, f, indent=4)
