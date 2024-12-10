@@ -13,7 +13,6 @@ env:
 
 jobs:
   pytest-coverage: # from pytest_coverage.yml
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -35,7 +34,7 @@ jobs:
         coverage report
   
   cli:
-    needs: [lint, pytest-coverage]
+    needs: [pytest-coverage]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
