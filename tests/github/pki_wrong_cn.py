@@ -75,7 +75,7 @@ if __name__ == '__main__':
     subprocess.check_call([
         'fx', 'workspace', 'create',
         '--prefix', prefix,
-        '--template', 'keras_cnn_mnist'
+        '--template', 'torch_cnn_mnist'
     ])
     os.chdir(prefix)
     fqdn = getfqdn_env()
