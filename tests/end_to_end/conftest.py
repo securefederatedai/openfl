@@ -19,7 +19,7 @@ from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_m
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, workspace_path, local_bind_path", 
+    "model_owner, aggregator, collaborators, workspace_path, local_bind_path",
 )
 
 def pytest_addoption(parser):
@@ -209,7 +209,6 @@ def fx_federation(request):
     Assumption: OpenFL workspace is present for the model being tested.
     Args:
         request: pytest request object. Model name is passed as a parameter to the fixture from test cases.
-        pytestconfig: pytest config object
     Returns:
         federation_fixture: Named tuple containing the objects for model owner, aggregator, and collaborators
 
@@ -241,7 +240,6 @@ def fx_federation(request):
         model_owner.create_workspace()
         fh.add_local_workspace_permission(local_bind_path)
     except Exception as e:
-        log.error(f"Failed to create the workspace: {e}")
         raise e
 
     # Modify the plan
@@ -255,27 +253,25 @@ def fx_federation(request):
             disable_tls=not request.config.use_tls,
         )
     except Exception as e:
-        log.error(f"Failed to modify the plan: {e}")
         raise e
 
+    # Certify the workspace in case of TLS
+    # Register the collaborators in case of non-TLS
     if request.config.use_tls:
         try:
             model_owner.certify_workspace()
         except Exception as e:
-            log.error(f"Failed to certify the workspace: {e}")
             raise e
     else:
         try:
             model_owner.register_collaborators(plan_path, request.config.num_collaborators)
         except Exception as e:
-            log.error(f"Failed to register the collaborators: {e}")
             raise e
 
     # Initialize the plan
     try:
         model_owner.initialize_plan(agg_domain_name=agg_domain_name)
     except Exception as e:
-        log.error(f"Failed to initialize the plan: {e}")
         raise e
 
     # Create the objects for aggregator and collaborators
@@ -287,17 +283,21 @@ def fx_federation(request):
         container_id=model_owner.container_id, # None in case of non-docker environment
     )
 
+    # Generate the sign request and certify the aggregator in case of TLS
     if request.config.use_tls:
-        # Generate the certs
-        aggregator.generate_sign_request()
-
-        # Certify the aggregator
-        model_owner.certify_aggregator(agg_domain_name)
+        try:
+            aggregator.generate_sign_request()
+            model_owner.certify_aggregator(agg_domain_name)
+        except Exception as e:
+            raise e
 
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
-    model_owner.export_workspace()
-    
+    try:
+        model_owner.export_workspace()
+    except Exception as e:
+        raise e
+
     futures = [
         executor.submit(
             fh.setup_collaborator,

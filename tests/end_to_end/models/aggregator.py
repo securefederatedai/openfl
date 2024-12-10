@@ -1,14 +1,9 @@
 # Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import yaml
 import logging
 
-import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
-import tests.end_to_end.utils.ssh_helper as sh
 
 
 log = logging.getLogger(__name__)
@@ -40,7 +35,6 @@ class Aggregator():
         Generate a sign request for the aggregator
         """
         try:
-            log.info("Inside aggregator's generate_sign_request")
             cmd = f"fx aggregator generate-cert-request --fqdn {self.agg_domain_name}"
             error_msg = "Failed to generate the sign request"
             return_code, output, error = fh.run_command(
@@ -54,7 +48,7 @@ class Aggregator():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-        
+
     def start(self, res_file):
         """
         Start the aggregator

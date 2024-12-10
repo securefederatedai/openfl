@@ -29,7 +29,7 @@ def setup_pki(fed_obj):
     executor = concurrent.futures.ThreadPoolExecutor()
 
     # Performing all the operations step by step
-    # This is to avoid problems during parallel execution 
+    # This is to avoid problems during parallel execution
     # in case one or more collaborator operations delay for some reason
     # Generate sign request for all the collaborators
     try:
@@ -238,7 +238,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     if os.getenv("TEST_ENV") == "docker":
         result_file_name = os.path.basename(result_file)
         result_file = os.path.join(local_bind_path, participant.name, "workspace", result_file_name)
-    
+
     log.info(f"Result file is: {result_file}")
 
     # Do not open file here as it will be opened in the loop below

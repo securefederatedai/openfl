@@ -43,7 +43,7 @@ class ModelOwner():
         self.rounds_to_train = constants.NUM_ROUNDS
         self.log_memory_usage = log_memory_usage
         self.container_id = container_id
-        
+
     def create_workspace(self):
         """
         Create the workspace for the model
@@ -72,7 +72,7 @@ class ModelOwner():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-    
+
     def get_workspace_path(self, results_dir, workspace_name):
         """
         Get the workspace path
@@ -122,7 +122,7 @@ class ModelOwner():
             log.error(f"{error_msg}: {e}")
             raise e
         return True
-    
+
     def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
         """
         Modify the plan to train the model
@@ -140,22 +140,26 @@ class ModelOwner():
         self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train
         self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
 
-        with open(plan_file) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+        try:
+            with open(plan_file) as fp:
+                data = yaml.load(fp, Loader=yaml.FullLoader)
 
-        data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
-        # Memory Leak related
-        data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
-        data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+            data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
+            # Memory Leak related
+            data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+            data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
 
-        data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
-        data["network"]["settings"]["require_client_auth"] = not disable_client_auth
-        data["network"]["settings"]["use_tls"] = not disable_tls
+            data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+            data["network"]["settings"]["require_client_auth"] = not disable_client_auth
+            data["network"]["settings"]["use_tls"] = not disable_tls
 
-        with open(plan_file, "w+") as write_file:
-            yaml.dump(data, write_file)
+            with open(plan_file, "w+") as write_file:
+                yaml.dump(data, write_file)
 
-        log.info(f"Modified the plan with provided parameters.")
+            log.info(f"Modified the plan with provided parameters.")
+        except Exception as e:
+            log.error(f"Failed to modify the plan: {e}")
+            raise e
 
     def initialize_plan(self, agg_domain_name):
         """
@@ -184,7 +188,7 @@ class ModelOwner():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-    
+
     def certify_workspace(self):
         """
         Certify the workspace
@@ -212,7 +216,6 @@ class ModelOwner():
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
             raise e
-        return True
 
     def register_collaborators(self, plan_path, num_collaborators=None):
         """
@@ -248,7 +251,7 @@ class ModelOwner():
         except Exception as e:
             log.error(f"Failed to register the collaborators: {e}")
             raise e
-    
+
     def certify_aggregator(self, agg_domain_name):
         """
         Certify the aggregator request
@@ -257,7 +260,7 @@ class ModelOwner():
         Returns:
             bool: True if successful, else False
         """
-        log.info(f"CA should sign the aggregator request")
+        log.info(f"Certify the aggregator request")
         try:
             cmd = f"fx aggregator certify --silent --fqdn {agg_domain_name}"
             error_msg = "Failed to certify the aggregator request"

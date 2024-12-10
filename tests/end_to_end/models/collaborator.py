@@ -2,13 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import yaml
 import logging
 
-import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
-import tests.end_to_end.utils.ssh_helper as sh
 
 
 log = logging.getLogger(__name__)
@@ -86,7 +83,7 @@ class Collaborator():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-    
+
     def import_pki(self, zip_name):
         """
         Import and certify the CSR for the collaborator
@@ -181,7 +178,7 @@ class Collaborator():
         except Exception as e:
             log.error(f"Failed to setup {self.collaborator_name} docker environment: {e}")
             raise e
-        
+
     def import_workspace(self):
         """
         Import the workspace
