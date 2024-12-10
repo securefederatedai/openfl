@@ -15,7 +15,7 @@ from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import get_memory_usage, write_metric, write_memory_usage_to_file
+from openfl.utilities.logs import get_memory_usage, write_memory_usage_to_file, write_metric
 
 
 class Aggregator:

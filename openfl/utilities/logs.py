@@ -4,9 +4,9 @@
 
 """Logs utilities."""
 
+import json
 import logging
 import os
-import json
 
 import psutil
 from rich.console import Console
