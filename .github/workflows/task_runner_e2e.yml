@@ -234,7 +234,7 @@ jobs:
   test_memory_logs:
     name: tr_tls_memory_logs
     runs-on: ubuntu-22.04
-    timeout-minutes: 15 # 15 mins
+    timeout-minutes: 15
     strategy:
       matrix:
         # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
