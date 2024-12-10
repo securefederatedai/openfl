@@ -9,7 +9,6 @@ aggregator :
     best_state_path : save/keras_cnn_mnist_best.pbuf
     last_state_path : save/keras_cnn_mnist_last.pbuf
     rounds_to_train : 10
-    callbacks : src.callbacks.get_aggregator_callbacks
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
@@ -17,7 +16,6 @@ collaborator :
   settings :
     delta_updates    : false
     opt_treatment    : RESET
-    callbacks : src.callbacks.get_collaborator_callbacks
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml

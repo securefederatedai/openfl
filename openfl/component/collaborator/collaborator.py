@@ -81,6 +81,7 @@ class Collaborator:
         delta_updates=False,
         compression_pipeline=None,
         db_store_rounds=1,
+        log_memory_usage=False,
         callbacks: Optional[List] = None,
     ):
         """Initialize the Collaborator object.
@@ -150,7 +151,10 @@ class Collaborator:
 
         # Callbacks
         if not isinstance(callbacks, callbacks_module.CallbackList):
-            self.callbacks = callbacks_module.CallbackList(callbacks)
+            self.callbacks = callbacks_module.CallbackList(
+                callbacks,
+                add_memory_profiler=log_memory_usage,
+                origin=self.collaborator_name)
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
         """Set available CUDA devices.

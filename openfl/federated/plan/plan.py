@@ -392,11 +392,7 @@ class Plan:
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
 
-        # Load callbacks.
-        callbacks = defaults[SETTINGS].get("callbacks")
-        if callbacks:
-            callbacks_list = Plan.import_(callbacks)()
-        defaults[SETTINGS]["callbacks"] = callbacks_list
+        # TODO: Load callbacks from plan.
 
         if self.aggregator_ is None:
             self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
@@ -572,11 +568,7 @@ class Plan:
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
-        # Load callbacks.
-        callbacks = defaults[SETTINGS].get("callbacks")
-        if callbacks:
-            callbacks_list = Plan.import_(callbacks)()
-        defaults[SETTINGS]["callbacks"] = callbacks_list
+        # TODO: Load callbacks from the plan.
 
         if task_runner is not None:
             defaults[SETTINGS]["task_runner"] = task_runner

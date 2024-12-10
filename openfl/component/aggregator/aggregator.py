@@ -80,6 +80,7 @@ class Aggregator:
         compression_pipeline=None,
         db_store_rounds=1,
         initial_tensor_dict=None,
+        log_memory_usage=False,
         callbacks: Optional[List] = None,
     ):
         """Initializes the Aggregator.
@@ -185,8 +186,8 @@ class Aggregator:
         if not isinstance(callbacks, callbacks_module.CallbackList):
             self.callbacks = callbacks_module.CallbackList(
                 callbacks,
-                tensor_db=self.tensor_db,
-                origin=self.uuid)
+                add_memory_profiler=log_memory_usage,
+                origin="aggregator")
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -958,8 +959,7 @@ class Aggregator:
             return
 
         # Compute all validation related metrics
-        all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
-        for task_name in all_tasks:
+        for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             self._compute_validation_related_task_metrics(task_name)
 
         # End of round callbacks.
