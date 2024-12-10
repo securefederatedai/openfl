@@ -19,6 +19,7 @@ class LambdaCallback(Callback):
         on_experiment_begin: called at the beginning of an experiment.
         on_experiment_end: called at the end of an experiment.
     """
+
     def __init__(
         self,
         on_round_begin=None,

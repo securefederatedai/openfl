@@ -19,12 +19,13 @@ class CallbackList(Callback):
             If provided, callbacks can access TensorDB for various actions.
         params: Additional parameters saved for use within the callbacks.
     """
+
     def __init__(
         self,
         callbacks: List[Callback],
-        add_memory_profiler=True,
+        add_memory_profiler=False,
         tensor_db=None,
-        **params
+        **params,
     ):
         super().__init__()
         self.callbacks = _flatten(callbacks) if callbacks else []
@@ -71,6 +72,7 @@ class CallbackList(Callback):
     def on_experiment_end(self, logs=None):
         for callback in self.callbacks:
             callback.on_experiment_end(logs)
+
 
 def _flatten(l):
     """Flatten a possibly-nested tree of lists."""

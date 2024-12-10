@@ -187,7 +187,8 @@ class Aggregator:
             self.callbacks = callbacks_module.CallbackList(
                 callbacks,
                 add_memory_profiler=log_memory_usage,
-                origin="aggregator")
+                origin="aggregator",
+            )
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.

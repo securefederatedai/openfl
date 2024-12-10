@@ -1,6 +1,7 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Memory Profiler callback."""
+
 import json
 import logging
 import os
@@ -11,12 +12,14 @@ from openfl.callbacks.callback import Callback
 
 logger = logging.getLogger(__name__)
 
+
 class MemoryProfiler(Callback):
     """Profile memory usage of the current process at the end of each round.
 
     Attributes:
         log_dir: If set, writes logs as lines of JSON.
     """
+
     def __init__(self, log_dir: str = "./logs/"):
         super().__init__()
         self.log_dir = None

@@ -21,6 +21,7 @@ class Callback:
         params: Additional parameters saved for use within the callback.
         tensor_db: The `TensorDB` instance of the respective participant.
     """
+
     def __init__(self):
         self.params = None
         self.tensor_db = None
