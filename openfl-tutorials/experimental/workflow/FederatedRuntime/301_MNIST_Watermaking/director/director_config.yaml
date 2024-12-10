@@ -7,5 +7,5 @@ aggregator:
   callable_func:
     settings:
       batch_size: 50
-      watermark_data: private_attributes.aggregator_private_attrs.watermark_data
-    template: private_attributes.aggregator_private_attrs.aggregator_private_attrs
+      watermark_data: private_attributes.watermark_data
+    template: private_attributes.aggregator_attrs

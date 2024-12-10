@@ -31,7 +31,7 @@ test_dataset = torchvision.datasets.MNIST(
 )
 
 
-def collaborator_private_attrs(index, n_collaborators, batch_size, train_dataset, test_dataset):
+def bangalore_attrs(index, n_collaborators, batch_size, train_dataset, test_dataset):
     train = deepcopy(train_dataset)
     test = deepcopy(test_dataset)
     train.data = train_dataset.data[index::n_collaborators]

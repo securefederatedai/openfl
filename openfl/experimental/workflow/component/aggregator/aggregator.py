@@ -130,8 +130,7 @@ class Aggregator:
         self.flow._metaflow_interface = MetaflowInterface(self.flow.__class__, "single_process")
         self.flow._run_id = self.flow._metaflow_interface.create_run()
         self.flow.runtime = FederatedRuntime()
-        self.flow.runtime.aggregator = "aggregator"
-        self.name = self.flow.runtime.aggregator
+        self.name = "aggregator"
         self.flow.runtime.collaborators = self.authorized_cols
 
         self.__private_attrs_callable = private_attributes_callable

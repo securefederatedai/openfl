@@ -27,8 +27,6 @@ class FederatedRuntime(Runtime):
     """FederatedRuntime class, derived from Runtime class.
 
     Attributes:
-        _aggregator (Optional[str]): Name of the aggregator. Defaults to
-                None.
         __collaborators (Optional[List[str]]): List of Authorized collaborators
         tls (bool): A flag indicating if TLS should be used for
             connections. Defaults to False.
@@ -41,7 +39,6 @@ class FederatedRuntime(Runtime):
 
     def __init__(
         self,
-        aggregator: Optional[str] = None,
         collaborators: Optional[List[str]] = None,
         director: Optional[Dict[str, Any]] = None,
         notebook_path: Optional[str] = None,
@@ -50,8 +47,6 @@ class FederatedRuntime(Runtime):
         """Initializes the FederatedRuntime object.
 
         Args:
-            aggregator (Optional[str]): Name of the aggregator. Defaults to
-                None.
             collaborators (Optional[List[str]]): List of Authorized collaborators.
                 Defaults to None.
             director (Optional[Dict[str, Any]]): Director information. Defaults to None
@@ -59,7 +54,6 @@ class FederatedRuntime(Runtime):
             tls (bool): Whether to use TLS for the connection.
         """
         super().__init__()
-        self._aggregator = aggregator
         self.__collaborators = collaborators
 
         self.tls = tls
@@ -86,21 +80,6 @@ class FederatedRuntime(Runtime):
         """
         if os.path.exists(archive_path):
             os.remove(archive_path)
-
-    @property
-    def aggregator(self) -> Optional[str]:
-        """Get the name of the aggregator."""
-        return self._aggregator
-
-    @aggregator.setter
-    def aggregator(self, aggregator_name: str) -> None:
-        """Set the aggregator name.
-
-        Args:
-            aggregator_name (str): The name of the aggregator to
-                set.
-        """
-        self._aggregator = aggregator_name
 
     @property
     def collaborators(self) -> List[str]:

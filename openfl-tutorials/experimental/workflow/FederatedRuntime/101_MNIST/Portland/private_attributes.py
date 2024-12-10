@@ -44,7 +44,7 @@ train.targets = mnist_train.targets[portland_col_idx::n_collaborators]
 test.data = mnist_test.data[portland_col_idx::n_collaborators]
 test.targets = mnist_test.targets[portland_col_idx::n_collaborators]
 
-collaborator_private_attrs = {
+portland_attrs = {
     "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=False),
     "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=False),
 }

@@ -157,7 +157,7 @@ watermark_data = WatermarkDataset(
 )
 
 
-def aggregator_private_attrs(watermark_data, batch_size):
+def aggregator_attrs(watermark_data, batch_size):
     return {
         "watermark_data_loader": torch.utils.data.DataLoader(
             watermark_data, batch_size=batch_size, shuffle=True
