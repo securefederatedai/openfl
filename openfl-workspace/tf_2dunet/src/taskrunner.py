@@ -3,7 +3,8 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow.compat.v1 as tf
+import tensorflow.compat.v1 as tf # might not work
+import Keras
 
 from openfl.federated import TensorFlowTaskRunner
 
@@ -138,7 +139,7 @@ else:
     concat_axis = 1
     data_format = 'channels_first'
 
-tf.keras.backend.set_image_data_format(data_format)
+# Keras.backend.set_image_data_format(data_format)
 
 
 def define_model(input_tensor,
@@ -176,12 +177,12 @@ def define_model(input_tensor,
     if dropout_at is None:
         dropout_at = [2, 3]
     # Set keras learning phase to train
-    tf.keras.backend.set_learning_phase(True)
+    Keras.backend.set_learning_phase(True)
 
     # Don't initialize variables on the fly
-    tf.keras.backend.manual_variable_initialization(False)
+    Keras.backend.manual_variable_initialization(False)
 
-    inputs = tf.keras.layers.Input(tensor=input_tensor, name='Images')
+    inputs = Keras.layers.Input(tensor=input_tensor, name='Images')
 
     if activation_function == 'relu':
         activation = tf.nn.relu
@@ -191,7 +192,7 @@ def define_model(input_tensor,
     params = {
         'activation': activation,
         'data_format': data_format,
-        'kernel_initializer': tf.keras.initializers.he_uniform(seed=seed),
+        'kernel_initializer': Keras.initializers.he_uniform(seed=seed),
         'kernel_size': (3, 3),
         'padding': 'same',
     }
@@ -202,47 +203,47 @@ def define_model(input_tensor,
     filters = initial_filters
     for i in range(depth):
         name = f'conv{i + 1}a'
-        net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
+        net = Keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if i in dropout_at:
-            net = tf.keras.layers.Dropout(dropout)(net)
+            net = Keras.layers.Dropout(dropout)(net)
         name = f'conv{i + 1}b'
-        net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
+        net = Keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if batch_norm:
-            net = tf.keras.layers.BatchNormalization()(net)
+            net = Keras.layers.BatchNormalization()(net)
         convb_layers[name] = net
         # only pool if not last level
         if i != depth - 1:
             name = f'pool{i + 1}'
-            net = tf.keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
+            net = Keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
             filters *= 2
 
     # do the up levels
     filters //= 2
     for i in range(depth - 1):
         if use_upsampling:
-            up = tf.keras.layers.UpSampling2D(
+            up = Keras.layers.UpSampling2D(
                 name=f'up{depth + i + 1}', size=(2, 2))(net)
         else:
-            up = tf.keras.layers.Conv2DTranspose(
+            up = Keras.layers.Conv2DTranspose(
                 name='transConv6', filters=filters, data_format=data_format,
                 kernel_size=(2, 2), strides=(2, 2), padding='same')(net)
-        net = tf.keras.layers.concatenate(
+        net = Keras.layers.concatenate(
             [up, convb_layers[f'conv{depth - i - 1}b']],
             axis=concat_axis
         )
-        net = tf.keras.layers.Conv2D(
+        net = Keras.layers.Conv2D(
             name=f'conv{depth + i + 1}a',
             filters=filters, **params)(net)
-        net = tf.keras.layers.Conv2D(
+        net = Keras.layers.Conv2D(
             name=f'conv{depth + i + 1}b',
             filters=filters, **params)(net)
         filters //= 2
 
-    net = tf.keras.layers.Conv2D(name='Mask', filters=n_cl_out,
+    net = Keras.layers.Conv2D(name='Mask', filters=n_cl_out,
                                  kernel_size=(1, 1), data_format=data_format,
                                  activation='sigmoid')(net)
 
-    model = tf.keras.models.Model(inputs=[inputs], outputs=[net])
+    model = Keras.models.Model(inputs=[inputs], outputs=[net])
 
     if print_summary:
         print(model.summary())
