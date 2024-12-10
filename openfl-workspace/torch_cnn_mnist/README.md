@@ -1,3 +1,23 @@
+## Instantiating a Workspace from Torch Template
+To instantiate a workspace from the torch_cnn_mnist template, you can use the fx workspace create command. This allows you to quickly set up a new workspace based on a predefined configuration and template.
+1. Ensure the necessary dependencies are installed.
+"""
+pip install virtualenv
+mkdir ~/openfl-quickstart
+virtualenv ~/openfl-quickstart/venv
+source ~/openfl-quickstart/venv/bin/activate
+pip install openfl==1.6
+"""
+2. Creating the Workspace Folder
+
+"""
+cd ~/openfl-quickstart
+fx workspace create --template torch_template --prefix fl_workspace
+cd ~/openfl-quickstart/fl_workspace
+"""
+
+Here’s a step-by-step guide on how to do this:
+
 ## Directory Structure
 The taskrunner workspace has the following file structure:
 ```
@@ -10,7 +30,7 @@ taskrunner
     ├── defaults          # path to the default values for the FL plan
 ├── src
     ├── __init__.py       # treat src as a Python package
-    └── cnn_model.py      # CNN model for federated learning.
+    └── cnn_model.py      # centralized CNN model, ready for use in federated learning
     ├── dataloader.py     # data loader module
     └── taskrunner.py     # task runner module
 ```
