@@ -194,7 +194,7 @@ class KerasTaskRunner(TaskRunner):
                     f"Param_metrics = {metrics}"
                 )
 
-        history = self.model.fit(batch_generator, verbose=1, **kwargs)
+        history = self.model.fit(batch_generator, verbose=2, **kwargs)
         results = []
         for metric in metrics:
             value = np.mean([history.history[metric]])
