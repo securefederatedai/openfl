@@ -24,7 +24,8 @@ def test_torch_cnn_mnist(request, fx_federation):
     results = fed_helper.run_federation(fx_federation)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(fx_federation, results, request.config.num_rounds), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(fx_federation, results,
+                                            num_rounds=request.config.num_rounds), "Federation completion failed"
 
 
 @pytest.mark.keras_cnn_mnist
@@ -39,7 +40,8 @@ def test_keras_cnn_mnist(request, fx_federation):
     results = fed_helper.run_federation(fx_federation)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(fx_federation, results, request.config.num_rounds), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(fx_federation, results,
+                                            num_rounds=request.config.num_rounds), "Federation completion failed"
 
 
 @pytest.mark.torch_cnn_histology
@@ -57,4 +59,5 @@ def test_torch_cnn_histology(request, fx_federation):
     results = fed_helper.run_federation(fx_federation)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(fx_federation, results, request.config.num_rounds), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(fx_federation, results,
+                                                num_rounds=request.config.num_rounds), "Federation completion failed"

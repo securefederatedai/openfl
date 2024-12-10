@@ -5,6 +5,8 @@ import time
 import concurrent.futures
 import logging
 import os
+import json
+import re
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -430,7 +432,7 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     return return_code, output, error
 
 
-# This functionality is common across multiple participants, thus moved to a common file
+# This functionality is common across multiple participants, thus moved to a common function
 def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_exception=True):
     """
     Verify the output of fx command run
@@ -500,3 +502,54 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
     return collaborator
+
+
+def extract_memory_usage(log_file):
+    """
+    Extracts memory usage data from a log file.
+    This function reads the content of the specified log file, searches for memory usage data
+    using a regular expression pattern, and returns the extracted data as a dictionary.
+    Args:
+        log_file (str): The path to the log file from which to extract memory usage data.
+    Returns:
+        dict: A dictionary containing the memory usage data.
+    Raises:
+        json.JSONDecodeError: If there is an error decoding the JSON data.
+        Exception: If memory usage data is not found in the log file.
+    """
+    try:
+        with open(log_file, 'r') as file:
+            content = file.read()
+
+        pattern = r"Publish memory usage: (\[.*?\])"
+        match = re.search(pattern, content, re.DOTALL)
+
+        if match:
+            memory_usage_data = match.group(1)
+            memory_usage_data = re.sub(r'\S+\.py:\d+', '', memory_usage_data)
+            memory_usage_data = memory_usage_data.replace('\n', '').replace(' ', '')
+            memory_usage_data = memory_usage_data.replace("'", '"')
+            memory_usage_dict = json.loads(memory_usage_data)
+            return memory_usage_dict
+        else:
+            log.error("Memory usage data not found in the log file")
+            raise Exception("Memory usage data not found in the log file")
+    except Exception as e:
+        log.error(f"An error occurred while extracting memory usage: {e}")
+        raise e
+
+
+def write_memory_usage_to_file(memory_usage_dict, output_file):
+    """
+    Writes memory usage data to a file.
+    This function writes the specified memory usage data to the specified output file.
+    Args:
+        memory_usage_dict (dict): A dictionary containing the memory usage data.
+        output_file (str): The path to the output file to which to write the memory usage data.
+    """
+    try:
+        with open(output_file, 'w') as file:
+            json.dump(memory_usage_dict, file, indent=4)
+    except Exception as e:
+        log.error(f"An error occurred while writing memory usage data to file: {e}")
+        raise e
