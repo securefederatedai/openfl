@@ -66,7 +66,15 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type='text/markdown',
     url='https://github.com/securefederatedai/openfl',
-    packages=find_packages(include=("openfl", "openfl.*", "openfl-docker", "openfl-workspace")),
+    packages=find_packages(
+        include=(
+            "openfl",
+            "openfl.*",
+            "openfl-docker",
+            "openfl-workspace",
+            "openfl-tutorials",
+        )
+    ),
     include_package_data=True,
     setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],  # ensure it is in-sync with `install_requires`
     install_requires=[
