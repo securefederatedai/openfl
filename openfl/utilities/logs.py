@@ -3,8 +3,6 @@
 
 
 """Logs utilities."""
-
-import json
 import logging
 
 from rich.console import Console
