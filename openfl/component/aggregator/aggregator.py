@@ -183,12 +183,11 @@ class Aggregator:
         self.use_delta_updates = use_delta_updates
 
         # Callbacks
-        if not isinstance(callbacks, callbacks_module.CallbackList):
-            self.callbacks = callbacks_module.CallbackList(
-                callbacks,
-                add_memory_profiler=log_memory_usage,
-                origin="aggregator",
-            )
+        self.callbacks = callbacks_module.CallbackList(
+            callbacks,
+            add_memory_profiler=log_memory_usage,
+            origin="aggregator",
+        )
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.

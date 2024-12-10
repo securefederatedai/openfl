@@ -150,12 +150,11 @@ class Collaborator:
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
         # Callbacks
-        if not isinstance(callbacks, callbacks_module.CallbackList):
-            self.callbacks = callbacks_module.CallbackList(
-                callbacks,
-                add_memory_profiler=log_memory_usage,
-                origin=self.collaborator_name,
-            )
+        self.callbacks = callbacks_module.CallbackList(
+            callbacks,
+            add_memory_profiler=log_memory_usage,
+            origin=self.collaborator_name,
+        )
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
         """Set available CUDA devices.
