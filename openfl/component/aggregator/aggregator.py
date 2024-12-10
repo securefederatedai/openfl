@@ -81,6 +81,7 @@ class Aggregator:
         db_store_rounds=1,
         initial_tensor_dict=None,
         log_memory_usage=False,
+        write_logs=False,
         callbacks: Optional[List] = None,
     ):
         """Initializes the Aggregator.

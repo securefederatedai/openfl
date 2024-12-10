@@ -82,6 +82,7 @@ class Collaborator:
         compression_pipeline=None,
         db_store_rounds=1,
         log_memory_usage=False,
+        write_logs=False,
         callbacks: Optional[List] = None,
     ):
         """Initialize the Collaborator object.
