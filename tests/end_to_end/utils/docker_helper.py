@@ -7,7 +7,7 @@ import os
 from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.ssh_helper as sh
+import tests.end_to_end.utils.exceptions as ex
 
 log = logging.getLogger(__name__)
 
@@ -71,37 +71,41 @@ def start_docker_container(
     Returns:
         container: Docker container object
     """
-    client = get_docker_client()
+    try:
+        client = get_docker_client()
 
-    # Local bind path
-    local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
+        # Local bind path
+        local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
 
-    # Docker container bind path
-    docker_participant_path = f"{workspace_path}/{container_name}/workspace"
+        # Docker container bind path
+        docker_participant_path = f"{workspace_path}/{container_name}/workspace"
 
-    volumes = {
-        local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
-    }
+        volumes = {
+            local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
+        }
 
-    # Start a container from the image
-    container = client.containers.run(
-        image,
-        detach=True,
-        user="root",
-        auto_remove=False,
-        tty=True,
-        name=container_name,
-        network="openfl",
-        volumes=volumes,
-        environment={
-            "WORKSPACE_PATH": docker_participant_path,
-            "NO_PROXY": "aggregator",
-            "no_proxy": "aggregator",
-            "TEMP_ENV": "noopur",
-        },
-        use_config_proxy=False,  # Do not use proxy for docker container
-    )
-    log.info(f"Container for {container_name} started with ID: {container.id}")
+        # Start a container from the image
+        container = client.containers.run(
+            image,
+            detach=True,
+            user="root",
+            auto_remove=False,
+            tty=True,
+            name=container_name,
+            network="openfl",
+            volumes=volumes,
+            environment={
+                "WORKSPACE_PATH": docker_participant_path,
+                "NO_PROXY": "aggregator",
+                "no_proxy": "aggregator",
+            },
+            use_config_proxy=False,  # Do not use proxy for docker container
+        )
+        log.info(f"Container for {container_name} started with ID: {container.id}")
+
+    except Exception as e:
+        raise ex.DockerException(f"Error starting docker container: {e}")
+
     return container
 
 
@@ -112,7 +116,10 @@ def get_docker_client():
     Returns:
         Docker client
     """
-    client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+    try:
+        client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+    except Exception as e:
+        raise ex.DockerException(f"Error getting docker client: {e}")
     return client
 
 

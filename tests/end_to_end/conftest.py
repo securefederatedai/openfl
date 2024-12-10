@@ -225,54 +225,39 @@ def fx_federation(request):
     model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path)
 
     # Create workspace for given model name
-    try:
-        fh.create_persistent_store(model_owner.name, local_bind_path)
-        if test_env == "docker":
-            # Create docker network openfl
-            # Create persistent store
-            # Start the aggregator container and set its container_id in model_owner
-            container = dh.start_docker_container(
-                container_name="aggregator",
-                workspace_path=workspace_path,
-                local_bind_path=local_bind_path,
-            )
-            model_owner.container_id = container.id
-        model_owner.create_workspace()
-        fh.add_local_workspace_permission(local_bind_path)
-    except Exception as e:
-        raise e
+    fh.create_persistent_store(model_owner.name, local_bind_path)
+
+    # Start the docker container for aggregator in case of docker environment
+    if test_env == "docker":
+        container = dh.start_docker_container(
+            container_name="aggregator",
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path,
+        )
+        model_owner.container_id = container.id
+
+    model_owner.create_workspace()
+    fh.add_local_workspace_permission(local_bind_path)
 
     # Modify the plan
     plan_path = os.path.join(local_bind_path, "aggregator", "workspace", "plan")
-    try:
-        model_owner.modify_plan(
-            plan_path=plan_path,
-            new_rounds=request.config.num_rounds,
-            num_collaborators=request.config.num_collaborators,
-            disable_client_auth=not request.config.require_client_auth,
-            disable_tls=not request.config.use_tls,
-        )
-    except Exception as e:
-        raise e
+    model_owner.modify_plan(
+        plan_path=plan_path,
+        new_rounds=request.config.num_rounds,
+        num_collaborators=request.config.num_collaborators,
+        disable_client_auth=not request.config.require_client_auth,
+        disable_tls=not request.config.use_tls,
+    )
 
     # Certify the workspace in case of TLS
     # Register the collaborators in case of non-TLS
     if request.config.use_tls:
-        try:
-            model_owner.certify_workspace()
-        except Exception as e:
-            raise e
+        model_owner.certify_workspace()
     else:
-        try:
-            model_owner.register_collaborators(plan_path, request.config.num_collaborators)
-        except Exception as e:
-            raise e
+        model_owner.register_collaborators(plan_path, request.config.num_collaborators)
 
     # Initialize the plan
-    try:
-        model_owner.initialize_plan(agg_domain_name=agg_domain_name)
-    except Exception as e:
-        raise e
+    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
 
     # Create the objects for aggregator and collaborators
     # Workspace path for aggregator is uniform in case of docker or task_runner
@@ -285,18 +270,12 @@ def fx_federation(request):
 
     # Generate the sign request and certify the aggregator in case of TLS
     if request.config.use_tls:
-        try:
-            aggregator.generate_sign_request()
-            model_owner.certify_aggregator(agg_domain_name)
-        except Exception as e:
-            raise e
+        aggregator.generate_sign_request()
+        model_owner.certify_aggregator(agg_domain_name)
 
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
-    try:
-        model_owner.export_workspace()
-    except Exception as e:
-        raise e
+    model_owner.export_workspace()
 
     futures = [
         executor.submit(

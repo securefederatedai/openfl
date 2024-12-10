@@ -3,6 +3,7 @@
 
 import logging
 
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 
 
@@ -46,8 +47,7 @@ class Aggregator():
             fh.verify_cmd_output(output, return_code, error, error_msg, f"Generated a sign request for {self.name}")
 
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
+            raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
     def start(self, res_file):
         """

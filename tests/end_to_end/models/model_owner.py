@@ -6,9 +6,8 @@ import yaml
 import logging
 
 import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
-import tests.end_to_end.utils.ssh_helper as sh
 
 log = logging.getLogger(__name__)
 
@@ -159,7 +158,7 @@ class ModelOwner():
             log.info(f"Modified the plan with provided parameters.")
         except Exception as e:
             log.error(f"Failed to modify the plan: {e}")
-            raise e
+            raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
     def initialize_plan(self, agg_domain_name):
         """
@@ -186,8 +185,7 @@ class ModelOwner():
             )
 
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
+            raise ex.PlanInitializationException(f"Failed to initialize the plan: {e}")
 
     def certify_workspace(self):
         """
@@ -214,8 +212,7 @@ class ModelOwner():
             )
 
         except Exception as e:
-            log.error(f"Failed to certify the workspace: {e}")
-            raise e
+            raise ex.WorkspaceCertificationException(f"Failed to certify the workspace: {e}")
 
     def register_collaborators(self, plan_path, num_collaborators=None):
         """
@@ -249,8 +246,7 @@ class ModelOwner():
                 f"Successfully registered collaborators in {cols_file}"
             )
         except Exception as e:
-            log.error(f"Failed to register the collaborators: {e}")
-            raise e
+            raise ex.CollaboratorRegistrationException(f"Failed to register the collaborators: {e}")
 
     def certify_aggregator(self, agg_domain_name):
         """
@@ -273,8 +269,7 @@ class ModelOwner():
             fh.verify_cmd_output(output, return_code, error, error_msg, "CA signed the request from aggregator")
 
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
+            raise ex.AggregatorCertificationException(f"{error_msg}: {e}")
 
     def export_workspace(self):
         """
@@ -292,5 +287,4 @@ class ModelOwner():
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
 
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
+            raise ex.WorkspaceExportException(f"{error_msg}: {e}")

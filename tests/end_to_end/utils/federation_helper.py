@@ -8,6 +8,7 @@ import os
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.ssh_helper as sh
 from tests.end_to_end.models import collaborator as col_model
 
@@ -348,22 +349,26 @@ def create_persistent_store(participant_name, local_bind_path):
         participant_name (str): Participant name
         local_bind_path (str): Local bind path
     """
-    # Create persistent store
-    cmd_persistent_store = (
-        f"export WORKING_DIRECTORY={local_bind_path}; " \
-        f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; " \
-        "sudo chmod -R 755 $WORKING_DIRECTORY"
-    )
-    log.debug(f"Creating persistent store")
-    return_code, output, error = run_command(
-        cmd_persistent_store,
-        workspace_path=os.getenv("HOME"),
-    )
-    if error:
-        log.error(f"Error in creating persistent store: {error}")
-        raise Exception(f"Error in creating persistent store: {error}")
+    try:
+        # Create persistent store
+        error_msg = f"Failed to create persistent store for {participant_name}"
+        cmd_persistent_store = (
+            f"export WORKING_DIRECTORY={local_bind_path}; " \
+            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; " \
+            "sudo chmod -R 755 $WORKING_DIRECTORY"
+        )
+        log.debug(f"Creating persistent store")
+        return_code, output, error = run_command(
+            cmd_persistent_store,
+            workspace_path=os.getenv("HOME"),
+        )
+        if error:
+            raise ex.PersistentStoreCreationException(f"{error_msg}: {error}")
 
-    log.info(f"Persistent store created for {participant_name}")
+        log.info(f"Persistent store created for {participant_name}")
+
+    except Exception as e:
+        raise ex.PersistentStoreCreationException(f"{error_msg}: {e}")
 
 
 def run_command(command, workspace_path, error_msg=None, container_id=None, run_in_background=False, bg_file=None, print_output=False):
@@ -447,7 +452,7 @@ def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(count, workspace_path, local_bind_path, container_id=None):
+def setup_collaborator(count, workspace_path, local_bind_path):
     """
     Setup the collaborator
     Args:
@@ -469,8 +474,7 @@ def setup_collaborator(count, workspace_path, local_bind_path, container_id=None
         create_persistent_store(collaborator.name, local_bind_path)
 
     except Exception as e:
-        log.error(f"Failed to create persistent store for {collaborator.name}: {e}")
-        raise e
+        raise ex.PersistentStoreCreationException(f"Failed to create persistent store for {collaborator.name}: {e}")
 
     try:
         if os.getenv("TEST_ENV") == "docker":
@@ -481,21 +485,18 @@ def setup_collaborator(count, workspace_path, local_bind_path, container_id=None
             )
             collaborator.container_id = container.id
     except Exception as e:
-        log.error(f"Failed to start {collaborator.name} docker environment: {e}")
-        raise e
+        raise ex.DockerException(f"Failed to start {collaborator.name} docker environment: {e}")
 
     try:
         local_col_ws_path = os.path.join(local_bind_path, collaborator.name, "workspace")
         copy_file_between_participants(local_agg_ws_path, local_col_ws_path, "workspace.zip")
         collaborator.import_workspace()
     except Exception as e:
-        log.error(f"Failed to import workspace for {collaborator.name}: {e}")
-        raise e
+        raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
 
     try:
         collaborator.create_collaborator()
     except Exception as e:
-        log.error(f"Failed to create collaborator: {e}")
-        raise e
+        raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
     return collaborator
