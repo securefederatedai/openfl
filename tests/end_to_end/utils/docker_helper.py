@@ -97,10 +97,10 @@ def start_docker_container(
             "WORKSPACE_PATH": docker_participant_path,
             "NO_PROXY": "aggregator",
             "no_proxy": "aggregator",
+            "TEMP_ENV": "noopur",
         },
         use_config_proxy=False,  # Do not use proxy for docker container
     )
-
     log.info(f"Container for {container_name} started with ID: {container.id}")
     return container
 
