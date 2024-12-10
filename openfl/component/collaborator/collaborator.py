@@ -182,11 +182,7 @@ class Collaborator:
 
             # Run tasks
             for task in tasks:
-                self.callbacks.on_task_begin(task)
-
                 self.do_task(task, round_num)
-
-                self.callbacks.on_task_end(task)
 
             # Round end
             self.tensor_db.clean_up(self.db_store_rounds)

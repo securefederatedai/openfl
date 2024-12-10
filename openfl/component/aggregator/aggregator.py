@@ -150,6 +150,7 @@ class Aggregator:
         self.best_state_path = best_state_path
         self.last_state_path = last_state_path
 
+        # TODO: Remove. Used in deprecated interactive and native APIs
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
@@ -182,7 +183,10 @@ class Aggregator:
 
         # Callbacks
         if not isinstance(callbacks, callbacks_module.CallbackList):
-            self.callbacks = callbacks_module.CallbackList(callbacks, model=self.model)
+            self.callbacks = callbacks_module.CallbackList(
+                callbacks,
+                tensor_db=self.tensor_db,
+                origin=self.uuid)
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
