@@ -84,11 +84,11 @@ jobs:
   #         python tests/end_to_end/utils/summary_helper.py
   #         echo "Test summary printed"
 
-  #     - name: Tar files
+  #     - name: Create Tar (exclude cert and data folders)
   #       id: tar_files
   #       if: ${{ always() }}
   #       run: |
-  #         tar -cvf result.tar --exclude="data" $HOME/results
+  #         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
 
   #     - name: Upload Artifacts
   #       id: upload_artifacts
@@ -152,11 +152,11 @@ jobs:
   #         python tests/end_to_end/utils/summary_helper.py
   #         echo "Test summary printed"
 
-  #     - name: Tar files
+  #     - name: Create Tar (exclude cert and data folders)
   #       id: tar_files
   #       if: ${{ always() }}
   #       run: |
-  #         tar -cvf result.tar --exclude="data" $HOME/results
+  #         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
 
   #     - name: Upload Artifacts
   #       id: upload_artifacts
@@ -220,11 +220,11 @@ jobs:
   #         python tests/end_to_end/utils/summary_helper.py
   #         echo "Test summary printed"
 
-  #     - name: Tar files
+  #     - name: Create Tar (exclude cert and data folders)
   #       id: tar_files
   #       if: ${{ always() }}
   #       run: |
-  #         tar -cvf result.tar --exclude="data" $HOME/results
+  #         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
 
   #     - name: Upload Artifacts
   #       id: upload_artifacts
@@ -297,10 +297,10 @@ jobs:
           python tests/end_to_end/utils/summary_helper.py
           echo "Test summary printed"
 
-      - name: Tar files
+      - name: Create Tar (exclude cert and data folders)
         id: tar_files
         if: ${{ always() }}
-        run: tar -cvf result.tar --exclude="data" $HOME/results
+        run: tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
 
       - name: Upload Artifacts
         id: upload_artifacts
