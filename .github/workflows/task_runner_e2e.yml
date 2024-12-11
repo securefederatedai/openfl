@@ -39,7 +39,7 @@ jobs:
         # There are open issues for some of the models, so excluding them for now:
         # model_name: [ "torch_cnn_mnist", "keras_cnn_mnist", "torch_cnn_histology" ]
         model_name: ["torch_cnn_mnist", "keras_cnn_mnist"]
-        python_version: ["3.8", "3.9", "3.10"]
+        python_version: ["3.9", "3.10", "3.11"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
