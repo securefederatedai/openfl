@@ -1,49 +1,43 @@
-# Copyright (C) 2024 Intel Corporation
-# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+# Copyright (C) 2020-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-from os import path, makedirs
-from collections.abc import Iterable
-
-import numpy as np
-from torch import manual_seed
-from torch.utils.data import random_split
-from torchvision.transforms import ToTensor, Grayscale, Compose
-from torchvision.datasets import ImageFolder
+"""You may copy this file as the starting point of your own model."""
 
 from openfl.federated import PyTorchDataLoader
+from torchvision import datasets
+from torchvision import transforms
+import numpy as np
+from logging import getLogger
 
-class TemplateDataLoader(PyTorchDataLoader):
-    """Template dataloader for PyTorch.
-    This class should be used as a template to create a custom DataLoader for your specific dataset.
-    After generating this template, you should:
-    1. Implement the `load_dataset` function to load your data.
-    2. Modify the `plan.yaml` file to use this DataLoader.
-    The `plan.yaml` modifications should be done under the `<workspace>/plan/plan.yaml` section:
-    ```
-    data_loader:
-        defaults : plan/defaults/data_loader.yaml
-        template: src.dataloader.TemplateDataLoader # Modify this line appropriately if you change the class name
-        settings:
-            # Add additional arguments (such as batch_size) that you wish to pass through `def __init__():`
-            # You do not need to pass in data_path here. It will be set by the collaborators
-    ```
-    `batch_size` is passed to the `super().`__init__` method to ensure that the superclass is properly initialized with the specified batch size.
-    After calling `super().__init__`, define `self.X_train`, `self.y_train`, `self.X_valid`, and `self.y_valid`.
-    """
+logger = getLogger(__name__)
+
+
+class PyTorchMNISTInMemory(PyTorchDataLoader):
+    """PyTorch data loader for MNIST dataset."""
 
     def __init__(self, data_path, batch_size, **kwargs):
-        """Initialize the data loader.
+        """Instantiate the data object.
+
         Args:
-            data_path: The file path to the data at the respective collaborator site.
-            batch_size: The batch size of the data loader.
-            **kwargs: Additional arguments that may be defined in `plan.yaml`
+            data_path: The file path to the data
+            batch_size: The batch size of the data loader
+            **kwargs: Additional arguments, passed to super
+             init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
 
-        # Load the dataset using the provided data_path and any additional kwargs.
-        X_train, y_train, X_valid, y_valid = load_dataset(data_path, **kwargs)
+        try:
+            int(data_path)
+        except:
+            raise ValueError(
+                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
+                "number used by the collaborator.",
+                data_path
+            )
 
-        # Assign the loaded data to instance variables.
+        num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
+            shard_num=int(data_path), **kwargs
+        )
         self.X_train = X_train
         self.y_train = y_train
         self.train_loader = self.get_train_loader()
@@ -52,58 +46,93 @@ class TemplateDataLoader(PyTorchDataLoader):
         self.y_valid = y_valid
         self.val_loader = self.get_valid_loader()
 
-def load_dataset(data_path, train_split_ratio=0.8, **kwargs):
+        self.num_classes = num_classes
+
+
+def load_mnist_shard(
+    shard_num, collaborator_count, categorical=False, channels_last=True, **kwargs
+):
     """
-    Load your dataset here.
-    This function should be implemented to load the dataset from the given `data_path`.
-    You can use additional arguments passed via `**kwargs` if necessary.
+    Load the MNIST dataset.
+
     Args:
-        data_path (str): Path to the data directory.
-        **kwargs: Additional arguments that may be defined in `plan.yaml`
+        shard_num (int): The shard to use from the dataset
+        collaborator_count (int): The number of collaborators in the
+                                  federation
+        categorical (bool): True = convert the labels to one-hot encoded
+                            vectors (Default = True)
+        channels_last (bool): True = The input images have the channels
+                              last (Default = True)
+        **kwargs: Additional parameters to pass to the function
+
     Returns:
-        Tuple containing:
-        - numpy.ndarray: The training data.
-        - numpy.ndarray: The training labels.
-        - numpy.ndarray: The validation data.
-        - numpy.ndarray: The validation labels.
+        list: The input shape
+        int: The number of classes
+        numpy.ndarray: The training data
+        numpy.ndarray: The training labels
+        numpy.ndarray: The validation data
+        numpy.ndarray: The validation labels
     """
-    # Implement dataset loading logic here and return the appropriate data.
-    # Replace the following placeholders with actual data loading code.
-    dataset = MNISTDataset(
-        root=data_path,
-        transform=Compose([Grayscale(num_output_channels=1), ToTensor()])
+    num_classes = 10
+
+    (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
+        shard_num, collaborator_count, transform=transforms.ToTensor()
     )
-    n_train = int(train_split_ratio * len(dataset))
-    n_valid = len(dataset) - n_train
 
-    ds_train, ds_val = random_split(
-        dataset, lengths=[n_train, n_valid], generator=manual_seed(0))
+    logger.info(f"MNIST > X_train Shape : {X_train.shape}")
+    logger.info(f"MNIST > y_train Shape : {y_train.shape}")
+    logger.info(f"MNIST > Train Samples : {X_train.shape[0]}")
+    logger.info(f"MNIST > Valid Samples : {X_valid.shape[0]}")
 
-    X_train, y_train = list(zip(*ds_train))
+    if categorical:
+        # convert class vectors to binary class matrices
+        y_train = one_hot(y_train, num_classes)
+        y_valid = one_hot(y_valid, num_classes)
 
-    X_train, y_train = np.stack(X_train), np.array(y_train)
+    return num_classes, X_train, y_train, X_valid, y_valid
 
-    X_valid, y_valid = list(zip(*ds_val))
-    X_valid, y_valid = np.stack(X_valid), np.array(y_valid)
 
-    return X_train, y_train, X_valid, y_valid
+def one_hot(labels, classes):
+    """
+    One Hot encode a vector.
 
-class MNISTDataset(ImageFolder):
-    """Encapsulates the MNIST dataset"""
+    Args:
+        labels (list):  List of labels to onehot encode
+        classes (int): Total number of categorical classes
 
-    FOLDER_NAME = "mnist_images"
-    DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
+    Returns:
+        np.array: Matrix of one-hot encoded labels
+    """
+    return np.eye(classes)[labels]
 
-    def __init__(self, root: str = DEFAULT_PATH, **kwargs) -> None:
-        """Initialize."""
-        makedirs(root, exist_ok=True)
 
-        super(MNISTDataset, self).__init__(
-            path.join(root, MNISTDataset.FOLDER_NAME), **kwargs)
+def _load_raw_datashards(shard_num, collaborator_count, transform=None):
+    """
+    Load the raw data by shard.
 
-    def __getitem__(self, index):
-        """Allow getting items by slice index."""
-        if isinstance(index, Iterable):
-            return [super(MNISTDataset, self).__getitem__(i) for i in index]
-        else:
-            return super(MNISTDataset, self).__getitem__(index)
+    Returns tuples of the dataset shard divided into training and validation.
+
+    Args:
+        shard_num (int): The shard number to use
+        collaborator_count (int): The number of collaborators in the federation
+        transform: torchvision.transforms.Transform to apply to images
+
+    Returns:
+        2 tuples: (image, label) of the training, validation dataset
+    """
+    train_data, val_data = (
+        datasets.MNIST("data", train=train, download=True, transform=transform)
+        for train in (True, False)
+    )
+    X_train_tot, y_train_tot = train_data.train_data, train_data.train_labels
+    X_valid_tot, y_valid_tot = val_data.test_data, val_data.test_labels
+
+    # create the shards
+    shard_num = int(shard_num)
+    X_train = X_train_tot[shard_num::collaborator_count].unsqueeze(1).float()
+    y_train = y_train_tot[shard_num::collaborator_count]
+
+    X_valid = X_valid_tot[shard_num::collaborator_count].unsqueeze(1).float()
+    y_valid = y_valid_tot[shard_num::collaborator_count]
+
+    return (X_train, y_train), (X_valid, y_valid)

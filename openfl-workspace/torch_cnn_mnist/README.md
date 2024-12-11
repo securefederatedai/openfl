@@ -6,7 +6,7 @@ pip install virtualenv
 mkdir ~/openfl-quickstart
 virtualenv ~/openfl-quickstart/venv
 source ~/openfl-quickstart/venv/bin/activate
-pip install openfl==1.6
+pip install openfl
 """
 2. Creating the Workspace Folder
 
@@ -49,9 +49,78 @@ taskrunner
     - taskrunner.py: The core task runner module that manages the execution of federated learning tasks.
 
 ## Defining the Data Loader
-The data loader in OpenFL is responsible for batching and iterating through the dataset that will be used for local training and validation on each collaborator node. The TemplateDataLoader class in src/dataloader.py is designed to be a starting template for creating a data loader that is tailored to the FL experiment’s data format requirements.
+The data loader in OpenFL is responsible for batching and iterating through the dataset that will be used for local training and validation on each collaborator node. The PyTorchMNISTInMemory class is designed to handle the MNIST dataset, ensuring it is properly loaded and preprocessed for federated learning experiments.
 
-To customize the TemplateDataLoader, we just need to implement the load_dataset() function to process the dataset available at data_path on the local file system. The data_path parameter comes from the data.yaml configuration file, which is populated when the collaborator’s identity is created via fx collaborator create.
+To customize the PyTorchMNISTInMemory class, you need to implement the load_mnist_shard() function to process the dataset available at data_path on the local file system. The data_path parameter represents the data shard number used by the collaborator. This setup allows each collaborator to work with a specific subset of the data, facilitating distributed training.
+
+The load_mnist_shard() function is responsible for loading the MNIST dataset, dividing it into training and validation sets, and applying necessary transformations. The data is then batched and made ready for the training process.
+
+# Modify the dataloader to support "bring your own data"
+You can either try to implement the placeholders by yourself, or get the solution from [dataloader.py](https://github.com/securefederatedai/openfl-contrib/blob/main/openfl_contrib_tutorials/ml_to_fl/federated/src/dataloader.py)
+
+```
+import numpy as np
+from typing import Iterator, Tuple
+from openfl.federated import PyTorchTaskRunner
+from openfl.utilities import Metric
+import torch.optim as optim
+import torch.nn.functional as F
+from src.cnn_model import DigitRecognizerCNN, train_epoch, validate
+
+class TemplateDataLoader(PyTorchDataLoader):
+
+    def __init__(self, data_path, batch_size, **kwargs):
+        super().__init__(batch_size, **kwargs)
+
+        # Load the dataset using the provided data_path and any additional kwargs.
+        X_train, y_train, X_valid, y_valid = load_dataset(data_path, **kwargs)
+
+        # Assign the loaded data to instance variables.
+        self.X_train = X_train
+        self.y_train = y_train
+
+        self.X_valid = X_valid
+        self.y_valid = y_valid
+
+def load_dataset(data_path, train_split_ratio=0.8, **kwargs):
+    dataset = MNISTDataset(
+        root=data_path, 
+        transform=Compose([Grayscale(num_output_channels=1), ToTensor()])
+    )
+    n_train = int(train_split_ratio * len(dataset))
+    n_valid = len(dataset) - n_train
+
+    ds_train, ds_val = random_split(
+        dataset, lengths=[n_train, n_valid], generator=manual_seed(0))
+
+    X_train, y_train = list(zip(*ds_train))
+    X_train, y_train = np.stack(X_train), np.array(y_train)
+
+    X_valid, y_valid = list(zip(*ds_val))
+    X_valid, y_valid = np.stack(X_valid), np.array(y_valid)
+
+    return X_train, y_train, X_valid, y_valid
+
+class MNISTDataset(ImageFolder):
+    """Encapsulates the MNIST dataset"""
+
+    FOLDER_NAME = "mnist_images"
+    DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
+
+    def __init__(self, root: str = DEFAULT_PATH, **kwargs) -> None:
+        """Initialize."""
+        makedirs(root, exist_ok=True)
+
+        super(MNISTDataset, self).__init__(
+            path.join(root, MNISTDataset.FOLDER_NAME), **kwargs)
+
+    def __getitem__(self, index):
+        """Allow getting items by slice index."""
+        if isinstance(index, Iterable):
+            return [super(MNISTDataset, self).__getitem__(i) for i in index]
+        else:
+            return super(MNISTDataset, self).__getitem__(index)
+```
 
 ## Defining the Task Runner
 The Task Runner class defines the actual computational tasks of the FL experiment (such as local training and validation). We can implement the placeholders of the TemplateTaskRunner class (src/taskrunner.py) by importing the DigitRecognizerCNN model, as well as the train_epoch() and validate() helper functions from the centralized ML script. The template also provides placeholders for providing custom optimizer and loss function objects.
@@ -64,45 +133,6 @@ To help OpenFL calculate the initial model weights, we need to provide the shape
 ```
 mkdir save
 fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
-```
-
-The pre-sharded dataset can be downloaded from [mnist_data_shards.tar.gz](https://github.com/securefederatedai/openfl-contrib/blob/main/openfl_contrib_tutorials/ml_to_fl/federated/mnist_data_shards.tar.gz). Copy the dataset bundle to the root of the FL workspace and unpack it:
-
-```
-cp mnist_data_shards.tar.gz ~/openfl/openfl-tutorials/taskrunner/
-cd ~/openfl/openfl-tutorials/taskrunner/
-tar -xvf mnist_data_shards.tar.gz
-rm mnist_data_shards.tar.gz
-```
-
-This will populate the data folder of the FL workspace with two shards (data/1 and data/2) of labeled MNIST images of digits (the 0–9 labels being encoded in the sub-folder names). Note that in a real-world federation each of the collaborator nodes would only hold one shard, given the decentralized nature of Federated Learning. To facilitate the local testing of the FL workspace, both shards are made available under the local data/ folder:
-
-```
-data
-├── 1
-    └── mnist_images
-        └── 0
-        └── 1
-        └── 2
-        └── 3
-        └── 4
-        └── 5
-        └── 6
-        └── 7
-        └── 8
-        └── 9
-├── 2
-    └── mnist_images
-        └── 0
-        └── 1
-        └── 2
-        └── 3
-        └── 4
-        └── 5
-        └── 6
-        └── 7
-        └── 8
-        └── 9
 ```
 
 We can now perform a test run with the following commands for creating a local PKI setup and starting the aggregator and the collaborators on the same machine:
@@ -129,7 +159,7 @@ fx aggregator certify --fqdn localhost --silent
 
 # Create a collaborator named "collaborator1" that will use data path "data/1"
 # This command adds the collaborator1,data/1 entry in data.yaml
-fx collaborator create -n collaborator1 -d data/1
+fx collaborator create -n collaborator1 -d 1
 
 # Generate a CSR for collaborator1
 fx collaborator generate-cert-request -n collaborator1
@@ -143,7 +173,7 @@ fx collaborator certify -n collaborator1 --silent
 
 # Create a collaborator named "collaborator2" that will use data path "data/2"
 # This command adds the collaborator2,data/2 entry in data.yaml
-fx collaborator create -n collaborator2 -d data/2
+fx collaborator create -n collaborator2 -d 2
 
 # Generate a CSR for collaborator2
 fx collaborator generate-cert-request -n collaborator2

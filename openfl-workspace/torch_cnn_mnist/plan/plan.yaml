@@ -32,7 +32,8 @@ compression_pipeline:
 data_loader:
   settings:
     batch_size: 64
-  template: src.dataloader.TemplateDataLoader
+    collaborator_count: 2
+  template: src.dataloader.PyTorchMNISTInMemory
 network:
   settings:
     agg_addr: localhost
