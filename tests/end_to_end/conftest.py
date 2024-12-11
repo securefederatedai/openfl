@@ -17,7 +17,7 @@ import tests.end_to_end.models.participants as participants
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, model_name, require_client_auth, use_tls, workspace_path, results_dir, num_rounds",
+    "model_owner, aggregator, collaborators, workspace_path",
 )
 
 def pytest_addoption(parser):
@@ -180,6 +180,24 @@ def pytest_sessionfinish(session, exitstatus):
         log.debug(f"Cleared .pytest_cache directory at {cache_dir}")
 
 
+def pytest_configure(config):
+    """
+    Configure the pytest plugin.
+    Args:
+        config: pytest config object
+    """
+    # Declare some global variables
+    args = parse_arguments()
+    # Use the model name from the test case name if not provided as a command line argument
+    config.model_name = args.model_name
+    config.num_collaborators = args.num_collaborators
+    config.num_rounds = args.num_rounds
+    config.require_client_auth = not args.disable_client_auth
+    config.use_tls = not args.disable_tls
+    config.log_memory_usage = args.log_memory_usage
+    config.results_dir = config.getini("results_dir")
+
+
 @pytest.fixture(scope="function")
 def fx_federation(request, pytestconfig):
     """
@@ -196,38 +214,26 @@ def fx_federation(request, pytestconfig):
     """
     collaborators = []
     agg_domain_name = "localhost"
-
-    # Parse the command line arguments
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    model_name = args.model_name if args.model_name else request.node.name.split("test_")[1]
-    results_dir = pytestconfig.getini("results_dir")
-    num_collaborators = args.num_collaborators
-    num_rounds = args.num_rounds
-    require_client_auth = not args.disable_client_auth
-    use_tls = not args.disable_tls
-    log_memory_usage = args.log_memory_usage
-
     log.info(
         f"Running federation setup using Task Runner API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {num_collaborators}\n"
-        f"\tNumber of rounds: {num_rounds}\n"
-        f"\tModel name: {model_name}\n"
-        f"\tClient authentication: {require_client_auth}\n"
-        f"\tTLS: {use_tls}\n"
-        f"\tMemory Logs: {log_memory_usage}"
+        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
+        f"\tNumber of rounds: {request.config.num_rounds}\n"
+        f"\tModel name: {request.config.model_name}\n"
+        f"\tClient authentication: {request.config.require_client_auth}\n"
+        f"\tTLS: {request.config.use_tls}\n"
+        f"\tMemory Logs: {request.config.log_memory_usage}"
     )
 
     # Validate the model name and create the workspace name
-    if not model_name.upper() in constants.ModelName._member_names_:
-        raise ValueError(f"Invalid model name: {model_name}")
+    if not request.config.model_name.upper() in constants.ModelName._member_names_:
+        raise ValueError(f"Invalid model name: {request.config.model_name}")
 
-    workspace_name = f"workspace_{model_name}"
+    workspace_name = request.config.model_name
 
     # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, model_name, log_memory_usage)
+    model_owner = participants.ModelOwner(workspace_name, request.config.model_name, request.config.log_memory_usage)
     try:
-        workspace_path = model_owner.create_workspace(results_dir=results_dir)
+        workspace_path = model_owner.create_workspace(results_dir=request.config.results_dir)
     except Exception as e:
         log.error(f"Failed to create the workspace: {e}")
         raise e
@@ -235,19 +241,19 @@ def fx_federation(request, pytestconfig):
     # Modify the plan
     try:
         model_owner.modify_plan(
-            new_rounds=num_rounds,
-            num_collaborators=num_collaborators,
-            require_client_auth=require_client_auth,
-            use_tls=use_tls,
+            new_rounds=request.config.num_rounds,
+            num_collaborators=request.config.num_collaborators,
+            require_client_auth=request.config.require_client_auth,
+            use_tls=request.config.use_tls,
         )
     except Exception as e:
         log.error(f"Failed to modify the plan: {e}")
         raise e
 
-    if not use_tls:
+    if not request.config.use_tls:
         log.info("Disabling TLS for communication")
         try:
-            model_owner.register_collaborators(num_collaborators)
+            model_owner.register_collaborators(request.config.num_collaborators)
         except Exception as e:
             log.error(f"Failed to register the collaborators: {e}")
             raise e
@@ -271,7 +277,7 @@ def fx_federation(request, pytestconfig):
         agg_domain_name=agg_domain_name, workspace_path=workspace_path
     )
 
-    for i in range(num_collaborators):
+    for i in range(request.config.num_collaborators):
         collaborator = participants.Collaborator(
             collaborator_name=f"collaborator{i+1}",
             data_directory_path=i + 1,
@@ -285,10 +291,5 @@ def fx_federation(request, pytestconfig):
         model_owner=model_owner,
         aggregator=aggregator,
         collaborators=collaborators,
-        model_name=model_name,
-        require_client_auth=require_client_auth,
-        use_tls=use_tls,
         workspace_path=workspace_path,
-        results_dir=results_dir,
-        num_rounds=num_rounds,
     )
