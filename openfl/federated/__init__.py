@@ -14,7 +14,11 @@ if util.find_spec("tensorflow") is not None:
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import KerasDataLoader, TensorFlowDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
-    from openfl.federated.task import KerasTaskRunner, TensorFlowTaskRunner, KerasTensorFlowTaskRunner
+    from openfl.federated.task import (
+        KerasTaskRunner,
+        TensorFlowTaskRunner,
+        KerasTensorFlowTaskRunner,
+    )
 if util.find_spec("torch") is not None:
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import PyTorchDataLoader
