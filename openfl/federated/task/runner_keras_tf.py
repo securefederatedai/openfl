@@ -3,7 +3,7 @@
 
 
 """
-Base classes for developing a ke.Model() Federated Learning model.
+Base classes for developing a keras.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
@@ -26,7 +26,7 @@ class KerasTensorFlowTaskRunner(TaskRunner):
     """The base model for Keras models in the federation.
 
     Attributes:
-        model (ke.Model): The Keras model.
+        model (keras.Model): The Keras model.
         model_tensor_names (list): List of model tensor names.
         required_tensorkeys_for_function (dict): A map of all of the required
             tensors for each of the public functions in KerasTensorFlowTaskRunner.
