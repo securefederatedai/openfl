@@ -233,8 +233,7 @@ class ModelOwner():
             with open(cols_file, "r", encoding="utf-8") as f:
                 doc = yaml.load(f, Loader=yaml.FullLoader)
 
-            if "collaborators" not in doc.keys() or not doc["collaborators"]:
-                doc["collaborators"] = []  # Create empty list
+            doc["collaborators"] = []  # Create empty list
 
             for i in range(num_collaborators):
                 col_name = "collaborator" + str(i+1)
