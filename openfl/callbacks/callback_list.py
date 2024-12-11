@@ -1,7 +1,5 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import List
-
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 
@@ -22,7 +20,7 @@ class CallbackList(Callback):
 
     def __init__(
         self,
-        callbacks: List[Callback],
+        callbacks: list,
         add_memory_profiler=False,
         tensor_db=None,
         **params,
@@ -76,6 +74,8 @@ class CallbackList(Callback):
 
 def _flatten(l):
     """Flatten a possibly-nested tree of lists."""
+    if not isinstance(l, (list, tuple)):
+        return [l]
     for elem in l:
         if isinstance(elem, list):
             yield from _flatten(elem)
