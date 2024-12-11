@@ -147,7 +147,7 @@ Bare Metal Approach
 STEP 1: Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.8 (>=3.6, <3.11) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm |productName| is available.
 
 	.. code-block:: console
 

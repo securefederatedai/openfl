@@ -114,7 +114,7 @@ However, continue with the following procedure for details in creating a federat
 STEP 1: Install GaNDLF prerequisites and Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.8 (>=3.7, <3.11) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm |productName| is available.
 
 	.. code-block:: python
 

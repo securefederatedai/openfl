@@ -19,7 +19,7 @@ Install the Package
 Follow this procedure to prepare the environment and install the |productName| package.
 Perform this procedure on every node in the federation.
 
-1. Install a Python 3.8 (>=3.6, <3.9) virtual environment using venv.
+1. Install a Python 3.9 (>=3.9, <3.12) virtual environment using venv.
    
  See the `Venv installation guide <https://docs.python.org/3/library/venv.html>`_ for details.
 
