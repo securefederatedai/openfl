@@ -134,10 +134,7 @@ def cleanup_docker_containers():
     # List all containers related to openfl
     agg_containers = client.containers.list(all=True, filters={"name": "aggregator"})
     col_containers = client.containers.list(all=True, filters={"name": "collaborator*"})
-
-    # itp_tool_container = docker_client.containers.get(itp_tool_container_id)
     containers = agg_containers + col_containers
-
     container_names = []
     # Stop and remove all containers
     for container in containers:
