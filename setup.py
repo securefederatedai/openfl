@@ -66,7 +66,15 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type='text/markdown',
     url='https://github.com/securefederatedai/openfl',
-    packages=find_packages(include=("openfl", "openfl.*", "openfl-docker", "openfl-workspace")),
+    packages=find_packages(
+        include=(
+            "openfl",
+            "openfl.*",
+            "openfl-docker",
+            "openfl-workspace",
+            "openfl-tutorials",
+        )
+    ),
     include_package_data=True,
     setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],  # ensure it is in-sync with `install_requires`
     install_requires=[
@@ -87,7 +95,7 @@ setup(
         'protobuf>=4.22,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
     ],
-    python_requires='>=3.8, <3.12',
+    python_requires='>=3.9, <3.12',
     project_urls={
         'Bug Tracker': 'https://github.com/securefederatedai/openfl/issues',
         'Documentation': 'https://openfl.readthedocs.io/en/stable/',
@@ -101,7 +109,6 @@ setup(
         'Topic :: System :: Distributed Computing',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',

@@ -13,7 +13,7 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
-from openfl.utilities.logs import get_memory_usage
+from openfl.utilities.logs import get_memory_usage, write_memory_usage_to_file
 
 
 class DevicePolicy(Enum):
@@ -82,7 +82,6 @@ class Collaborator:
         compression_pipeline=None,
         db_store_rounds=1,
         log_memory_usage=False,
-        **kwargs,
     ):
         """Initialize the Collaborator object.
 
@@ -104,7 +103,6 @@ class Collaborator:
                 Defaults to None.
             db_store_rounds (int, optional): The number of rounds to store in
                 the database. Defaults to 1.
-            **kwargs: Variable length argument list.
         """
         self.single_col_cert_common_name = None
 
@@ -183,6 +181,9 @@ class Collaborator:
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
             self.logger.info(f"Publish memory usage: {memory_details}")
+            write_memory_usage_to_file(
+                memory_details, f"{self.collaborator_name}_memory_usage.json"
+            )
 
         self.logger.info("End of Federation reached. Exiting...")
 
