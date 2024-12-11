@@ -40,9 +40,9 @@ network:
     agg_port: 59583
     cert_folder: cert
     client_reconnect_interval: 5
-    disable_client_auth: false
+    require_client_auth: false
     hash_salt: auto
-    tls: true
+    use_tls: true
   template: openfl.federation.Network
 task_runner:
   settings: {}
