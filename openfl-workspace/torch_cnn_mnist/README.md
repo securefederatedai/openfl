@@ -1,22 +1,21 @@
 ## Instantiating a Workspace from Torch Template
 To instantiate a workspace from the torch_cnn_mnist template, you can use the fx workspace create command. This allows you to quickly set up a new workspace based on a predefined configuration and template.
+
 1. Ensure the necessary dependencies are installed.
-"""
+```
 pip install virtualenv
 mkdir ~/openfl-quickstart
 virtualenv ~/openfl-quickstart/venv
 source ~/openfl-quickstart/venv/bin/activate
 pip install openfl
-"""
+```
 2. Creating the Workspace Folder
 
-"""
+```
 cd ~/openfl-quickstart
 fx workspace create --template torch_template --prefix fl_workspace
 cd ~/openfl-quickstart/fl_workspace
-"""
-
-Here’s a step-by-step guide on how to do this:
+```
 
 ## Directory Structure
 The taskrunner workspace has the following file structure:
@@ -36,27 +35,28 @@ taskrunner
 ```
 
 ## Directory Breakdown:
-* requirements.txt: This file lists all the Python dependencies required to run the TaskRunner API and its components. Ensure you install these dependencies by running pip install -r requirements.txt.
+* requirements.txt: Lists all the Python dependencies required to run the TaskRunner API and its components. Ensure you install these dependencies by running pip install -r requirements.txt.
 * plan: Contains configuration files for federated learning:
     - plan.yaml: The main Federated Learning plan declaration, defining the structure of the federated learning workflow.
     - cols.yaml: A list of authorized collaborators for the federated learning task.
     - data.yaml: Specifies the path to the data set for each collaborator.
     - defaults: Path to the default configuration values for the federated learning plan.
-* src: This directory contains the Python modules used for federated learning:
+* src: Contains the Python modules used for federated learning:
     - init.py: Marks the src directory as a Python package, allowing you to import modules within the directory.
     - cnn_model.py: Defines the Convolutional Neural Network (CNN) model for federated learning.
     - dataloader.py: A module responsible for loading and processing datasets for the federated learning task.
     - taskrunner.py: The core task runner module that manages the execution of federated learning tasks.
 
 ## Defining the Data Loader
-The data loader in OpenFL is responsible for batching and iterating through the dataset that will be used for local training and validation on each collaborator node. The PyTorchMNISTInMemory class is designed to handle the MNIST dataset, ensuring it is properly loaded and preprocessed for federated learning experiments.
+The data loader in OpenFL is responsible for batching and iterating through the dataset that will be used for local training and validation on each collaborator node. The PyTorchMNISTInMemory class is responsible for batching and iterating through the MNIST data set, additionally sharded "on the fly".
 
 To customize the PyTorchMNISTInMemory class, you need to implement the load_mnist_shard() function to process the dataset available at data_path on the local file system. The data_path parameter represents the data shard number used by the collaborator. This setup allows each collaborator to work with a specific subset of the data, facilitating distributed training.
 
 The load_mnist_shard() function is responsible for loading the MNIST dataset, dividing it into training and validation sets, and applying necessary transformations. The data is then batched and made ready for the training process.
 
-# Modify the dataloader to support "bring your own data"
+# Modify the dataloader to support "Bring Your Own Data"
 You can either try to implement the placeholders by yourself, or get the solution from [dataloader.py](https://github.com/securefederatedai/openfl-contrib/blob/main/openfl_contrib_tutorials/ml_to_fl/federated/src/dataloader.py)
+Also, update the data loader class name in plan.yaml accordingly.
 
 ```
 import numpy as np
@@ -67,7 +67,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from src.cnn_model import DigitRecognizerCNN, train_epoch, validate
 
-class TemplateDataLoader(PyTorchDataLoader):
+class MNISTShardDataLoader(PyTorchDataLoader):
 
     def __init__(self, data_path, batch_size, **kwargs):
         super().__init__(batch_size, **kwargs)
@@ -190,7 +190,7 @@ fx aggregator start & fx collaborator start -n collaborator1 & fx collaborator s
 
 A successful local simulation of the FL workspace involves the aggregator and collaborators completing a round of training, saving the best-performing model under save/best.pbuf, and exiting with a unanimous “End of Federation reached…”:
 
-## output
+## Sample output
 ```
 INFO     Round: 1, Collaborators that have completed all tasks: ['collaborator2', 'collaborator1']                                 
     METRIC   {'metric_origin': 'aggregator', 'task_name': 'aggregated_model_validation', 'metric_name': 'accuracy', 'metric_value':
