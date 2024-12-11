@@ -11,7 +11,7 @@ import os
 import psutil
 from rich.console import Console
 from rich.logging import RichHandler
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 
 def write_metric(node_name, task_name, metric_name, metric, round_number):
