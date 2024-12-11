@@ -228,8 +228,9 @@ class ModelOwner():
         self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
 
         try:
-            # Straightforward writing to the yaml file is not recommended here
-            # As the file might contain spaces and tabs which can cause issues
+            # Open the file and add the entries from scratch.
+            # This way even if there is a mismatch with some models having it blank
+            # and others having values, it will be consistent
             with open(cols_file, "r", encoding="utf-8") as f:
                 doc = yaml.load(f, Loader=yaml.FullLoader)
 
