@@ -6,6 +6,7 @@ license agreement between Intel Corporation and you.
 """
 from logging import getLogger
 from typing import Optional
+from typing import Iterator
 from typing import Tuple
 from typing import Union
 
@@ -55,7 +56,7 @@ class NLPDataLoader(KerasDataLoader):
         """Get the shape of an example feature array."""
         return self.X_train[0].shape
 
-    def get_train_loader(self, batch_size: Optional[int] = None):
+    def get_train_loader(self, batch_size: Optional[int] = None) -> Iterator[Tuple[np.ndarray]]:
         """
         Get training data loader.
 
@@ -66,7 +67,7 @@ class NLPDataLoader(KerasDataLoader):
         return self._get_batch_generator(X1=self.X_train[0], X2=self.X_train[1],
                                          y=self.y_train, batch_size=batch_size)
 
-    def get_valid_loader(self, batch_size: Optional[int] = None):
+    def get_valid_loader(self, batch_size: Optional[int] = None) -> Iterator[Tuple[np.ndarray]]:
         """
         Get validation data loader.
 
@@ -98,7 +99,7 @@ class NLPDataLoader(KerasDataLoader):
     def _batch_generator(X1: np.ndarray, X2: np.ndarray,
                          y: np.ndarray, idxs: np.ndarray,
                          batch_size: int,
-                         num_batches: int):
+                         num_batches: int) -> Iterator[Tuple[np.ndarray]]:
         """
         Generate batch of data.
 
