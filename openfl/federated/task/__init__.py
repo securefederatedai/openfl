@@ -19,6 +19,7 @@ if util.find_spec("tensorflow") is not None:
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA
     from openfl.federated.task.runner_tf import TensorFlowTaskRunner  # NOQA
+    from openfl.federated.task.runner_keras_tf import KerasTensorFlowTaskRunner  # NOQA
 if util.find_spec("torch") is not None:
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_pt import PyTorchTaskRunner  # NOQA

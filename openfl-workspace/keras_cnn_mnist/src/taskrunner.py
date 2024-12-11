@@ -8,10 +8,10 @@ from keras.layers import Conv2D
 from keras.layers import Dense
 from keras.layers import Flatten
 
-from openfl.federated import KerasTaskRunner
+from openfl.federated import KerasTensorFlowTaskRunner
 
 
-class KerasCNN(KerasTaskRunner):
+class KerasCNN(KerasTensorFlowTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, **kwargs):
