@@ -15,7 +15,7 @@ locally_tuned_model_validation:
       - acc
 
 train:
-  function : train_batches
+  function : train
   kwargs   :
     batch_size  : 32
     metrics     :

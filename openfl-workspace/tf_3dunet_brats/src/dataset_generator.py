@@ -277,6 +277,8 @@ class DatasetGenerator:
         self.num_val = int(numvaltest * self.validate_test_split)
         self.num_test = self.num_train - self.num_val
         ds_val = ds_val_test.take(self.num_val)
+        print("ds_val 1",ds_val)
+        print("*"*100)
         ds_test = ds_val_test.skip(self.num_val)
 
         ds_train = ds_train.map(lambda x: tf.py_function(self.read_nifti_file,
@@ -285,6 +287,8 @@ class DatasetGenerator:
         ds_val = ds_val.map(lambda x: tf.py_function(self.read_nifti_file,
                                                      [x, False], [tf.float32, tf.float32]),
                             num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        print("ds_val 2",ds_val)
+        print("*"*100)
         ds_test = ds_test.map(lambda x: tf.py_function(self.read_nifti_file,
                                                        [x, False], [tf.float32, tf.float32]),
                               num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -295,9 +299,15 @@ class DatasetGenerator:
         batch_size_val = max(1, self.batch_size // 2)    # Could be any batch size you'd like
         ds_val = ds_val.batch(batch_size_val, drop_remainder=True)
         ds_val = ds_val.prefetch(tf.data.experimental.AUTOTUNE)
-
+        print("ds_val 3",ds_val)
+        print("*"*100)
         batch_size_test = max(1, self.batch_size // 2)   # Could be any batch size you'd like
         ds_test = ds_test.batch(batch_size_test, drop_remainder=True)
         ds_test = ds_test.prefetch(tf.data.experimental.AUTOTUNE)
+        print("type(ds_val)",type(ds_val))
+        for ds in ds_val:
+            # print(ds)
+            print("type(ds)",type(ds))
+            print("shape(ds)",ds[0].shape)
 
         return ds_train, ds_val, ds_test

@@ -3,15 +3,13 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow.compat.v1 as tf # might not work
-import Keras
+import tensorflow as tf
+import keras
 
-from openfl.federated import TensorFlowTaskRunner
-
-tf.disable_v2_behavior()
+from openfl.federated import KerasTaskRunner
 
 
-class TensorFlow2DUNet(TensorFlowTaskRunner):
+class TensorFlow2DUNet(KerasTaskRunner):
     """Initialize.
 
     Args:
@@ -43,92 +41,140 @@ class TensorFlow2DUNet(TensorFlowTaskRunner):
             **kwargs: Additional parameters to pass to the function
 
         """
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        config.intra_op_parallelism_threads = 112
-        config.inter_op_parallelism_threads = 1
-        self.sess = tf.Session(config=config)
+        self.input_shape = self.data_loader.get_feature_shape()
+        self.model = self.define_model(self.input_shape, use_upsampling=True, **kwargs)
+        self.model.summary(print_fn=self.logger.info, line_length=120)
 
-        self.X = tf.placeholder(tf.float32, self.input_shape)
-        self.y = tf.placeholder(tf.float32, self.input_shape)
-        self.output = define_model(self.X, use_upsampling=True, **kwargs)
+    def define_model(self, input_shape,
+                use_upsampling=False,
+                n_cl_out=1,
+                dropout=0.2,
+                print_summary=True,
+                activation_function='relu',
+                seed=0xFEEDFACE,
+                depth=5,
+                dropout_at=None,
+                initial_filters=32,
+                batch_norm=True,
+                **kwargs):
+        """Define the TensorFlow model.
 
-        self.loss = dice_coef_loss(self.y, self.output, smooth=training_smoothing)
-        self.loss_name = dice_coef_loss.__name__
-        self.validation_metric = dice_coef(
-            self.y, self.output, smooth=validation_smoothing)
-        self.validation_metric_name = dice_coef.__name__
+        Args:
+            input_shape: input shape of the model
+            use_upsampling (bool): True = use bilinear interpolation;
+                                False = use transposed convolution (Default=False)
+            n_cl_out (int): Number of channels in input layer (Default=1)
+            dropout (float): Dropout percentage (Default=0.2)
+            print_summary (bool): True = print the model summary (Default = True)
+            activation_function: The activation function to use after convolutional
+            layers (Default='relu')
+            seed: random seed (Default=0xFEEDFACE)
+            depth (int): Number of max pooling layers in encoder (Default=5)
+            dropout_at: Layers to perform dropout after (Default=[2,3])
+            initial_filters (int): Number of filters in first convolutional
+            layer (Default=32)
+            batch_norm (bool): True = use batch normalization (Default=True)
+            **kwargs: Additional parameters to pass to the function
 
-        self.global_step = tf.train.get_or_create_global_step()
+        """
+        if dropout_at is None:
+            dropout_at = [2, 3]
 
-        self.tvars = tf.trainable_variables()
+        inputs = keras.layers.Input(shape=input_shape, name='Images')
 
-        self.optimizer = tf.train.RMSPropOptimizer(1e-2)
+        if activation_function == 'relu':
+            activation = tf.nn.relu
+        elif activation_function == 'leakyrelu':
+            activation = tf.nn.leaky_relu
 
-        self.gvs = self.optimizer.compute_gradients(self.loss, self.tvars)
-        self.train_step = self.optimizer.apply_gradients(self.gvs,
-                                                         global_step=self.global_step)
+        params = {
+            'activation': activation,
+            'data_format': data_format,
+            'kernel_initializer': keras.initializers.he_uniform(seed=seed),
+            'kernel_size': (3, 3),
+            'padding': 'same',
+        }
 
-        self.opt_vars = self.optimizer.variables()
+        convb_layers = {}
 
-        # FIXME: Do we really need to share the opt_vars?
-        # Two opt_vars for one tvar: gradient and square sum for RMSprop.
-        self.fl_vars = self.tvars + self.opt_vars
+        net = inputs
+        filters = initial_filters
+        for i in range(depth):
+            name = f'conv{i + 1}a'
+            net = keras.layers.Conv2D(name=name, filters=filters, **params)(net)
+            if i in dropout_at:
+                net = keras.layers.Dropout(dropout)(net)
+            name = f'conv{i + 1}b'
+            net = keras.layers.Conv2D(name=name, filters=filters, **params)(net)
+            if batch_norm:
+                net = keras.layers.BatchNormalization()(net)
+            convb_layers[name] = net
+            # only pool if not last level
+            if i != depth - 1:
+                name = f'pool{i + 1}'
+                net = keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
+                filters *= 2
 
-        self.initialize_globals()
+        # do the up levels
+        filters //= 2
+        for i in range(depth - 1):
+            if use_upsampling:
+                up = keras.layers.UpSampling2D(
+                    name=f'up{depth + i + 1}', size=(2, 2))(net)
+            else:
+                up = keras.layers.Conv2DTranspose(
+                    name='transConv6', filters=filters, data_format=data_format,
+                    kernel_size=(2, 2), strides=(2, 2), padding='same')(net)
+            net = keras.layers.concatenate(
+                [up, convb_layers[f'conv{depth - i - 1}b']],
+                axis=concat_axis
+            )
+            net = keras.layers.Conv2D(
+                name=f'conv{depth + i + 1}a',
+                filters=filters, **params)(net)
+            net = keras.layers.Conv2D(
+                name=f'conv{depth + i + 1}b',
+                filters=filters, **params)(net)
+            filters //= 2
+        net = keras.layers.Conv2D(name='Mask', filters=n_cl_out,
+                                    kernel_size=(1, 1), data_format=data_format,
+                                    activation='sigmoid')(net)
+        model = keras.models.Model(inputs=[inputs], outputs=[net])
 
 
-def dice_coef(y_true, y_pred, smooth=1.0, **kwargs):
-    """Dice coefficient.
+        self.optimizer = keras.optimizers.RMSprop(1e-2)
+        model.compile(
+            loss=self.dice_coef_loss,
+            optimizer=self.optimizer,
+            metrics=["acc"],
+        )
 
-    Calculate the Dice Coefficient
+        return model
 
-    Args:
-        y_true: Ground truth annotation array
-        y_pred: Prediction array from model
-        smooth (float): Laplace smoothing factor (Default=1.0)
-        **kwargs: Additional parameters to pass to the function
+    def dice_coef_loss(self, y_true, y_pred):
+        """Dice coefficient loss.
 
-    Returns:
-        float: Dice cofficient metric
+        Calculate the -log(Dice Coefficient) loss
 
-    """
-    intersection = tf.reduce_sum(y_true * y_pred, axis=[1, 2, 3])
-    coef = (
-        (tf.constant(2.) * intersection + tf.constant(smooth))
-        / (tf.reduce_sum(y_true, axis=[1, 2, 3])
-           + tf.reduce_sum(y_pred, axis=[1, 2, 3]) + tf.constant(smooth))
-    )
-    return tf.reduce_mean(coef)
+        Args:
+            y_true: Ground truth annotation array
+            y_pred: Prediction array from model
+            smooth (float): Laplace smoothing factor (Default=1.0)
+        Returns:
+            float: -log(Dice cofficient) metric
+        """
+        intersection = tf.reduce_sum(y_true * y_pred, axis=(1, 2, 3))
+        smooth=1.0
+        term1 = -tf.math.log(tf.constant(2.0) * intersection + smooth)
+        term2 = tf.math.log(tf.reduce_sum(y_true, axis=(1, 2, 3))
+                    + tf.reduce_sum(y_pred, axis=(1, 2, 3)) + smooth)
 
+        term1 = tf.reduce_mean(term1)
+        term2 = tf.reduce_mean(term2)
 
-def dice_coef_loss(y_true, y_pred, smooth=1.0, **kwargs):
-    """Dice coefficient loss.
+        loss = term1 + term2
 
-    Calculate the -log(Dice Coefficient) loss
-
-    Args:
-        y_true: Ground truth annotation array
-        y_pred: Prediction array from model
-        smooth (float): Laplace smoothing factor (Default=1.0)
-        **kwargs: Additional parameters to pass to the function
-
-    Returns:
-        float: -log(Dice cofficient) metric
-
-    """
-    intersection = tf.reduce_sum(y_true * y_pred, axis=(1, 2, 3))
-
-    term1 = -tf.log(tf.constant(2.0) * intersection + smooth)
-    term2 = tf.log(tf.reduce_sum(y_true, axis=(1, 2, 3))
-                   + tf.reduce_sum(y_pred, axis=(1, 2, 3)) + smooth)
-
-    term1 = tf.reduce_mean(term1)
-    term2 = tf.reduce_mean(term2)
-
-    loss = term1 + term2
-
-    return loss
+        return loss
 
 
 CHANNEL_LAST = True
@@ -139,113 +185,3 @@ else:
     concat_axis = 1
     data_format = 'channels_first'
 
-# Keras.backend.set_image_data_format(data_format)
-
-
-def define_model(input_tensor,
-                 use_upsampling=False,
-                 n_cl_out=1,
-                 dropout=0.2,
-                 print_summary=True,
-                 activation_function='relu',
-                 seed=0xFEEDFACE,
-                 depth=5,
-                 dropout_at=None,
-                 initial_filters=32,
-                 batch_norm=True,
-                 **kwargs):
-    """Define the TensorFlow model.
-
-    Args:
-        input_tensor: input shape ot the model
-        use_upsampling (bool): True = use bilinear interpolation;
-                               False = use transposed convolution (Default=False)
-        n_cl_out (int): Number of channels in input layer (Default=1)
-        dropout (float): Dropout percentage (Default=0.2)
-        print_summary (bool): True = print the model summary (Default = True)
-        activation_function: The activation function to use after convolutional
-         layers (Default='relu')
-        seed: random seed (Default=0xFEEDFACE)
-        depth (int): Number of max pooling layers in encoder (Default=5)
-        dropout_at: Layers to perform dropout after (Default=[2,3])
-        initial_filters (int): Number of filters in first convolutional
-         layer (Default=32)
-        batch_norm (bool): True = use batch normalization (Default=True)
-        **kwargs: Additional parameters to pass to the function
-
-    """
-    if dropout_at is None:
-        dropout_at = [2, 3]
-    # Set keras learning phase to train
-    Keras.backend.set_learning_phase(True)
-
-    # Don't initialize variables on the fly
-    Keras.backend.manual_variable_initialization(False)
-
-    inputs = Keras.layers.Input(tensor=input_tensor, name='Images')
-
-    if activation_function == 'relu':
-        activation = tf.nn.relu
-    elif activation_function == 'leakyrelu':
-        activation = tf.nn.leaky_relu
-
-    params = {
-        'activation': activation,
-        'data_format': data_format,
-        'kernel_initializer': Keras.initializers.he_uniform(seed=seed),
-        'kernel_size': (3, 3),
-        'padding': 'same',
-    }
-
-    convb_layers = {}
-
-    net = inputs
-    filters = initial_filters
-    for i in range(depth):
-        name = f'conv{i + 1}a'
-        net = Keras.layers.Conv2D(name=name, filters=filters, **params)(net)
-        if i in dropout_at:
-            net = Keras.layers.Dropout(dropout)(net)
-        name = f'conv{i + 1}b'
-        net = Keras.layers.Conv2D(name=name, filters=filters, **params)(net)
-        if batch_norm:
-            net = Keras.layers.BatchNormalization()(net)
-        convb_layers[name] = net
-        # only pool if not last level
-        if i != depth - 1:
-            name = f'pool{i + 1}'
-            net = Keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
-            filters *= 2
-
-    # do the up levels
-    filters //= 2
-    for i in range(depth - 1):
-        if use_upsampling:
-            up = Keras.layers.UpSampling2D(
-                name=f'up{depth + i + 1}', size=(2, 2))(net)
-        else:
-            up = Keras.layers.Conv2DTranspose(
-                name='transConv6', filters=filters, data_format=data_format,
-                kernel_size=(2, 2), strides=(2, 2), padding='same')(net)
-        net = Keras.layers.concatenate(
-            [up, convb_layers[f'conv{depth - i - 1}b']],
-            axis=concat_axis
-        )
-        net = Keras.layers.Conv2D(
-            name=f'conv{depth + i + 1}a',
-            filters=filters, **params)(net)
-        net = Keras.layers.Conv2D(
-            name=f'conv{depth + i + 1}b',
-            filters=filters, **params)(net)
-        filters //= 2
-
-    net = Keras.layers.Conv2D(name='Mask', filters=n_cl_out,
-                                 kernel_size=(1, 1), data_format=data_format,
-                                 activation='sigmoid')(net)
-
-    model = Keras.models.Model(inputs=[inputs], outputs=[net])
-
-    if print_summary:
-        print(model.summary())
-
-    return net

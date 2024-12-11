@@ -7,7 +7,7 @@
 import os
 
 from openfl.federated import TensorFlowDataLoader
-from .data_generator import DatasetGenerator
+from .dataset_generator import DatasetGenerator
 
 
 class TensorFlowBratsDataLoader(TensorFlowDataLoader):

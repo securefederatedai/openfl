@@ -99,7 +99,4 @@ class TensorFlowCNN(KerasTaskRunner):
         self.opt_vars = self.optimizer.variables
         print(f'optimizer vars: {self.opt_vars}')
 
-        # Two opt_vars for one tvar: gradient and square sum for RMSprop.
-        self.fl_vars = self.tvars + self.opt_vars
-
         return model
