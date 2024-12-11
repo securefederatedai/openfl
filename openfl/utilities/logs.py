@@ -11,6 +11,21 @@ import os
 import psutil
 from rich.console import Console
 from rich.logging import RichHandler
+from torch.utils.tensorboard import SummaryWriter
+
+
+def write_metric(node_name, task_name, metric_name, metric, round_number):
+    """Write metric callback.
+    This function logs a metric to TensorBoard.
+    Args:
+        node_name (str): The name of the node.
+        task_name (str): The name of the task.
+        metric_name (str): The name of the metric.
+        metric (float): The value of the metric.
+        round_number (int): The current round number.
+    """
+    writer = SummaryWriter("./logs/tensorboard", flush_secs=5)
+    writer.add_scalar(f"{node_name}/{task_name}/{metric_name}", metric, round_number)
 
 
 def setup_loggers(log_level=logging.INFO):
