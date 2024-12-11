@@ -79,9 +79,9 @@ setup(
     setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],  # ensure it is in-sync with `install_requires`
     install_requires=[
         'click',
+        'psutil',
         'pyyaml',
         'rich',
-        'psutil',
         'dynaconf',
         'tqdm',
         'numpy',

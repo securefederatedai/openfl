@@ -4,8 +4,8 @@
 
 """Collaborator module."""
 
+import logging
 from enum import Enum
-from logging import getLogger
 from time import sleep
 from typing import List, Optional, Tuple
 
@@ -14,6 +14,8 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
+
+logger = logging.getLogger(__name__)
 
 
 class DevicePolicy(Enum):
@@ -129,21 +131,17 @@ class Collaborator:
 
         self.task_config = task_config
 
-        self.logger = getLogger(__name__)
-
         # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
+            logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
             raise NotImplementedError(f"Unknown opt_treatment: {opt_treatment}.")
 
         if hasattr(DevicePolicy, device_assignment_policy):
             self.device_assignment_policy = DevicePolicy[device_assignment_policy]
         else:
-            self.logger.error(
-                "Unknown device_assignment_policy: " f"{device_assignment_policy.name}."
-            )
+            logger.error("Unknown device_assignment_policy: " f"{device_assignment_policy.name}.")
             raise NotImplementedError(
                 f"Unknown device_assignment_policy: {device_assignment_policy}."
             )
@@ -182,7 +180,7 @@ class Collaborator:
                 continue
 
             # Round begin
-            self.logger.info("Received Tasks: %s", tasks)
+            logger.info("Received Tasks: %s", tasks)
             self.callbacks.on_round_begin(round_num)
 
             # Run tasks
@@ -195,7 +193,7 @@ class Collaborator:
 
         # Experiment end
         self.callbacks.on_experiment_end()
-        self.logger.info("Received shutdown signal. Exiting...")
+        logger.info("Received shutdown signal. Exiting...")
 
     def run_simulation(self):
         """Specific function for the simulation.
@@ -206,15 +204,15 @@ class Collaborator:
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
-                self.logger.info("End of Federation reached. Exiting...")
+                logger.info("End of Federation reached. Exiting...")
                 break
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
             else:
-                self.logger.info("Received the following tasks: %s", tasks)
+                logger.info("Received the following tasks: %s", tasks)
                 for task in tasks:
                     self.do_task(task, round_number)
-                self.logger.info(
+                logger.info(
                     f"All tasks completed on {self.collaborator_name} "
                     f"for round {round_number}..."
                 )
@@ -230,7 +228,7 @@ class Collaborator:
              time_to_quit (bool): bool value for quit.
         """
         # logging wait time to analyze training process
-        self.logger.info("Waiting for tasks...")
+        logger.info("Waiting for tasks...")
         tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
             self.collaborator_name
         )
@@ -298,7 +296,7 @@ class Collaborator:
             # New interactive python API
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
-            self.logger.debug("Using Interactive Python API")
+            logger.debug("Using Interactive Python API")
 
             # So far 'kwargs' contained parameters read from the plan
             # those are parameters that the eperiment owner registered for
@@ -316,7 +314,7 @@ class Collaborator:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
-            self.logger.debug("Using TaskRunner subclassing API")
+            logger.debug("Using TaskRunner subclassing API")
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -355,13 +353,13 @@ class Collaborator:
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
-        self.logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
+        logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
         nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
 
         # if None and origin is our client, request it from the client
         if nparray is None:
             if origin == self.collaborator_name:
-                self.logger.info(
+                logger.info(
                     f"Attempting to find locally stored {tensor_name} tensor from prior round..."
                 )
                 prior_round = round_number - 1
@@ -370,16 +368,14 @@ class Collaborator:
                         TensorKey(tensor_name, origin, prior_round, report, tags)
                     )
                     if nparray is not None:
-                        self.logger.debug(
+                        logger.debug(
                             f"Found tensor {tensor_name} in local TensorDB "
                             f"for round {prior_round}"
                         )
                         return nparray
                     prior_round -= 1
-                self.logger.info(
-                    f"Cannot find any prior version of tensor {tensor_name} locally..."
-                )
-            self.logger.debug(
+                logger.info(f"Cannot find any prior version of tensor {tensor_name} locally...")
+            logger.debug(
                 "Unable to get tensor from local store..." "attempting to retrieve from client"
             )
             # Determine whether there are additional compression related
@@ -407,7 +403,7 @@ class Collaborator:
                     )
                     self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
-                    self.logger.info(
+                    logger.info(
                         "Count not find previous model layer."
                         "Fetching latest layer from aggregator"
                     )
@@ -421,7 +417,7 @@ class Collaborator:
                     tensor_key, require_lossless=True
                 )
         else:
-            self.logger.debug("Found tensor %s in local TensorDB", tensor_key)
+            logger.debug("Found tensor %s in local TensorDB", tensor_key)
 
         return nparray
 
@@ -447,7 +443,7 @@ class Collaborator:
         """
         tensor_name, origin, round_number, report, tags = tensor_key
 
-        self.logger.debug("Requesting aggregated tensor %s", tensor_key)
+        logger.debug("Requesting aggregated tensor %s", tensor_key)
         tensor = self.client.get_aggregated_tensor(
             self.collaborator_name,
             tensor_name,
@@ -487,13 +483,13 @@ class Collaborator:
         if "valid" in task_name:
             data_size = self.task_runner.get_valid_data_size()
 
-        self.logger.debug("%s data size = %s", task_name, data_size)
+        logger.debug("%s data size = %s", task_name, data_size)
 
         for tensor in tensor_dict:
             tensor_name, origin, fl_round, report, tags = tensor
 
             if report:
-                self.logger.metric(
+                logger.info(
                     f"Round {round_number}, collaborator {self.collaborator_name} "
                     f"is sending metric for task {task_name}:"
                     f" {tensor_name}\t{tensor_dict[tensor]:f}"
@@ -589,7 +585,7 @@ class Collaborator:
             named_tensor.report,
             tuple(named_tensor.tags),
         )
-        tensor_name, origin, round_number, report, tags = tensor_key
+        *_, tags = tensor_key
         if "compressed" in tags:
             decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
                 tensor_key,
@@ -604,7 +600,7 @@ class Collaborator:
         else:
             # There could be a case where the compression pipeline is bypassed
             # entirely
-            self.logger.warning("Bypassing tensor codec...")
+            logger.warning("Bypassing tensor codec...")
             decompressed_tensor_key = tensor_key
             decompressed_nparray = raw_bytes
 
