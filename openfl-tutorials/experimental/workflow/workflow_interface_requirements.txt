@@ -1,11 +1,10 @@
-astor==0.8.1
 chardet
 charset-normalizer
 dill==0.3.6
 matplotlib>=2.0.0
 metaflow==2.7.15
 nbdev==2.3.12
-nbformat
+nbformat==5.10.4
 ray==2.9.2
 torch
 torchvision
