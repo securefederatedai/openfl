@@ -66,6 +66,14 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base \
+            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
         run: |
@@ -133,6 +141,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install -r test-requirements.txt
+
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base \
+            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
@@ -202,7 +218,15 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
-      - name: Run Task Runner E2E tests without TLS
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base \
+            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+
+      - name: Run Task Runner E2E tests without Client Auth
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/docker_tests.py \

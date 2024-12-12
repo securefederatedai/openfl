@@ -6,6 +6,7 @@ import logging
 import os
 import json
 
+from tests.end_to_end.utils.common_fixtures import fx_federation
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
@@ -38,36 +39,55 @@ def test_log_memory_usage(request, fx_federation):
 
     # Setup PKI for trusted communication within the federation
     if request.config.use_tls:
-        assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
+        assert fed_helper.setup_pki(
+            fx_federation
+        ), "Failed to setup PKI for trusted communication"
 
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(fx_federation, results, \
-                                num_rounds=request.config.num_rounds), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(
+        fx_federation, results, num_rounds=request.config.num_rounds
+    ), "Federation completion failed"
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = os.path.join(fx_federation.workspace_path, "logs", "aggregator_memory_usage.json")
-    assert os.path.exists(aggregator_memory_usage_file), "Aggregator memory usage file is not available"
+    aggregator_memory_usage_file = os.path.join(
+        fx_federation.workspace_path,
+        "aggregator",
+        "workspace",
+        "logs",
+        "aggregator_memory_usage.json",
+    )
+    assert os.path.exists(
+        aggregator_memory_usage_file
+    ), "Aggregator memory usage file is not available"
 
     # Log the aggregator memory usage details
     memory_usage_dict = json.load(open(aggregator_memory_usage_file))
 
     # check memory usage entries for each round
-    assert len(memory_usage_dict) == request.config.num_rounds, \
-                "Memory usage details are not available for all rounds"
+    assert (
+        len(memory_usage_dict) == request.config.num_rounds
+    ), "Memory usage details are not available for all rounds"
 
     # check memory usage entries for each collaborator
     for collaborator in fx_federation.collaborators:
-        collaborator_memory_usage_file = os.path.join(fx_federation.workspace_path,
-                                                      "logs",
-                                                      f"{collaborator.collaborator_name}_memory_usage.json")
+        collaborator_memory_usage_file = os.path.join(
+            fx_federation.workspace_path,
+            collaborator.name,
+            "workspace",
+            "logs",
+            f"{collaborator.collaborator_name}_memory_usage.json",
+        )
 
-        assert os.path.exists(collaborator_memory_usage_file), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"
+        assert os.path.exists(
+            collaborator_memory_usage_file
+        ), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"
 
         memory_usage_dict = json.load(open(collaborator_memory_usage_file))
 
-        assert len(memory_usage_dict) == request.config.num_rounds, \
-                f"Memory usage details are not available for all rounds for collaborator {collaborator.collaborator_name}"
+        assert (
+            len(memory_usage_dict) == request.config.num_rounds
+        ), f"Memory usage details are not available for all rounds for collaborator {collaborator.collaborator_name}"
 
     log.info("Memory usage details are available for all participants")

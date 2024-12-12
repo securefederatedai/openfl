@@ -8,7 +8,7 @@ This project aims at integration testing of ```openfl-workspace``` using pytest 
 tests/end_to_end
 ├── models                  # Central location for all model-related code for testing purpose
 ├── test_suites             # Folder containing test files
-├── utils                   # Folder containing helper files
+├── utils                   # Folder containing fixture and helper files
 ├── conftest.py             # Pytest framework configuration file
 ├── pytest.ini              # Pytest initialisation file
 └── README.md               # Readme file

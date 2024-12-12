@@ -272,7 +272,7 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
-      - name: Run Task Runner E2E tests without TLS
+      - name: Run Task Runner E2E tests with TLS and memory logs
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
@@ -291,7 +291,7 @@ jobs:
       - name: Tar files
         id: tar_files
         if: ${{ always() }}
-        run: tar -cvf result.tar results
+        run: tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
 
       - name: Upload Artifacts
         id: upload_artifacts
