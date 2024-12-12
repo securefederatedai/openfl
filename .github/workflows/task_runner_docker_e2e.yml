@@ -31,7 +31,6 @@ jobs:
   test_with_tls_docker:
     name: tr_tls_docker
     runs-on:
-      group: ubuntu-runners
       labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
@@ -108,7 +107,6 @@ jobs:
   test_with_non_tls_docker:
     name: tr_non_tls_docker
     runs-on:
-      group: ubuntu-runners
       labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
@@ -185,7 +183,6 @@ jobs:
   test_with_no_client_auth_docker:
     name: tr_no_client_auth_docker
     runs-on:
-      group: ubuntu-runners
       labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
