@@ -69,7 +69,7 @@ jobs:
       - name: Create OpenFL image
         id: create_openfl_image
         run: |
-          echo "Creating openfl image. This may take a few minutes..."
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
           cd openfl-docker
           docker build . -t openfl -f Dockerfile.base \
             --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
@@ -145,7 +145,7 @@ jobs:
       - name: Create OpenFL image
         id: create_openfl_image
         run: |
-          echo "Creating openfl image. This may take a few minutes..."
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
           cd openfl-docker
           docker build . -t openfl -f Dockerfile.base \
             --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
@@ -221,7 +221,7 @@ jobs:
       - name: Create OpenFL image
         id: create_openfl_image
         run: |
-          echo "Creating openfl image. This may take a few minutes..."
+          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
           cd openfl-docker
           docker build . -t openfl -f Dockerfile.base \
             --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
