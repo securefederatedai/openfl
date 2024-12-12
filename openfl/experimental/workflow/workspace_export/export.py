@@ -293,8 +293,8 @@ class WorkspaceExport:
         return instance.generate_experiment_archive()
 
     @classmethod
-    def export_agg_based_workspace(cls, notebook_path: str, output_workspace: str) -> None:
-        """Exports workspace for Aggregator based workflow.
+    def export(cls, notebook_path: str, output_workspace: str) -> None:
+        """Exports workspace to output_workspace.
 
         Args:
             notebook_path (str): Path to the Jupyter notebook.
