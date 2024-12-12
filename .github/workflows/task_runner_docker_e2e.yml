@@ -30,7 +30,9 @@ env:
 jobs:
   test_with_tls_docker:
     name: tr_tls_docker
-    runs-on: ubuntu-22.04
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
       matrix:
@@ -66,6 +68,13 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base
+
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
         run: |
@@ -98,7 +107,9 @@ jobs:
 
   test_with_non_tls_docker:
     name: tr_non_tls_docker
-    runs-on: ubuntu-22.04
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
       matrix:
@@ -134,6 +145,13 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
 
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base
+
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
@@ -166,7 +184,9 @@ jobs:
 
   test_with_no_client_auth_docker:
     name: tr_no_client_auth_docker
-    runs-on: ubuntu-22.04
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
     timeout-minutes: 15
     strategy:
       matrix:
@@ -201,6 +221,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install -r test-requirements.txt
+
+      - name: Create OpenFL image
+        id: create_openfl_image
+        run: |
+          echo "Creating openfl image. This may take a few minutes..."
+          cd openfl-docker
+          docker build . -t openfl -f Dockerfile.base
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
