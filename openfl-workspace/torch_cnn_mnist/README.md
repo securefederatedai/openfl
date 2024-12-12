@@ -57,7 +57,6 @@ The load_mnist_shard() function is responsible for loading the MNIST dataset, di
 # Modify the dataloader to support "Bring Your Own Data"
 You can either try to implement the placeholders by yourself, or get the solution from [dataloader.py](https://github.com/securefederatedai/openfl-contrib/blob/main/openfl_contrib_tutorials/ml_to_fl/federated/src/dataloader.py)
 Also, update the data loader class name in plan.yaml accordingly.
-
 ```
 import numpy as np
 from typing import Iterator, Tuple
@@ -121,6 +120,43 @@ class MNISTDataset(ImageFolder):
         else:
             return super(MNISTDataset, self).__getitem__(index)
 ```
+Use a pre-sharded version of the standard MNIST dataset (divided among two data owners). The pre-sharded dataset can be downloaded from [mnist_data_shards.tar.gz](https://github.com/securefederatedai/openfl-contrib/blob/main/openfl_contrib_tutorials/ml_to_fl/federated/mnist_data_shards.tar.gz). 
+
+Copy the dataset bundle to the root of the FL workspace and unpack it:
+```
+cp mnist_data_shards.tar.gz ~/openfl-quickstart/fl_workspace
+cd ~/openfl-quickstart/fl_workspace
+tar -xvf mnist_data_shards.tar.gz
+rm mnist_data_shards.tar.gz
+```
+This will populate the ```/data``` folder of the FL workspace with two shards (data/1 and data/2) of labeled MNIST images of digits (the 0–9 labels being encoded in the sub-folder names). 
+```
+data
+├── 1
+    └── mnist_images
+        └── 0
+        └── 1
+        └── 2
+        └── 3
+        └── 4
+        └── 5
+        └── 6
+        └── 7
+        └── 8
+        └── 9
+├── 2
+    └── mnist_images
+        └── 0
+        └── 1
+        └── 2
+        └── 3
+        └── 4
+        └── 5
+        └── 6
+        └── 7
+        └── 8
+        └── 9
+```
 
 ## Defining the Task Runner
 The Task Runner class defines the actual computational tasks of the FL experiment (such as local training and validation). We can implement the placeholders of the TemplateTaskRunner class (src/taskrunner.py) by importing the DigitRecognizerCNN model, as well as the train_epoch() and validate() helper functions from the centralized ML script. The template also provides placeholders for providing custom optimizer and loss function objects.
@@ -138,7 +174,7 @@ fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
 We can now perform a test run with the following commands for creating a local PKI setup and starting the aggregator and the collaborators on the same machine:
 
 ```
-cd ~/openfl/openfl-tutorials/taskrunner/
+cd ~/openfl-quickstart/fl_workspace
 
 # This will create a local certificate authority (CA), so the participants communicate over a secure TLS Channel
 fx workspace certify
