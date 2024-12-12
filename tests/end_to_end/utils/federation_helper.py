@@ -27,8 +27,9 @@ def setup_pki(fed_obj):
         bool: True if successful, else False
     """
     # PKI setup for aggregator is done at fixture level
-    local_agg_ws_path = os.path.join(fed_obj.local_bind_path, "aggregator", "workspace")
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(fed_obj.workspace_path)
 
+    test_env = os.getenv("TEST_ENV")
     executor = concurrent.futures.ThreadPoolExecutor()
 
     # Performing all the operations step by step
@@ -53,7 +54,7 @@ def setup_pki(fed_obj):
         results = [
             executor.submit(
                 copy_file_between_participants,
-                local_src_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace"),
+                local_src_path=constants.COL_WORKSPACE_PATH.format(fed_obj.local_bind_path, collaborator.name),
                 local_dest_path=local_agg_ws_path,
                 file_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
             )
@@ -82,7 +83,7 @@ def setup_pki(fed_obj):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=local_agg_ws_path,
-                local_dest_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace"),
+                local_dest_path=constants.COL_WORKSPACE_PATH.format(fed_obj.local_bind_path, collaborator.name),
                 file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
             )
             for collaborator in fed_obj.collaborators
@@ -93,36 +94,42 @@ def setup_pki(fed_obj):
         raise e
 
     # Import and certify the CSR for all the collaborators
-    try:
-        results = [
-            executor.submit(
-                collaborator.import_pki,
-                zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
-            )
-            for collaborator in fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception("Failed to import and certify the CSR for one or more collaborators")
-    except Exception as e:
-        raise e
+    if test_env == "dockerized_ws":
+        log.info("Do this")
+        # Pack the collaborator's private key, signed cert, and data.yaml into a tarball
+        # Cleanup tar and zip files
+        # Create signed cert for aggregator
+    else:
+        try:
+            results = [
+                executor.submit(
+                    collaborator.import_pki,
+                    zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
+                )
+                for collaborator in fed_obj.collaborators
+            ]
+            if not all([f.result() for f in results]):
+                raise Exception("Failed to import and certify the CSR for one or more collaborators")
+        except Exception as e:
+            raise e
 
-    # Copy the cols.yaml file from aggregator to all the collaborators
-    # File cols.yaml is updated after PKI setup
-    try:
-        results = [
-            executor.submit(
-                copy_file_between_participants,
-                local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=os.path.join(fed_obj.local_bind_path, collaborator.name, "workspace", "plan"),
-                file_name="cols.yaml",
-                run_with_sudo=True,
-            )
-            for collaborator in fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception("Failed to copy cols.yaml file from aggregator to one or more collaborators")
-    except Exception as e:
-        raise e
+        # Copy the cols.yaml file from aggregator to all the collaborators
+        # File cols.yaml is updated after PKI setup
+        try:
+            results = [
+                executor.submit(
+                    copy_file_between_participants,
+                    local_src_path=os.path.join(local_agg_ws_path, "plan"),
+                    local_dest_path=constants.COL_PLAN_PATH.format(fed_obj.local_bind_path, collaborator.name),
+                    file_name="cols.yaml",
+                    run_with_sudo=True,
+                )
+                for collaborator in fed_obj.collaborators
+            ]
+            if not all([f.result() for f in results]):
+                raise Exception("Failed to copy cols.yaml file from aggregator to one or more collaborators")
+        except Exception as e:
+            raise e
 
     return True
 
@@ -154,35 +161,41 @@ def run_federation(fed_obj):
     Returns:
         list: List of response files for all the participants
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
-    # Install dependencies on collaborators
-    # This is a time taking process, thus doing at this stage after all verification is done
-    log.info("Installing dependencies on collaborators. This might take some time...")
-    futures = [
-        executor.submit(
-            participant.install_dependencies
-        )
-        for participant in fed_obj.collaborators
-    ]
-    results = [f.result() for f in futures]
-    log.info(f"Results from all the collaborators for installation of dependencies: {results}")
+    test_env = os.getenv("TEST_ENV")
+    if test_env == "dockerized_ws":
+        # Load workspace image
+        # Run aggregator and collaborator containers
+        log.info("Loading workspace image")
+    else:
+        executor = concurrent.futures.ThreadPoolExecutor()
+        # Install dependencies on collaborators
+        # This is a time taking process, thus doing at this stage after all verification is done
+        log.info("Installing dependencies on collaborators. This might take some time...")
+        futures = [
+            executor.submit(
+                participant.install_dependencies
+            )
+            for participant in fed_obj.collaborators
+        ]
+        results = [f.result() for f in futures]
+        log.info(f"Results from all the collaborators for installation of dependencies: {results}")
 
-    if not all(results):
-        raise Exception("Failed to install dependencies on one or more collaborators")
+        if not all(results):
+            raise Exception("Failed to install dependencies on one or more collaborators")
 
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start,
-            os.path.join(fed_obj.workspace_path, participant.name, "workspace", f"{participant.name}.log")
-        )
-        for participant in fed_obj.collaborators + [fed_obj.aggregator]
-    ]
+        # As the collaborators will wait for aggregator to start, we need to start them in parallel.
+        futures = [
+            executor.submit(
+                participant.start,
+                constants.AGG_COL_RESULT_FILE.format(fed_obj.workspace_path, participant.name),
+            )
+            for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        ]
 
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise Exception("Failed to start one or more participants")
+        # Result will contain response files for all the participants.
+        results = [f.result() for f in futures]
+        if not all(results):
+            raise Exception("Failed to start one or more participants")
     return results
 
 
@@ -239,8 +252,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
 
     # In case of docker environment, get the logs from local path which is mounted to the container
     if os.getenv("TEST_ENV") == "docker":
-        result_file_name = os.path.basename(result_file)
-        result_file = os.path.join(local_bind_path, participant.name, "workspace", result_file_name)
+        result_file = constants.AGG_COL_RESULT_FILE.format(local_bind_path, participant.name)
 
     log.info(f"Result file is: {result_file}")
 
@@ -281,7 +293,14 @@ def federation_env_setup_and_validate(request):
     """
     # Determine the test type based on the markers
     markers = [m.name for m in request.node.iter_markers()]
-    os.environ["TEST_ENV"] = test_env = "docker" if "docker" in markers else "task_runner"
+    if "docker" in markers:
+        test_env = "docker"
+    elif "dockerized_ws" in markers:
+        test_env = "dockerized_ws"
+    else:
+        test_env = "task_runner" # default test environment
+
+    os.environ["TEST_ENV"] = test_env
 
     # Validate the model name and create the workspace name
     if not request.config.model_name.upper() in constants.ModelName._member_names_:
@@ -307,6 +326,10 @@ def federation_env_setup_and_validate(request):
     else:
         local_bind_path = workspace_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
         agg_domain_name = "localhost"
+        if test_env == "dockerized_ws":
+            # Cleanup docker containers
+            # No image or network check required
+            dh.cleanup_docker_containers()
 
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
@@ -330,7 +353,7 @@ def add_local_workspace_permission(local_bind_path):
         agg_container_id (str): Container ID
     """
     try:
-        agg_workspace_path = os.path.join(local_bind_path, "aggregator", "workspace")
+        agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
         return_code, output, error = run_command(
             f"sudo chmod -R 777 {agg_workspace_path}",
             workspace_path=local_bind_path,
@@ -464,7 +487,7 @@ def setup_collaborator(count, workspace_path, local_bind_path):
     Returns:
         object: Collaborator object
     """
-    local_agg_ws_path = os.path.join(local_bind_path, "aggregator", "workspace")
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     collaborator = None
 
     try:
@@ -489,12 +512,13 @@ def setup_collaborator(count, workspace_path, local_bind_path):
     except Exception as e:
         raise ex.DockerException(f"Failed to start {collaborator.name} docker environment: {e}")
 
-    try:
-        local_col_ws_path = os.path.join(local_bind_path, collaborator.name, "workspace")
-        copy_file_between_participants(local_agg_ws_path, local_col_ws_path, "workspace.zip")
-        collaborator.import_workspace()
-    except Exception as e:
-        raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
+    if not os.getenv("TEST_ENV") == "dockerized_ws":
+        try:
+            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name)
+            copy_file_between_participants(local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME)
+            collaborator.import_workspace()
+        except Exception as e:
+            raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
 
     try:
         collaborator.create_collaborator()

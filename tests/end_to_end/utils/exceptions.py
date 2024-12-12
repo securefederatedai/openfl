@@ -56,3 +56,8 @@ class WorkspaceImportException(Exception):
 class CollaboratorCreationException(Exception):
     """Exception for aggregator creation"""
     pass
+
+
+class WorkspaceDockerizationException(Exception):
+    """Exception for workspace dockerization"""
+    pass

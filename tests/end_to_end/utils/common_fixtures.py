@@ -6,6 +6,7 @@ import collections
 import concurrent.futures
 import os
 
+import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
@@ -35,7 +36,7 @@ def fx_federation(request):
     executor = concurrent.futures.ThreadPoolExecutor()
 
     test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
-    agg_workspace_path = os.path.join(workspace_path, "aggregator", "workspace")
+    agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
@@ -57,7 +58,7 @@ def fx_federation(request):
     fh.add_local_workspace_permission(local_bind_path)
 
     # Modify the plan
-    plan_path = os.path.join(local_bind_path, "aggregator", "workspace", "plan")
+    plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
     model_owner.modify_plan(
         plan_path=plan_path,
         new_rounds=request.config.num_rounds,
@@ -66,15 +67,18 @@ def fx_federation(request):
         disable_tls=not request.config.use_tls,
     )
 
+    # Initialize the plan
+    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
+
+    if test_env == "dockerized_ws":
+        model_owner.dockerize_workspace()
+
     # Certify the workspace in case of TLS
     # Register the collaborators in case of non-TLS
     if request.config.use_tls:
         model_owner.certify_workspace()
     else:
         model_owner.register_collaborators(plan_path, request.config.num_collaborators)
-
-    # Initialize the plan
-    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
 
     # Create the objects for aggregator and collaborators
     # Workspace path for aggregator is uniform in case of docker or task_runner
@@ -86,13 +90,15 @@ def fx_federation(request):
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
-    if request.config.use_tls:
+    # Skip this step in case of dockerized workspace
+    if request.config.use_tls and test_env != "dockerized_ws":
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
 
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
-    model_owner.export_workspace()
+    if test_env != "dockerized_ws":
+        model_owner.export_workspace()
 
     futures = [
         executor.submit(

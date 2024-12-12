@@ -8,6 +8,7 @@ import logging
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.ssh_helper as ssh
 
 log = logging.getLogger(__name__)
 
@@ -185,7 +186,7 @@ class ModelOwner():
             )
 
         except Exception as e:
-            raise ex.PlanInitializationException(f"Failed to initialize the plan: {e}")
+            raise ex.PlanInitializationException(f"{error_msg}: {e}")
 
     def certify_workspace(self):
         """
@@ -199,7 +200,7 @@ class ModelOwner():
             error_msg = "Failed to certify the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
-                error_msg="Failed to certify the workspace",
+                error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
@@ -212,7 +213,33 @@ class ModelOwner():
             )
 
         except Exception as e:
-            raise ex.WorkspaceCertificationException(f"Failed to certify the workspace: {e}")
+            raise ex.WorkspaceCertificationException(f"{error_msg}: {e}")
+
+    def dockerize_workspace(self):
+        """
+        Dockerize the workspace
+        """
+        log.info("Dockerizing the workspace..")
+        try:
+            if not os.getenv("GITHUB_REPOSITORY") or not os.getenv("GITHUB_BRANCH"):
+                repo, branch = ssh.get_git_repo_and_branch()
+            else:
+                repo = os.getenv("GITHUB_REPOSITORY")
+                branch = os.getenv("GITHUB_BRANCH")
+
+            log.info(f"Repo: {repo}, Branch: {branch}")
+            cmd = f"fx workspace dockerize --save --revision https://github.com/${repo}.git@${branch}"
+            error_msg = "Failed to dockerize the workspace"
+            return_code, output, error = fh.run_command(
+                cmd,
+                error_msg=error_msg,
+                container_id=self.container_id,
+                workspace_path=self.workspace_path,
+            )
+            fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
+        
+        except Exception as e:
+            raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
 
     def register_collaborators(self, plan_path, num_collaborators=None):
         """
