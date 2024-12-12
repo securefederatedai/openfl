@@ -30,8 +30,7 @@ env:
 jobs:
   test_with_tls_docker:
     name: tr_tls_docker
-    runs-on:
-      labels: ubuntu-20.04-16core
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
@@ -106,8 +105,7 @@ jobs:
 
   test_with_non_tls_docker:
     name: tr_non_tls_docker
-    runs-on:
-      labels: ubuntu-20.04-16core
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
@@ -182,8 +180,7 @@ jobs:
 
   test_with_no_client_auth_docker:
     name: tr_no_client_auth_docker
-    runs-on:
-      labels: ubuntu-20.04-16core
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
