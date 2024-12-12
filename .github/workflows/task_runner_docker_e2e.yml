@@ -152,7 +152,7 @@ jobs:
           echo "Creating openfl image. This may take a few minutes..."
           cd openfl-docker
           docker build . -t openfl -f Dockerfile.base \
-            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@{{ github.ref_name }}
+            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
