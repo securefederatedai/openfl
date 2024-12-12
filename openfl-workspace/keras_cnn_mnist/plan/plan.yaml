@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2021 Intel Corporation
 # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 aggregator :
@@ -40,3 +40,7 @@ tasks :
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
+  # To use different Compression Pipeline, uncomment the following lines
+  # template : openfl.pipelines.KCPipeline
+  # settings :
+  #   n_clusters : 6

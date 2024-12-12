@@ -6,10 +6,10 @@ license agreement between Intel Corporation and you.
 """
 import keras
 
-from openfl.federated import KerasTensorFlowTaskRunner
+from openfl.federated import KerasTaskRunner
 
 
-class KerasNLP(KerasTensorFlowTaskRunner):
+class KerasNLP(KerasTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, latent_dim, **kwargs):
