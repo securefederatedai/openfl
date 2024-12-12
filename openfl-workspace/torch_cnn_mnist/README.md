@@ -124,12 +124,12 @@ Use a pre-sharded version of the standard MNIST dataset (divided among two data 
 
 Copy the dataset bundle to the root of the FL workspace and unpack it:
 ```
-cp mnist_data_shards.tar.gz ~/openfl/openfl-workspace/torch_cnn_mnist/
-cd ~/openfl/openfl-workspace/torch_cnn_mnist/
+cp mnist_data_shards.tar.gz ~/openfl-quickstart/fl_workspace
+cd ~/openfl-quickstart/fl_workspace
 tar -xvf mnist_data_shards.tar.gz
 rm mnist_data_shards.tar.gz
 ```
-This will populate the data folder of the FL workspace with two shards (data/1 and data/2) of labeled MNIST images of digits (the 0–9 labels being encoded in the sub-folder names). 
+This will populate the ```/data``` folder of the FL workspace with two shards (data/1 and data/2) of labeled MNIST images of digits (the 0–9 labels being encoded in the sub-folder names). 
 ```
 data
 ├── 1
@@ -174,7 +174,7 @@ fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
 We can now perform a test run with the following commands for creating a local PKI setup and starting the aggregator and the collaborators on the same machine:
 
 ```
-cd ~/openfl/openfl-workspace/torch_cnn_mnist/
+cd ~/openfl-quickstart/fl_workspace
 
 # This will create a local certificate authority (CA), so the participants communicate over a secure TLS Channel
 fx workspace certify
