@@ -6,6 +6,7 @@ import logging
 import os
 import json
 
+from tests.end_to_end.utils.common_fixtures import fx_federation
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
