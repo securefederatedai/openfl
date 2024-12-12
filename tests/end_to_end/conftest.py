@@ -7,17 +7,19 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 import logging
+import concurrent.futures
 
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils.conftest_helper import parse_arguments
-import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.models.participants as participants
+import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.federation_helper as fh
+from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, workspace_path",
+    "model_owner, aggregator, collaborators, workspace_path, local_bind_path",
 )
 
 def pytest_addoption(parser):
@@ -36,6 +38,24 @@ def pytest_addoption(parser):
     parser.addoption("--log_memory_usage", action="store_true")
 
 
+def pytest_configure(config):
+    """
+    Configure the pytest plugin.
+    Args:
+        config: pytest config object
+    """
+    # Declare some global variables
+    args = parse_arguments()
+    # Use the model name from the test case name if not provided as a command line argument
+    config.model_name = args.model_name
+    config.num_collaborators = args.num_collaborators
+    config.num_rounds = args.num_rounds
+    config.require_client_auth = not args.disable_client_auth
+    config.use_tls = not args.disable_tls
+    config.log_memory_usage = args.log_memory_usage
+    config.results_dir = config.getini("results_dir")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_logging(pytestconfig):
     """
@@ -45,14 +65,15 @@ def setup_logging(pytestconfig):
     Returns:
         logger: logger object
     """
-    results_dir = pytestconfig.getini("results_dir")
+    tmp_results_dir = pytestconfig.getini("results_dir")
     log_level = pytestconfig.getini("log_level")
 
+    results_dir = os.path.join(os.getenv("HOME"), tmp_results_dir)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(os.path.join(results_dir, "deployment.log"), log_level)
+    configure_logging(f"{results_dir}/deployment.log", log_level)
     return logging.getLogger()
 
 
@@ -199,92 +220,91 @@ def pytest_configure(config):
 
 
 @pytest.fixture(scope="function")
-def fx_federation(request, pytestconfig):
+def fx_federation(request):
     """
     Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
     It also creates workspace.
     Assumption: OpenFL workspace is present for the model being tested.
     Args:
         request: pytest request object. Model name is passed as a parameter to the fixture from test cases.
-        pytestconfig: pytest config object
     Returns:
         federation_fixture: Named tuple containing the objects for model owner, aggregator, and collaborators
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
     collaborators = []
-    agg_domain_name = "localhost"
-    log.info(
-        f"Running federation setup using Task Runner API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {request.config.num_rounds}\n"
-        f"\tModel name: {request.config.model_name}\n"
-        f"\tClient authentication: {request.config.require_client_auth}\n"
-        f"\tTLS: {request.config.use_tls}\n"
-        f"\tMemory Logs: {request.config.log_memory_usage}"
-    )
+    executor = concurrent.futures.ThreadPoolExecutor()
 
-    # Validate the model name and create the workspace name
-    if not request.config.model_name.upper() in constants.ModelName._member_names_:
-        raise ValueError(f"Invalid model name: {request.config.model_name}")
-
-    workspace_name = request.config.model_name
+    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+    agg_workspace_path = os.path.join(workspace_path, "aggregator", "workspace")
 
     # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, request.config.model_name, request.config.log_memory_usage)
-    try:
-        workspace_path = model_owner.create_workspace(results_dir=request.config.results_dir)
-    except Exception as e:
-        log.error(f"Failed to create the workspace: {e}")
-        raise e
+    # Workspace name will be same as the model name
+    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path)
+
+    # Create workspace for given model name
+    fh.create_persistent_store(model_owner.name, local_bind_path)
+
+    # Start the docker container for aggregator in case of docker environment
+    if test_env == "docker":
+        container = dh.start_docker_container(
+            container_name="aggregator",
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path,
+        )
+        model_owner.container_id = container.id
+
+    model_owner.create_workspace()
+    fh.add_local_workspace_permission(local_bind_path)
 
     # Modify the plan
-    try:
-        model_owner.modify_plan(
-            new_rounds=request.config.num_rounds,
-            num_collaborators=request.config.num_collaborators,
-            require_client_auth=request.config.require_client_auth,
-            use_tls=request.config.use_tls,
-        )
-    except Exception as e:
-        log.error(f"Failed to modify the plan: {e}")
-        raise e
-
-    if not request.config.use_tls:
-        log.info("Disabling TLS for communication")
-        try:
-            model_owner.register_collaborators(request.config.num_collaborators)
-        except Exception as e:
-            log.error(f"Failed to register the collaborators: {e}")
-            raise e
-    else:
-        log.info("Enabling TLS for communication")
-        try:
-            model_owner.certify_workspace()
-        except Exception as e:
-            log.error(f"Failed to certify the workspace: {e}")
-            raise e
-
-    # Initialize the plan
-    try:
-        model_owner.initialize_plan(agg_domain_name=agg_domain_name)
-    except Exception as e:
-        log.error(f"Failed to initialize the plan: {e}")
-        raise e
-
-    # Create the objects for aggregator and collaborators
-    aggregator = participants.Aggregator(
-        agg_domain_name=agg_domain_name, workspace_path=workspace_path
+    plan_path = os.path.join(local_bind_path, "aggregator", "workspace", "plan")
+    model_owner.modify_plan(
+        plan_path=plan_path,
+        new_rounds=request.config.num_rounds,
+        num_collaborators=request.config.num_collaborators,
+        disable_client_auth=not request.config.require_client_auth,
+        disable_tls=not request.config.use_tls,
     )
 
-    for i in range(request.config.num_collaborators):
-        collaborator = participants.Collaborator(
-            collaborator_name=f"collaborator{i+1}",
-            data_directory_path=i + 1,
+    # Certify the workspace in case of TLS
+    # Register the collaborators in case of non-TLS
+    if request.config.use_tls:
+        model_owner.certify_workspace()
+    else:
+        model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+
+    # Initialize the plan
+    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
+
+    # Create the objects for aggregator and collaborators
+    # Workspace path for aggregator is uniform in case of docker or task_runner
+    # But, for collaborators, it is different
+    aggregator = agg_model.Aggregator(
+        agg_domain_name=agg_domain_name,
+        workspace_path=agg_workspace_path,
+        container_id=model_owner.container_id, # None in case of non-docker environment
+    )
+
+    # Generate the sign request and certify the aggregator in case of TLS
+    if request.config.use_tls:
+        aggregator.generate_sign_request()
+        model_owner.certify_aggregator(agg_domain_name)
+
+    # Export the workspace
+    # By default the workspace will be exported to workspace.zip
+    model_owner.export_workspace()
+
+    futures = [
+        executor.submit(
+            fh.setup_collaborator,
+            count=i,
             workspace_path=workspace_path,
+            local_bind_path=local_bind_path,
         )
-        collaborator.create_collaborator()
-        collaborators.append(collaborator)
+        for i in range(request.config.num_collaborators)
+    ]
+    collaborators = [f.result() for f in futures]
 
     # Return the federation fixture
     return federation_fixture(
@@ -292,4 +312,5 @@ def fx_federation(request, pytestconfig):
         aggregator=aggregator,
         collaborators=collaborators,
         workspace_path=workspace_path,
+        local_bind_path=local_bind_path,
     )
