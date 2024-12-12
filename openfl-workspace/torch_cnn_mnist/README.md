@@ -13,7 +13,7 @@ pip install openfl
 
 ```
 cd ~/openfl-quickstart
-fx workspace create --template torch_template --prefix fl_workspace
+fx workspace create --template torch_cnn_mnist --prefix fl_workspace
 cd ~/openfl-quickstart/fl_workspace
 ```
 
