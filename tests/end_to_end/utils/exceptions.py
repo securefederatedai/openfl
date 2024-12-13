@@ -61,3 +61,8 @@ class CollaboratorCreationException(Exception):
 class WorkspaceDockerizationException(Exception):
     """Exception for workspace dockerization"""
     pass
+
+
+class WorkspaceLoadException(Exception):
+    """Exception for workspace load"""
+    pass

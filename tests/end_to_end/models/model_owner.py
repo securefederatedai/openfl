@@ -57,9 +57,9 @@ class ModelOwner():
 
             return_code, output, error = fh.run_command(
                 f"fx workspace create --prefix {ws_path} --template {self.model_name}",
+                workspace_path="", # No workspace path required for this command
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path="", # No workspace path required for this command
             )
             fh.verify_cmd_output(
                 output,
@@ -105,9 +105,9 @@ class ModelOwner():
             error_msg = f"Failed to sign the CSR {zip_name}"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
 
             fh.verify_cmd_output(
@@ -173,9 +173,9 @@ class ModelOwner():
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path
             )
             fh.verify_cmd_output(
                 output,
@@ -200,9 +200,9 @@ class ModelOwner():
             error_msg = "Failed to certify the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
-                error_msg,
-                container_id=self.container_id,
                 workspace_path=self.workspace_path,
+                error_msg=error_msg,
+                container_id=self.container_id,
             )
             fh.verify_cmd_output(
                 output,
@@ -232,14 +232,27 @@ class ModelOwner():
             error_msg = "Failed to dockerize the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
         
         except Exception as e:
             raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
+    
+    def load_workspace(self, workspace_tar_name):
+        """
+        Load the workspace
+        """
+        log.info("Loading the workspace..")
+        try:
+            return_code, output, error = ssh.run_command(f"docker load -i {workspace_tar_name}", work_dir=self.workspace_path)
+            if return_code != 0:
+                raise Exception(f"Failed to load the workspace: {error}")
+
+        except Exception as e:
+            raise ex.WorkspaceLoadException(f"Error loading workspace: {e}")
 
     def register_collaborators(self, plan_path, num_collaborators=None):
         """
@@ -289,9 +302,9 @@ class ModelOwner():
             error_msg = "Failed to certify the aggregator request"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "CA signed the request from aggregator")
 
@@ -307,9 +320,9 @@ class ModelOwner():
             error_msg = "Failed to export the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
 

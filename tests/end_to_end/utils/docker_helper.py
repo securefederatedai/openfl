@@ -60,6 +60,8 @@ def start_docker_container(
     workspace_path,
     local_bind_path,
     image=constants.DEFAULT_OPENFL_IMAGE,
+    env_keyval_list=None,
+    security_opt=None,
 ):
     """
     Start the docker container with provided name.
@@ -68,6 +70,9 @@ def start_docker_container(
         workspace_path: Workspace path
         local_bind_path: Local bind path
         image: Docker image to use
+        env_keyval_list: List of environment variables to set.
+            Provide in key=val format. For example ["KERAS_HOME=/tmp"]
+        security_opt: Security options for the container
     Returns:
         container: Docker container object
     """
@@ -83,7 +88,19 @@ def start_docker_container(
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
         }
+        log.info(f"Volumes for {container_name}: {volumes}")
 
+        environment = {
+            "WORKSPACE_PATH": docker_participant_path,
+            "NO_PROXY": "aggregator",
+            "no_proxy": "aggregator"
+        }
+        if env_keyval_list:
+            for keyval in env_keyval_list:
+                key, val = keyval.split("=")
+                environment[key] = val
+
+        log.info(f"Environment variables for {container_name}: {environment}")
         # Start a container from the image
         container = client.containers.run(
             image,
@@ -93,12 +110,9 @@ def start_docker_container(
             tty=True,
             name=container_name,
             network="openfl",
+            security_opt=security_opt,
             volumes=volumes,
-            environment={
-                "WORKSPACE_PATH": docker_participant_path,
-                "NO_PROXY": "aggregator",
-                "no_proxy": "aggregator",
-            },
+            environment=environment,
             use_config_proxy=False,  # Do not use proxy for docker container
         )
         log.info(f"Container for {container_name} started with ID: {container.id}")

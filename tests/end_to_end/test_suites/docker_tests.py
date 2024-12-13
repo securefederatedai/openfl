@@ -4,7 +4,7 @@
 import pytest
 import logging
 
-from tests.end_to_end.utils.common_fixtures import fx_federation
+from tests.end_to_end.utils.common_fixtures import fx_federation, fx_federation_dws
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def test_federation_via_docker(request, fx_federation):
 
 
 @pytest.mark.dockerized_ws
-def test_federation_via_dockerized_workspace(request, fx_federation):
+def test_federation_via_dockerized_workspace(request, fx_federation_dws):
     """
     Test federation via dockerized workspace.
     Args:
@@ -38,6 +38,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation):
         fx_federation (Fixture): Pytest fixture
     """
     # Setup PKI for trusted communication within the federation
+    breakpoint()
     if request.config.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
