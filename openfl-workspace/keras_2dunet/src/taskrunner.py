@@ -9,7 +9,7 @@ import keras
 from openfl.federated import KerasTaskRunner
 
 
-class KerasFlow2DUNet(KerasTaskRunner):
+class Keras2DUNet(KerasTaskRunner):
     """Initialize.
 
     Args:
