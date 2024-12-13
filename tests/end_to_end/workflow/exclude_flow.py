@@ -27,14 +27,9 @@ class TestFlowExclude(FLSpec):
         """
         Testing whether attributes are excluded from agg to agg
         """
-        if (
-            hasattr(self, "include_agg_to_agg") is True
-            and hasattr(self, "exclude_agg_to_agg") is False
-        ):
-            log.info("... Exclude test passed in test_exclude_agg_to_agg")
-        else:
-            log.error("... Exclude test failed in test_exclude_agg_to_agg")
-            raise ValueError("test_exclude_agg_to_agg")
+        assert hasattr(self, "include_agg_to_agg") is True, "include_agg_to_agg attribute missing"
+        assert hasattr(self, "exclude_agg_to_agg") is False, "exclude_agg_to_agg attribute should be excluded"
+        log.info("Exclude test passed in test_exclude_agg_to_agg")
 
         self.exclude_agg_to_collab = 20
         self.include_agg_to_collab = 100
@@ -50,16 +45,11 @@ class TestFlowExclude(FLSpec):
         Testing whether attributes are excluded from agg to collab
         """
 
-        if (
-            hasattr(self, "include_agg_to_agg") is True
-            and hasattr(self, "include_agg_to_collab") is True
-            and hasattr(self, "exclude_agg_to_agg") is False
-            and hasattr(self, "exclude_agg_to_collab") is False
-        ):
-            log.info("... Exclude test passed in test_exclude_agg_to_collab")
-        else:
-            log.error("... Exclude test failed in test_exclude_agg_to_collab")
-            raise ValueError("test_exclude_agg_to_collab")
+        assert hasattr(self, "include_agg_to_agg") is True, "include_agg_to_agg attribute missing"
+        assert hasattr(self, "include_agg_to_collab") is True, "include_agg_to_collab attribute missing"
+        assert hasattr(self, "exclude_agg_to_agg") is False, "exclude_agg_to_agg attribute should be excluded"
+        assert hasattr(self, "exclude_agg_to_collab") is False, "exclude_agg_to_collab attribute should be excluded"
+        log.info("Exclude test passed in test_exclude_agg_to_collab")
 
         self.exclude_collab_to_collab = 10
         self.include_collab_to_collab = 44
@@ -74,18 +64,13 @@ class TestFlowExclude(FLSpec):
         Testing whether attributes are excluded from collab to collab
         """
 
-        if (
-            hasattr(self, "include_agg_to_agg") is True
-            and hasattr(self, "include_agg_to_collab") is True
-            and hasattr(self, "include_collab_to_collab") is True
-            and hasattr(self, "exclude_agg_to_agg") is False
-            and hasattr(self, "exclude_agg_to_collab") is False
-            and hasattr(self, "exclude_collab_to_collab") is False
-        ):
-            log.info("... Exclude test passed in test_exclude_collab_to_collab")
-        else:
-            log.error("... Exclude test failed in test_exclude_collab_to_collab")
-            raise ValueError("test_exclude_collab_to_collab")
+        assert hasattr(self, "include_agg_to_agg") is True, "include_agg_to_agg attribute missing"
+        assert hasattr(self, "include_agg_to_collab") is True, "include_agg_to_collab attribute missing"
+        assert hasattr(self, "include_collab_to_collab") is True, "include_collab_to_collab attribute missing"
+        assert hasattr(self, "exclude_agg_to_agg") is False, "exclude_agg_to_agg attribute should be excluded"
+        assert hasattr(self, "exclude_agg_to_collab") is False, "exclude_agg_to_collab attribute should be excluded"
+        assert hasattr(self, "exclude_collab_to_collab") is False, "exclude_collab_to_collab attribute should be excluded"
+        log.info("Exclude test passed in test_exclude_collab_to_collab")
 
         self.exclude_collab_to_agg = 20
         self.include_collab_to_agg = 56
@@ -107,19 +92,13 @@ class TestFlowExclude(FLSpec):
         # Collaborator attribute check
         for input in inputs:
             validation = validate and (
-                hasattr(input, "include_collab_to_collab") is True
-                and hasattr(input, "exclude_collab_to_collab") is False
-                and hasattr(input, "exclude_collab_to_agg") is False
-                and hasattr(input, "include_collab_to_agg") is True
+            hasattr(input, "include_collab_to_collab") is True
+            and hasattr(input, "exclude_collab_to_collab") is False
+            and hasattr(input, "exclude_collab_to_agg") is False
+            and hasattr(input, "include_collab_to_agg") is True
             )
-
-        if validation:
-            log.info("... Exclude test passed in join")
-        else:
-            log.error("... Exclude test failed in join")
-            raise ValueError("join")
-
-        log.info("Exclude attribute test summary:")
+        assert validation, "Exclude test failed in join"
+        log.info("Exclude test passed in join")
         self.next(self.end)
 
     @aggregator
