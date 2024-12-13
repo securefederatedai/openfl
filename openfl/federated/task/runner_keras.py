@@ -66,7 +66,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(
+    def train_task(
         self,
         col_name,
         round_num,
@@ -101,7 +101,7 @@ class KerasTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
             self.logger.info("Run %s epoch of %s round", epoch, round_num)
-            results = self.train_iteration(
+            results = self.train_(
                 self.data_loader.get_train_loader(batch_size),
                 metrics=metrics,
                 **kwargs,
@@ -164,7 +164,7 @@ class KerasTaskRunner(TaskRunner):
         self.update_tensorkeys_for_functions()
         return global_tensor_dict, local_tensor_dict
 
-    def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
+    def train_(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch. Override this function for custom training.
 
         Args:
@@ -201,7 +201,7 @@ class KerasTaskRunner(TaskRunner):
             results.append(Metric(name=metric, value=np.array(value)))
         return results
 
-    def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
+    def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
         """Run the trained model on validation data; report results.
 
         Args:
@@ -388,7 +388,7 @@ class KerasTaskRunner(TaskRunner):
         Returns:
             list: List of TensorKey objects.
         """
-        if func_name == "validate":
+        if func_name == "validate_task":
             local_model = "apply=" + str(kwargs["apply"])
             return self.required_tensorkeys_for_function[func_name][local_model]
         else:
@@ -409,17 +409,17 @@ class KerasTaskRunner(TaskRunner):
         opt_names = self._get_weights_names(self.model.optimizer)
         tensor_names = model_layer_names + opt_names
         self.logger.debug("Updating model tensor names: %s", tensor_names)
-        self.required_tensorkeys_for_function["train"] = [
+        self.required_tensorkeys_for_function["train_task"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
         ]
 
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function["validate"] = {}
-        self.required_tensorkeys_for_function["validate"]["apply=local"] = [
+        self.required_tensorkeys_for_function["validate_task"] = {}
+        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
             TensorKey(tensor_name, "LOCAL", 0, False, ("trained",)) for tensor_name in tensor_names
         ]
-        self.required_tensorkeys_for_function["validate"]["apply=global"] = [
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
         ]
 
@@ -453,28 +453,28 @@ class KerasTaskRunner(TaskRunner):
                 **self.tensor_dict_split_fn_kwargs,
             )
 
-        self.required_tensorkeys_for_function["train"] = [
+        self.required_tensorkeys_for_function["train_task"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict
         ]
-        self.required_tensorkeys_for_function["train"] += [
+        self.required_tensorkeys_for_function["train_task"] += [
             TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict
         ]
 
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function["validate"] = {}
+        self.required_tensorkeys_for_function["validate_task"] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function["validate"]["apply=local"] = [
+        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
             TensorKey(tensor_name, "LOCAL", 0, False, ("trained",))
             for tensor_name in {**global_model_dict_val, **local_model_dict_val}
         ]
-        self.required_tensorkeys_for_function["validate"]["apply=global"] = [
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict_val
         ]
-        self.required_tensorkeys_for_function["validate"]["apply=global"] += [
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] += [
             TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict_val
         ]

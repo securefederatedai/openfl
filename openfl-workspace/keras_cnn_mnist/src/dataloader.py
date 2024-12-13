@@ -7,7 +7,7 @@ from openfl.federated import KerasDataLoader
 from .mnist_utils import load_mnist_shard
 
 
-class Dataloader(KerasDataLoader):
+class KerasMNISTInMemory(KerasDataLoader):
     """Data Loader for MNIST Dataset."""
 
     def __init__(self, data_path, batch_size, **kwargs):

@@ -7,8 +7,8 @@ from openfl.federated import KerasDataLoader
 from .brats_utils import load_from_nifti
 
 
-class TensorFlowBratsInMemory(KerasDataLoader):
-    """TensorFlow Data Loader for the BraTS dataset."""
+class KerasBratsInMemory(KerasDataLoader):
+    """Keras Data Loader for the BraTS dataset."""
 
     def __init__(self, data_path, batch_size, percent_train=0.8, pre_split_shuffle=True, **kwargs):
         """Initialize.
