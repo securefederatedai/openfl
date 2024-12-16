@@ -70,8 +70,7 @@ def aggregator(context):
 @option(
     "--task_group",
     required=False,
-    default="learning",
-    help="Selected task-group for assignment - defaults to learning",
+    help="Selected task-group for assignment",
 )
 def start_(plan, authorized_cols, task_group):
     """Start the aggregator service.
@@ -94,11 +93,13 @@ def start_(plan, authorized_cols, task_group):
         cols_config_path=Path(authorized_cols).absolute(),
     )
 
-    # Set task_group in aggregator settings
-    if "settings" not in parsed_plan.config["aggregator"]:
-        parsed_plan.config["aggregator"]["settings"] = {}
-    parsed_plan.config["aggregator"]["settings"]["task_group"] = task_group
-    logger.info(f"Setting aggregator to assign: {task_group} task_group")
+    # Set task_group in aggregator and assigner settings if provided
+    if task_group:
+        if "settings" not in parsed_plan.config["aggregator"]:
+            parsed_plan.config["aggregator"]["settings"] = {}
+        parsed_plan.config["aggregator"]["settings"]["task_group"] = task_group
+        parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
+        logger.info(f"Setting aggregator to assign: {task_group} task_group")
 
     logger.info("🧿 Starting the Aggregator Service.")
 

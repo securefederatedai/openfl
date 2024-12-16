@@ -32,6 +32,8 @@ class StaticGroupedAssigner(Assigner):
         \* - Plan setting.
     """
 
+    with_selected_task_group = Assigner.with_selected_task_group
+
     def __init__(self, task_groups, **kwargs):
         """Initializes the StaticGroupedAssigner.
 
@@ -42,6 +44,7 @@ class StaticGroupedAssigner(Assigner):
         self.task_groups = task_groups
         super().__init__(**kwargs)
 
+    @with_selected_task_group
     def define_task_assignments(self):
         """Define task assignments for each round and collaborator.
 

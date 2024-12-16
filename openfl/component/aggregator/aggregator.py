@@ -130,15 +130,25 @@ class Aggregator:
         self.straggler_handling_policy = (
             straggler_handling_policy or CutoffTimeBasedStragglerHandling()
         )
-        self._end_of_round_check_done = [False] * rounds_to_train
-        self.stragglers = []
 
         self.rounds_to_train = rounds_to_train
+        if self.task_group == "evaluation":
+            self.rounds_to_train = 1
+            logger.info(
+                f"task_group is {self.task_group}, setting rounds_to_train = {self.rounds_to_train}"
+            )
+
+        self._end_of_round_check_done = [False] * rounds_to_train
+        self.stragglers = []
 
         # if the collaborator requests a delta, this value is set to true
         self.authorized_cols = authorized_cols
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
+        # # override the assigner selected_task_group
+        # # FIXME check the case of CustomAssigner as base class Assigner is redefined
+        # # and doesn't have selected_task_group as attribute
+        # assigner.selected_task_group = task_group
         self.assigner = assigner
         self.quit_job_sent_to = []
 
