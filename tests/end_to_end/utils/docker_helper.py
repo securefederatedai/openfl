@@ -60,6 +60,7 @@ def start_docker_container(
     workspace_path,
     local_bind_path,
     image=constants.DEFAULT_OPENFL_IMAGE,
+    network=constants.DOCKER_NETWORK_NAME,
     env_keyval_list=None,
     security_opt=None,
     mount_mapping=None,
@@ -71,6 +72,7 @@ def start_docker_container(
         workspace_path: Workspace path
         local_bind_path: Local bind path
         image: Docker image to use
+        network: Docker network to use (default is openfl)
         env_keyval_list: List of environment variables to set.
             Provide in key=val format. For example ["KERAS_HOME=/tmp"]
         security_opt: Security options for the container
@@ -113,7 +115,7 @@ def start_docker_container(
             auto_remove=False,
             tty=True,
             name=container_name,
-            network="openfl",
+            network=network,
             security_opt=security_opt,
             volumes=volumes,
             environment=environment,

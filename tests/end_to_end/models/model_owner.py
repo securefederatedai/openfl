@@ -234,6 +234,10 @@ class ModelOwner():
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
 
+            return_code, output, error = ssh.run_command("docker images", work_dir=self.workspace_path)
+            if return_code != 0:
+                raise Exception(f"Failed to list the docker images: {error}")
+            log.info(f"List of docker images: {output}")
         except Exception as e:
             raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
 

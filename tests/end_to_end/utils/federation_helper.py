@@ -358,12 +358,13 @@ def federation_env_setup_and_validate(request):
     if test_env in ["task_runner_docker", "task_runner_dockerized_ws"]:
         # Cleanup docker containers
         dh.cleanup_docker_containers()
+        dh.remove_docker_network()
+        dh.create_docker_network()
+
         # Note: In case of dockerized workspace, image name would be same as workspace name and to be created at later stage.
         if test_env == "task_runner_docker":
             # Check if the docker image and network exists
-            dh.check_docker_image()
-            dh.remove_docker_network()
-            dh.create_docker_network()
+            dh.check_docker_image()    
             agg_domain_name = "aggregator"
 
             # Absolute path is required for docker
