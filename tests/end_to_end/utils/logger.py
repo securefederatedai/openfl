@@ -23,7 +23,7 @@ def configure_logging(log_file, log_level):
         OSError: If there is an issue with creating the log file handler.
     """
     formatter = logging.Formatter(
-        "\n%(asctime)s - %(levelname)s: [%(filename)s - %(funcName)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        "\n%(asctime)s - %(levelname)s: [%(filename)s - %(funcName)s - %(lineno)d]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)

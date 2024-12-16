@@ -1,0 +1,11 @@
+# Copyright (C) 2020-2024 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+# all keys under 'collaborators' corresponds to a specific colaborator name the corresponding dictionary has data_name, data_path pairs.
+# Note that in the mnist case we do not store the data locally, and the data_path is used to pass an integer that helps the data object
+# construct the shard of the mnist dataset to be use for this collaborator.
+#
+# collaborator_name,data_directory_path
+
+one,1
+two,2

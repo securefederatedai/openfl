@@ -2,23 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-import collections
+
 import os
 import shutil
 import xml.etree.ElementTree as ET
 import logging
 
+
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils.conftest_helper import parse_arguments
-import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.models.participants as participants
 
-# Define a named tuple to store the objects for model owner, aggregator, and collaborators
-federation_fixture = collections.namedtuple(
-    "federation_fixture",
-    "model_owner, aggregator, collaborators, workspace_path",
-)
 
 def pytest_addoption(parser):
     """
@@ -36,6 +30,24 @@ def pytest_addoption(parser):
     parser.addoption("--log_memory_usage", action="store_true")
 
 
+def pytest_configure(config):
+    """
+    Configure the pytest plugin.
+    Args:
+        config: pytest config object
+    """
+    # Declare some global variables
+    args = parse_arguments()
+    # Use the model name from the test case name if not provided as a command line argument
+    config.model_name = args.model_name
+    config.num_collaborators = args.num_collaborators
+    config.num_rounds = args.num_rounds
+    config.require_client_auth = not args.disable_client_auth
+    config.use_tls = not args.disable_tls
+    config.log_memory_usage = args.log_memory_usage
+    config.results_dir = config.getini("results_dir")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_logging(pytestconfig):
     """
@@ -45,14 +57,15 @@ def setup_logging(pytestconfig):
     Returns:
         logger: logger object
     """
-    results_dir = pytestconfig.getini("results_dir")
+    tmp_results_dir = pytestconfig.getini("results_dir")
     log_level = pytestconfig.getini("log_level")
 
+    results_dir = os.path.join(os.getenv("HOME"), tmp_results_dir)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(os.path.join(results_dir, "deployment.log"), log_level)
+    configure_logging(f"{results_dir}/deployment.log", log_level)
     return logging.getLogger()
 
 
@@ -196,100 +209,3 @@ def pytest_configure(config):
     config.use_tls = not args.disable_tls
     config.log_memory_usage = args.log_memory_usage
     config.results_dir = config.getini("results_dir")
-
-
-@pytest.fixture(scope="function")
-def fx_federation(request, pytestconfig):
-    """
-    Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
-    It also creates workspace.
-    Assumption: OpenFL workspace is present for the model being tested.
-    Args:
-        request: pytest request object. Model name is passed as a parameter to the fixture from test cases.
-        pytestconfig: pytest config object
-    Returns:
-        federation_fixture: Named tuple containing the objects for model owner, aggregator, and collaborators
-
-    Note: As this is a function level fixture, thus no import is required at test level.
-    """
-    collaborators = []
-    agg_domain_name = "localhost"
-    log.info(
-        f"Running federation setup using Task Runner API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {request.config.num_rounds}\n"
-        f"\tModel name: {request.config.model_name}\n"
-        f"\tClient authentication: {request.config.require_client_auth}\n"
-        f"\tTLS: {request.config.use_tls}\n"
-        f"\tMemory Logs: {request.config.log_memory_usage}"
-    )
-
-    # Validate the model name and create the workspace name
-    if not request.config.model_name.upper() in constants.ModelName._member_names_:
-        raise ValueError(f"Invalid model name: {request.config.model_name}")
-
-    workspace_name = request.config.model_name
-
-    # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, request.config.model_name, request.config.log_memory_usage)
-    try:
-        workspace_path = model_owner.create_workspace(results_dir=request.config.results_dir)
-    except Exception as e:
-        log.error(f"Failed to create the workspace: {e}")
-        raise e
-
-    # Modify the plan
-    try:
-        model_owner.modify_plan(
-            new_rounds=request.config.num_rounds,
-            num_collaborators=request.config.num_collaborators,
-            require_client_auth=request.config.require_client_auth,
-            use_tls=request.config.use_tls,
-        )
-    except Exception as e:
-        log.error(f"Failed to modify the plan: {e}")
-        raise e
-
-    if not request.config.use_tls:
-        log.info("Disabling TLS for communication")
-        try:
-            model_owner.register_collaborators(request.config.num_collaborators)
-        except Exception as e:
-            log.error(f"Failed to register the collaborators: {e}")
-            raise e
-    else:
-        log.info("Enabling TLS for communication")
-        try:
-            model_owner.certify_workspace()
-        except Exception as e:
-            log.error(f"Failed to certify the workspace: {e}")
-            raise e
-
-    # Initialize the plan
-    try:
-        model_owner.initialize_plan(agg_domain_name=agg_domain_name)
-    except Exception as e:
-        log.error(f"Failed to initialize the plan: {e}")
-        raise e
-
-    # Create the objects for aggregator and collaborators
-    aggregator = participants.Aggregator(
-        agg_domain_name=agg_domain_name, workspace_path=workspace_path
-    )
-
-    for i in range(request.config.num_collaborators):
-        collaborator = participants.Collaborator(
-            collaborator_name=f"collaborator{i+1}",
-            data_directory_path=i + 1,
-            workspace_path=workspace_path,
-        )
-        collaborator.create_collaborator()
-        collaborators.append(collaborator)
-
-    # Return the federation fixture
-    return federation_fixture(
-        model_owner=model_owner,
-        aggregator=aggregator,
-        collaborators=collaborators,
-        workspace_path=workspace_path,
-    )
