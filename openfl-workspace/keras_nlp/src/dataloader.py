@@ -5,9 +5,8 @@ Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
 from logging import getLogger
-from typing import Iterator
-from typing import List
 from typing import Optional
+from typing import Iterator
 from typing import Tuple
 from typing import Union
 
@@ -57,7 +56,7 @@ class NLPDataLoader(KerasDataLoader):
         """Get the shape of an example feature array."""
         return self.X_train[0].shape
 
-    def get_train_loader(self, batch_size: Optional[int] = None) -> Iterator[List[np.ndarray]]:
+    def get_train_loader(self, batch_size: Optional[int] = None) -> Iterator[Tuple[np.ndarray]]:
         """
         Get training data loader.
 
@@ -68,7 +67,7 @@ class NLPDataLoader(KerasDataLoader):
         return self._get_batch_generator(X1=self.X_train[0], X2=self.X_train[1],
                                          y=self.y_train, batch_size=batch_size)
 
-    def get_valid_loader(self, batch_size: Optional[int] = None) -> Iterator[List[np.ndarray]]:
+    def get_valid_loader(self, batch_size: Optional[int] = None) -> Iterator[Tuple[np.ndarray]]:
         """
         Get validation data loader.
 
@@ -100,7 +99,7 @@ class NLPDataLoader(KerasDataLoader):
     def _batch_generator(X1: np.ndarray, X2: np.ndarray,
                          y: np.ndarray, idxs: np.ndarray,
                          batch_size: int,
-                         num_batches: int) -> Iterator[List[np.ndarray]]:
+                         num_batches: int) -> Iterator[Tuple[np.ndarray]]:
         """
         Generate batch of data.
 
@@ -116,11 +115,11 @@ class NLPDataLoader(KerasDataLoader):
         for i in range(num_batches):
             a = i * batch_size
             b = a + batch_size
-            yield [X1[idxs[a:b]], X2[idxs[a:b]]], y[idxs[a:b]]
+            yield (X1[idxs[a:b]], X2[idxs[a:b]]), y[idxs[a:b]]
 
     def _get_batch_generator(self, X1: np.ndarray, X2: np.ndarray,
                              y: np.ndarray,
-                             batch_size: Union[int, None]) -> Iterator[List[np.ndarray]]:
+                             batch_size: Union[int, None]):
         """
         Return the dataset generator.
 

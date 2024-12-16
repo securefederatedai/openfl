@@ -3,12 +3,12 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import TensorFlowDataLoader
+from openfl.federated import KerasDataLoader
 from .mnist_utils import load_mnist_shard
 
 
-class TensorFlowMNISTInMemory(TensorFlowDataLoader):
-    """TensorFlow Data Loader for MNIST Dataset."""
+class KerasMNISTInMemory(KerasDataLoader):
+    """Data Loader for MNIST Dataset."""
 
     def __init__(self, data_path, batch_size, **kwargs):
         """
