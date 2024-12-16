@@ -1,13 +1,12 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow.keras as ke
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Flatten
+from keras.models import Sequential
+from keras.layers import Conv2D
+from keras.layers import Dense
+from keras.layers import Flatten
 
 from openfl.federated import KerasTaskRunner
 
@@ -50,7 +49,7 @@ class KerasCNN(KerasTaskRunner):
             num_classes (int): The number of classes of the dataset
 
         Returns:
-            tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
+            keras.models.Sequential: The model defined in Keras
 
         """
         model = Sequential()
@@ -72,14 +71,8 @@ class KerasCNN(KerasTaskRunner):
 
         model.add(Dense(num_classes, activation='softmax'))
 
-        model.compile(loss=ke.losses.categorical_crossentropy,
-                      optimizer=ke.optimizers.legacy.Adam(),
-                      metrics=['accuracy'])
-
-        # initialize the optimizer variables
-        opt_vars = model.optimizer.variables()
-
-        for v in opt_vars:
-            v.initializer.run(session=self.sess)
+        model.compile(loss="categorical_crossentropy",
+                      optimizer="adam",
+                      metrics=["accuracy"])
 
         return model

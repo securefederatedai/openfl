@@ -5,9 +5,9 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path : save/tf_2dunet_brats_init.pbuf
-    last_state_path : save/tf_2dunet_brats_latest.pbuf
-    best_state_path : save/tf_2dunet_brats_best.pbuf
+    init_state_path : save/init.pbuf
+    last_state_path : save/latest.pbuf
+    best_state_path : save/best.pbuf
     rounds_to_train : 10
     db_store_rounds : 2
 
@@ -20,7 +20,7 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.tfbrats_inmemory.TensorFlowBratsInMemory
+  template : src.dataloader.KerasBratsInMemory
   settings :
     batch_size: 64
     percent_train: 0.8
@@ -29,7 +29,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.tf_2dunet.TensorFlow2DUNet
+  template : src.taskrunner.Keras2DUNet
 
 network :
   defaults : plan/defaults/network.yaml
@@ -38,7 +38,30 @@ assigner :
   defaults : plan/defaults/assigner.yaml
 
 tasks :
-  defaults : plan/defaults/tasks_tensorflow.yaml
+  aggregated_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 32
+      apply      : global
+      metrics    :
+        - acc
+
+  locally_tuned_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 32
+      apply      : local
+      metrics    :
+        - acc
+
+  train:
+    function : train_task
+    kwargs   :
+      batch_size  : 32
+      metrics     :
+      - loss
+      epochs      : 1
+
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml

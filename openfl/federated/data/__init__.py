@@ -15,10 +15,9 @@ with catch_warnings():
 
 from openfl.federated.data.loader import DataLoader  # NOQA
 
-if util.find_spec("tensorflow") is not None:
+if util.find_spec("keras") is not None:
     from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
     from openfl.federated.data.loader_keras import KerasDataLoader  # NOQA
-    from openfl.federated.data.loader_tf import TensorFlowDataLoader  # NOQA
 
 if util.find_spec("torch") is not None:
     from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
