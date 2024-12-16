@@ -47,11 +47,8 @@ jobs:
       run: |
         cd example_workspace
         fx collaborator create -d 1 -n charlie --silent
-        fx collaborator create -d 2 -n delta --silent
         fx collaborator generate-cert-request -n charlie --silent
-        fx collaborator generate-cert-request -n delta --silent
         fx collaborator certify --request-pkg col_charlie_to_agg_cert_request.zip --silent
-        fx collaborator certify --request-pkg col_delta_to_agg_cert_request.zip --silent
         
         # Pack the collaborator's private key, signed cert, and data.yaml into a tarball
         tarfiles="plan/data.yaml agg_to_col_charlie_signed_cert.zip"
@@ -63,19 +60,9 @@ jobs:
 
         tar -cf cert_col_charlie.tar $tarfiles
 
-        tarfiles="plan/data.yaml agg_to_col_delta_signed_cert.zip"
-        for entry in cert/client/*; do
-            if [[ "$entry" == *.key ]]; then
-                tarfiles="$tarfiles $entry"
-            fi
-        done
-
-        tar -cf cert_col_delta.tar $tarfiles
-
         # Clean up
         rm -f $tarfiles
         rm -f col_charlie_to_agg_cert_request.zip
-        rm -f col_delta_to_agg_cert_request.zip
 
     - name: Create signed cert for aggregator
       run: |
@@ -100,7 +87,7 @@ jobs:
 
         set -x
         docker run --rm \
-          --network host --name aggregator \
+          --network host \
           --security-opt seccomp=unconfined \
           --mount type=bind,source=./cert_agg.tar,target=/certs.tar \
           --env KERAS_HOME=/tmp \
@@ -113,28 +100,3 @@ jobs:
           --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
           --env KERAS_HOME=/tmp \
           example_workspace bash -c "tar -xf /certs.tar && fx collaborator certify --import agg_to_col_charlie_signed_cert.zip && gramine-direct fx collaborator start -n charlie"
-
-        docker run --rm \
-          --network host \
-          --security-opt seccomp=unconfined \
-          --mount type=bind,source=./cert_col_delta.tar,target=/certs.tar \
-          --env KERAS_HOME=/tmp \
-          example_workspace bash -c "tar -xf /certs.tar && fx collaborator certify --import agg_to_col_delta_signed_cert.zip && gramine-direct fx collaborator start -n delta"
-
-        docker run --rm \
-          --network host \
-          --device=/dev/sgx_enclave \
-          -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
-          --security-opt seccomp=unconfined \
-          --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
-          --env KERAS_HOME=/tmp \
-          example_workspace bash -c "tar -xf /certs.tar && gramine-sgx fx collaborator certify --import agg_to_col_charlie_signed_cert.zip && gramine-direct fx collaborator start -n charlie"
-
-        docker run --rm \
-          --network host \
-          --device=/dev/sgx_enclave \
-          -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
-          --security-opt seccomp=unconfined \
-          --mount type=bind,source=./cert_col_delta.tar,target=/certs.tar \
-          --env KERAS_HOME=/tmp \
-          example_workspace bash -c "tar -xf /certs.tar && gramine-sgx fx collaborator certify --import agg_to_col_delta_signed_cert.zip && gramine-direct fx collaborator start -n delta"

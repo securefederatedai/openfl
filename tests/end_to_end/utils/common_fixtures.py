@@ -37,18 +37,24 @@ def fx_federation_tr(request):
     test_env = fh.get_test_env_from_markers(request)
 
     if test_env not in ["task_runner_docker", "task_runner_basic"]:
-        raise ValueError("Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws")
+        raise ValueError(
+            "Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws"
+        )
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+    model_name, workspace_path, local_bind_path, agg_domain_name = (
+        fh.federation_env_setup_and_validate(request)
+    )
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
-    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path)
+    model_owner = mo_model.ModelOwner(
+        model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
+    )
 
     # Create workspace for given model name
     fh.create_persistent_store(model_owner.name, local_bind_path)
@@ -85,7 +91,7 @@ def fx_federation_tr(request):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id, # None in case of non-docker environment
+        container_id=model_owner.container_id,  # None in case of non-docker environment
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -136,18 +142,24 @@ def fx_federation_tr_dws(request):
     Note: As this is a function level fixture, thus no import is required at test level.
     """
     if fh.get_test_env_from_markers(request) != "task_runner_dockerized_ws":
-        raise ValueError("Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws")
+        raise ValueError(
+            "Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws"
+        )
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
+    model_name, workspace_path, local_bind_path, agg_domain_name = (
+        fh.federation_env_setup_and_validate(request)
+    )
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
-    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path)
+    model_owner = mo_model.ModelOwner(
+        model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
+    )
 
     # Create workspace for given model name
     fh.create_persistent_store(model_owner.name, local_bind_path)
@@ -177,7 +189,7 @@ def fx_federation_tr_dws(request):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id, # None in case of non-docker environment
+        container_id=model_owner.container_id,  # None in case of non-docker environment
     )
 
     futures = [
@@ -194,35 +206,33 @@ def fx_federation_tr_dws(request):
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
 
-    fh.create_tarball_for_collaborators(collaborators, local_bind_path)
+    fh.create_tarball_for_collaborators(
+        collaborators, local_bind_path, use_tls=request.config.use_tls
+    )
 
     # Generate the sign request and certify the aggregator in case of TLS
     if request.config.use_tls:
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
-        local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
-        return_code, output, error = ssh.run_command(f"tar -cf cert_agg.tar plan cert save", work_dir=local_agg_ws_path)
-        if return_code != 0:
-            raise Exception(f"Failed to create tar for aggregator: {error}")
+
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    return_code, output, error = ssh.run_command(
+        f"tar -cf cert_agg.tar plan cert save", work_dir=local_agg_ws_path
+    )
+    if return_code != 0:
+        raise Exception(f"Failed to create tar for aggregator: {error}")
 
     # When no name is provided 'fx workspace dockerize --save ..' will use the last folder name
     # which is workspace in this case for tar and image name.
     image_name = "workspace"
     model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
 
-    futures = [
-        executor.submit(
-            dh.start_docker_container,
-            container_name=participant.name,
-            workspace_path=workspace_path,
-            local_bind_path=local_bind_path,
-            image=image_name,
-            mount_mapping=["cert_agg.tar:/certs.tar"] if participant.name == "aggregator" else [f"cert_col_{participant.name}.tar:/certs.tar"],
-        )
-        for participant in collaborators + [aggregator]
-    ]
-    results = [f.result() for f in futures]
-    log.info(f"Result of starting docker containers: {results}")
+    fh.start_docker_containers_for_dws(
+        participants=[aggregator] + collaborators,
+        workspace_path=workspace_path,
+        local_bind_path=local_bind_path,
+        image_name=image_name,
+    )
 
     # Return the federation fixture
     return federation_fixture(

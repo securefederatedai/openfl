@@ -97,22 +97,33 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
     return True
 
 
-def create_tarball_for_collaborators(collaborators, local_bind_path):
+def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
     """
     Create tarball for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+        use_tls (bool): Use TLS or not (default is True)
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     try:
         def _create_tarball(collaborator_name, local_bind_path):
             local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator_name)
-            client_cert_entries = [f"cert/client/{f}" for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")]
-            if client_cert_entries:
-                client_cert_entries = " ".join(client_cert_entries)
-            tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}"
+            client_cert_entries = ""
+            tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml"
+            # If TLS is enabled, client certificates and signed certificates are also included
+            if use_tls:
+                client_path = f"{local_col_ws_path}/cert/client"
+                client_cert_entries = [f"cert/client/{f}" for f in client_path if f.endswith(".key")]
+                if client_cert_entries:
+                    client_cert_entries = " ".join(client_cert_entries)
+                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}" 
+
             return_code, output, error = ssh.run_command(f"tar -cf {tarfiles}", work_dir=local_col_ws_path)
             if return_code != 0:
                 raise Exception(f"Failed to create tarball for {collaborator_name}: {error}")
             return True
+
         results = [
             executor.submit(
                 _create_tarball,
@@ -188,13 +199,88 @@ def copy_file_between_participants(local_src_path, local_dest_path, file_name, r
     return True
 
 
-def run_federation(fed_obj):
+def run_federation(fed_obj, install_dependencies=True, run_inside_docker=False):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
+        install_dependencies (bool): Install dependencies on collaborators (default is True)
+        run_inside_docker (bool): Run the command inside docker container (default is False)
+            This is special case for dockerized workspace where the command is run inside the container only at the end
     Returns:
         list: List of response files for all the participants
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    if install_dependencies:
+        install_dependencies_on_collaborators(fed_obj)
+
+    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
+    futures = [
+        executor.submit(
+            participant.start,
+            constants.AGG_COL_RESULT_FILE.format(fed_obj.workspace_path, participant.name),
+            run_inside_docker=run_inside_docker,
+        )
+        for participant in fed_obj.collaborators + [fed_obj.aggregator]
+    ]
+
+    # Result will contain response files for all the participants.
+    results = [f.result() for f in futures]
+    if not all(results):
+        raise Exception("Failed to start one or more participants")
+    return results
+
+
+def run_federation_for_dws(fed_obj, use_tls):
+    """
+    Start the federation
+    Args:
+        fed_obj (object): Federation fixture object
+        use_tls (bool): Use TLS or not (default is True)
+    Returns:
+        list: List of response files for all the participants
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    try:
+        results = [
+            executor.submit(
+                run_command,
+                command=f"tar -xf /workspace/certs.tar",
+                workspace_path="",
+                error_msg=f"Failed to extract certificates for {participant.name}",
+                container_id=participant.container_id,
+                run_inside_docker=True,
+            )
+            for participant in [fed_obj.aggregator] + fed_obj.collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to extract certificates for one or more participants")
+    except Exception as e:
+        raise e
+
+    if use_tls:
+        try:
+            results = [
+                executor.submit(
+                    collaborator.import_pki,
+                    zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
+                    run_inside_docker=True,
+                )
+                for collaborator in fed_obj.collaborators
+            ]
+            if not all([f.result() for f in results]):
+                raise Exception("Failed to import and certify the CSR for one or more collaborators")
+        except Exception as e:
+            raise e
+
+    # Start federation run for all the participants
+    return run_federation(fed_obj, install_dependencies=False, run_inside_docker=True)
+
+
+def install_dependencies_on_collaborators(fed_obj):
+    """
+    Install dependencies on all the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     # Install dependencies on collaborators
@@ -211,21 +297,6 @@ def run_federation(fed_obj):
 
     if not all(results):
         raise Exception("Failed to install dependencies on one or more collaborators")
-
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start,
-            constants.AGG_COL_RESULT_FILE.format(fed_obj.workspace_path, participant.name),
-        )
-        for participant in fed_obj.collaborators + [fed_obj.aggregator]
-    ]
-
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise Exception("Failed to start one or more participants")
-    return results
 
 
 def verify_federation_run_completion(fed_obj, results, num_rounds):
@@ -435,7 +506,7 @@ def create_persistent_store(participant_name, local_bind_path):
         raise ex.PersistentStoreCreationException(f"{error_msg}: {e}")
 
 
-def run_command(command, workspace_path, error_msg=None, container_id=None, run_in_background=False, bg_file=None, print_output=False):
+def run_command(command, workspace_path, error_msg=None, container_id=None, run_in_background=False, bg_file=None, print_output=False, run_inside_docker=False):
     """
     Run the command
     Args:
@@ -445,12 +516,16 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
         run_in_background (bool): Run the command in background
         bg_file (str): Background file (with path)
         print_output (bool): Print the output
+        run_inside_docker (bool): Run the command inside docker container
+            This is special case for dockerized workspace where the command is run inside the container only at the end
     Returns:
         tuple: Return code, output and error
     """
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
-    is_docker = True if os.getenv("TEST_ENV") == "task_runner_docker" else False
+
+    is_docker = True if (os.getenv("TEST_ENV") == "task_runner_docker" or run_inside_docker) else False
+
     if is_docker and container_id:
         log.debug("Running command in docker container")
         if len(workspace_path):
@@ -610,3 +685,34 @@ def write_memory_usage_to_file(memory_usage_dict, output_file):
     except Exception as e:
         log.error(f"An error occurred while writing memory usage data to file: {e}")
         raise e
+
+
+def start_docker_containers_for_dws(participants, workspace_path, local_bind_path, image_name):
+    """
+    Start docker containers for the participants
+    Args:
+        participants (list): List of participant objects (collaborators and aggregator)
+        workspace_path (str): Workspace path
+        local_bind_path (str): Local bind path
+        image_name (str): Docker image name
+    """
+    for participant in participants:
+        try:
+            if participant.name == "aggregator":
+                local_ws_path = f"{local_bind_path}/aggregator/workspace"
+                local_cert_tar = "cert_agg.tar"
+            else:
+                local_ws_path = f"{local_bind_path}/{participant.name}/workspace"
+                local_cert_tar = f"cert_col_{participant.name}.tar"
+            
+            # In case of dockerized workspace, the workspace gets created inside folder with image name
+            container = dh.start_docker_container(
+                container_name=participant.name,
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
+                image=image_name,
+                mount_mapping=[f"{local_ws_path}/{local_cert_tar}:/{image_name}/certs.tar"],
+            )
+            participant.container_id = container.id
+        except Exception as e:
+            raise ex.DockerException(f"Failed to start {participant.name} docker environment: {e}")
