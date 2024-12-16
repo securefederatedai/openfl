@@ -4,7 +4,6 @@
 import pytest
 import collections
 import concurrent.futures
-import os
 import logging
 
 import tests.end_to_end.utils.constants as constants
@@ -35,13 +34,15 @@ def fx_federation_tr(request):
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
+    test_env = fh.get_test_env_from_markers(request)
+
+    if test_env not in ["task_runner_docker", "task_runner_basic"]:
+        raise ValueError("Use fx_federation_tr_dws for this test environment: dockerized_ws")
+    
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
-
-    if test_env not in ["task_runner_docker", "task_runner_native"]:
-        raise ValueError(f"Use fx_federation_dws for this test environment: {test_env}")
+    model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
@@ -66,13 +67,7 @@ def fx_federation_tr(request):
 
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
-    model_owner.modify_plan(
-        plan_path=plan_path,
-        new_rounds=request.config.num_rounds,
-        num_collaborators=request.config.num_collaborators,
-        disable_client_auth=not request.config.require_client_auth,
-        disable_tls=not request.config.use_tls,
-    )
+    model_owner.modify_plan(param_config=request.config, plan_path=plan_path)
 
     # Initialize the plan
     model_owner.initialize_plan(agg_domain_name=agg_domain_name)
@@ -105,7 +100,7 @@ def fx_federation_tr(request):
 
     futures = [
         executor.submit(
-            fh.setup_collaborator_with_pki,
+            fh.setup_collaborator,
             count=i,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
@@ -113,6 +108,9 @@ def fx_federation_tr(request):
         for i in range(request.config.num_collaborators)
     ]
     collaborators = [f.result() for f in futures]
+    
+    fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+    fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
     # Return the federation fixture
     return federation_fixture(
@@ -125,7 +123,7 @@ def fx_federation_tr(request):
 
 
 @pytest.fixture(scope="function")
-def fx_federation_dws(request):
+def fx_federation_tr_dws(request):
     """
     Fixture for federation in case of dockerized workspace. This fixture is used to create the model owner, aggregator, and collaborators.
     It also creates workspace.
@@ -137,12 +135,13 @@ def fx_federation_dws(request):
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
+    if fh.get_test_env_from_markers(request) != "dockerized_ws":
+        raise ValueError("Use fx_federation_tr_dws for this test environment: dockerized_ws")
+
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
-    if test_env != "dockerized_ws":
-        raise ValueError(f"Use fx_federation_tr for this test environment: {test_env}")
+    model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
  
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
@@ -158,13 +157,7 @@ def fx_federation_dws(request):
 
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
-    model_owner.modify_plan(
-        plan_path=plan_path,
-        new_rounds=request.config.num_rounds,
-        num_collaborators=request.config.num_collaborators,
-        disable_client_auth=not request.config.require_client_auth,
-        disable_tls=not request.config.use_tls,
-    )
+    model_owner.modify_plan(param_config=request.config, plan_path=plan_path)
 
     # Initialize the plan
     model_owner.initialize_plan(agg_domain_name=agg_domain_name)
@@ -189,7 +182,7 @@ def fx_federation_dws(request):
 
     futures = [
         executor.submit(
-            fh.setup_collaborator_with_pki,
+            fh.setup_collaborator,
             count=i,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
@@ -197,6 +190,10 @@ def fx_federation_dws(request):
         for i in range(request.config.num_collaborators)
     ]
     collaborators = [f.result() for f in futures]
+
+    fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+
+    fh.create_tarball_for_collaborators(collaborators, local_bind_path)
 
     # Generate the sign request and certify the aggregator in case of TLS
     # Skip this step in case of dockerized workspace
@@ -208,7 +205,10 @@ def fx_federation_dws(request):
         if return_code != 0:
             raise Exception(f"Failed to create tar for aggregator: {error}")
 
-    model_owner.load_workspace(workspace_tar_name=f"{model_name}.tar")
+    # When no name is provided 'fx workspace dockerize --save ..' will use the last folder name
+    # which is workspace in this case for tar and image name.
+    image_name = "workspace"
+    model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
 
     futures = [
         executor.submit(
@@ -216,7 +216,7 @@ def fx_federation_dws(request):
             container_name=participant.name,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
-            image=model_name,
+            image=image_name,
             mount_mapping=["cert_agg.tar:/certs.tar"] if participant.name == "aggregator" else [f"cert_col_{participant.name}.tar:/certs.tar"],
         )
         for participant in collaborators + [aggregator]

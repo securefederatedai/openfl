@@ -17,20 +17,19 @@ from tests.end_to_end.models import collaborator as col_model
 log = logging.getLogger(__name__)
 
 
-def setup_pki(fed_obj):
+def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
     """
     Setup PKI for trusted communication within the federation
 
     Args:
-        fed_obj (object): Federation fixture object
+        collaborators (list): List of collaborator objects
+        model_owner (object): Model owner object
+        local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
     """
     # PKI setup for aggregator is done at fixture level
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(fed_obj.local_bind_path)
-
-    if os.getenv("TEST_ENV") not in ["task_runner_docker", "task_runner_native"]:
-        raise ValueError(f"Use setup_pki_dws for this test environment: {os.getenv('TEST_ENV')}")
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -43,7 +42,7 @@ def setup_pki(fed_obj):
             executor.submit(
                 collaborator.generate_sign_request,
             )
-            for collaborator in fed_obj.collaborators
+            for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to generate sign request for one or more collaborators")
@@ -56,11 +55,11 @@ def setup_pki(fed_obj):
         results = [
             executor.submit(
                 copy_file_between_participants,
-                local_src_path=constants.COL_WORKSPACE_PATH.format(fed_obj.local_bind_path, collaborator.name),
+                local_src_path=constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name),
                 local_dest_path=local_agg_ws_path,
                 file_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
             )
-            for collaborator in fed_obj.collaborators
+            for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to copy sign request zip from one or more collaborators to aggregator")
@@ -69,9 +68,9 @@ def setup_pki(fed_obj):
 
     # Certify the collaborator sign requests
     # DO NOT run this in parallel as it causes command to fail with FileNotFoundError for a different collaborator
-    for collaborator in fed_obj.collaborators:
+    for collaborator in collaborators:
         try:
-            fed_obj.model_owner.certify_collaborator(
+            model_owner.certify_collaborator(
                 collaborator_name=collaborator.name,
                 zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
             )
@@ -85,23 +84,64 @@ def setup_pki(fed_obj):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=local_agg_ws_path,
-                local_dest_path=constants.COL_WORKSPACE_PATH.format(fed_obj.local_bind_path, collaborator.name),
+                local_dest_path=constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name),
                 file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
             )
-            for collaborator in fed_obj.collaborators
+            for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to copy signed certificates from aggregator to one or more collaborators")
     except Exception as e:
         raise e
 
+    return True
+
+
+def create_tarball_for_collaborators(collaborators, local_bind_path):
+    """
+    Create tarball for all the collaborators
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    try:
+        def _create_tarball(collaborator_name, local_bind_path):
+            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator_name)
+            client_cert_entries = [f"cert/client/{f}" for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")]
+            if client_cert_entries:
+                client_cert_entries = " ".join(client_cert_entries)
+            tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}"
+            return_code, output, error = ssh.run_command(f"tar -cf {tarfiles}", work_dir=local_col_ws_path)
+            if return_code != 0:
+                raise Exception(f"Failed to create tarball for {collaborator_name}: {error}")
+            return True
+        results = [
+            executor.submit(
+                _create_tarball,
+                collaborator.name,
+                local_bind_path=local_bind_path
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to create tarball for one or more collaborators")
+    except Exception as e:
+        raise e
+
+    return True
+
+
+def import_pki_for_collaborators(collaborators, local_bind_path):
+    """
+    Import and certify the CSR for the collaborators
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
                 collaborator.import_pki,
                 zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
             )
-            for collaborator in fed_obj.collaborators
+            for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to import and certify the CSR for one or more collaborators")
@@ -115,11 +155,11 @@ def setup_pki(fed_obj):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=constants.COL_PLAN_PATH.format(fed_obj.local_bind_path, collaborator.name),
+                local_dest_path=constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
                 file_name="cols.yaml",
                 run_with_sudo=True,
             )
-            for collaborator in fed_obj.collaborators
+            for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to copy cols.yaml file from aggregator to one or more collaborators")
@@ -237,7 +277,6 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     time.sleep(20) # Wait for some time before checking the log file
     # Set timeout based on the number of rounds and time for each round
     timeout = 600 + ( time_for_each_round * num_rounds ) # in seconds
-    log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
 
     # In case of docker environment, get the logs from local path which is mounted to the container
     if os.getenv("TEST_ENV") == "task_runner_docker":
@@ -258,7 +297,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
         content = list(filter(str.rstrip, lines))[-1:]
 
         # Print last line of the log file on screen to track the progress
-        log.info(f"{participant.name}: {content}")
+        log.info(f"Last line in {participant.name} log: {content}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
@@ -272,26 +311,35 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
         return True
 
 
+def get_test_env_from_markers(request):
+    """
+    Get test environment based on test case markers
+    """
+    # Determine the test type based on the markers
+    markers = [m.name for m in request.node.iter_markers()]
+    if "task_runner_docker" in markers:
+        test_env = "task_runner_docker"
+    elif "task_runner_basic" in markers:
+        test_env = "task_runner_basic"
+    elif "dockerized_ws" in markers:
+        test_env = "dockerized_ws"
+
+    os.environ["TEST_ENV"] = test_env
+    return test_env
+
+
 def federation_env_setup_and_validate(request):
     """
     Setup the federation environment and validate the configurations
     Args:
         request (object): Request object
     Returns:
-        tuple: Test environment, model name, workspace path, aggregator domain name
+        tuple: Model name, workspace path, local bind path, aggregator domain name
     """
     agg_domain_name = "localhost"
 
     # Determine the test type based on the markers
-    markers = [m.name for m in request.node.iter_markers()]
-    if "task_runner_docker" in markers:
-        test_env = "task_runner_docker"
-    elif "task_runner_native" in markers:
-        test_env = "task_runner_native"
-    elif "dockerized_ws" in markers:
-        test_env = "dockerized_ws"
-
-    os.environ["TEST_ENV"] = test_env
+    test_env = get_test_env_from_markers(request)
 
     # Validate the model name and create the workspace name
     if not request.config.model_name.upper() in constants.ModelName._member_names_:
@@ -300,6 +348,7 @@ def federation_env_setup_and_validate(request):
     # Set the workspace path
     home_dir = os.getenv("HOME")
     local_bind_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
+    workspace_path = local_bind_path
 
     if test_env in ["task_runner_docker", "dockerized_ws"]:
         # Cleanup docker containers
@@ -312,10 +361,8 @@ def federation_env_setup_and_validate(request):
             dh.create_docker_network()
             agg_domain_name = "aggregator"
 
-        # Absolute path is required for docker
-        workspace_path = os.path.join("/", request.config.results_dir, request.config.model_name)
-    else:
-        workspace_path = local_bind_path
+            # Absolute path is required for docker
+            workspace_path = os.path.join("/", request.config.results_dir, request.config.model_name)
 
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
@@ -328,7 +375,7 @@ def federation_env_setup_and_validate(request):
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
     )
-    return test_env, request.config.model_name, workspace_path, local_bind_path, agg_domain_name
+    return request.config.model_name, workspace_path, local_bind_path, agg_domain_name
 
 
 def add_local_workspace_permission(local_bind_path):
@@ -463,18 +510,13 @@ def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator_with_pki(count, workspace_path, local_bind_path):
+def setup_collaborator(count, workspace_path, local_bind_path):
     """
     Setup the collaborator
-    Args:
-        count (int): Count of collaborator
-        workspace_path (str): Workspace path
-        local_bind_path (str): Local bind path
-    Returns:
-        object: Collaborator object
+    Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
     """
+    test_env = os.getenv("TEST_ENV")
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
-    collaborator = None
 
     try:
         collaborator = col_model.Collaborator(
@@ -488,7 +530,7 @@ def setup_collaborator_with_pki(count, workspace_path, local_bind_path):
         raise ex.PersistentStoreCreationException(f"Failed to create persistent store for {collaborator.name}: {e}")
 
     try:
-        if os.getenv("TEST_ENV") == "task_runner_docker":
+        if test_env == "task_runner_docker":
             container = dh.start_docker_container(
                 container_name=collaborator.name,
                 workspace_path=workspace_path,
@@ -509,24 +551,7 @@ def setup_collaborator_with_pki(count, workspace_path, local_bind_path):
         collaborator.create_collaborator()
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
-
-    try:
-        if os.getenv("TEST_ENV") == "dockerized_ws":
-            tarfiles = f"plan/data.yaml agg_to_col_{collaborator.name}_signed_cert.zip"
-            entries = [f for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")]
-            tarfiles = " ".join([tarfiles] + entries)
-            log.info(f"Tar files: {tarfiles}")
-            return_code, output, error = ssh.run_command(f"tar -cf cert_col_{collaborator.name}.tar {tarfiles}", work_dir=local_col_ws_path)
-            if return_code != 0:
-                raise Exception(f"Failed to create tarball for {collaborator.name}: {error}")
-
-            return_code, output, error = ssh.run_command(f"rm -f {tarfiles} col_{collaborator.name}_to_agg_cert_request.zip", work_dir=local_col_ws_path)
-            if return_code != 0:
-                log.warning(f"Failed to clean up files for {collaborator.name}: {error}")
-
-    except Exception as e:
-        raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
-
+    
     return collaborator
 
 

@@ -6,14 +6,16 @@ import logging
 import concurrent.futures
 
 import tests.end_to_end.utils.ssh_helper as ssh
-from tests.end_to_end.utils.common_fixtures import fx_federation_dws
+from tests.end_to_end.utils.common_fixtures import fx_federation_tr_dws
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
 
 
+# NOTE: This test file contains the test cases for the task runner federation using dockerized workspace approach.
+
 @pytest.mark.dockerized_ws
-def test_federation_via_dockerized_workspace(request, fx_federation_dws):
+def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     """
     Test federation via dockerized workspace.
     Args:
@@ -28,7 +30,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation_dws):
                 cmd="tar -xf /certs.tar",
                 work_dir=participant.workspace_path,
             )
-            for participant in [fx_federation_dws.aggregator] + fx_federation_dws.collaborators
+            for participant in [fx_federation_tr_dws.aggregator] + fx_federation_tr_dws.collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to extract certificates for one or more participants")
@@ -41,7 +43,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation_dws):
                 collaborator.import_pki,
                 zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
             )
-            for collaborator in fx_federation_dws.collaborators
+            for collaborator in fx_federation_tr_dws.collaborators
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to import and certify the CSR for one or more collaborators")
@@ -49,7 +51,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation_dws):
         raise e
 
     # Start the federation
-    results = fed_helper.run_federation(fx_federation_dws)
+    results = fed_helper.run_federation(fx_federation_tr_dws)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(fx_federation_dws, results, request.config.num_rounds), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(fx_federation_tr_dws, results, request.config.num_rounds), "Federation completion failed"

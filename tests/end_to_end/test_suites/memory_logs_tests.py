@@ -38,12 +38,6 @@ def test_log_memory_usage(request, fx_federation):
     if not request.config.log_memory_usage:
         pytest.skip("Memory usage logging is disabled")
 
-    # Setup PKI for trusted communication within the federation
-    if request.config.use_tls:
-        assert fed_helper.setup_pki(
-            fx_federation
-        ), "Failed to setup PKI for trusted communication"
-
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
 
