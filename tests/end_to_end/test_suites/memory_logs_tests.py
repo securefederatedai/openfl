@@ -52,7 +52,7 @@ def test_log_memory_usage(request, fx_federation_tr):
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fx_federation_tr)
+    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fx_federation_tr.workspace_path)
     assert os.path.exists(
         aggregator_memory_usage_file
     ), "Aggregator memory usage file is not available"
