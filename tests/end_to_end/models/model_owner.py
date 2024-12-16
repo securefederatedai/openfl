@@ -233,10 +233,10 @@ class ModelOwner():
                 container_id=self.container_id,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
-        
+
         except Exception as e:
             raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
-    
+
     def load_workspace(self, workspace_tar_name):
         """
         Load the workspace

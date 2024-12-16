@@ -38,7 +38,7 @@ def fx_federation_tr(request):
 
     if test_env not in ["task_runner_docker", "task_runner_basic"]:
         raise ValueError("Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws")
-    
+
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -107,7 +107,7 @@ def fx_federation_tr(request):
         for i in range(request.config.num_collaborators)
     ]
     collaborators = [f.result() for f in futures]
-    
+
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators, local_bind_path)
@@ -142,7 +142,7 @@ def fx_federation_tr_dws(request):
     executor = concurrent.futures.ThreadPoolExecutor()
 
     model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
- 
+
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # Create model owner object and the workspace for the model

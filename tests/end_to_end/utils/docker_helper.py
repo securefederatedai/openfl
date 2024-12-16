@@ -85,7 +85,7 @@ def start_docker_container(
         if mount_mapping:
             local_participant_path = mount_mapping[0].split(":")[0]
             docker_participant_path = mount_mapping[0].split(":")[1]
-        else: 
+        else:
             local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
             docker_participant_path = f"{workspace_path}/{container_name}/workspace"
 

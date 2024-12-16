@@ -323,6 +323,11 @@ def get_test_env_from_markers(request):
         test_env = "task_runner_basic"
     elif "task_runner_dockerized_ws" in markers:
         test_env = "task_runner_dockerized_ws"
+    else:
+        raise ValueError(
+            "Invalid test environment. Provide one of the valid markers: " \
+            "task_runner_docker, task_runner_basic, task_runner_dockerized_ws"
+        )
 
     os.environ["TEST_ENV"] = test_env
     return test_env
@@ -551,7 +556,7 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         collaborator.create_collaborator()
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
-    
+
     return collaborator
 
 
