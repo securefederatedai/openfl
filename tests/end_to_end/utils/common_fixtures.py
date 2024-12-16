@@ -89,7 +89,6 @@ def fx_federation_tr(request):
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
-    # Skip this step in case of dockerized workspace
     if request.config.use_tls:
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
@@ -109,8 +108,9 @@ def fx_federation_tr(request):
     ]
     collaborators = [f.result() for f in futures]
     
-    fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
-    fh.import_pki_for_collaborators(collaborators, local_bind_path)
+    if request.config.use_tls:
+        fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+        fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
     # Return the federation fixture
     return federation_fixture(
@@ -191,12 +191,12 @@ def fx_federation_tr_dws(request):
     ]
     collaborators = [f.result() for f in futures]
 
-    fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+    if request.config.use_tls:
+        fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
 
     fh.create_tarball_for_collaborators(collaborators, local_bind_path)
 
     # Generate the sign request and certify the aggregator in case of TLS
-    # Skip this step in case of dockerized workspace
     if request.config.use_tls:
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)

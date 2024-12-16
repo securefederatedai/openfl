@@ -11,6 +11,9 @@ log = logging.getLogger(__name__)
 
 
 # NOTE: This test file contains the test cases for the task runner federation using bare metal and docker approaches.
+# Fixture and marker mapping:
+# fx_federation_tr - task_runner_basic and task_runner_docker
+# fx_federation_tr_dws - task_runner_dockerized_ws
 
 @pytest.mark.task_runner_basic
 def test_federation_via_native(request, fx_federation_tr):

@@ -12,7 +12,12 @@ from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
 
+# Note: This test file contains the test cases for logging memory usage in a federated learning setup.
+# Fixture and marker mapping:
+# fx_federation_tr - task_runner_basic and task_runner_docker
+# fx_federation_tr_dws - task_runner_dockerized_ws
 
+@pytest.mark.task_runner_basic
 @pytest.mark.log_memory_usage
 def test_log_memory_usage(request, fx_federation_tr):
     """
