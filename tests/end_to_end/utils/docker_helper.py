@@ -62,6 +62,7 @@ def start_docker_container(
     image=constants.DEFAULT_OPENFL_IMAGE,
     env_keyval_list=None,
     security_opt=None,
+    mount_mapping=None,
 ):
     """
     Start the docker container with provided name.
@@ -73,17 +74,20 @@ def start_docker_container(
         env_keyval_list: List of environment variables to set.
             Provide in key=val format. For example ["KERAS_HOME=/tmp"]
         security_opt: Security options for the container
+        mount_mapping: Mapping of local path to docker path. Format ["local_path:docker_path"]
     Returns:
         container: Docker container object
     """
     try:
         client = get_docker_client()
 
-        # Local bind path
-        local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
-
-        # Docker container bind path
-        docker_participant_path = f"{workspace_path}/{container_name}/workspace"
+        # Set Local bind path and Docker container bind path
+        if mount_mapping:
+            local_participant_path = mount_mapping[0].split(":")[0]
+            docker_participant_path = mount_mapping[0].split(":")[1]
+        else: 
+            local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
+            docker_participant_path = f"{workspace_path}/{container_name}/workspace"
 
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},

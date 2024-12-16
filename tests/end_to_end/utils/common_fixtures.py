@@ -10,6 +10,7 @@ import logging
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 
 log = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ federation_fixture = collections.namedtuple(
 
 
 @pytest.fixture(scope="function")
-def fx_federation(request):
+def fx_federation_tr(request):
     """
     Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
     It also creates workspace.
@@ -39,7 +40,7 @@ def fx_federation(request):
 
     test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
 
-    if test_env not in ["docker", "task_runner"]:
+    if test_env not in ["task_runner_docker", "task_runner_native"]:
         raise ValueError(f"Use fx_federation_dws for this test environment: {test_env}")
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
@@ -52,7 +53,7 @@ def fx_federation(request):
     fh.create_persistent_store(model_owner.name, local_bind_path)
 
     # Start the docker container for aggregator in case of docker environment
-    if test_env == "docker":
+    if test_env == "task_runner_docker":
         container = dh.start_docker_container(
             container_name="aggregator",
             workspace_path=workspace_path,
@@ -104,7 +105,7 @@ def fx_federation(request):
 
     futures = [
         executor.submit(
-            fh.setup_collaborator,
+            fh.setup_collaborator_with_pki,
             count=i,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
@@ -141,8 +142,8 @@ def fx_federation_dws(request):
 
     test_env, model_name, workspace_path, local_bind_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
     if test_env != "dockerized_ws":
-        raise ValueError(f"Use fx_federation for this test environment: {test_env}")
-                                                                    
+        raise ValueError(f"Use fx_federation_tr for this test environment: {test_env}")
+ 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # Create model owner object and the workspace for the model
@@ -188,7 +189,7 @@ def fx_federation_dws(request):
 
     futures = [
         executor.submit(
-            fh.setup_collaborator,
+            fh.setup_collaborator_with_pki,
             count=i,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
@@ -196,6 +197,32 @@ def fx_federation_dws(request):
         for i in range(request.config.num_collaborators)
     ]
     collaborators = [f.result() for f in futures]
+
+    # Generate the sign request and certify the aggregator in case of TLS
+    # Skip this step in case of dockerized workspace
+    if request.config.use_tls:
+        aggregator.generate_sign_request()
+        model_owner.certify_aggregator(agg_domain_name)
+        local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+        return_code, output, error = ssh.run_command(f"tar -cf cert_agg.tar plan cert save", work_dir=local_agg_ws_path)
+        if return_code != 0:
+            raise Exception(f"Failed to create tar for aggregator: {error}")
+
+    model_owner.load_workspace(workspace_tar_name=f"{model_name}.tar")
+
+    futures = [
+        executor.submit(
+            dh.start_docker_container,
+            container_name=participant.name,
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path,
+            image=model_name,
+            mount_mapping=["cert_agg.tar:/certs.tar"] if participant.name == "aggregator" else [f"cert_col_{participant.name}.tar:/certs.tar"],
+        )
+        for participant in collaborators + [aggregator]
+    ]
+    results = [f.result() for f in futures]
+    log.info(f"Result of starting docker containers: {results}")
 
     # Return the federation fixture
     return federation_fixture(

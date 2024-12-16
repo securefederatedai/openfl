@@ -11,7 +11,7 @@ import re
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.ssh_helper as sh
+import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 
 log = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ def setup_pki(fed_obj):
     # PKI setup for aggregator is done at fixture level
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(fed_obj.local_bind_path)
 
-    if os.getenv("TEST_ENV") not in ["docker", "task_runner"]:
-        raise ValueError(f"Use setup_pki_dws for this test environment: {test_env}")
+    if os.getenv("TEST_ENV") not in ["task_runner_docker", "task_runner_native"]:
+        raise ValueError(f"Use setup_pki_dws for this test environment: {os.getenv('TEST_ENV')}")
 
     executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -140,7 +140,7 @@ def copy_file_between_participants(local_src_path, local_dest_path, file_name, r
     """
     cmd = "sudo cp" if run_with_sudo else "cp"
     cmd += f" {local_src_path}/{file_name} {local_dest_path}"
-    return_code, output, error = sh.run_command(cmd)
+    return_code, output, error = ssh.run_command(cmd)
     if return_code != 0:
         log.error(f"Failed to copy file: {error}")
         raise Exception(f"Failed to copy file: {error}")
@@ -240,7 +240,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
 
     # In case of docker environment, get the logs from local path which is mounted to the container
-    if os.getenv("TEST_ENV") == "docker":
+    if os.getenv("TEST_ENV") == "task_runner_docker":
         result_file = constants.AGG_COL_RESULT_FILE.format(local_bind_path, participant.name)
 
     log.info(f"Result file is: {result_file}")
@@ -284,12 +284,12 @@ def federation_env_setup_and_validate(request):
 
     # Determine the test type based on the markers
     markers = [m.name for m in request.node.iter_markers()]
-    if "docker" in markers:
-        test_env = "docker"
+    if "task_runner_docker" in markers:
+        test_env = "task_runner_docker"
+    elif "task_runner_native" in markers:
+        test_env = "task_runner_native"
     elif "dockerized_ws" in markers:
         test_env = "dockerized_ws"
-    else:
-        test_env = "task_runner" # default test environment
 
     os.environ["TEST_ENV"] = test_env
 
@@ -301,11 +301,11 @@ def federation_env_setup_and_validate(request):
     home_dir = os.getenv("HOME")
     local_bind_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
 
-    if test_env in ["docker", "dockerized_ws"]:
+    if test_env in ["task_runner_docker", "dockerized_ws"]:
         # Cleanup docker containers
         dh.cleanup_docker_containers()
         # Note: In case of dockerized workspace, image name would be same as workspace name and to be created at later stage.
-        if test_env == "docker":
+        if test_env == "task_runner_docker":
             # Check if the docker image and network exists
             dh.check_docker_image()
             dh.remove_docker_network()
@@ -397,7 +397,7 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     """
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
-    is_docker = True if os.getenv("TEST_ENV") == "docker" else False
+    is_docker = True if os.getenv("TEST_ENV") == "task_runner_docker" else False
     if is_docker and container_id:
         log.debug("Running command in docker container")
         if len(workspace_path):
@@ -423,14 +423,14 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     log.debug("Running command on local machine")
     if run_in_background and not is_docker:
         bg_file = open(bg_file, "w", buffering=1)
-        sh.run_command_background(
+        ssh.run_command_background(
             command,
             work_dir=workspace_path,
             redirect_to_file=bg_file,
             check_sleep=60,
         )
     else:
-        return_code, output, error = sh.run_command(command)
+        return_code, output, error = ssh.run_command(command)
         if return_code != 0:
             log.error(f"{error_msg}: {error}")
             raise Exception(f"{error_msg}: {error}")
@@ -463,7 +463,7 @@ def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(count, workspace_path, local_bind_path):
+def setup_collaborator_with_pki(count, workspace_path, local_bind_path):
     """
     Setup the collaborator
     Args:
@@ -488,7 +488,7 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         raise ex.PersistentStoreCreationException(f"Failed to create persistent store for {collaborator.name}: {e}")
 
     try:
-        if os.getenv("TEST_ENV") == "docker":
+        if os.getenv("TEST_ENV") == "task_runner_docker":
             container = dh.start_docker_container(
                 container_name=collaborator.name,
                 workspace_path=workspace_path,
@@ -498,16 +498,32 @@ def setup_collaborator(count, workspace_path, local_bind_path):
     except Exception as e:
         raise ex.DockerException(f"Failed to start {collaborator.name} docker environment: {e}")
 
-    if not os.getenv("TEST_ENV") == "dockerized_ws":
-        try:
-            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name)
-            copy_file_between_participants(local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME)
-            collaborator.import_workspace()
-        except Exception as e:
-            raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
+    try:
+        local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name)
+        copy_file_between_participants(local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME)
+        collaborator.import_workspace()
+    except Exception as e:
+        raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
 
     try:
         collaborator.create_collaborator()
+    except Exception as e:
+        raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
+
+    try:
+        if os.getenv("TEST_ENV") == "dockerized_ws":
+            tarfiles = f"plan/data.yaml agg_to_col_{collaborator.name}_signed_cert.zip"
+            entries = [f for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")]
+            tarfiles = " ".join([tarfiles] + entries)
+            log.info(f"Tar files: {tarfiles}")
+            return_code, output, error = ssh.run_command(f"tar -cf cert_col_{collaborator.name}.tar {tarfiles}", work_dir=local_col_ws_path)
+            if return_code != 0:
+                raise Exception(f"Failed to create tarball for {collaborator.name}: {error}")
+
+            return_code, output, error = ssh.run_command(f"rm -f {tarfiles} col_{collaborator.name}_to_agg_cert_request.zip", work_dir=local_col_ws_path)
+            if return_code != 0:
+                log.warning(f"Failed to clean up files for {collaborator.name}: {error}")
+
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
