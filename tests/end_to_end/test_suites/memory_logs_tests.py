@@ -7,6 +7,7 @@ import os
 import json
 
 from tests.end_to_end.utils.common_fixtures import fx_federation
+import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
@@ -37,12 +38,6 @@ def test_log_memory_usage(request, fx_federation):
     if not request.config.log_memory_usage:
         pytest.skip("Memory usage logging is disabled")
 
-    # Setup PKI for trusted communication within the federation
-    if request.config.use_tls:
-        assert fed_helper.setup_pki(
-            fx_federation
-        ), "Failed to setup PKI for trusted communication"
-
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
 
@@ -50,14 +45,9 @@ def test_log_memory_usage(request, fx_federation):
     assert fed_helper.verify_federation_run_completion(
         fx_federation, results, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
+
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = os.path.join(
-        fx_federation.workspace_path,
-        "aggregator",
-        "workspace",
-        "logs",
-        "aggregator_memory_usage.json",
-    )
+    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fx_federation.workspace_path)
     assert os.path.exists(
         aggregator_memory_usage_file
     ), "Aggregator memory usage file is not available"
@@ -72,12 +62,8 @@ def test_log_memory_usage(request, fx_federation):
 
     # check memory usage entries for each collaborator
     for collaborator in fx_federation.collaborators:
-        collaborator_memory_usage_file = os.path.join(
-            fx_federation.workspace_path,
-            collaborator.name,
-            "workspace",
-            "logs",
-            f"{collaborator.collaborator_name}_memory_usage.json",
+        collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
+            fx_federation.workspace_path, collaborator.name
         )
 
         assert os.path.exists(

@@ -129,3 +129,20 @@ def run_command(
             raise subprocess.CalledProcessError(returncode=result.returncode, cmd=cmd, stderr=result.stderr)
 
     return result.returncode, output, error
+
+
+def get_git_repo_and_branch():
+    """
+    Get the current repository URL and branch name.
+    """
+    try:
+        # Get the current repository URL
+        repo_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode('utf-8')
+        
+        # Get the current branch name
+        branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip().decode('utf-8')
+        
+        return repo_url, branch_name
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None, None

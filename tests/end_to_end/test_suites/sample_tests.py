@@ -26,8 +26,6 @@ def test_sample_model_name(fx_federation):
     Add a proper docstring here.
     """
     log.info(f"Running sample model test {fx_federation.model_name}")
-    # Setup PKI for trusted communication within the federation
-    assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI"
 
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
