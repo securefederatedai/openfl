@@ -321,8 +321,8 @@ def get_test_env_from_markers(request):
         test_env = "task_runner_docker"
     elif "task_runner_basic" in markers:
         test_env = "task_runner_basic"
-    elif "dockerized_ws" in markers:
-        test_env = "dockerized_ws"
+    elif "task_runner_dockerized_ws" in markers:
+        test_env = "task_runner_dockerized_ws"
 
     os.environ["TEST_ENV"] = test_env
     return test_env
@@ -350,7 +350,7 @@ def federation_env_setup_and_validate(request):
     local_bind_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
     workspace_path = local_bind_path
 
-    if test_env in ["task_runner_docker", "dockerized_ws"]:
+    if test_env in ["task_runner_docker", "task_runner_dockerized_ws"]:
         # Cleanup docker containers
         dh.cleanup_docker_containers()
         # Note: In case of dockerized workspace, image name would be same as workspace name and to be created at later stage.

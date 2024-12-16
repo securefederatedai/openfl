@@ -6,7 +6,7 @@ import logging
 import os
 import json
 
-from tests.end_to_end.utils.common_fixtures import fx_federation
+from tests.end_to_end.utils.common_fixtures import fx_federation_tr
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils import federation_helper as fed_helper
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.mark.log_memory_usage
-def test_log_memory_usage(request, fx_federation):
+def test_log_memory_usage(request, fx_federation_tr):
     """
     This module contains end-to-end tests for logging memory usage in a federated learning setup.
     Test Suite:
@@ -24,7 +24,7 @@ def test_log_memory_usage(request, fx_federation):
     Test the memory usage logging functionality in a federated learning setup.
     Parameters:
         - request: The pytest request object containing configuration options.
-        - fx_federation: The fixture representing the federated learning setup.
+        - fx_federation_tr: The fixture representing the federated learning setup.
     Steps:
         1. Skip the test if memory usage logging is disabled.
         2. Setup PKI for trusted communication if TLS is enabled.
@@ -39,15 +39,15 @@ def test_log_memory_usage(request, fx_federation):
         pytest.skip("Memory usage logging is disabled")
 
     # Start the federation
-    results = fed_helper.run_federation(fx_federation)
+    results = fed_helper.run_federation(fx_federation_tr)
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
-        fx_federation, results, num_rounds=request.config.num_rounds
+        fx_federation_tr, results, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fx_federation.workspace_path)
+    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fx_federation_tr)
     assert os.path.exists(
         aggregator_memory_usage_file
     ), "Aggregator memory usage file is not available"
@@ -61,9 +61,9 @@ def test_log_memory_usage(request, fx_federation):
     ), "Memory usage details are not available for all rounds"
 
     # check memory usage entries for each collaborator
-    for collaborator in fx_federation.collaborators:
+    for collaborator in fx_federation_tr.collaborators:
         collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
-            fx_federation.workspace_path, collaborator.name
+            fx_federation_tr.workspace_path, collaborator.name
         )
 
         assert os.path.exists(

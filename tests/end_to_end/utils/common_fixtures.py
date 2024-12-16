@@ -37,7 +37,7 @@ def fx_federation_tr(request):
     test_env = fh.get_test_env_from_markers(request)
 
     if test_env not in ["task_runner_docker", "task_runner_basic"]:
-        raise ValueError("Use fx_federation_tr_dws for this test environment: dockerized_ws")
+        raise ValueError("Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws")
     
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
@@ -135,8 +135,8 @@ def fx_federation_tr_dws(request):
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
-    if fh.get_test_env_from_markers(request) != "dockerized_ws":
-        raise ValueError("Use fx_federation_tr_dws for this test environment: dockerized_ws")
+    if fh.get_test_env_from_markers(request) != "task_runner_dockerized_ws":
+        raise ValueError("Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws")
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()

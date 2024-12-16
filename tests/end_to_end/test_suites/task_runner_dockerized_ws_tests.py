@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 # NOTE: This test file contains the test cases for the task runner federation using dockerized workspace approach.
 
-@pytest.mark.dockerized_ws
+@pytest.mark.task_runner_dockerized_ws
 def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     """
     Test federation via dockerized workspace.
