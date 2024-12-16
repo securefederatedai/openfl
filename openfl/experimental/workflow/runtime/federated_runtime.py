@@ -60,9 +60,9 @@ class FederatedRuntime(Runtime):
         if director:
             self.director = director
             self._fill_certs(
-                self.director["cert_chain"],
-                self.director["api_private_key"],
-                self.director["api_cert"],
+                self.director.get("cert_chain", None),
+                self.director.get("api_private_key", None),
+                self.director.get("api_cert", None),
             )
             self._dir_client = self._create_director_client()
 
