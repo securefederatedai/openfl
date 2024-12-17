@@ -206,6 +206,7 @@ def fx_federation_tr_dws(request):
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
 
+    # Note: In case of multiple machines setup, scp the created tar for collaborators to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls
     )
@@ -216,6 +217,8 @@ def fx_federation_tr_dws(request):
         model_owner.certify_aggregator(agg_domain_name)
 
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+
+    # Note: In case of multiple machines setup, scp this tar to the other machine(s)
     return_code, output, error = ssh.run_command(
         f"tar -cf cert_agg.tar plan cert save", work_dir=local_agg_ws_path
     )
@@ -225,6 +228,9 @@ def fx_federation_tr_dws(request):
     # When no name is provided 'fx workspace dockerize --save ..' will use the last folder name
     # which is workspace in this case for tar and image name.
     image_name = "workspace"
+
+    # Note: In case of multiple machines setup, scp this workspace tar
+    # to the other machine(s) so that docker load can load the image.
     model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
 
     fh.start_docker_containers_for_dws(

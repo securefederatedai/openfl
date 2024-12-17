@@ -127,13 +127,11 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
             tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml"
             # If TLS is enabled, client certificates and signed certificates are also included
             if use_tls:
-                client_path = f"{local_col_ws_path}/cert/client"
                 client_cert_entries = [
-                    f"cert/client/{f}" for f in client_path if f.endswith(".key")
+                    f"cert/client/{f}" for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")
                 ]
-                if client_cert_entries:
-                    client_cert_entries = " ".join(client_cert_entries)
-                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}"
+                client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
+                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
 
             return_code, output, error = ssh.run_command(
                 f"tar -cf {tarfiles}", work_dir=local_col_ws_path
