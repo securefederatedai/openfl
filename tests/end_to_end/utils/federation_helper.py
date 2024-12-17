@@ -231,8 +231,7 @@ def run_federation(fed_obj, install_dependencies=True, run_for_dockerized_ws=Fal
     Args:
         fed_obj (object): Federation fixture object
         install_dependencies (bool): Install dependencies on collaborators (default is True)
-        run_for_dockerized_ws (bool): Run the command inside docker container (default is False)
-            This is special case for dockerized workspace where the command is run inside the container only at the end
+        run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
         list: List of response files for all the participants
     """
@@ -593,8 +592,7 @@ def run_command(
         run_in_background (bool): Run the command in background
         bg_file (str): Background file (with path)
         print_output (bool): Print the output
-        run_for_dockerized_ws (bool): Run the command inside docker container
-            This is special case for dockerized workspace where the command is run inside the container only at the end
+        run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
         tuple: Return code, output and error
     """

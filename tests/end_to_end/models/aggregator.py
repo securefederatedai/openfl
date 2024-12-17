@@ -55,7 +55,7 @@ class Aggregator():
         Start the aggregator
         Args:
             res_file (str): Result file to track the logs
-            run_for_dockerized_ws (bool): Flag to run the aggregator inside a docker container
+            run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
         Returns:
             str: Path to the log file
         """

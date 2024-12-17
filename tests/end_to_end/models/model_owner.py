@@ -141,6 +141,7 @@ class ModelOwner():
             with open(plan_file) as fp:
                 data = yaml.load(fp, Loader=yaml.FullLoader)
 
+            # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
             # Memory Leak related
             data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
@@ -214,7 +215,7 @@ class ModelOwner():
 
     def dockerize_workspace(self):
         """
-        Dockerize the workspace
+        Dockerize the workspace. It internally uses workspace name as the image name
         """
         log.info("Dockerizing the workspace. It will take some time to complete..")
         try:

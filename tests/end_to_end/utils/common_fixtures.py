@@ -38,7 +38,7 @@ def fx_federation_tr(request):
 
     if test_env not in ["task_runner_docker", "task_runner_basic"]:
         raise ValueError(
-            "Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws"
+            "Fixture fx_federation_tr is only supported for task_runner_basic and task_runner_docker markers"
         )
 
     collaborators = []
@@ -143,7 +143,7 @@ def fx_federation_tr_dws(request):
     """
     if fh.get_test_env_from_markers(request) != "task_runner_dockerized_ws":
         raise ValueError(
-            "Use fx_federation_tr_dws for this test environment: task_runner_dockerized_ws"
+            "Fixture fx_federation_tr_dws is only supported for task_runner_dockerized_ws marker"
         )
 
     collaborators = []
@@ -174,7 +174,10 @@ def fx_federation_tr_dws(request):
     # Initialize the plan
     model_owner.initialize_plan(agg_domain_name=agg_domain_name)
 
+    # Command 'fx workspace dockerize --save ..' will use the workspace name for image name
+    # which is 'workspace' in this case.
     model_owner.dockerize_workspace()
+    image_name = "workspace"
 
     # Certify the workspace in case of TLS
     # Register the collaborators in case of non-TLS
@@ -224,10 +227,6 @@ def fx_federation_tr_dws(request):
     )
     if return_code != 0:
         raise Exception(f"Failed to create tar for aggregator: {error}")
-
-    # When no name is provided 'fx workspace dockerize --save ..' will use the last folder name
-    # which is workspace in this case for tar and image name.
-    image_name = "workspace"
 
     # Note: In case of multiple machines setup, scp this workspace tar
     # to the other machine(s) so that docker load can load the image.

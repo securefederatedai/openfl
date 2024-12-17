@@ -94,7 +94,7 @@ def start_docker_container(
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
         }
-        log.info(f"Volumes for {container_name}: {volumes}")
+        log.debug(f"Volumes for {container_name}: {volumes}")
 
         environment = {
             "WORKSPACE_PATH": docker_participant_path,
@@ -106,7 +106,7 @@ def start_docker_container(
                 key, val = keyval.split("=")
                 environment[key] = val
 
-        log.info(f"Environment variables for {container_name}: {environment}")
+        log.debug(f"Environment variables for {container_name}: {environment}")
         # Start a container from the image
         container = client.containers.run(
             image,

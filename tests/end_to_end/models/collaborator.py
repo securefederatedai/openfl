@@ -89,8 +89,7 @@ class Collaborator():
         Import and certify the CSR for the collaborator
         Args:
             zip_name (str): Zip file name
-            run_for_dockerized_ws (bool): Run the command inside the docker container
-                This is special case for dockerized workspace.
+            run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
         Returns:
             bool: True if successful, else False
         """
