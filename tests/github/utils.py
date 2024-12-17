@@ -53,6 +53,7 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
 
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
+    check_call(['pip', 'list'])
     plan_path = Path('plan/plan.yaml')
     try:
         rounds_to_train = int(rounds_to_train)
