@@ -92,6 +92,7 @@ Round
 
    releases
    contributing
+   roadmap
    about/features
    about/blogs_publications
    about/license
