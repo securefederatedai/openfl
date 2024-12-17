@@ -6,6 +6,7 @@ import collections
 import concurrent.futures
 import os
 import logging
+import numpy as np
 
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
@@ -138,12 +139,29 @@ def fx_local_federated_workflow(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
-    aggregator = Aggregator()
+    collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
+    collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
+    agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
+
+    collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
+    agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
+    collaborators_list = []
+
+    if agg_callback_func_name:
+        aggregator = Aggregator( name="agg",private_attributes_callable=agg_callback_func_name)
+    else:
+        aggregator = Aggregator()
 
     # Setup collaborators
-    collaborators_list = []
     for i in range(request.config.num_collaborators):
-        collaborators_list.append(Collaborator(name=f"collaborator{i}"))
+        func_var = i if collab_value == "int" else f"collaborator{i}" if collab_value == "str" else None
+        collaborators_list.append(
+            Collaborator(
+                name=f"collaborator{i}",
+                private_attributes_callable=collab_callback_func_name,
+                param = func_var
+            )
+        )
 
     backend = request.config.backend if hasattr(request.config, 'backend') else None
     if backend:
@@ -158,3 +176,96 @@ def fx_local_federated_workflow(request):
         collaborators=collaborators_list,
         runtime = local_runtime,
     )
+
+@pytest.fixture(scope="function")
+def fx_local_federated_workflow_prvt_attr(request):
+    """
+    Fixture to set up a local federated workflow for testing.
+    This fixture initializes an `Aggregator` and sets up a list of collaborators
+    based on the number specified in the test configuration. It also configures
+    a `LocalRuntime` with the aggregator, collaborators, and an optional backend
+    if specified in the test configuration.
+    Args:
+        request (FixtureRequest): The pytest request object that provides access
+                                to the test configuration.
+    Yields:
+        LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
+                    collaborators, and backend.
+    """
+    collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
+    collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
+    agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
+
+    collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
+    agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
+    collaborators_list = []
+    # Setup aggregator
+    if agg_callback_func_name:
+        aggregator = Aggregator( name="agg",private_attributes_callable=agg_callback_func_name)
+    else:
+        aggregator = Aggregator()
+
+    aggregator.private_attributes = {
+        "test_loader_pvt": np.random.rand(10, 28, 28)  # Random data
+    }
+    # Setup collaborators
+    for i in range(request.config.num_collaborators):
+        func_var = i if collab_value == "int" else f"collaborator{i}" if collab_value == "str" else None
+        collab = Collaborator(
+                name=f"collaborator{i}",
+                private_attributes_callable=collab_callback_func_name,
+                param = func_var
+            )
+        collab.private_attributes = {
+            "train_loader_pvt": np.random.rand(i * 50, 28, 28),
+            "test_loader_pvt": np.random.rand(i * 10, 28, 28),
+        }
+        collaborators_list.append(collab)
+
+    backend = request.config.backend if hasattr(request.config, 'backend') else None
+    if backend:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
+
+    log.info(f"Local runtime collaborators = {local_runtime.collaborators}")
+
+    # Return the federation fixture
+    return workflow_local_fixture(
+        aggregator=aggregator,
+        collaborators=collaborators_list,
+        runtime = local_runtime,
+    )
+
+
+def init_collaborator_private_attr_index(param):
+        return {"index": param + 1}
+
+def init_collaborator_private_attr_name(param):
+        return {"name": param}
+
+def init_collaborate_pvt_attr_np(param):
+    return {
+        "train_loader": np.random.rand(param * 50, 28, 28),
+        "test_loader": np.random.rand(param * 10, 28, 28),
+    }
+
+def init_agg_pvt_attr_np():
+    return {"test_loader": np.random.rand(10, 28, 28)}
+
+def init_collaborator_pvt_attr(
+    n_collaborators, index, train_dataset, test_dataset, batch_size
+):
+    local_train = deepcopy(train_dataset)
+    local_test = deepcopy(test_dataset)
+    local_train.data = mnist_train.data[index::n_collaborators]
+    local_train.targets = mnist_train.targets[index::n_collaborators]
+    local_test.data = mnist_test.data[index::n_collaborators]
+    local_test.targets = mnist_test.targets[index::n_collaborators]
+    return {
+        "train_loader": torch.utils.data.DataLoader(
+            local_train, batch_size=batch_size, shuffle=True
+        ),
+        "test_loader": torch.utils.data.DataLoader(
+            local_test, batch_size=batch_size, shuffle=True
+        ),
+    }
