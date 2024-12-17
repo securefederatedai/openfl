@@ -50,27 +50,27 @@ class Aggregator():
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
-    def start(self, res_file, run_inside_docker=False):
+    def start(self, res_file, run_for_dockerized_ws=False):
         """
         Start the aggregator
         Args:
             res_file (str): Result file to track the logs
-            run_inside_docker (bool): Flag to run the aggregator inside a docker container
+            run_for_dockerized_ws (bool): Flag to run the aggregator inside a docker container
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.name}")
-            res_file = res_file if not run_inside_docker else os.path.basename(res_file)
+            res_file = res_file if not run_for_dockerized_ws else os.path.basename(res_file)
             error_msg = "Failed to start the aggregator"
             fh.run_command(
                 "fx aggregator start",
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path if not run_inside_docker else "",
+                workspace_path=self.workspace_path if not run_for_dockerized_ws else "",
                 run_in_background=True,
                 bg_file=res_file,
-                run_inside_docker=run_inside_docker
+                run_for_dockerized_ws=run_for_dockerized_ws
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."

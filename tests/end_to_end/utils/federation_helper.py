@@ -225,13 +225,13 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True, run_inside_docker=False):
+def run_federation(fed_obj, install_dependencies=True, run_for_dockerized_ws=False):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
         install_dependencies (bool): Install dependencies on collaborators (default is True)
-        run_inside_docker (bool): Run the command inside docker container (default is False)
+        run_for_dockerized_ws (bool): Run the command inside docker container (default is False)
             This is special case for dockerized workspace where the command is run inside the container only at the end
     Returns:
         list: List of response files for all the participants
@@ -247,7 +247,7 @@ def run_federation(fed_obj, install_dependencies=True, run_inside_docker=False):
             constants.AGG_COL_RESULT_FILE.format(
                 fed_obj.workspace_path, participant.name
             ),
-            run_inside_docker=run_inside_docker,
+            run_for_dockerized_ws=run_for_dockerized_ws,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -278,7 +278,7 @@ def run_federation_for_dws(fed_obj, use_tls):
                 workspace_path="",
                 error_msg=f"Failed to extract certificates for {participant.name}",
                 container_id=participant.container_id,
-                run_inside_docker=True,
+                run_for_dockerized_ws=True,
             )
             for participant in [fed_obj.aggregator] + fed_obj.collaborators
         ]
@@ -295,7 +295,7 @@ def run_federation_for_dws(fed_obj, use_tls):
                 executor.submit(
                     collaborator.import_pki,
                     zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
-                    run_inside_docker=True,
+                    run_for_dockerized_ws=True,
                 )
                 for collaborator in fed_obj.collaborators
             ]
@@ -307,7 +307,7 @@ def run_federation_for_dws(fed_obj, use_tls):
             raise e
 
     # Start federation run for all the participants
-    return run_federation(fed_obj, run_inside_docker=True)
+    return run_federation(fed_obj, run_for_dockerized_ws=True)
 
 
 def install_dependencies_on_collaborators(fed_obj):
@@ -582,7 +582,7 @@ def run_command(
     run_in_background=False,
     bg_file=None,
     print_output=False,
-    run_inside_docker=False,
+    run_for_dockerized_ws=False,
 ):
     """
     Run the command
@@ -593,7 +593,7 @@ def run_command(
         run_in_background (bool): Run the command in background
         bg_file (str): Background file (with path)
         print_output (bool): Print the output
-        run_inside_docker (bool): Run the command inside docker container
+        run_for_dockerized_ws (bool): Run the command inside docker container
             This is special case for dockerized workspace where the command is run inside the container only at the end
     Returns:
         tuple: Return code, output and error
@@ -603,7 +603,7 @@ def run_command(
 
     is_docker = (
         True
-        if (os.getenv("TEST_ENV") == "task_runner_docker" or run_inside_docker)
+        if (os.getenv("TEST_ENV") == "task_runner_docker" or run_for_dockerized_ws)
         else False
     )
 
