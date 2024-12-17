@@ -1,3 +1,0 @@
-pillow
-tensorflow==2.13
-tensorflow-datasets
