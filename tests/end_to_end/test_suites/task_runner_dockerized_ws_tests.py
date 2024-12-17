@@ -3,9 +3,7 @@
 
 import pytest
 import logging
-import concurrent.futures
 
-import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.utils.common_fixtures import fx_federation_tr_dws
 from tests.end_to_end.utils import federation_helper as fed_helper
 

@@ -492,6 +492,8 @@ def federation_env_setup_and_validate(request):
     workspace_path = local_bind_path
 
     if test_env in ["task_runner_docker", "task_runner_dockerized_ws"]:
+
+        agg_domain_name = "aggregator"
         # Cleanup docker containers
         dh.cleanup_docker_containers()
         dh.remove_docker_network()
@@ -501,7 +503,6 @@ def federation_env_setup_and_validate(request):
         if test_env == "task_runner_docker":
             # Check if the docker image and network exists
             dh.check_docker_image()
-            agg_domain_name = "aggregator"
 
             # Absolute path is required for docker
             workspace_path = os.path.join(

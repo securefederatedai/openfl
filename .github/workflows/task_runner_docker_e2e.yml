@@ -3,7 +3,7 @@
 # Workflow to run Task Runner E2E tests via Docker
 # Authors - Noopur, Payal Chaurasiya
 #---------------------------------------------------------------------------
-name: Task Runner E2E via Docker
+name: Task_Runner_E2E_via_Docker # Please do not modify the name as it is used in the composite action
 
 on:
   workflow_dispatch:
@@ -53,26 +53,9 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
-
-      - name: Create OpenFL image
-        id: create_openfl_image
-        run: |
-          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
-          cd openfl-docker
-          docker build . -t openfl -f Dockerfile.base \
-            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+      - name: Pre test run
+        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
@@ -82,27 +65,11 @@ jobs:
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/task_runner_e2e/post_test_run
         if: ${{ always() }}
         with:
-          name: tr_tls_docker_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          run_type: "tr_tls_docker"
 
   test_with_non_tls_docker:
     name: tr_non_tls_docker
@@ -129,26 +96,9 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
-
-      - name: Create OpenFL image
-        id: create_openfl_image
-        run: |
-          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
-          cd openfl-docker
-          docker build . -t openfl -f Dockerfile.base \
-            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+      - name: Pre test run
+        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
@@ -158,27 +108,11 @@ jobs:
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/task_runner_e2e/post_test_run
         if: ${{ always() }}
         with:
-          name: tr_non_tls_docker_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          run_type: "tr_non_tls_docker"
 
   test_with_no_client_auth_docker:
     name: tr_no_client_auth_docker
@@ -205,26 +139,9 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
-
-      - name: Create OpenFL image
-        id: create_openfl_image
-        run: |
-          echo "Creating openfl image with current repo and branch. This may take a few minutes..."
-          cd openfl-docker
-          docker build . -t openfl -f Dockerfile.base \
-            --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+      - name: Pre test run
+        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without Client Auth
         id: run_tests
@@ -234,24 +151,8 @@ jobs:
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/task_runner_e2e/post_test_run
         if: ${{ always() }}
         with:
-          name: tr_no_client_auth_docker_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          run_type: "tr_no_client_auth_docker"

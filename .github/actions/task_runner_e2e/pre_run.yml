@@ -1,0 +1,39 @@
+---
+#---------------------------------------------------------------------------
+# Composite Action to run pre-test functions for task runner end to end tests
+# Includes:
+# - Set up Python
+# - Install dependencies
+#
+# Authors - Noopur, Payal Chaurasiya
+#---------------------------------------------------------------------------
+name: 'Pre-Test Functions'
+description: 'Run pre-test functions'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      id: install_dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+        pip install -r test-requirements.txt
+      shell: bash
+    
+    - name: Create OpenFL image
+      if: ${{ github.workflow == 'Task_Runner_E2E_via_Docker' }}
+      id: create_openfl_image
+      run: |
+        echo "Creating openfl image with current repo and branch. This may take a few minutes..."
+        cd openfl-docker
+        docker build . -t openfl -f Dockerfile.base \
+          --build-arg OPENFL_REVISION=https://github.com/${{ github.repository }}.git@${{ github.ref_name }}
+        echo "OpenFL image created successfully"
+      shell: bash
