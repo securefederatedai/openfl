@@ -5,23 +5,22 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path : save/keras_nlp_init.pbuf
-    best_state_path : save/keras_nlp_best.pbuf
-    last_state_path : save/keras_nlp_last.pbuf
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/last.pbuf
     rounds_to_train : 10
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
-    epochs_per_round : 10
-    polling_interval : 4
+    db_store_rounds: 2
     delta_updates    : false
     opt_treatment    : RESET
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.nlp_dataloader.NLPDataLoader
+  template : src.dataloader.NLPDataLoader
   settings :
     collaborator_count : 2
     batch_size         : 64
@@ -30,7 +29,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.nlp_taskrunner.KerasNLP
+  template : src.taskrunner.KerasNLP
   settings :
     latent_dim : 256
 

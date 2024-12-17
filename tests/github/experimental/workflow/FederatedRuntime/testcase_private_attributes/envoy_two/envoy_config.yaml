@@ -1,0 +1,6 @@
+envoy_two:
+  callable_func:
+    settings:
+      index: 2
+    template: private_attributes.collaborator_private_attrs.collaborator_private_attrs
+

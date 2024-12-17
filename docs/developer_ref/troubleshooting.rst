@@ -10,7 +10,7 @@
 The following is a list of commonly reported issues in Open Federated Learning (|productName|). If you don't see your issue reported here, please submit a `Github issue
 <https://github.com/intel/openfl/issues>`_ or contact us directly on `Slack <https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw>`_.
 
-1. I see the error :code:`Cannot import name TensorFlowDataLoader from openfl.federated`
+1. I see the error :code:`Cannot import name KerasDataLoader from openfl.federated`
 
    |productName| currently uses conditional imports to attempt to be framework agnostic. If your task runner is derived from `KerasTaskRunner` or `TensorflowTaskRunner`, this error could come up if TensorFlow\*\  was not installed in your collaborator's virtual environment. If running on multi-node experiment, we recommend using the :code:`fx workspace export` and :code:`fx workspace import` commands, as this will ensure consistent modules between aggregator and collaborators.
 
