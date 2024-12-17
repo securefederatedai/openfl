@@ -6,7 +6,6 @@
 
 import os
 import sys
-import threading
 from logging import getLogger
 from pathlib import Path
 
@@ -92,13 +91,7 @@ def start_(plan, authorized_cols, secure):
 
     agg_server = plan.get_server()
     agg_server.is_server_started = False
-    agg_grpc_server = threading.Thread(target=agg_server.serve)
-    agg_grpc_server.start()
-
-    while True:
-        if agg_server.is_server_started:
-            plan.aggregator_.run_flow()
-            break
+    agg_server.run_server()
 
 
 @aggregator.command(name="generate-cert-request")
