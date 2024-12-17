@@ -69,7 +69,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_tls_docker"
+          test_type: "tr_tls_docker"
 
   test_with_non_tls_docker:
     name: tr_non_tls_docker
@@ -112,7 +112,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_non_tls_docker"
+          test_type: "tr_non_tls_docker"
 
   test_with_no_client_auth_docker:
     name: tr_no_client_auth_docker
@@ -155,4 +155,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_no_client_auth_docker"
+          test_type: "tr_no_client_auth_docker"

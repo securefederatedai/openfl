@@ -71,7 +71,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_tls"
+          test_type: "tr_tls"
 
   test_with_non_tls:
     name: tr_non_tls
@@ -114,7 +114,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_non_tls"
+          test_type: "tr_non_tls"
 
   test_with_no_client_auth:
     name: tr_no_client_auth
@@ -157,7 +157,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_no_client_auth"
+          test_type: "tr_no_client_auth"
 
   test_memory_logs:
     name: tr_tls_memory_logs
@@ -200,4 +200,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          run_type: "tr_tls_memory_logs"
+          test_type: "tr_tls_memory_logs"
