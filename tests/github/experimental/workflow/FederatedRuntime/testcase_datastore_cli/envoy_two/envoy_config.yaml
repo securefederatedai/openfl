@@ -1,0 +1,11 @@
+envoy_two:
+  callable_func:
+    settings:
+      batch_size_train: 64
+      index: 1
+      n_collaborators: 2
+      test_dataset: private_attributes.collaborator_private_attrs.test_dataset
+      train_dataset: private_attributes.collaborator_private_attrs.train_dataset
+    template: private_attributes.collaborator_private_attrs.collaborator_private_attrs
+
+

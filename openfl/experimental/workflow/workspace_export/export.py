@@ -2,16 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-"""Workspace Builder module."""
+"""Workspace Export module."""
 
 import ast
 import importlib
 import inspect
 import re
+import shutil
 import sys
 from logging import getLogger
 from pathlib import Path
 from shutil import copytree
+from typing import Any, Dict, Optional, Tuple
 
 import nbformat
 import yaml
@@ -19,27 +21,39 @@ from nbdev.export import nb_export
 
 from openfl.experimental.workflow.interface.cli.cli_helper import print_tree
 
+logger = getLogger(__name__)
+
 
 class WorkspaceExport:
     """Convert a LocalRuntime Jupyter Notebook to Aggregator based
     FederatedRuntime Workflow.
 
-    Args:
+    Attributes:
         notebook_path: Absolute path of jupyter notebook.
         template_workspace_path: Path to template workspace provided with
             OpenFL.
-        output_dir: Output directory for new generated workspace
+        output_workspace_path: Output directory for new generated workspace
             (default="/tmp").
-
-    Returns:
-        None
     """
 
     def __init__(self, notebook_path: str, output_workspace: str) -> None:
-        self.logger = getLogger(__name__)
+        """Initialize a WorkspaceExport object.
+
+        Args:
+            notebook_path (str): Path to Jupyter notebook.
+            output_workspace (str): Path to output_workspace to be
+                generated.
+        """
 
         self.notebook_path = Path(notebook_path).resolve()
+        # Check if the Jupyter notebook exists
+        if not self.notebook_path.exists() or not self.notebook_path.is_file():
+            raise FileNotFoundError(f"The Jupyter notebook at {notebook_path} does not exist.")
+
         self.output_workspace_path = Path(output_workspace).resolve()
+        # Regenerate the workspace if it already exists
+        if self.output_workspace_path.exists():
+            shutil.rmtree(self.output_workspace_path)
         self.output_workspace_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.template_workspace_path = (
@@ -58,9 +72,9 @@ class WorkspaceExport:
         self.created_workspace_path = Path(
             copytree(self.template_workspace_path, self.output_workspace_path)
         )
-        self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
+        logger.info(f"Copied template workspace to {self.created_workspace_path}")
 
-        self.logger.info("Converting jupter notebook to python script...")
+        logger.info("Converting jupter notebook to python script...")
         export_filename = self.__get_exp_name()
         if export_filename is None:
             raise NameError(
@@ -85,7 +99,7 @@ class WorkspaceExport:
         # backend="ray" # NOQA
         self.__change_runtime()
 
-    def __get_exp_name(self):
+    def __get_exp_name(self) -> None:
         """Fetch the experiment name from the Jupyter notebook."""
         with open(str(self.notebook_path), "r") as f:
             notebook_content = nbformat.read(f, as_version=nbformat.NO_CONVERT)
@@ -95,16 +109,25 @@ class WorkspaceExport:
                 code = cell.source
                 match = re.search(r"#\s*\|\s*default_exp\s+(\w+)", code)
                 if match:
-                    self.logger.info(f"Retrieved {match.group(1)} from default_exp")
+                    logger.info(f"Retrieved {match.group(1)} from default_exp")
                     return match.group(1)
         return None
 
-    def __convert_to_python(self, notebook_path: Path, output_path: Path, export_filename):
+    def __convert_to_python(self, notebook_path: Path, output_path: Path, export_filename) -> Path:
+        """Converts a Jupyter notebook to a Python script.
+
+        Args:
+            notebook_path (Path): The path to the Jupyter notebook file
+                to be converted.
+            output_path (Path): The directory where the exported Python
+                script should be saved.
+            export_filename: The name of the exported Python script file.
+        """
         nb_export(notebook_path, output_path)
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __comment_flow_execution(self):
+    def __comment_flow_execution(self) -> None:
         """In the python script search for ".run()" and comment it."""
         with open(self.script_path, "r") as f:
             data = f.readlines()
@@ -114,7 +137,7 @@ class WorkspaceExport:
         with open(self.script_path, "w") as f:
             f.writelines(data)
 
-    def __change_runtime(self):
+    def __change_runtime(self) -> None:
         """Change the LocalRuntime backend from ray to single_process."""
         with open(self.script_path, "r") as f:
             data = f.read()
@@ -127,8 +150,12 @@ class WorkspaceExport:
         with open(self.script_path, "w") as f:
             f.write(data)
 
-    def __get_class_arguments(self, class_name):
-        """Given the class name returns expected class arguments."""
+    def __get_class_arguments(self, class_name) -> list:
+        """Given the class name returns expected class arguments.
+
+        Args:
+            class_name (str): Name of the class
+        """
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
@@ -158,11 +185,17 @@ class WorkspaceExport:
                 ]
                 return arg_names
             return []
-        self.logger.error(f"{cls} is not a class")
+        logger.error(f"{cls} is not a class")
 
-    def __get_class_name_and_sourcecode_from_parent_class(self, parent_class):
+    def __get_class_name_and_sourcecode_from_parent_class(
+        self, parent_class
+    ) -> Optional[Tuple[Optional[str], Optional[str]]]:
         """Provided the parent_class name returns derived class source code and
-        name."""
+        name.
+
+        Args:
+            parent_class: FLSpec instance
+        """
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
@@ -175,9 +208,13 @@ class WorkspaceExport:
 
         return None, None
 
-    def __extract_class_initializing_args(self, class_name):  # noqa: C901
+    def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:  # noqa: C901
         """Provided name of the class returns expected arguments and it's
-        values in form of dictionary."""
+        values in form of dictionary.
+
+        Args:
+            class_name (str): Name of the class
+        """
         instantiation_args = {"args": {}, "kwargs": {}}
 
         with open(self.script_path, "r") as s:
@@ -221,7 +258,7 @@ class WorkspaceExport:
 
         return instantiation_args
 
-    def __import_exported_script(self):
+    def __import_exported_script(self) -> None:
         """
         Imports generated python script with help of importlib
         """
@@ -230,35 +267,65 @@ class WorkspaceExport:
         self.exported_script_module = importlib.import_module(self.script_name)
         self.available_modules_in_exported_script = dir(self.exported_script_module)
 
-    def __read_yaml(self, path):
+    def __read_yaml(self, path) -> None:
         with open(path, "r") as y:
             return yaml.safe_load(y)
 
-    def __write_yaml(self, path, data):
+    def __write_yaml(self, path, data) -> None:
         with open(path, "w") as y:
             yaml.safe_dump(data, y)
 
     @classmethod
-    def export(cls, notebook_path: str, output_workspace: str) -> None:
-        """Exports workspace to `output_dir`.
+    def export_federated(cls, notebook_path: str, output_workspace: str) -> Tuple[str, str]:
+        """Exports workspace for FederatedRuntime.
 
         Args:
-            notebook_path: Jupyter notebook path.
-            output_dir: Path for generated workspace directory.
-            template_workspace_path: Path to template workspace provided with
-                OpenFL (default="/tmp").
+            notebook_path (str): Path to the Jupyter notebook.
+            output_workspace (str): Path for the generated workspace directory.
 
         Returns:
-            None
+            Tuple[str, str]: A tuple containing:
+                (archive_path, flow_class_name).
+        """
+        instance = cls(notebook_path, output_workspace)
+        instance.generate_requirements()
+        instance.generate_plan_yaml()
+        return instance.generate_experiment_archive()
+
+    @classmethod
+    def export(cls, notebook_path: str, output_workspace: str) -> None:
+        """Exports workspace to output_workspace.
+
+        Args:
+            notebook_path (str): Path to the Jupyter notebook.
+            output_workspace (str): Path for the generated workspace directory.
         """
         instance = cls(notebook_path, output_workspace)
         instance.generate_requirements()
         instance.generate_plan_yaml()
         instance.generate_data_yaml()
 
+    def generate_experiment_archive(self) -> Tuple[str, str]:
+        """
+        Create archive of the generated workspace
+
+        Returns:
+            Tuple[str, str]: A tuple containing:
+                (generated_workspace_path, archive_path, flow_class_name).
+        """
+        parent_directory = self.output_workspace_path.parent
+        archive_path = parent_directory / "experiment"
+
+        # Create a ZIP archive of the generated_workspace directory
+        arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
+
+        print(f"Archive created at {archive_path}.zip")
+
+        return arch_path, self.flow_class_name
+
     # Have to do generate_requirements before anything else
     # because these !pip commands needs to be removed from python script
-    def generate_requirements(self):
+    def generate_requirements(self) -> None:
         """Finds pip libraries mentioned in exported python script and append
         in workspace/requirements.txt."""
         data = None
@@ -290,7 +357,7 @@ class WorkspaceExport:
                 if i not in line_nos:
                     f.write(line)
 
-    def generate_plan_yaml(self):
+    def generate_plan_yaml(self) -> None:
         """
         Generates plan.yaml
         """
@@ -333,7 +400,7 @@ class WorkspaceExport:
 
         self.__write_yaml(plan, data)
 
-    def generate_data_yaml(self):  # noqa: C901
+    def generate_data_yaml(self) -> None:  # noqa: C901
         """Generates data.yaml."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
