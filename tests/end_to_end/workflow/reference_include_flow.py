@@ -118,6 +118,21 @@ class TestFlowReferenceWithInclude(FLSpec):
 
 
 def filter_attrs(attr_list):
+    """
+    Filters a list of attributes, returning only those that are valid.
+
+    An attribute is considered valid if:
+    - It does not start with an underscore.
+    - It is not in the list of reserved words: ["next", "runtime", "execute_next"].
+    - It is not an attribute of the TestFlowReferenceWithInclude class.
+    - It is not an instance of MethodType.
+
+    Args:
+        attr_list (list): A list of tuples where each tuple contains an attribute name and its value.
+
+    Returns:
+        list: A list of valid attribute names.
+    """
     valid_attrs = []
     reserved_words = ["next", "runtime", "execute_next"]
     for attr in attr_list:
@@ -132,6 +147,17 @@ def filter_attrs(attr_list):
 
 
 def find_matched_references(collab_attr_list, all_collaborators):
+    """
+    Finds and logs matched references between collaborators based on specified attributes.
+
+    Args:
+        collab_attr_list (list): List of attribute names to check for matches.
+        all_collaborators (list): List of collaborator objects to compare.
+
+    Returns:
+        dict: A dictionary where keys are collaborator inputs and values are lists of attribute names
+              that have matched references with other collaborators.
+    """
     matched_ref_dict = {}
     for i in range(len(all_collaborators)):
         matched_ref_dict[all_collaborators[i].input] = []
@@ -153,6 +179,20 @@ def find_matched_references(collab_attr_list, all_collaborators):
 
 
 def validate_references(matched_ref_dict):
+    """
+    Validates the references in the given dictionary.
+
+    This function checks if any collaborators have shared references.
+    If any references are found, it raises an assertion error.
+
+    Args:
+        matched_ref_dict (dict): A dictionary where keys are collaborator names
+                                 and values are booleans indicating if they have
+                                 shared references.
+
+    Raises:
+        AssertionError: If any collaborator has shared references.
+    """
     collborators_sharing_ref = []
     reference_flag = False
 
