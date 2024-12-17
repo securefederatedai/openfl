@@ -1,29 +1,17 @@
-# How to update the documentation
+# Update documentation
 
-We use sphinx to generate the documentation for this project.
-The documentation project has been initialized properly and we basically just need to update the actual content.
-
-Install the openfl package
-
-```sh
-pip install .
-```
-
-Install requirements for building documentation:
-
+To rebuild documentation, install packages:
 ```sh
 pip install -r docs/requirements.txt
 ```
 
-
-The Makefile supports many targets. We choose html because we can easily host the documentation on a remote server. Compile the documentation source code:
+Compile the documentation source code:
 ```sh
 make clean
 make html
 ```
 
-Open documentation locally:
+Serve documentation locally:
 ```sh
-cd _build/html
-python -m http.server
+python -m http.server --directory _build/html
 ```

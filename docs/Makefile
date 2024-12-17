@@ -7,7 +7,7 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?= -D autodoc_default_options.imported-members=True
+SPHINXOPTS    ?= -D autodoc_default_options.imported-members=True -j auto
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
