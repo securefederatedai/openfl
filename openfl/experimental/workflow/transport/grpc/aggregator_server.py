@@ -4,6 +4,7 @@
 
 """AggregatorGRPCServer module."""
 
+import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -181,7 +182,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         function = request.function
         stream_buffer = request.stream_buffer
 
-        self.aggregator.call_checkpoint(execution_environment, function, stream_buffer)
+        self.aggregator.call_checkpoint(
+            collaborator_name, execution_environment, function, stream_buffer
+        )
 
         return aggregator_pb2.CheckpointResponse(header=self.get_header(collaborator_name))
 
@@ -217,7 +220,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         return self.server
 
-    def serve(self):
+    async def serve(self):
         """Start an aggregator gRPC service."""
         self.get_server()
 
@@ -226,9 +229,18 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.is_server_started = True
         try:
             while not self.aggregator.all_quit_jobs_sent():
-                sleep(5)
+                await asyncio.sleep(5)
         except KeyboardInterrupt:
             pass
+        finally:
+            self.logger.info("All Jobs Sent Successfully, Exiting...")
+            self.stop_server()
+
+    def run_server(self):
+        """Launch the aggregator gRPC server and aggregator flow concurrently"""
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.aggregator.run_flow())
+        loop.run_until_complete(self.serve())
 
     def stop_server(self):
         self.server.stop(0)
