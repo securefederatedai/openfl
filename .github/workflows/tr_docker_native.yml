@@ -55,8 +55,6 @@ jobs:
 
         tar -cf cert_col_charlie.tar $tarfiles
 
-    - name: Cleanup files
-      run: |
         # Clean up
         rm -f $tarfiles
         rm -f col_charlie_to_agg_cert_request.zip

@@ -7,6 +7,7 @@ import logging
 import os
 import json
 import re
+from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -45,7 +46,9 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
             for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to generate sign request for one or more collaborators")
+            raise Exception(
+                "Failed to generate sign request for one or more collaborators"
+            )
 
     except Exception as e:
         raise e
@@ -55,14 +58,18 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
         results = [
             executor.submit(
                 copy_file_between_participants,
-                local_src_path=constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name),
+                local_src_path=constants.COL_WORKSPACE_PATH.format(
+                    local_bind_path, collaborator.name
+                ),
                 local_dest_path=local_agg_ws_path,
-                file_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
+                file_name=f"col_{collaborator.name}_to_agg_cert_request.zip",
             )
             for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to copy sign request zip from one or more collaborators to aggregator")
+            raise Exception(
+                "Failed to copy sign request zip from one or more collaborators to aggregator"
+            )
     except Exception as e:
         raise e
 
@@ -72,7 +79,7 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
         try:
             model_owner.certify_collaborator(
                 collaborator_name=collaborator.name,
-                zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip"
+                zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip",
             )
         except Exception as e:
             log.error(f"Failed to certify sign request for {collaborator.name}: {e}")
@@ -84,13 +91,17 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=local_agg_ws_path,
-                local_dest_path=constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name),
-                file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
+                local_dest_path=constants.COL_WORKSPACE_PATH.format(
+                    local_bind_path, collaborator.name
+                ),
+                file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
             )
             for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to copy signed certificates from aggregator to one or more collaborators")
+            raise Exception(
+                "Failed to copy signed certificates from aggregator to one or more collaborators"
+            )
     except Exception as e:
         raise e
 
@@ -107,28 +118,35 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     try:
+
         def _create_tarball(collaborator_name, local_bind_path):
-            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator_name)
+            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+                local_bind_path, collaborator_name
+            )
             client_cert_entries = ""
             tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml"
             # If TLS is enabled, client certificates and signed certificates are also included
             if use_tls:
                 client_path = f"{local_col_ws_path}/cert/client"
-                client_cert_entries = [f"cert/client/{f}" for f in client_path if f.endswith(".key")]
+                client_cert_entries = [
+                    f"cert/client/{f}" for f in client_path if f.endswith(".key")
+                ]
                 if client_cert_entries:
                     client_cert_entries = " ".join(client_cert_entries)
-                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}" 
+                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_cert_entries}"
 
-            return_code, output, error = ssh.run_command(f"tar -cf {tarfiles}", work_dir=local_col_ws_path)
+            return_code, output, error = ssh.run_command(
+                f"tar -cf {tarfiles}", work_dir=local_col_ws_path
+            )
             if return_code != 0:
-                raise Exception(f"Failed to create tarball for {collaborator_name}: {error}")
+                raise Exception(
+                    f"Failed to create tarball for {collaborator_name}: {error}"
+                )
             return True
 
         results = [
             executor.submit(
-                _create_tarball,
-                collaborator.name,
-                local_bind_path=local_bind_path
+                _create_tarball, collaborator.name, local_bind_path=local_bind_path
             )
             for collaborator in collaborators
         ]
@@ -150,12 +168,14 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
         results = [
             executor.submit(
                 collaborator.import_pki,
-                zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip"
+                zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
             )
             for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to import and certify the CSR for one or more collaborators")
+            raise Exception(
+                "Failed to import and certify the CSR for one or more collaborators"
+            )
     except Exception as e:
         raise e
 
@@ -166,21 +186,27 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
+                local_dest_path=constants.COL_PLAN_PATH.format(
+                    local_bind_path, collaborator.name
+                ),
                 file_name="cols.yaml",
                 run_with_sudo=True,
             )
             for collaborator in collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to copy cols.yaml file from aggregator to one or more collaborators")
+            raise Exception(
+                "Failed to copy cols.yaml file from aggregator to one or more collaborators"
+            )
     except Exception as e:
         raise e
 
     return True
 
 
-def copy_file_between_participants(local_src_path, local_dest_path, file_name, run_with_sudo=False):
+def copy_file_between_participants(
+    local_src_path, local_dest_path, file_name, run_with_sudo=False
+):
     """
     Copy file between participants
     Args:
@@ -195,7 +221,9 @@ def copy_file_between_participants(local_src_path, local_dest_path, file_name, r
     if return_code != 0:
         log.error(f"Failed to copy file: {error}")
         raise Exception(f"Failed to copy file: {error}")
-    log.info(f"File {file_name} copied successfully from {local_src_path} to {local_dest_path}")
+    log.info(
+        f"File {file_name} copied successfully from {local_src_path} to {local_dest_path}"
+    )
     return True
 
 
@@ -218,7 +246,9 @@ def run_federation(fed_obj, install_dependencies=True, run_inside_docker=False):
     futures = [
         executor.submit(
             participant.start,
-            constants.AGG_COL_RESULT_FILE.format(fed_obj.workspace_path, participant.name),
+            constants.AGG_COL_RESULT_FILE.format(
+                fed_obj.workspace_path, participant.name
+            ),
             run_inside_docker=run_inside_docker,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
@@ -255,7 +285,9 @@ def run_federation_for_dws(fed_obj, use_tls):
             for participant in [fed_obj.aggregator] + fed_obj.collaborators
         ]
         if not all([f.result() for f in results]):
-            raise Exception("Failed to extract certificates for one or more participants")
+            raise Exception(
+                "Failed to extract certificates for one or more participants"
+            )
     except Exception as e:
         raise e
 
@@ -270,12 +302,14 @@ def run_federation_for_dws(fed_obj, use_tls):
                 for collaborator in fed_obj.collaborators
             ]
             if not all([f.result() for f in results]):
-                raise Exception("Failed to import and certify the CSR for one or more collaborators")
+                raise Exception(
+                    "Failed to import and certify the CSR for one or more collaborators"
+                )
         except Exception as e:
             raise e
 
     # Start federation run for all the participants
-    return run_federation(fed_obj, install_dependencies=False, run_inside_docker=True)
+    return run_federation(fed_obj, run_inside_docker=True)
 
 
 def install_dependencies_on_collaborators(fed_obj):
@@ -287,13 +321,13 @@ def install_dependencies_on_collaborators(fed_obj):
     # This is a time taking process, thus doing at this stage after all verification is done
     log.info("Installing dependencies on collaborators. This might take some time...")
     futures = [
-        executor.submit(
-            participant.install_dependencies
-        )
+        executor.submit(participant.install_dependencies)
         for participant in fed_obj.collaborators
     ]
     results = [f.result() for f in futures]
-    log.info(f"Results from all the collaborators for installation of dependencies: {results}")
+    log.info(
+        f"Results from all the collaborators for installation of dependencies: {results}"
+    )
 
     if not all(results):
         raise Exception("Failed to install dependencies on one or more collaborators")
@@ -319,7 +353,7 @@ def verify_federation_run_completion(fed_obj, results, num_rounds):
             participant,
             num_rounds,
             results[i],
-            local_bind_path=fed_obj.local_bind_path
+            local_bind_path=fed_obj.local_bind_path,
         )
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
     ]
@@ -333,7 +367,9 @@ def verify_federation_run_completion(fed_obj, results, num_rounds):
     return all(results)
 
 
-def _verify_completion_for_participant(participant, num_rounds, result_file, time_for_each_round=100, local_bind_path=None):
+def _verify_completion_for_participant(
+    participant, num_rounds, result_file, time_for_each_round=100, local_bind_path=None
+):
     """
     Verify the completion of the process for the participant
     Args:
@@ -345,13 +381,23 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     Returns:
         bool: True if successful, else False
     """
-    time.sleep(20) # Wait for some time before checking the log file
+    time.sleep(20)  # Wait for some time before checking the log file
     # Set timeout based on the number of rounds and time for each round
-    timeout = 600 + ( time_for_each_round * num_rounds ) # in seconds
+    timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
 
+    test_env = get_test_env_from_markers()
     # In case of docker environment, get the logs from local path which is mounted to the container
-    if os.getenv("TEST_ENV") == "task_runner_docker":
-        result_file = constants.AGG_COL_RESULT_FILE.format(local_bind_path, participant.name)
+    if test_env == "task_runner_docker":
+        result_file = constants.AGG_COL_RESULT_FILE.format(
+            local_bind_path, participant.name
+        )
+    elif test_env == "task_runner_dockerized_ws":
+        result_file = constants.AGG_COL_RESULT_FILE.format(
+            local_bind_path, participant.name
+        )
+        ssh.copy_file_from_docker(
+            participant.name, f"/workspace/{participant.name}.log", result_file
+        )
 
     log.info(f"Result file is: {result_file}")
 
@@ -363,7 +409,7 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     while (
         constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
     ):
-        with open(result_file, 'r') as file:
+        with open(result_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
         content = list(filter(str.rstrip, lines))[-1:]
 
@@ -374,18 +420,35 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
         log.info(f"Process is yet to complete for {participant.name}")
         time.sleep(45)
 
+        # Copy the log file from docker container to local machine everytime to get the latest logs
+        if test_env == "task_runner_dockerized_ws":
+            ssh.copy_file_from_docker(
+                participant.name,
+                f"/workspace/{participant.name}.log",
+                constants.AGG_COL_RESULT_FILE.format(local_bind_path, participant.name),
+            )
+
     if constants.SUCCESS_MARKER not in content:
-        log.error(f"Process failed/is incomplete for {participant.name} after timeout of {timeout} seconds")
+        log.error(
+            f"Process failed/is incomplete for {participant.name} after timeout of {timeout} seconds"
+        )
         return False
     else:
-        log.info(f"Process completed for {participant.name} in {time.time() - start_time} seconds")
+        log.info(
+            f"Process completed for {participant.name} in {time.time() - start_time} seconds"
+        )
         return True
 
 
-def get_test_env_from_markers(request):
+@lru_cache(maxsize=50)
+def get_test_env_from_markers(request=None):
     """
     Get test environment based on test case markers
+    Keeping request argument as optional so that it can be used in other functions as well
     """
+    if os.getenv("TEST_ENV"):
+        return os.getenv("TEST_ENV")
+
     # Determine the test type based on the markers
     markers = [m.name for m in request.node.iter_markers()]
     if "task_runner_docker" in markers:
@@ -396,7 +459,7 @@ def get_test_env_from_markers(request):
         test_env = "task_runner_dockerized_ws"
     else:
         raise ValueError(
-            "Invalid test environment. Provide one of the valid markers: " \
+            "Invalid test environment. Provide one of the valid markers: "
             "task_runner_docker, task_runner_basic, task_runner_dockerized_ws"
         )
 
@@ -423,7 +486,9 @@ def federation_env_setup_and_validate(request):
 
     # Set the workspace path
     home_dir = os.getenv("HOME")
-    local_bind_path = os.path.join(home_dir, request.config.results_dir, request.config.model_name)
+    local_bind_path = os.path.join(
+        home_dir, request.config.results_dir, request.config.model_name
+    )
     workspace_path = local_bind_path
 
     if test_env in ["task_runner_docker", "task_runner_dockerized_ws"]:
@@ -435,11 +500,13 @@ def federation_env_setup_and_validate(request):
         # Note: In case of dockerized workspace, image name would be same as workspace name and to be created at later stage.
         if test_env == "task_runner_docker":
             # Check if the docker image and network exists
-            dh.check_docker_image()    
+            dh.check_docker_image()
             agg_domain_name = "aggregator"
 
             # Absolute path is required for docker
-            workspace_path = os.path.join("/", request.config.results_dir, request.config.model_name)
+            workspace_path = os.path.join(
+                "/", request.config.results_dir, request.config.model_name
+            )
 
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
@@ -471,7 +538,9 @@ def add_local_workspace_permission(local_bind_path):
         if return_code != 0:
             raise Exception(f"Failed to add local permission to workspace: {error}")
 
-        log.debug(f"Recursive permission added to workspace on local machine: {agg_workspace_path}")
+        log.debug(
+            f"Recursive permission added to workspace on local machine: {agg_workspace_path}"
+        )
     except Exception as e:
         log.error(f"Failed to add local permission to workspace: {e}")
         raise e
@@ -488,8 +557,8 @@ def create_persistent_store(participant_name, local_bind_path):
         # Create persistent store
         error_msg = f"Failed to create persistent store for {participant_name}"
         cmd_persistent_store = (
-            f"export WORKING_DIRECTORY={local_bind_path}; " \
-            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; " \
+            f"export WORKING_DIRECTORY={local_bind_path}; "
+            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; "
             "sudo chmod -R 755 $WORKING_DIRECTORY"
         )
         log.debug(f"Creating persistent store")
@@ -506,7 +575,16 @@ def create_persistent_store(participant_name, local_bind_path):
         raise ex.PersistentStoreCreationException(f"{error_msg}: {e}")
 
 
-def run_command(command, workspace_path, error_msg=None, container_id=None, run_in_background=False, bg_file=None, print_output=False, run_inside_docker=False):
+def run_command(
+    command,
+    workspace_path,
+    error_msg=None,
+    container_id=None,
+    run_in_background=False,
+    bg_file=None,
+    print_output=False,
+    run_inside_docker=False,
+):
     """
     Run the command
     Args:
@@ -524,7 +602,11 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
 
-    is_docker = True if (os.getenv("TEST_ENV") == "task_runner_docker" or run_inside_docker) else False
+    is_docker = (
+        True
+        if (os.getenv("TEST_ENV") == "task_runner_docker" or run_inside_docker)
+        else False
+    )
 
     if is_docker and container_id:
         log.debug("Running command in docker container")
@@ -570,7 +652,9 @@ def run_command(command, workspace_path, error_msg=None, container_id=None, run_
 
 
 # This functionality is common across multiple participants, thus moved to a common function
-def verify_cmd_output(output, return_code, error, error_msg, success_msg, raise_exception=True):
+def verify_cmd_output(
+    output, return_code, error, error_msg, success_msg, raise_exception=True
+):
     """
     Verify the output of fx command run
     Assumption - it will have '✔️ OK' in the output if the command is successful
@@ -608,7 +692,9 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         create_persistent_store(collaborator.name, local_bind_path)
 
     except Exception as e:
-        raise ex.PersistentStoreCreationException(f"Failed to create persistent store for {collaborator.name}: {e}")
+        raise ex.PersistentStoreCreationException(
+            f"Failed to create persistent store for {collaborator.name}: {e}"
+        )
 
     try:
         if test_env == "task_runner_docker":
@@ -619,14 +705,22 @@ def setup_collaborator(count, workspace_path, local_bind_path):
             )
             collaborator.container_id = container.id
     except Exception as e:
-        raise ex.DockerException(f"Failed to start {collaborator.name} docker environment: {e}")
+        raise ex.DockerException(
+            f"Failed to start {collaborator.name} docker environment: {e}"
+        )
 
     try:
-        local_col_ws_path = constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name)
-        copy_file_between_participants(local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME)
+        local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+            local_bind_path, collaborator.name
+        )
+        copy_file_between_participants(
+            local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME
+        )
         collaborator.import_workspace()
     except Exception as e:
-        raise ex.WorkspaceImportException(f"Failed to import workspace for {collaborator.name}: {e}")
+        raise ex.WorkspaceImportException(
+            f"Failed to import workspace for {collaborator.name}: {e}"
+        )
 
     try:
         collaborator.create_collaborator()
@@ -650,7 +744,7 @@ def extract_memory_usage(log_file):
         Exception: If memory usage data is not found in the log file.
     """
     try:
-        with open(log_file, 'r') as file:
+        with open(log_file, "r") as file:
             content = file.read()
 
         pattern = r"Publish memory usage: (\[.*?\])"
@@ -658,8 +752,8 @@ def extract_memory_usage(log_file):
 
         if match:
             memory_usage_data = match.group(1)
-            memory_usage_data = re.sub(r'\S+\.py:\d+', '', memory_usage_data)
-            memory_usage_data = memory_usage_data.replace('\n', '').replace(' ', '')
+            memory_usage_data = re.sub(r"\S+\.py:\d+", "", memory_usage_data)
+            memory_usage_data = memory_usage_data.replace("\n", "").replace(" ", "")
             memory_usage_data = memory_usage_data.replace("'", '"')
             memory_usage_dict = json.loads(memory_usage_data)
             return memory_usage_dict
@@ -680,14 +774,16 @@ def write_memory_usage_to_file(memory_usage_dict, output_file):
         output_file (str): The path to the output file to which to write the memory usage data.
     """
     try:
-        with open(output_file, 'w') as file:
+        with open(output_file, "w") as file:
             json.dump(memory_usage_dict, file, indent=4)
     except Exception as e:
         log.error(f"An error occurred while writing memory usage data to file: {e}")
         raise e
 
 
-def start_docker_containers_for_dws(participants, workspace_path, local_bind_path, image_name):
+def start_docker_containers_for_dws(
+    participants, workspace_path, local_bind_path, image_name
+):
     """
     Start docker containers for the participants
     Args:
@@ -704,15 +800,19 @@ def start_docker_containers_for_dws(participants, workspace_path, local_bind_pat
             else:
                 local_ws_path = f"{local_bind_path}/{participant.name}/workspace"
                 local_cert_tar = f"cert_col_{participant.name}.tar"
-            
+
             # In case of dockerized workspace, the workspace gets created inside folder with image name
             container = dh.start_docker_container(
                 container_name=participant.name,
                 workspace_path=workspace_path,
                 local_bind_path=local_bind_path,
                 image=image_name,
-                mount_mapping=[f"{local_ws_path}/{local_cert_tar}:/{image_name}/certs.tar"],
+                mount_mapping=[
+                    f"{local_ws_path}/{local_cert_tar}:/{image_name}/certs.tar"
+                ],
             )
             participant.container_id = container.id
         except Exception as e:
-            raise ex.DockerException(f"Failed to start {participant.name} docker environment: {e}")
+            raise ex.DockerException(
+                f"Failed to start {participant.name} docker environment: {e}"
+            )

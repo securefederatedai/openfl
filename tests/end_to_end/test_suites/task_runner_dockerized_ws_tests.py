@@ -28,5 +28,6 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     # Start the federation
     results = fed_helper.run_federation_for_dws(fx_federation_tr_dws, use_tls=request.config.use_tls)
 
+    log.info(f"Federation run completed successfully with {results}")
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(fx_federation_tr_dws, results, request.config.num_rounds), "Federation completion failed"

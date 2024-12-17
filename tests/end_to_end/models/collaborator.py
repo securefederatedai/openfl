@@ -84,11 +84,13 @@ class Collaborator():
             log.error(f"{error_msg}: {e}")
             raise e
 
-    def import_pki(self, zip_name):
+    def import_pki(self, zip_name, run_inside_docker=False):
         """
         Import and certify the CSR for the collaborator
         Args:
-            agg_workspace_path (str): Workspace path of model owner or aggregator
+            zip_name (str): Zip file name
+            run_inside_docker (bool): Run the command inside the docker container
+                This is special case for dockerized workspace.
         Returns:
             bool: True if successful, else False
         """
@@ -100,7 +102,8 @@ class Collaborator():
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
+                workspace_path=self.workspace_path if not run_inside_docker else "",
+                run_inside_docker=run_inside_docker,
             )
             fh.verify_cmd_output(
                 output, return_code, error, error_msg,
@@ -112,24 +115,27 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, res_file):
+    def start(self, res_file, run_inside_docker=False):
         """
         Start the collaborator
         Args:
             res_file (str): Result file to track the logs
+            run_inside_docker (bool): Flag to run the collaborator inside a docker container
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
+            res_file = res_file if not run_inside_docker else os.path.basename(res_file)
             error_msg = f"Failed to start {self.collaborator_name}"
             fh.run_command(
                 f"fx collaborator start -n {self.collaborator_name}",
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
+                workspace_path=self.workspace_path if not run_inside_docker else "",
                 run_in_background=True,
                 bg_file=res_file,
+                run_inside_docker=run_inside_docker
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
