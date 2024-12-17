@@ -12,8 +12,6 @@ import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.federation_helper as fh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 
-from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
-from openfl.experimental.workflow.runtime import LocalRuntime
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +137,8 @@ def fx_local_federated_workflow(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    from openfl.experimental.workflow.interface import Aggregator, Collaborator
+    from openfl.experimental.workflow.runtime import LocalRuntime
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
@@ -192,6 +192,8 @@ def fx_local_federated_workflow_prvt_attr(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    from openfl.experimental.workflow.interface import Aggregator, Collaborator
+    from openfl.experimental.workflow.runtime import LocalRuntime
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
