@@ -50,10 +50,9 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
-    check_call(['pip', 'list'])
+
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
-    
     plan_path = Path('plan/plan.yaml')
     try:
         rounds_to_train = int(rounds_to_train)
