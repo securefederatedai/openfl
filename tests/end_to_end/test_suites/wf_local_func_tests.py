@@ -6,7 +6,7 @@ import pytest
 import os
 import shutil
 import random
-from metaflow import Step, Flow
+from metaflow import Step
 
 from tests.end_to_end.utils.common_fixtures import fx_local_federated_workflow, fx_local_federated_workflow_prvt_attr
 from tests.end_to_end.workflow.exclude_flow import TestFlowExclude
@@ -26,6 +26,9 @@ from tests.end_to_end.utils import wf_helper as wf_helper
 log = logging.getLogger(__name__)
 
 def test_exclude_flow(request, fx_local_federated_workflow):
+    """
+    Test if variable is excluded, variables not show in next step and all other variables will show
+    """
     log.info("***** Starting test_exclude_flow *****")
     flflow = TestFlowExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -36,6 +39,10 @@ def test_exclude_flow(request, fx_local_federated_workflow):
 
 
 def test_include_exclude_flow(request, fx_local_federated_workflow):
+    """
+    Test variables which is excluded will not show in next step
+    Test variables which are included will show in next step
+    """
     log.info("***** Starting test_include_exclude_flow *****")
     flflow = TestFlowIncludeExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -46,6 +53,9 @@ def test_include_exclude_flow(request, fx_local_federated_workflow):
 
 
 def test_include_flow(request, fx_local_federated_workflow):
+    """
+    Test if variable is included, variables woll show in next step and all other variables will not show
+    """
     log.info("***** Starting test_include_flow *****")
     flflow = TestFlowInclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -56,11 +66,14 @@ def test_include_flow(request, fx_local_federated_workflow):
 
 
 def test_internal_loop(request, fx_local_federated_workflow):
+    """
+    Verify that thru internal loop, rounds to train is set
+    """
     log.info("***** Starting test_internal_loop *****")
     model = None
     optimizer = None
 
-    flflow = TestFlowInternalLoop(model, optimizer, 5, checkpoint=True)
+    flflow = TestFlowInternalLoop(model, optimizer, request.config.num_rounds, checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     flflow.run()
 
@@ -94,6 +107,9 @@ def test_internal_loop(request, fx_local_federated_workflow):
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_index", "int", None )], indirect=True)
 def test_reference_flow(request, fx_local_federated_workflow):
+    """
+    Test reference variables matched through out the flow
+    """
     log.info("***** Starting test_reference_flow *****")
     flflow = TestFlowReference(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -104,6 +120,9 @@ def test_reference_flow(request, fx_local_federated_workflow):
 
 
 def test_reference_include_flow(request, fx_local_federated_workflow):
+    """
+    Test reference variables matched if included else not
+    """
     log.info("***** Starting test_reference_include_flow *****")
     flflow = TestFlowReferenceWithInclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -114,6 +133,9 @@ def test_reference_include_flow(request, fx_local_federated_workflow):
 
 
 def test_reference_exclude_flow(request, fx_local_federated_workflow):
+    """
+    Test reference variables matched if not excluded
+    """
     log.info("***** Starting test_reference_exclude_flow *****")
     flflow = TestFlowReferenceWithExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -125,6 +147,18 @@ def test_reference_exclude_flow(request, fx_local_federated_workflow):
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_name", "str", None )], indirect=True)
 def test_subset_collaborators(request, fx_local_federated_workflow):
+    """
+    Test the subset of collaborators in a federated workflow.
+
+    Parameters:
+        request (FixtureRequest): The request fixture provides information about the requesting test function.
+        fx_local_federated_workflow (Fixture): The fixture for the local federated workflow.
+
+    Tests:
+        - Ensure the test starts and ends correctly.
+        - Verify the number of collaborators matches the expected subset.
+        - Check that the flow runs for each subset collaborator.
+    """
     log.info("***** Starting test_subset_collaborators *****")
     collaborators = fx_local_federated_workflow.collaborators
 
@@ -175,6 +209,9 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
 
 
 def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr):
+    """
+    Set private attribute without callable function i.e thru direct assignment
+    """
     log.info("***** Starting test_private_attr_wo_callable *****")
     flflow = TestFlowPrivateAttributesWoCallable(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow_prvt_attr.runtime
@@ -186,6 +223,9 @@ def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
 def test_private_attributes(request, fx_local_federated_workflow):
+    """
+    Set private attribute thru callable function
+    """
     log.info("***** Starting test_private_attributes *****")
     flflow = TestFlowPrivateAttributes(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
@@ -197,6 +237,9 @@ def test_private_attributes(request, fx_local_federated_workflow):
 
 @pytest.mark.parametrize("fx_local_federated_workflow_prvt_attr", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
 def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
+    """
+    Set private attribute thru callable function and direct assignment
+    """
     log.info("***** Starting test_private_attr_both *****")
     flflow = TestFlowPrivateAttributesBoth(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow_prvt_attr.runtime
