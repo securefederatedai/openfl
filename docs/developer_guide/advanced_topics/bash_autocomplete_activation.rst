@@ -10,7 +10,7 @@ Get faster access to available commands by activating bash completion in CLI mod
 STEP 1: Preparation
 ===================
 
-Make sure you are inside a virtual environment with Open Federated Learning (|productName|) installed. See :ref:`install_package` for details.
+Make sure you are inside a virtual environment with Open Federated Learning (OpenFL) installed. See :ref:`install_package` for details.
 
 
 STEP 2: Create the fx-autocomplete.sh Script
@@ -94,4 +94,3 @@ To save time, add the script into **.bashrc** so the script is activated when yo
 3. Save your changes.
 
 4. Open a new terminal to use the updated bash shell.
-

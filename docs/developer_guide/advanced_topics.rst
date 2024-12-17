@@ -8,7 +8,7 @@ Advanced Topics
 ***************
 **General**
 
-    Speed up activating Open Federated Learning (|productName|) commands:
+    Speed up activating Open Federated Learning (OpenFL) commands:
 
     - :doc:`advanced_topics/bash_autocomplete_activation`
 
@@ -18,7 +18,7 @@ Advanced Topics
 
     - :doc:`advanced_topics/multiple_plans`
 
-    Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
+    Reduce the amount of data transferred in a federation through compression pipelines available in OpenFL:
 
     - :doc:`advanced_topics/compression_settings`
     

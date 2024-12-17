@@ -63,15 +63,6 @@ version = ''
 release = ''
 main_doc = 'index'
 
-# Global variables for rST
-rst_prolog = '''
-.. |productName| replace:: OpenFL
-.. |productZip| replace:: openfl.zip
-.. |productDir| replace:: openfl
-.. |productWheel| replace:: openfl
-
-'''
-
 napoleon_google_docstring = True
 
 # Config the returns section to behave like the Args section

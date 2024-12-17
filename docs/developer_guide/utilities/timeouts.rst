@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 *******************************************************
-|productName| Component Timeouts
+OpenFL Component Timeouts
 *******************************************************
 
 .. _comp_timeout_overview:
@@ -17,7 +17,7 @@ The decorated functions is then monitored and gets terminated right after the ex
 
 .. note::
      
-    The `fedtiming` class, `SyncAsyncTaskDecoFactory` factory class, custom synchronous and asynchronous execution of decorated function is in-place. The end to end implementation of |productName| Component timeouts feature is still in beta mode and would undergo design and implementation changes before the complete feature is made available. Appreciate any feedbacks or issues.
+    The `fedtiming` class, `SyncAsyncTaskDecoFactory` factory class, custom synchronous and asynchronous execution of decorated function is in-place. The end to end implementation of OpenFL Component timeouts feature is still in beta mode and would undergo design and implementation changes before the complete feature is made available. Appreciate any feedbacks or issues.
 
 
 .. _comp_timeout_design:

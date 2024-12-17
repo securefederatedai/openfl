@@ -4,10 +4,10 @@
 .. _quick_start:
 
 =====================
-Quick Start
+Quickstart
 =====================
 
-|productName| has a variety of APIs to choose from when setting up and running a federation. 
+OpenFL has a variety of APIs to choose from when setting up and running a federation. 
 In this quick start guide, we will demonstrate how to run a simple federated learning example using the Task Runner API.
 
 

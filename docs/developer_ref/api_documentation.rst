@@ -2,10 +2,10 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 *************************************************
-|productName| API
+OpenFL API
 *************************************************
 
-Welcome to the |productName| API reference:
+Welcome to the OpenFL API reference:
 
 .. autosummary::
    :toctree: _autosummary

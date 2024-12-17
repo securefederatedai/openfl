@@ -7,9 +7,9 @@
 Straggler Handling Interface
 *****************************
 
-The Open Federated Learning (|productName|) framework supports straggler handling interface for identifying stragglers or slow collaborators for a round and ending the round early as a result of it. The updates from these stragglers are not aggregated in the aggregator model.
+The Open Federated Learning (OpenFL) framework supports straggler handling interface for identifying stragglers or slow collaborators for a round and ending the round early as a result of it. The updates from these stragglers are not aggregated in the aggregator model.
 
-The following are the straggler handling algorithms supported in |productName|:
+The following are the straggler handling algorithms supported in OpenFL:
 
 ``CutoffTimeBasedStragglerHandling``
     Identifies stragglers based on the cutoff time specified in the settings. Arguments to the function are:
@@ -38,4 +38,3 @@ The example template, **torch_cnn_mnist_straggler_check**, uses the ``Percentage
             settings :
                 straggler_cutoff_time : 20
                 minimum_reporting : 1
-

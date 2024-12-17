@@ -12,7 +12,7 @@ See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe886
 
 .. note::
 
-    Ensure you have installed the |productName| package.
+    Ensure you have installed the OpenFL package.
 
     See :ref:`install_package` for details.
 

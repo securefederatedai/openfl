@@ -7,7 +7,7 @@
 Installation
 =====================
 
-Depending on how you want to set up |productName|, choose one of the following installation procedure.
+Depending on how you want to set up OpenFL, choose one of the following installation procedure.
 
 
 .. _install_package:
@@ -16,7 +16,7 @@ Depending on how you want to set up |productName|, choose one of the following i
 Install the Package
 *********************************
 
-Follow this procedure to prepare the environment and install the |productName| package.
+Follow this procedure to prepare the environment and install the OpenFL package.
 Perform this procedure on every node in the federation.
 
 1. Install a Python 3.9 (>=3.9, <3.12) virtual environment using venv.
@@ -35,7 +35,7 @@ Perform this procedure on every node in the federation.
 
       $ source venv/bin/activate
 
-4. Install the |productName| package.
+4. Install the OpenFL package.
 
     A. Installation from PyPI: 
     
@@ -45,14 +45,14 @@ Perform this procedure on every node in the federation.
    
     B. Installation from source:
 
-        #. Clone the |productName| repository:
+        #. Clone the OpenFL repository:
         
             .. code-block:: console
             
                 $ git clone https://github.com/intel/openfl.git 
 
 
-        #. Install build tools, before installing |productName|: 
+        #. Install build tools, before installing OpenFL: 
 
             .. code-block:: console
             
@@ -62,7 +62,7 @@ Perform this procedure on every node in the federation.
 
 
 
-5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
+5. Run the :code:`fx` command in the virtual environment to confirm OpenFL is installed.
 
 	.. code-block:: console
 
@@ -103,14 +103,14 @@ Perform this procedure on every node in the federation.
 .. _install_docker:
 
 ****************************************
-|productName| with Docker\* \ 
+OpenFL with Docker\* \ 
 ****************************************
 
-Follow this procedure to download or build a Docker\*\  image of |productName|, which you can use to run your federation in an isolated environment.
+Follow this procedure to download or build a Docker\*\  image of OpenFL, which you can use to run your federation in an isolated environment.
 
 .. note::
 
-   The Docker\* \  version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
+   The Docker\* \  version of OpenFL is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
 
 1. Install Docker on all nodes in the federation.
 
@@ -127,7 +127,7 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
       ...
       ...
       
-3. Build an image from the latest official |productName| release:
+3. Build an image from the latest official OpenFL release:
 
 	.. code-block:: console
 

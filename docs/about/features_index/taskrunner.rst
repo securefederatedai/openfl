@@ -121,7 +121,7 @@ Bare Metal Approach
 
 .. note::
 
-    Ensure you have installed the |productName| package on every node (aggregator and collaborators) in the federation.
+    Ensure you have installed the OpenFL package on every node (aggregator and collaborators) in the federation.
 
     See :ref:`install_package` for details.
 
@@ -147,7 +147,7 @@ Bare Metal Approach
 STEP 1: Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm OpenFL is available.
 
 	.. code-block:: console
 
@@ -503,7 +503,7 @@ In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded w
 Running inside Docker
 ---------------------
 
-There are two ways you can run |productName| with Docker\*\.
+There are two ways you can run OpenFL with Docker\*\.
 
 - `Option 1: Deploy a Federation in a Docker Container`_
 - `Option 2: Deploy Your Workspace in a Docker Container`_
@@ -515,17 +515,17 @@ Option 1: Deploy a Federation in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    You have to built an |productName| image. See :ref:`install_docker` for details.
+    You have to built an OpenFL image. See :ref:`install_docker` for details.
 
 
-1. Run the |productName| image.
+1. Run the OpenFL image.
 
     .. code-block:: console
 
        $ docker run -it --network host openfl
 
 
-You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
+You can now experiment with OpenFL in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
 
 
 .. _running_the_federation_docker_workspace:
