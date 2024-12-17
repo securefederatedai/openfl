@@ -137,6 +137,8 @@ class TestFlowReferenceWithExclude(FLSpec):
     @aggregator
     def end(self):
         log.info("Testing FederatedFlow - Ending test for validating the references.")
+        TestFlowReferenceWithExclude.step_one_collab_attrs = []
+        TestFlowReferenceWithExclude.step_two_collab_attrs = []
 
 
 def filter_attrs(attr_list):

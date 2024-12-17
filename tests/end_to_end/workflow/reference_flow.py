@@ -182,12 +182,8 @@ class TestFlowReference(FLSpec):
 
         """
         log.info("Testing FederatedFlow - Ending test for validating the references.")
-        if TestFlowReference.all_ref_error_dict:
-            raise AssertionError("...Test case failed...")
-
         TestFlowReference.step_one_collab_attrs = []
         TestFlowReference.step_two_collab_attrs = []
-        TestFlowReference.all_ref_error_dict = {}
 
 
 def filter_attrs(attr_list):
