@@ -1,120 +1,100 @@
 # Copyright (C) 2020-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
-"""You may copy this file as the starting point of your own model."""
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from typing import Iterator
-from typing import Tuple
+
+from typing import Iterator, Tuple
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import Metric
 
+import torch.optim as optim
+import torch.nn.functional as F
+from src.cnn_model import DigitRecognizerCNN, train_epoch, validate
 
-class PyTorchCNN(PyTorchTaskRunner):
-    """
-    Simple CNN for classification.
+class TemplateTaskRunner(PyTorchTaskRunner):
+    """Template Task Runner for PyTorch.
 
-    PyTorchTaskRunner inherits from nn.module, so you can define your model
-    in the same way that you would for PyTorch
+    This class should be used as a template to create a custom Task Runner for your specific model and training workload.
+    After generating this template, you should:
+    1. Define your model, optimizer, and loss function as you would in PyTorch. PyTorchTaskRunner inherits from torch.nn.Module.
+    2. Implement the `train_` and `validate_` functions to define a single train and validate epoch of your workload.
+    3. Modify the `plan.yaml` file to use this Task Runner.
+
+    The `plan.yaml` modifications should be done under the `<workspace>/plan/plan.yaml` section:
+    ```
+    task_runner:
+        defaults : plan/defaults/task_runner.yaml
+        template: src.taskrunner.TemplateTaskRunner # Modify this line appropriately if you change the class name
+        settings:
+            # Add additional arguments that you wish to pass through `__init__`
+    ```
+
+    Define the `forward` method of this class as a forward pass through the model.
     """
 
     def __init__(self, device="cpu", **kwargs):
-        """Initialize.
+        """Initialize the Task Runner.
 
         Args:
-            device: The hardware device to use for training (Default = "cpu")
-            **kwargs: Additional arguments to pass to the function
-
+            device: The hardware device to use for training (Default = "cpu").
+            **kwargs: Additional arguments that may be defined in `plan.yaml`
         """
         super().__init__(device=device, **kwargs)
 
         # Define the model
-        self.conv1 = nn.Conv2d(1, 20, 2, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(800, 500)
-        self.fc2 = nn.Linear(500, 10)
+        self.model = DigitRecognizerCNN()
         self.to(device)
 
-        # `self.optimizer` must be set for optimizer weights to be federated
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
+        # Define the optimizer
+        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-4)
 
-        # Set the loss function
+        # Define the loss function
         self.loss_fn = F.cross_entropy
 
     def forward(self, x):
-        """
-        Forward pass of the model.
+        """Forward pass of the model.
 
         Args:
-            x: Data input to the model for the forward pass
+            x: Data input to the model for the forward pass.
+
+        Returns:
+            The output of the model's forward pass.
         """
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 800)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+        return self.model(x)
 
     def train_(
         self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
-        """
-        Train single epoch.
-
-        Override this function in order to use custom training.
+        """Single Training epoch.
 
         Args:
-            train_dataloader: Train dataset batch generator. Yields (samples, targets) tuples of
-            size = `self.data_loader.batch_size`.
+            train_dataloader: Train dataset batch generator. Yields (samples, targets) tuples
+                              of size = `self.train_dataloader.batch_size`.
+
         Returns:
-            Metric: An object containing name and np.ndarray value.
+            Metric: An object containing the name of the metric and its value as an np.ndarray.
         """
-        losses = []
-        for data, target in train_dataloader:
-            data, target = data.to(self.device), target.to(self.device)
-            self.optimizer.zero_grad()
-            output = self(data)
-            loss = self.loss_fn(output, target)
-            loss.backward()
-            self.optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-        loss = np.mean(losses)
-        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
+        # Implement training logic here and return a Metric object with the training loss.
+        # Replace the following placeholder with actual training code.
+
+        loss = train_epoch(self.model, self.optimizer, self.loss_fn, train_dataloader, self.device)
+        return Metric(name="crossentropy_loss", value=np.array(loss))
 
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
-        """
-        Perform validation on PyTorch Model
-
-        Override this function for your own custom validation function
+        """Single validation epoch.
 
         Args:
-            validation_dataloader: Validation dataset batch generator.
-                                   Yields (samples, targets) tuples
+            validation_dataloader: Validation dataset batch generator. Yields (samples, targets) tuples.
+                                   of size = `self.validation_dataloader.batch_size`.
+
         Returns:
-            Metric: An object containing name and np.ndarray value
+            Metric: An object containing the name of the metric and its value as an np.ndarray.
         """
+        # Implement validation logic here and return a Metric object with the validation accuracy.
+        # Replace the following placeholder with actual validation code.
 
-        total_samples = 0
-        val_score = 0
-        with torch.no_grad():
-            for data, target in validation_dataloader:
-                samples = target.shape[0]
-                total_samples += samples
-                data, target = data.to(self.device), target.to(
-                    self.device, dtype=torch.int64
-                )
-                output = self(data)
-                # get the index of the max log-probability
-                pred = output.argmax(dim=1)
-                val_score += pred.eq(target).sum().cpu().numpy()
-
-        accuracy = val_score / total_samples
+        accuracy = validate(self.model, validation_dataloader, self.device)
         return Metric(name="accuracy", value=np.array(accuracy))

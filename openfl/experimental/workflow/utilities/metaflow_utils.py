@@ -65,9 +65,7 @@ class SystemMutex:
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new(
-            "sha256", self.name.encode("utf8"), usedforsecurity=False
-        ).hexdigest()  # nosec
+        lock_id = hashlib.new("sha256", self.name.encode("utf8"), usedforsecurity=False).hexdigest()  # nosec
         # Using SHA-256 to address security warning
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
@@ -158,7 +156,7 @@ class DAGnode(DAGNode):
         # these attributes are populated by _postprocess
         self.is_inside_foreach = False
 
-    def _parse(self, func_ast):
+    def _parse(self, func_ast):  # noqa: C901
         self.num_args = len(func_ast.args.args)
         tail = func_ast.body[-1]
 
@@ -319,7 +317,7 @@ class TaskDataStore(TaskDataStore):
 
     @only_if_not_done
     @require_mode("w")
-    def save_artifacts(self, artifacts_iter, force_v4=False, len_hint=0):
+    def save_artifacts(self, artifacts_iter, force_v4=False, len_hint=0):  # noqa: C901
         """Saves Metaflow Artifacts (Python objects) to the datastore and
         stores any relevant metadata needed to retrieve them.
 

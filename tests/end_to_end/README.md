@@ -8,7 +8,7 @@ This project aims at integration testing of ```openfl-workspace``` using pytest 
 tests/end_to_end
 ├── models                  # Central location for all model-related code for testing purpose
 ├── test_suites             # Folder containing test files
-├── utils                   # Folder containing helper files
+├── utils                   # Folder containing fixture and helper files
 ├── conftest.py             # Pytest framework configuration file
 ├── pytest.ini              # Pytest initialisation file
 └── README.md               # Readme file
@@ -59,10 +59,18 @@ python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_roun
 
 ```
 results
-    ├── <workspace_name>    # Based on the workspace name provided during test run.
+    ├── <workspace_name>    # Same as model name used for testing.
+        ├── aggregator
+            ├── workspace   # containing aggregator specific files and folders
+        ├── collaborator1
+            ├── workspace   # containing collaborator1 specific files and folders
+        ├── ....
+        ├── collaborator<n>
+            ├── workspace   # containing collaborator<n> specific files and folders
     ├── results.xml         # Output file in JUNIT.
     └── deployment.log      # Log file containing step by step test progress.
 ```
+Folders excluded for all the participants - cert and data.
 
 ## Contribution
 

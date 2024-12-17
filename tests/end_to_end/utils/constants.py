@@ -19,3 +19,9 @@ NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
 DEFAULT_MODEL_NAME = "torch_cnn_mnist"
 SUCCESS_MARKER = "✔️ OK"
+
+# Docker specific constants
+CREATE_OPENFL_NW = "docker network create"
+REMOVE_OPENFL_NW = "docker network rm"
+DOCKER_NETWORK_NAME = "openfl"
+DEFAULT_OPENFL_IMAGE = "openfl:latest"

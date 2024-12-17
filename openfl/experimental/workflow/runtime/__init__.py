@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-""" openfl.experimental.workflow.runtime package Runtime class."""
+"""openfl.experimental.workflow.runtime package Runtime class."""
 
 from openfl.experimental.workflow.runtime.federated_runtime import FederatedRuntime
 from openfl.experimental.workflow.runtime.local_runtime import LocalRuntime

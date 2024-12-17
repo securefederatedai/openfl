@@ -14,12 +14,13 @@ env:
 jobs:
   pytest-coverage: # from pytest_coverage.yml
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
+    - name: Set up Python 3
       uses: actions/setup-python@v3
       with:
-        python-version: "3.8"
+        python-version: "3.9"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -34,12 +35,13 @@ jobs:
   cli: # from taskrunner.yml
     needs: [pytest-coverage]
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.8
+      - name: Set up Python 3
         uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "3.9"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

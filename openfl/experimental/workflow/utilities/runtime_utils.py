@@ -45,14 +45,14 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     return cls_attrs, valid_artifacts
 
 
-def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
+def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpoint"]):
     """Generates artifacts from the given context, excluding specified reserved
     words.
 
     Args:
         ctx (any): The context to generate artifacts from.
         reserved_words (list, optional): A list of reserved words to exclude.
-            Defaults to ["next", "runtime", "input"].
+            Defaults to ["next", "runtime", "input", "checkpoint"].
 
     Returns:
         tuple: A tuple containing a generator of artifacts and a list of
@@ -69,7 +69,7 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
     return artifacts_iter, cls_attrs
 
 
-def filter_attributes(ctx, f, **kwargs):
+def filter_attributes(ctx, f, **kwargs):  # noqa: C901
     """Filters out attributes from the next task in the flow based on inclusion
     or exclusion.
 
@@ -114,6 +114,9 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         parent_func (function): The function that was just executed.
         chkpnt_reserved_words (list, optional): A list of reserved words to
             exclude from checkpointing. Defaults to ["next", "runtime"].
+
+    Returns:
+        step_stdout (io.StringIO): parent_func stdout
     """
 
     # Extract the stdout & stderr from the buffer
@@ -134,6 +137,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
             buffer_err=step_stderr,
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
+        return step_stdout
 
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
@@ -176,7 +180,7 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
         # buffer to cycle though since need_assigned will change sizes as we
         # assign participants
         current_dict = need_assigned.copy()
-        for i, (participant_name, participant_gpu_usage) in enumerate(current_dict.items()):
+        for participant_name, participant_gpu_usage in current_dict.items():
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:

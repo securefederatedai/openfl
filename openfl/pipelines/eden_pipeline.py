@@ -438,7 +438,7 @@ class Eden:
         res = torch.zeros(size_scaled * bools_in_float32, device=self.device)
 
         s = 0
-        for i in range(bools_in_float32):
+        for _ in range(bools_in_float32):
             res[s : s + size_scaled] = r & mask
             s += size_scaled
             r >>= shift

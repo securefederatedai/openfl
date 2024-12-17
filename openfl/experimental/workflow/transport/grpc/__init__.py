@@ -6,8 +6,5 @@
 
 from openfl.experimental.workflow.transport.grpc.aggregator_client import AggregatorGRPCClient
 from openfl.experimental.workflow.transport.grpc.aggregator_server import AggregatorGRPCServer
-
-
-# FIXME: Not the right place for exceptions
-class ShardNotFoundError(Exception):
-    """Indicates that director has no information about that shard."""
+from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
+from openfl.experimental.workflow.transport.grpc.director_server import DirectorGRPCServer

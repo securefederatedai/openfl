@@ -3,6 +3,7 @@
 
 
 """Cryptography participant utilities."""
+
 from typing import Tuple
 
 from cryptography import x509
