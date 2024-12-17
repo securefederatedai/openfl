@@ -144,12 +144,16 @@ def fx_local_federated_workflow(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    # Import is done inline because Task Runner does not support importing below penfl packages
+
     from openfl.experimental.workflow.interface import Aggregator, Collaborator
     from openfl.experimental.workflow.runtime import LocalRuntime
+
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
 
+    # Get the callback functions from the globals using string
     collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
     agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
     collaborators_list = []
@@ -176,14 +180,13 @@ def fx_local_federated_workflow(request):
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
-    log.info(f"Local runtime collaborators = {local_runtime.collaborators}")
-
     # Return the federation fixture
     return workflow_local_fixture(
         aggregator=aggregator,
         collaborators=collaborators_list,
         runtime=local_runtime,
     )
+
 
 @pytest.fixture(scope="function")
 def fx_local_federated_workflow_prvt_attr(request):
@@ -200,12 +203,16 @@ def fx_local_federated_workflow_prvt_attr(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    # Import is done inline because Task Runner does not support importing below penfl packages
+
     from openfl.experimental.workflow.interface import Aggregator, Collaborator
     from openfl.experimental.workflow.runtime import LocalRuntime
+
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
 
+     # Get the callback functions from the globals using string
     collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
     agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
     collaborators_list = []
@@ -237,8 +244,6 @@ def fx_local_federated_workflow_prvt_attr(request):
     if backend:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
-
-    log.info(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     # Return the federation fixture
     return workflow_local_fixture(

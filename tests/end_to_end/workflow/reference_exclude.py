@@ -142,6 +142,21 @@ class TestFlowReferenceWithExclude(FLSpec):
 
 
 def filter_attrs(attr_list):
+    """
+    Filters a list of attributes based on specific criteria.
+
+    Args:
+        attr_list (list): A list of tuples where each tuple contains an attribute name and its value.
+
+    Returns:
+        list: A list of attribute names that meet the filtering criteria.
+
+    The filtering criteria are:
+    - The attribute name does not start with an underscore.
+    - The attribute name is not in the list of reserved words: ["next", "runtime", "execute_next"].
+    - The attribute name is not an attribute of the TestFlowReferenceWithExclude class.
+    - The attribute value is not an instance of MethodType.
+    """
     valid_attrs = []
     reserved_words = ["next", "runtime", "execute_next"]
     for attr in attr_list:
@@ -157,10 +172,15 @@ def filter_attrs(attr_list):
 
 def find_matched_references(collab_attr_list, all_collaborators):
     """
-    Iterate attributes of collaborator and capture the duplicate reference
-    return: dict: {
-                    'Portland': ['failed attributes'], 'Seattle': [],
-                  }
+    Finds and logs matched references between collaborators based on their attributes.
+
+    Args:
+        collab_attr_list (list): A list of attribute names to check for shared references.
+        all_collaborators (list): A list of collaborator objects to be checked.
+
+    Returns:
+        dict: A dictionary where keys are collaborator inputs and values are lists of attribute names
+              that have shared references with other collaborators.
     """
     matched_ref_dict = {}
     for i in range(len(all_collaborators)):
@@ -189,7 +209,17 @@ def find_matched_references(collab_attr_list, all_collaborators):
 
 def validate_references(matched_ref_dict):
     """
-    Iterate reference list and raise assertion for conflicts
+    Validates the references in the provided dictionary and updates the
+    TestFlowReferenceWithExclude.step_one_collab_attrs list with collaborators
+    sharing references.
+
+    Args:
+        matched_ref_dict (dict): A dictionary where keys are collaborator names
+                                 and values are booleans indicating if they share
+                                 a reference.
+
+    Returns:
+        None
     """
     collborators_sharing_ref = []
     reference_flag = False

@@ -99,7 +99,7 @@ def test_internal_loop(request, fx_local_federated_workflow):
     log.info("\n **** Summary of internal flow testing ****\n"
              "No issues found and below are the tests that ran successfully\n"
              "1. Number of training completed is equal to training rounds\n"
-             "2. Cli steps and Expected steps are matching\n"
+             "2. CLI steps and Expected steps are matching\n"
              "3. Number of tasks are aligned with number of rounds and number of collaborators\n"
              "4. End function executed one time")
     log.info("***** Successfully ended test_internal_loop *****")
