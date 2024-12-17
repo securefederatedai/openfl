@@ -62,8 +62,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install -r test-requirements.txt
-          pip install metaflow==2.7.15
-          pip install ray==2.9.2
+          pip install -r tests/github/experimental/workflow/LocalRuntime/requirements_experimental_localruntime_tests.txt
 
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
