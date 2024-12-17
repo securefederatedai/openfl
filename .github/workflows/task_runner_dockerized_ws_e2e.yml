@@ -54,7 +54,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pre test run
-        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
       - name: Run Task Runner E2E tests with TLS
@@ -66,7 +66,7 @@ jobs:
           echo "Task runner end to end test run completed"
 
       - name: Post test run
-        uses: ./.github/actions/task_runner_e2e/post_test_run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
           run_type: "tr_tls_dockerized_ws"
@@ -97,7 +97,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pre test run
-        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without TLS
@@ -109,7 +109,7 @@ jobs:
           echo "Task runner end to end test run completed"
 
       - name: Post test run
-        uses: ./.github/actions/task_runner_e2e/post_test_run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
           run_type: "tr_non_tls_dockerized_ws"
@@ -140,7 +140,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pre test run
-        uses: ./.github/actions/task_runner_e2e/pre_test_run
+        uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without TLS
@@ -152,7 +152,7 @@ jobs:
           echo "Task runner end to end test run completed"
 
       - name: Post test run
-        uses: ./.github/actions/task_runner_e2e/post_test_run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
           run_type: "tr_no_client_auth_dockerized_ws"
