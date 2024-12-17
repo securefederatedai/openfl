@@ -30,8 +30,10 @@ Signoff your patch commits using your real name. We discourage anonymous contrib
 
     Signed-off-by: Joe Smith <joe.smith@email.com>
 
-If you set your `user.name` and `user.email` git configs, you can sign your
-commits using `git commit --signoff`.
+If you set your `user.name` and `user.email` git configs, you can sign your commits using:
+```bash
+git commit --signoff -m <commit message>
+```
 
 Your signature [certifies](http://developercertificate.org/) that you wrote the patch, or, you otherwise have the right to pass it on as an open-source patch.
 
@@ -39,12 +41,12 @@ OpenFL is licensed under the [Apache 2.0 license](https://github.com/securefeder
 
 ### Step 5. Code review and merge
 
-Verify that your contribution passes all tests in our CI/CD pipeline. In case of a failure, like shown below, look into the error messages and try to fix them.
+Verify that your contribution passes all tests in our CI/CD pipeline. In case of any failures, look into the error messages and try to fix them.
 
-![CI/CD](docs/images/CI_details.png)
+![CI/CD](images/CI_details.png)
 
 Meanwhile, a reviewer will review the pull request and provide comments. Post few iterations of
-reviews and changes (depending on the complexity of the changes), PR will be approved for merge.
+reviews and changes (depending on the complexity of the changes), the PR will be approved for merge.
 
 ## Setup environment
 

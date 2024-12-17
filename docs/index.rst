@@ -64,7 +64,7 @@ Round
    :caption: Getting Started
    :maxdepth: 2
 
-   get_started/installation
+   installation
    get_started/quickstart
    get_started/examples
 
@@ -90,9 +90,9 @@ Round
    :caption: About
    :maxdepth: 2
 
+   releases
+   contributing
    about/features
-   about/releases
-   about/contributing
    about/blogs_publications
    about/license
    about/notices_and_disclaimers
