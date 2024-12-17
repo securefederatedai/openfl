@@ -5,6 +5,9 @@ recommonmark
 sphinx>=3.0.4 # not directly required, pinned by Snyk to avoid a vulnerability
 sphinx-copybutton
 sphinx-prompt 
-sphinx-rtd-theme
-sphinx_substitution_extensions 
+sphinx-book-theme
+sphinx_substitution_extensions
 sphinxcontrib-mermaid
+sphinx-remove-toctrees
+sphinx-design
+sphinxext-rediraffe

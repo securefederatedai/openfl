@@ -1,8 +1,6 @@
-"""Docs configuration module."""
-
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+"""Docs configuration module."""
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -17,6 +15,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import inspect
+import operator
 import sys
 from datetime import datetime
 
@@ -31,17 +31,21 @@ sys.path.insert(0, os.path.abspath('../'))
 # import sphinxcontrib.napoleon # NOQA:E800
 
 extensions = [
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme',
-    'sphinx.ext.autosectionlabel',
-    'sphinx-prompt',
-    'sphinx_copybutton',
-    'sphinx_substitution_extensions',
-    'sphinx.ext.ifconfig',
-    'sphinxcontrib.mermaid',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'recommonmark'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.linkcode',
+    'sphinx.ext.mathjax',
+    'sphinx_remove_toctrees',
+    'sphinx_copybutton',
+    'sphinx_design',
+    'sphinxext.rediraffe',
+    'sphinxcontrib.mermaid',
+    'sphinx-prompt',
+    # 'sphinx.ext.ifconfig',
+    # 'sphinx.ext.autosectionlabel',
+    # 'sphinx_substitution_extensions',
+    # 'recommonmark'
 ]
 autodoc_default_options = {
     'imported-members': True,
@@ -51,17 +55,13 @@ autosummary_generate = True  # Turn on sphinx.ext.autosummary
 source_suffix = ['.rst', '.md']
 
 # -- Project information -----------------------------------------------------
-
 # This will replace the |variables| within the rST documents automatically
-
-PRODUCT_VERSION = 'Intel'
-
 project = 'OpenFL'
-copyright = f'{datetime.now().year}, Intel'  # NOQA
-author = 'Intel Corporation'
-version = f'{datetime.now().year}.{datetime.now().month}'
-release = version
-master_doc = 'index'
+copyright = f'{datetime.now().year}, The OpenFL Team'
+author = 'The OpenFL Team'
+version = ''
+release = ''
+main_doc = 'index'
 
 # Global variables for rST
 rst_prolog = '''
@@ -126,16 +126,49 @@ exclude_patterns.extend(['modules.rst',
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
+html_logo = '_static/openfl_logo.png'
+html_favicon = '_static/favicon.png'
+html_theme = 'sphinx_book_theme'
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    'show_toc_level': 2,
+    'repository_url': 'https://github.com/securefederatedai/openfl',
+    'use_repository_button': True,     # add a "link to repository" button
+    'navigation_with_keys': False,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_style = 'css/Intel_One_Mono_Font_Theme.css'
-autosectionlabel_prefix_document = True
+# html_style = 'css/Intel_One_Mono_Font_Theme.css'
+# Customize code links via sphinx.ext.linkcode
 
+def linkcode_resolve(domain, info):
+  import openfl
 
-def setup(app):
-    app.add_css_file('css/custom.css')
+  if domain != 'py':
+    return None
+  if not info['module']:
+    return None
+  if not info['fullname']:
+    return None
+  if info['module'].split(".")[0] != 'openfl':
+     return None
+  try:
+    mod = sys.modules.get(info['module'])
+    obj = operator.attrgetter(info['fullname'])(mod)
+    if isinstance(obj, property):
+        obj = obj.fget
+    while hasattr(obj, '__wrapped__'):  # decorated functions
+        obj = obj.__wrapped__
+    filename = inspect.getsourcefile(obj)
+    source, linenum = inspect.getsourcelines(obj)
+  except:
+    return None
+  filename = os.path.relpath(filename, start=os.path.dirname(openfl.__file__))
+  lines = f"#L{linenum}-L{linenum + len(source)}" if linenum else ""
+  return f"https://github.com/securefederatedai/openfl/blob/develop/openfl/{filename}{lines}"
