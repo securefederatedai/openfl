@@ -33,6 +33,7 @@ env:
 
 jobs:
   test_wf_func:
+    if: github.event.pull_request.draft == false
     name: wf_func
     runs-on: ubuntu-22.04
     timeout-minutes: 15

@@ -148,7 +148,8 @@ def fx_local_federated_workflow(request):
     collaborators_list = []
 
     if agg_callback_func_name:
-        aggregator = Aggregator( name="agg",private_attributes_callable=agg_callback_func_name)
+        aggregator = Aggregator( name="agg",
+                                private_attributes_callable=agg_callback_func_name)
     else:
         aggregator = Aggregator()
 
@@ -174,7 +175,7 @@ def fx_local_federated_workflow(request):
     return workflow_local_fixture(
         aggregator=aggregator,
         collaborators=collaborators_list,
-        runtime = local_runtime,
+        runtime=local_runtime,
     )
 
 @pytest.fixture(scope="function")
@@ -203,7 +204,8 @@ def fx_local_federated_workflow_prvt_attr(request):
     collaborators_list = []
     # Setup aggregator
     if agg_callback_func_name:
-        aggregator = Aggregator( name="agg",private_attributes_callable=agg_callback_func_name)
+        aggregator = Aggregator( name="agg",
+                                private_attributes_callable=agg_callback_func_name)
     else:
         aggregator = Aggregator()
 
@@ -235,7 +237,7 @@ def fx_local_federated_workflow_prvt_attr(request):
     return workflow_local_fixture(
         aggregator=aggregator,
         collaborators=collaborators_list,
-        runtime = local_runtime,
+        runtime=local_runtime,
     )
 
 

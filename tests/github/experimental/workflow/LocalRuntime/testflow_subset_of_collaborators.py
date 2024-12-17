@@ -125,8 +125,6 @@ if __name__ == "__main__":
             )
 
     random_ints = random.sample(range(1, len(collaborators) + 1), len(collaborators))
-    print("-------")
-    print(random_ints)
     tc_pass_fail = {"passed": [], "failed": []}
     for round_num in range(len(collaborators)):
         print(f"{bcolors.OKBLUE}Starting round {round_num}...{bcolors.ENDC}")
@@ -144,7 +142,6 @@ if __name__ == "__main__":
         collaborators_ran = testflow_subset_collaborators.collaborators_ran
         # We now convert names to lowercase
         random_ints = testflow_subset_collaborators.random_ints
-        print(f"random_ints = {random_ints}")
         random_ints.remove(len(subset_collaborators))
 
         step = Step(
