@@ -218,7 +218,7 @@ def fx_local_federated_workflow_prvt_attr(request):
     collaborators_list = []
     # Setup aggregator
     if agg_callback_func_name:
-        aggregator = Aggregator( name="agg",
+        aggregator = Aggregator(name="agg",
                                 private_attributes_callable=agg_callback_func_name)
     else:
         aggregator = Aggregator()

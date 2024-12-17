@@ -29,13 +29,13 @@ def test_exclude_flow(request, fx_local_federated_workflow):
     """
     Test if variable is excluded, variables not show in next step and all other variables will show
     """
-    log.info("***** Starting test_exclude_flow *****")
+    log.info("Starting test_exclude_flow")
     flflow = TestFlowExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_exclude_flow *****")
+    log.info("Successfully ended test_exclude_flow")
 
 
 def test_include_exclude_flow(request, fx_local_federated_workflow):
@@ -43,33 +43,33 @@ def test_include_exclude_flow(request, fx_local_federated_workflow):
     Test variables which is excluded will not show in next step
     Test variables which are included will show in next step
     """
-    log.info("***** Starting test_include_exclude_flow *****")
+    log.info("Starting test_include_exclude_flow")
     flflow = TestFlowIncludeExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_include_exclude_flow *****")
+    log.info("Successfully ended test_include_exclude_flow")
 
 
 def test_include_flow(request, fx_local_federated_workflow):
     """
     Test if variable is included, variables woll show in next step and all other variables will not show
     """
-    log.info("***** Starting test_include_flow *****")
+    log.info("Starting test_include_flow")
     flflow = TestFlowInclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_include_flow *****")
+    log.info("Successfully ended test_include_flow")
 
 
 def test_internal_loop(request, fx_local_federated_workflow):
     """
     Verify that thru internal loop, rounds to train is set
     """
-    log.info("***** Starting test_internal_loop *****")
+    log.info("Starting test_internal_loop")
     model = None
     optimizer = None
 
@@ -96,13 +96,13 @@ def test_internal_loop(request, fx_local_federated_workflow):
     assert len(extra_steps_in_cli) == 0, f"Following steps are extra in Datastore: {extra_steps_in_cli}"
     assert flflow.end_count == 1, "End function called more than one time"
 
-    log.info("\n **** Summary of internal flow testing ****\n"
+    log.info("\n  Summary of internal flow testing \n"
              "No issues found and below are the tests that ran successfully\n"
              "1. Number of training completed is equal to training rounds\n"
              "2. CLI steps and Expected steps are matching\n"
              "3. Number of tasks are aligned with number of rounds and number of collaborators\n"
              "4. End function executed one time")
-    log.info("***** Successfully ended test_internal_loop *****")
+    log.info("Successfully ended test_internal_loop")
 
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_index", "int", None )], indirect=True)
@@ -110,39 +110,39 @@ def test_reference_flow(request, fx_local_federated_workflow):
     """
     Test reference variables matched through out the flow
     """
-    log.info("***** Starting test_reference_flow *****")
+    log.info("Starting test_reference_flow")
     flflow = TestFlowReference(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_reference_flow *****")
+    log.info("Successfully ended test_reference_flow")
 
 
 def test_reference_include_flow(request, fx_local_federated_workflow):
     """
     Test reference variables matched if included else not
     """
-    log.info("***** Starting test_reference_include_flow *****")
+    log.info("Starting test_reference_include_flow")
     flflow = TestFlowReferenceWithInclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_reference_include_flow *****")
+    log.info("Successfully ended test_reference_include_flow")
 
 
 def test_reference_exclude_flow(request, fx_local_federated_workflow):
     """
     Test reference variables matched if not excluded
     """
-    log.info("***** Starting test_reference_exclude_flow *****")
+    log.info("Starting test_reference_exclude_flow")
     flflow = TestFlowReferenceWithExclude(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_reference_exclude_flow *****")
+    log.info("Successfully ended test_reference_exclude_flow")
 
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_name", "str", None )], indirect=True)
@@ -159,7 +159,7 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
         - Verify the number of collaborators matches the expected subset.
         - Check that the flow runs for each subset collaborator.
     """
-    log.info("***** Starting test_subset_collaborators *****")
+    log.info("Starting test_subset_collaborators")
     collaborators = fx_local_federated_workflow.collaborators
 
     random_ints = random.sample(range(1, len(collaborators) + 1), len(collaborators))
@@ -205,20 +205,20 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
     log.info(
         f"Testing FederatedFlow - Ending test for validating "
         + f"the subset of collaborators.")
-    log.info("***** Successfully ended test_subset_collaborators *****")
+    log.info("Successfully ended test_subset_collaborators")
 
 
 def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr):
     """
     Set private attribute without callable function i.e thru direct assignment
     """
-    log.info("***** Starting test_private_attr_wo_callable *****")
+    log.info("Starting test_private_attr_wo_callable")
     flflow = TestFlowPrivateAttributesWoCallable(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow_prvt_attr.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_private_attr_wo_callable *****")
+    log.info("Successfully ended test_private_attr_wo_callable")
 
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
@@ -226,13 +226,13 @@ def test_private_attributes(request, fx_local_federated_workflow):
     """
     Set private attribute thru callable function
     """
-    log.info("***** Starting test_private_attributes *****")
+    log.info("Starting test_private_attributes")
     flflow = TestFlowPrivateAttributes(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow.runtime
     for i in range(request.config.num_rounds):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_private_attributes *****")
+    log.info("Successfully ended test_private_attributes")
 
 
 @pytest.mark.parametrize("fx_local_federated_workflow_prvt_attr", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
@@ -240,10 +240,10 @@ def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
     """
     Set private attribute thru callable function and direct assignment
     """
-    log.info("***** Starting test_private_attr_both *****")
+    log.info("Starting test_private_attr_both")
     flflow = TestFlowPrivateAttributesBoth(checkpoint=True)
     flflow.runtime = fx_local_federated_workflow_prvt_attr.runtime
     for i in range(5):
         log.info(f"Starting round {i}...")
         flflow.run()
-    log.info("***** Successfully ended test_private_attr_both *****")
+    log.info("Successfully ended test_private_attr_both")
