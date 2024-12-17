@@ -1,4 +1,4 @@
-# Contributing to OpenFL
+# Contributing
 
 We welcome contributions from the community. There are several ways to contribute:
 * Improvements in [documentation](https://openfl.readthedocs.io/en/latest/).

@@ -31,7 +31,6 @@
 
 We are excited to announce the release of OpenFL 1.5.1 - our first since moving to LF AI & Data! This release brings the following changes.
 
-### 1.5.1 Highlights
 - **Documentation accessibility improvements**: As part of our [Global Accessibility Awareness Day](https://www.intel.com/content/www/us/en/developer/articles/community/open-fl-project-improve-accessibility-for-devs.html) (GAAD) Pledge, the OpenFL project is making strides towards more accessible documentation. This release includes the integration of [Intel® One Mono](https://www.intel.com/content/www/us/en/company-overview/one-monospace-font.html) font, contrast color improvements, formatting improvements, and [new accessibility focused issues](https://github.com/securefederatedai/openfl/issues?q=is%3Aissue+is%3Aopen+accessibility) to take up in the future. 
 - **[Documentation to federate a Generally Nuanced Deep Learning Framework (GaNDLF) model with OpenFL](https://openfl.readthedocs.io/en/latest/running_the_federation_with_gandlf.html)**
 - **New OpenFL Interactive API Tutorials**:
@@ -46,7 +45,6 @@ We are excited to announce the release of OpenFL 1.5.1 - our first since moving 
 ## 1.5
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.5)
 
-### 1.5 Highlights
 * **New Workflows Interface (Experimental)** - a new way of composing federated learning experiments inspired by [Metaflow](https://github.com/Netflix/metaflow). Enables the creation of custom aggregator and collaborators tasks. This initial release is intended for simulation on a single node (using the LocalRuntime); distributed execution (FederatedRuntime) to be enabled in a future release. 
 * **New use cases enabled by the workflow interface**:
     * **[End-of-round validation with aggregator dataset](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/workflow/102_Aggregator_Validation.ipynb)** 
@@ -139,4 +137,4 @@ This release includes:
 - `fx` CLI for multi-node production deployments
 - Additional test coverage for OpenFL components
 
-\* Singularity supported via DockerHub integration: `singularity shell docker://openfl:latest`
+<!-- * Singularity supported via DockerHub integration: `singularity shell docker://openfl:latest` -->

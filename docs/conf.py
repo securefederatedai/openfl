@@ -42,10 +42,10 @@ extensions = [
     'sphinxext.rediraffe',
     'sphinxcontrib.mermaid',
     'sphinx-prompt',
+    'recommonmark',
     # 'sphinx.ext.ifconfig',
     # 'sphinx.ext.autosectionlabel',
     # 'sphinx_substitution_extensions',
-    # 'recommonmark'
 ]
 autodoc_default_options = {
     'imported-members': True,
@@ -116,8 +116,7 @@ exclude_patterns = ['_build', 'Thumbs.db', 'README.md', 'structurizer_dsl/README
                     '.DS_Store', 'tutorials/*', 'graveyard/*', '_templates']
 
 # add temporary unused files
-exclude_patterns.extend(['modules.rst',
-                         'install.singularity.rst',
+exclude_patterns.extend(['install.singularity.rst',
                          'overview.what_is_intel_federated_learning.rst',
                          'overview.how_can_intel_protect_federated_learning.rst',
                          'source/workflow/running_the_federation.singularity.rst'])
