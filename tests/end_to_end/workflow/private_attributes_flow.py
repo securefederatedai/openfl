@@ -99,6 +99,17 @@ class TestFlowPrivateAttributes(FLSpec):
         log.info("...Test case passed...")
 
 def validate_collab_private_attr(self, private_attr, step_name):
+    """
+    Validates the private attributes of the aggregator and collaborators.
+
+    Args:
+        private_attr (str): The name of the private attribute to validate.
+        step_name (str): The name of the current step in the workflow.
+
+    Raises:
+        AssertionError: If the aggregator does not have the specified private attribute.
+        AssertionError: If any collaborator's private attributes are accessible.
+    """
     # Aggregator should only be able to access its own attributes
     assert hasattr(self, private_attr), f"{step_name}_aggregator_attributes_missing"
 
@@ -107,7 +118,19 @@ def validate_collab_private_attr(self, private_attr, step_name):
         assert not (type(self.collaborators[idx]) is not str or hasattr(self.runtime, "_collaborators") or hasattr(self.runtime, "__collaborators")), \
             f"{step_name}_collaborator_attributes_found for collaborator {collab}"
 
+
 def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
+    """
+    Validates that the collaborator can only access its own private attributes and not the aggregator's attributes.
+
+    Args:
+        private_attr_1 (str): The name of the first private attribute to check.
+        private_attr_2 (str): The name of the second private attribute to check.
+        step_name (str): The name of the current step in the workflow.
+
+    Raises:
+        AssertionError: If the collaborator does not have the specified private attributes or if the aggregator's attributes are accessible.
+    """
     # Collaborator should only be able to access its own attributes
     assert hasattr(self, private_attr_1) and hasattr(self, private_attr_2), \
         f"{step_name}collab_attributes_not_found"

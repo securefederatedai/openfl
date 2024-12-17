@@ -16,6 +16,16 @@ class TestFlowSubsetCollaborators(FLSpec):
     """
 
     def __init__(self, random_ints=[], **kwargs) -> None:
+        """
+        Initialize the SubsetFlow class.
+
+        Args:
+            random_ints (list, optional): A list of random integers. Defaults to an empty list.
+            **kwargs: Additional keyword arguments passed to the superclass initializer.
+
+        Returns:
+            None
+        """
         super().__init__(**kwargs)
         self.random_ints = random_ints
 

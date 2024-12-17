@@ -30,12 +30,9 @@ class Net(nn.Module):
 
 
 class TestFlowReference(FLSpec):
-
     """
     Testflow to validate references of collaborator attributes in Federated Flow.
-
     """
-
     step_one_collab_attrs = []
     step_two_collab_attrs = []
     all_ref_error_dict = {}
@@ -187,6 +184,21 @@ class TestFlowReference(FLSpec):
 
 
 def filter_attrs(attr_list):
+    """
+    Filters a list of attribute tuples to return only valid attribute names.
+
+    An attribute is considered valid if:
+    - It does not start with an underscore.
+    - It is not in the list of reserved words: ["next", "runtime", "execute_next"].
+    - It is not an attribute of the TestFlowReference class.
+    - It is not an instance of MethodType.
+
+    Args:
+        attr_list (list): A list of tuples where each tuple contains an attribute name and its value.
+
+    Returns:
+        list: A list of valid attribute names.
+    """
     valid_attrs = []
     reserved_words = ["next", "runtime", "execute_next"]
     for attr in attr_list:
@@ -202,10 +214,22 @@ def filter_attrs(attr_list):
 
 def find_matched_references(collab_attr_list, all_collaborators):
     """
-    Iterate attributes of collaborator and capture the duplicate reference
-    return: dict: {
-                    'Portland': ['failed attributes'], 'Seattle': [],
-                  }
+    Finds and logs matched references between collaborators based on their attributes.
+
+    This function iterates through a list of collaborator attributes and checks if any of the
+    collaborators share the same reference for a given attribute. If a shared reference is found,
+    it logs an error and raises a ReferenceFlowException.
+
+    Args:
+        collab_attr_list (list): A list of attribute names to check for shared references.
+        all_collaborators (list): A list of collaborator objects to be checked.
+
+    Returns:
+        dict: A dictionary where the keys are the input attributes of the collaborators and the
+              values are lists of attribute names that have shared references.
+
+    Raises:
+        ReferenceFlowException: If any two collaborators share the same reference for a given attribute.
     """
     matched_ref_dict = {}
     for i in range(len(all_collaborators)):
@@ -234,7 +258,22 @@ def find_matched_references(collab_attr_list, all_collaborators):
 
 def validate_collab_references(matched_ref_dict):
     """
-    Iterate reference list and raise assertion for conflicts
+    Validates the references shared by collaborators.
+
+    This function checks the provided dictionary of matched references and
+    identifies collaborators who have shared references. It updates the
+    `all_ref_error_dict` attribute of the `TestFlowReference` class with
+    collaborators who have shared references. If no references are shared,
+    it logs a message indicating that the reference test passed.
+
+    Args:
+        matched_ref_dict (dict): A dictionary where keys are collaborator
+                                 identifiers and values are boolean flags
+                                 indicating whether the collaborator has
+                                 shared references.
+
+    Returns:
+        None
     """
     collborators_sharing_ref = []
     reference_flag = False
@@ -256,8 +295,17 @@ def validate_collab_references(matched_ref_dict):
 
 def validate_agg_attr_ref(agg_attrs, agg_obj):
     """
-    Verifies aggregator attributes are retained after
-    collaborator execution
+    Validates that the attributes of the aggregator object are intact after
+    coming out of collaborators by comparing their IDs with the reference
+    dictionary.
+
+    Args:
+        agg_attrs (list): A list of attribute names to be validated.
+        agg_obj (object): The aggregator object whose attributes are to be validated.
+
+    Raises:
+        ReferenceFlowException: If any of the aggregator attributes' references
+                                are not intact.
     """
     attr_flag = False
     for attr in agg_attrs:
@@ -273,9 +321,16 @@ def validate_agg_attr_ref(agg_attrs, agg_obj):
 
 def validate_agg_collab_references(all_collaborators, agg_obj, agg_attrs):
     """
-    Iterate attributes of aggregator and collaborator to capture the mismatched references.
-    """
+    Validates that the attributes of the aggregator object are not shared by reference with any of the collaborators.
 
+    Args:
+        all_collaborators (list): A list of collaborator objects.
+        agg_obj (object): The aggregator object whose attributes are to be validated.
+        agg_attrs (list): A list of attribute names (strings) to be checked for reference sharing.
+
+    Raises:
+        ReferenceFlowException: If any attribute of the aggregator object is found to be shared by reference with any collaborator.
+    """
     mis_matched_ref = {}
     for collab in all_collaborators:
         mis_matched_ref[collab.input] = []
