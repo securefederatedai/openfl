@@ -66,6 +66,7 @@
               python -m pip install --upgrade pip
               pip install .
               pip install -r test-requirements.txt
+              pip install metaflow==2.7.15
     
           - name: Run Task Runner E2E tests with TLS
             id: run_tests
