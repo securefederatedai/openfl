@@ -1,3 +1,6 @@
+# Copyright 2020-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 pass
 import torch.nn as nn
 import torch.optim as optim
@@ -122,7 +125,7 @@ def filter_attrs(attr_list):
     for attr in attr_list:
         if (
             not attr[0].startswith("_")
-            and attr[0] not in reserved_words
+            and attr[0] not in reserved words
             and not hasattr(TestFlowReferenceWithInclude, attr[0])
         ):
             if not isinstance(attr[1], MethodType):
