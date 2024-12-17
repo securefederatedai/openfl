@@ -66,6 +66,12 @@ Round
 
    installation
    get_started/quickstart
+
+.. toctree::
+   :hidden:
+   :caption: Tutorials
+   :maxdepth: 2
+
    get_started/examples
 
 .. toctree::
@@ -73,6 +79,7 @@ Round
    :caption: Developer Guide
    :maxdepth: 2
 
+   about/features
    developer_guide/manual
    developer_guide/openfl_structure
  
@@ -87,13 +94,13 @@ Round
 
 .. toctree::
    :hidden:
-   :caption: About
+   :caption: Notes
    :maxdepth: 2
 
    releases
    contributing
    roadmap
-   about/features
+   deprecation
    about/blogs_publications
    about/license
    about/notices_and_disclaimers
