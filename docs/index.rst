@@ -65,7 +65,7 @@ Round
    :maxdepth: 2
 
    installation
-   get_started/quickstart
+   get_started/taskrunner
 
 .. toctree::
    :hidden:

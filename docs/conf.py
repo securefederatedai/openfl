@@ -43,6 +43,7 @@ extensions = [
     'sphinxcontrib.mermaid',
     'sphinx-prompt',
     'recommonmark',
+    'myst_nb',
     # 'sphinx.ext.ifconfig',
     # 'sphinx.ext.autosectionlabel',
     # 'sphinx_substitution_extensions',
@@ -52,7 +53,7 @@ autodoc_default_options = {
 }
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
-source_suffix = ['.rst', '.md']
+source_suffix = ['.rst', '.md', '.ipynb']
 
 # -- Project information -----------------------------------------------------
 # This will replace the |variables| within the rST documents automatically
@@ -135,6 +136,16 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 # html_style = 'css/Intel_One_Mono_Font_Theme.css'
+
+# -- Options for myst ----------------------------------------------
+myst_heading_anchors = 3  # auto-generate 3 levels of heading anchors
+myst_enable_extensions = ['dollarmath']
+nb_execution_mode = "force"
+nb_execution_allow_errors = False
+nb_merge_streams = True
+nb_execution_show_tb = True
+nb_execution_timeout = 100
+
 # Customize code links via sphinx.ext.linkcode
 
 def linkcode_resolve(domain, info):

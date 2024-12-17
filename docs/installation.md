@@ -1,6 +1,6 @@
 # Installation
 
-OpenFL needs to be installed on every node participating in the federation. The installation process depends on the environment in which you plan to run OpenFL. The following sections provide instructions for installing OpenFL in a Python virtual environment or in a Docker container.
+This document provides instructions for installing OpenFL; either in a Python virtual environment or as a docker container.
 
 ## Using `pip`
 
