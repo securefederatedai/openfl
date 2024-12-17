@@ -1,5 +1,6 @@
 from metaflow import Flow
 import logging
+import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -49,3 +50,61 @@ def validate_flow(flow_obj, expected_flow_steps):
         step for step in cli_step_names if step not in expected_flow_steps
     ]
     return steps_present_in_cli, missing_steps_in_cli, extra_steps_in_cli
+
+
+def init_collaborator_private_attr_index(param):
+        """
+        Initialize a collaborator's private attribute index.
+
+        Args:
+            param (int): The initial value for the index.
+
+        Returns:
+            dict: A dictionary with the key 'index' and the value of `param` incremented by 1.
+        """
+        return {"index": param + 1}
+
+
+def init_collaborator_private_attr_name(param):
+        """
+        Initialize a collaborator's private attribute name.
+
+        Args:
+            param (str): The name to be assigned to the collaborator's private attribute.
+
+        Returns:
+            dict: A dictionary with the key 'name' and the value of the provided parameter.
+        """
+        return {"name": param}
+
+
+def init_collaborate_pvt_attr_np(param):
+    """
+    Initialize private attributes for collaboration with numpy arrays.
+
+    This function generates random numpy arrays for training and testing loaders
+    based on the given parameter.
+
+    Args:
+        param (int): A multiplier to determine the size of the generated arrays.
+
+    Returns:
+        dict: A dictionary containing:
+            - "train_loader" (numpy.ndarray): A numpy array of shape (param * 50, 28, 28) with random values.
+            - "test_loader" (numpy.ndarray): A numpy array of shape (param * 10, 28, 28) with random values.
+    """
+    return {
+        "train_loader": np.random.rand(param * 50, 28, 28),
+        "test_loader": np.random.rand(param * 10, 28, 28),
+    }
+
+
+def init_agg_pvt_attr_np():
+    """
+    Initialize a dictionary with a private attribute for testing.
+
+    Returns:
+        dict: A dictionary containing a single key "test_loader" with a value
+              of a NumPy array of shape (10, 28, 28) filled with random values.
+    """
+    return {"test_loader": np.random.rand(10, 28, 28)}

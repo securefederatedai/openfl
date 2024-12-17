@@ -1,9 +1,6 @@
 # Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from openfl.experimental.workflow.interface import FLSpec
 from openfl.experimental.workflow.placement import aggregator, collaborator

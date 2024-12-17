@@ -9,8 +9,15 @@ import logging
 import numpy as np
 
 import tests.end_to_end.utils.docker_helper as dh
+from tests.end_to_end.utils.wf_helper import (
+    init_collaborator_private_attr_index,
+    init_collaborator_private_attr_name,
+    init_collaborate_pvt_attr_np,
+    init_agg_pvt_attr_np
+)
 import tests.end_to_end.utils.federation_helper as fh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
+
 
 
 log = logging.getLogger(__name__)
@@ -239,37 +246,3 @@ def fx_local_federated_workflow_prvt_attr(request):
         collaborators=collaborators_list,
         runtime=local_runtime,
     )
-
-
-def init_collaborator_private_attr_index(param):
-        return {"index": param + 1}
-
-def init_collaborator_private_attr_name(param):
-        return {"name": param}
-
-def init_collaborate_pvt_attr_np(param):
-    return {
-        "train_loader": np.random.rand(param * 50, 28, 28),
-        "test_loader": np.random.rand(param * 10, 28, 28),
-    }
-
-def init_agg_pvt_attr_np():
-    return {"test_loader": np.random.rand(10, 28, 28)}
-
-def init_collaborator_pvt_attr(
-    n_collaborators, index, train_dataset, test_dataset, batch_size
-):
-    local_train = deepcopy(train_dataset)
-    local_test = deepcopy(test_dataset)
-    local_train.data = mnist_train.data[index::n_collaborators]
-    local_train.targets = mnist_train.targets[index::n_collaborators]
-    local_test.data = mnist_test.data[index::n_collaborators]
-    local_test.targets = mnist_test.targets[index::n_collaborators]
-    return {
-        "train_loader": torch.utils.data.DataLoader(
-            local_train, batch_size=batch_size, shuffle=True
-        ),
-        "test_loader": torch.utils.data.DataLoader(
-            local_test, batch_size=batch_size, shuffle=True
-        ),
-    }

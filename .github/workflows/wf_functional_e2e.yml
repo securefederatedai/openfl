@@ -64,7 +64,6 @@ jobs:
           pip install .
           pip install -r test-requirements.txt
           pip install -r openfl-tutorials/experimental/workflow/workflow_interface_requirements.txt
-          pip install -r tests/github/experimental/workflow/LocalRuntime/requirements_experimental_localruntime_tests.txt
 
       - name: Run Work Flow Functional tests
         id: run_tests
