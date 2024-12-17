@@ -1,3 +1,4 @@
 # Set your workspace's requirements here
-torch
-torchvision
+setuptools==59.6.0
+torch==2.5.1
+torchvision==0.20.1

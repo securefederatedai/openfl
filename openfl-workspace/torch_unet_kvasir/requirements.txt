@@ -1,3 +1,4 @@
 scikit-image==0.24.0
-torch==2.3.1
-torchvision==0.18.1
+setuptools==59.6.0
+torch==2.5.1
+torchvision==0.20.1

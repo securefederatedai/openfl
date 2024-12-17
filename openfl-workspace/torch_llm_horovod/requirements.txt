@@ -7,8 +7,9 @@ jupyter
 peft
 sentencepiece
 seqeval
+setuptools==59.6.0
 tensorboard
-torch
-torchvision
+torch==2.5.1
+torchvision==0.20.1
 transformers[torch]
 wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
