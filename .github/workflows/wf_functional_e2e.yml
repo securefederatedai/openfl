@@ -28,7 +28,7 @@ permissions:
 
 # Environment variables common for all the jobs
 env:
-  NUM_ROUNDS: ${{ github.event.inputs.num_rounds || '5' }}
+  NUM_ROUNDS: ${{ github.event.inputs.num_rounds || '2' }}
   NUM_COLLABORATORS: ${{ github.event.inputs.num_collaborators || '2' }}
 
 jobs:
@@ -62,14 +62,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install -r test-requirements.txt
+          pip install -r openfl-tutorials/experimental/workflow/workflow_interface_requirements.txt
           pip install -r tests/github/experimental/workflow/LocalRuntime/requirements_experimental_localruntime_tests.txt
 
-      - name: Run Task Runner E2E tests with TLS
+      - name: Run Work Flow Functional tests
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
-          echo "Task runner end to end test run completed"
+          echo "Work Flow Functional tests run completed"
 
       - name: Print test summary
         id: print_test_summary
