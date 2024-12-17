@@ -14,21 +14,21 @@ We recommend using a Python virtual environment. Refer to the [venv installation
     source venv/bin/activate
 
     # Install OpenFL
-    python -m pip install openfl
+    pip install openfl
     ```
 
 * For development:
 
     ```bash
     git clone https://github.com/securefederatedai/openfl.git && cd openfl
-    python -m pip install -U pip setuptools wheel
-    python -m pip install -e .
+    pip install -U pip setuptools wheel
+    pip install -e .
     ```
 
 * Nightly (from the `develop` branch):
 
     ```bash
-    python -m pip install git+https://github.com/securefederatedai/openfl.git@develop
+    pip install git+https://github.com/securefederatedai/openfl.git@develop
     ```
 
 Verify installation using the `fx --help` command.
@@ -74,6 +74,8 @@ This method can be used to run federated learning experiments in an isolated env
 	```bash
 	git clone https://github.com/securefederatedai/openfl.git && cd openfl
 	git checkout develop
+    ```
+    ```bash
 	docker build 
         -t openfl \
         -f Dockerfile.base \
