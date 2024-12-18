@@ -55,7 +55,12 @@ def _log_memory_usage(request, fed_obj):
         6. Log the availability of memory usage details for all participants.
     """
     # Start the federation
-    results = fed_helper.run_federation(fed_obj)
+    if request.config.test_env == "task_runner_basic": 
+        results = fed_helper.run_federation(fed_obj)
+    else:
+        results = fed_helper.run_federation_for_dws(
+            fed_obj, use_tls=request.config.use_tls
+        )
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
