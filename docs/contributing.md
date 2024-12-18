@@ -79,3 +79,22 @@ A **class** or a **function** docstring may contain:
 * Paragraph(s) of detailed information.
 * Usage examples wherever applicable.
 * Detailed description of function arguments, return types and possible exceptions raised.
+
+## Update documentation
+To rebuild documentation, install packages:
+
+```bash
+pip install -r docs/requirements.txt
+```
+
+Next, run:
+```bash
+sphinx-build -b html docs docs/_build/html -j auto
+```
+
+You may disable notebook execution if that takes too long:
+```bash
+sphinx-build -b html -D nb_execution_mode=off docs docs/_build/html -j auto
+```
+
+The `-j auto` option controls build parallelism. You may replace `auto` with a number to specify the number of jobs to run in parallel.

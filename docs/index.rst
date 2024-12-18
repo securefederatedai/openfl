@@ -66,6 +66,7 @@ Round
 
    installation
    get_started/taskrunner
+   get_started/workflow
 
 .. toctree::
    :hidden:
