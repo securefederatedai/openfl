@@ -1,11 +1,7 @@
-.. # Copyright (C) 2020-2024 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
-
 .. _workflow_interface:
 
-******************
-Workflow Interface
-******************
+Workflow API
+============
 
 **Important Note**
 
@@ -122,7 +118,7 @@ Prior interfaces in OpenFL support the standard horizontal FL training workflow:
     4. The collaborator performs validation with their local validation dataset on their locally trained model, and sends their validation metrics to the aggregator (locally_tuned_model_validation task)
     5. The aggregator applies an aggregation function (weighted average, FedCurv, FedProx, etc.) to the model weights, and reports the aggregate metrics.
 
-The Task Assigner determines the list of collaborator tasks to be performed, and both in the task runner API as well as the interactive API these tasks can be modified (to varying degrees). For example, to perform federated evaluation of a model, only the aggregated_model_validation task would be selected for the assigner's block of the federated plan. Equivalently for the interactive API, this can be done by only registering a single validation task. But there are many other types of workflows that can't be easily represented purely by training / validation tasks performed on a collaborator with a single model. An example is training a Federated Generative Adversarial Network (GAN); because this may be represented by separate generative and discriminator models, and could leak information about a collaborator dataset, the interface we provide should allow for better control over what gets sent over the network and how. Another common request we get is for validation with an aggregator's dataset after training. Prior to |productName| 1.5, there has not a great way to support this in OpenFL.
+The Task Assigner determines the list of collaborator tasks to be performed, and both in the task runner API as well as the interactive API these tasks can be modified (to varying degrees). For example, to perform federated evaluation of a model, only the aggregated_model_validation task would be selected for the assigner's block of the federated plan. Equivalently for the interactive API, this can be done by only registering a single validation task. But there are many other types of workflows that can't be easily represented purely by training / validation tasks performed on a collaborator with a single model. An example is training a Federated Generative Adversarial Network (GAN); because this may be represented by separate generative and discriminator models, and could leak information about a collaborator dataset, the interface we provide should allow for better control over what gets sent over the network and how. Another common request we get is for validation with an aggregator's dataset after training. Prior to OpenFL 1.5, there has not a great way to support this in OpenFL.
 
 Goals
 =====
@@ -306,14 +302,14 @@ The `fx director start` command is used to start the Director. You can run it wi
 **With TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx director start -c <path_to_director_config_yaml_file> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx director start --disable-tls -c <path_to_director_config_yaml_file>
 
@@ -352,14 +348,14 @@ The `fx envoy start` command is used to start the Envoy. You can run it with or 
 **With TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx envoy start -n <envoy_name> -ec <path_to_envoy_config_yaml_file> -dh <director_host> -dp <director_port> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx envoy start -n <envoy_name> --disable-tls -ec <path_to_envoy_config_yaml_file>
 

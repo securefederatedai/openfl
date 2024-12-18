@@ -17,7 +17,7 @@ You will start a Jupyter\* \  lab server and receive a URL you can use to access
 Start the Tutorials
 ===================
 
-1. Start a Python\* \  3.9 (>=3.9, <3.12) virtual environment and confirm |productName| is available.
+1. Start a Python\* \  3.9 (>=3.9, <3.12) virtual environment and confirm OpenFL is available.
 
     .. code-block:: python
 
@@ -44,7 +44,7 @@ Start the Tutorials
 Familiarize with the API Concepts in an Aggregator-Based Worklow
 ================================================================
 
-Step 1: Enable the |productName| Python API
+Step 1: Enable the OpenFL Python API
 -------------------------------------------
 
 Add the following lines to your Python script.
@@ -54,7 +54,7 @@ Add the following lines to your Python script.
      import openfl.native as fx
      from openfl.federated import FederatedModel, FederatedDataSet
 
-This loads the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context.
+This loads the OpenFL package and import wrappers that adapt your existing data and models to a (simulated) federated context.
 
 Step 2: Set Up the Experiment
 -----------------------------
@@ -207,7 +207,7 @@ This command creates a model for each collaborator with their data shard.
 
 .. note::
 
-	In production deployments of |productName|, each collaborator will have the data on premise. Splitting data into shards is not necessary.
+	In production deployments of OpenFL, each collaborator will have the data on premise. Splitting data into shards is not necessary.
 
 Step 6: Run the Experiment
 --------------------------

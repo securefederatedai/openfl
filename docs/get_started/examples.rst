@@ -7,7 +7,7 @@
 Examples for Running a Federation
 =================================
 
-|productName| currently offers four ways to set up and run experiments with a federation: 
+OpenFL currently offers four ways to set up and run experiments with a federation: 
 the Task Runner API, Python Native API, the Interactive API (Deprecated), and the Workflow API. 
 the Task Runner API is advised for production scenarios where the workload needs to be verified prior to execution, whereas the python native API provides a clean python interface on top of it intended for simulation purposes.
 The Interactive API (Deprecated) introduces a convenient way to set up a federation and brings “long-lived” components in a federation (“Director” and “Envoy”), 

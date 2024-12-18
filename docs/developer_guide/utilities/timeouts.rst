@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 *******************************************************
-|productName| Component Timeouts
+OpenFL Component Timeouts
 *******************************************************
 
 .. _comp_timeout_overview:
@@ -17,7 +17,7 @@ The decorated functions is then monitored and gets terminated right after the ex
 
 .. note::
      
-    The `fedtiming` class, `SyncAsyncTaskDecoFactory` factory class, custom synchronous and asynchronous execution of decorated function is in-place. The end to end implementation of |productName| Component timeouts feature is still in beta mode and would undergo design and implementation changes before the complete feature is made available. Appreciate any feedbacks or issues.
+    The `fedtiming` class, `SyncAsyncTaskDecoFactory` factory class, custom synchronous and asynchronous execution of decorated function is in-place. The end to end implementation of OpenFL Component timeouts feature is still in beta mode and would undergo design and implementation changes before the complete feature is made available. Appreciate any feedbacks or issues.
 
 
 .. _comp_timeout_design:
@@ -42,7 +42,7 @@ Flow of execution
 #. [Step A] Decorate any sync or async function :code:`@fedtiming(timeout=<seconds>)` to monitor its execution time and terminate after `timeout=<seconds>` value.
 
 
-      .. code-block:: console
+      .. code-block:: shell
 
         @fedtiming(timeout=5)
         def some_sync_function():
@@ -50,7 +50,7 @@ Flow of execution
 
       | This decorated function execution gets terminated after `5 seconds`.
 
-      .. code-block:: console
+      .. code-block:: shell
 
         @fedtiming(timeout=10)
         async def some_async_function():
@@ -64,7 +64,7 @@ Flow of execution
        
       **Synchronous Example:**
 
-      .. code-block:: console
+      .. code-block:: shell
 
         some_sync_function = fedtiming(timeout=5)(some_sync_function)
 
@@ -76,7 +76,7 @@ Flow of execution
         
       **Aynchronous Example:**
 
-      .. code-block:: console
+      .. code-block:: shell
 
         some_async_function = fedtiming(timeout=5)(some_async_function)
 
@@ -98,7 +98,7 @@ Flow of execution
        
      The prepared `some_sync_function` or `some_async_function` when called internally with its respective parameters.
 
-     .. code-block:: console
+     .. code-block:: shell
 
       some_sync_function(*args, **kwargs) -> sync_wrapper(*args, **kwargs)
       some_async_function(*args, **kwargs) -> async_wrapper(*args, **kwargs)
