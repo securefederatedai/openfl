@@ -1,9 +1,7 @@
 ---
-#---------------------------------------------------------------------------
-# Workflow to run Task Runner end to end tests
-# Authors - Noopur, Payal Chaurasiya
-#---------------------------------------------------------------------------
-name: Task Runner E2E
+# Task Runner E2E tests for bare metal approach
+
+name: Task_Runner_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
   schedule:
@@ -55,48 +53,23 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          name: tr_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          test_type: "tr_tls"
 
   test_with_non_tls:
     name: tr_non_tls
@@ -123,48 +96,23 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          name: tr_non_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          test_type: "tr_non_tls"
 
   test_with_no_client_auth:
     name: tr_no_client_auth
@@ -191,48 +139,23 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Create Tar (exclude cert and data folders)
-        id: tar_files
-        if: ${{ always() }}
-        run: |
-          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          name: tr_no_client_auth_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          test_type: "tr_no_client_auth"
 
   test_memory_logs:
     name: tr_tls_memory_logs
@@ -259,44 +182,21 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        id: setup_python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        id: install_dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-          pip install -r test-requirements.txt
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
       - name: Run Task Runner E2E tests with TLS and memory logs
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
-          --model_name ${{ env.MODEL_NAME }} --num_rounds ${{ env.NUM_ROUNDS }} \
-          --num_collaborators ${{ env.NUM_COLLABORATORS }} --log_memory_usage
+          -k test_log_memory_usage_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
+          --log_memory_usage
           echo "Task runner memory logs test run completed"
 
-      - name: Print test summary
-        id: print_test_summary
-        if: ${{ always() }}
-        run: |
-          export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
-          echo "Test summary printed"
-
-      - name: Tar files
-        id: tar_files
-        if: ${{ always() }}
-        run: tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
-
-      - name: Upload Artifacts
-        id: upload_artifacts
-        uses: actions/upload-artifact@v4
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          name: tr_tls_memory_logs_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
-          path: result.tar
+          test_type: "tr_tls_memory_logs"

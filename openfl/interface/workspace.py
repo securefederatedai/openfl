@@ -79,10 +79,10 @@ def create_temp(prefix, template):
         template: The template to use for creating the workspace.
     """
 
-    echo("Creating Workspace Templates")
-
+    src = template if os.path.isabs(template) else WORKSPACE / template
+    echo(f"Creating Workspace Templates from {src} in {prefix}")
     shutil.copytree(
-        src=WORKSPACE / template,
+        src=src,
         dst=prefix,
         dirs_exist_ok=True,
         ignore=shutil.ignore_patterns("__pycache__"),

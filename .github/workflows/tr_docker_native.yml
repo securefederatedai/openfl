@@ -44,7 +44,7 @@ jobs:
         fx collaborator create -d 1 -n charlie --silent
         fx collaborator generate-cert-request -n charlie --silent
         fx collaborator certify --request-pkg col_charlie_to_agg_cert_request.zip --silent
-        
+
         # Pack the collaborator's private key, signed cert, and data.yaml into a tarball
         tarfiles="plan/data.yaml agg_to_col_charlie_signed_cert.zip"
         for entry in cert/client/*; do

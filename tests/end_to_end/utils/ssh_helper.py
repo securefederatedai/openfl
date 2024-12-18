@@ -129,3 +129,37 @@ def run_command(
             raise subprocess.CalledProcessError(returncode=result.returncode, cmd=cmd, stderr=result.stderr)
 
     return result.returncode, output, error
+
+
+def get_git_repo_and_branch():
+    """
+    Get the current repository URL and branch name.
+    """
+    try:
+        # Get the current repository URL
+        repo_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode('utf-8')
+
+        # Get the current branch name
+        branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip().decode('utf-8')
+
+        return repo_url, branch_name
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None, None
+
+
+def copy_file_from_docker(container_name, container_file_path, local_file_path):
+    """
+    Copy a file from a Docker container to the local machine.
+    Args:
+        container_name (str): Name of the Docker container
+        container_file_path (str): Path of the file in the Docker container
+        local_file_path (str): Path of the file on the local machine
+    """
+    try:
+        command = ['sudo', 'docker', 'cp', f'{container_name}:{container_file_path}', local_file_path]
+        subprocess.check_call(command)
+        log.info(f"Copied {container_file_path} from {container_name} to {local_file_path}.")
+    except subprocess.CalledProcessError as e:
+        log.error(f"Error: {e}")
+        raise e
