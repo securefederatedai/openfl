@@ -55,15 +55,15 @@ For example, to run Task runner (bare metal approach) with - torch_cnn_mnist mod
 python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_basic --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --disable_tls
 ```
 
-And, to run Task runner (via docker) with keras_cnn_mnist, 2 collaborators, 5 rounds:
+And, to run Task runner (via dockerized workspace) with keras_cnn_mnist, 2 collaborators, 3 rounds:
 
 ```sh
-python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_docker --num_rounds 5 --num_collaborators 2 --model_name keras_cnn_mnist
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_dockerized_ws --num_rounds 3 --num_collaborators 2 --model_name keras_cnn_mnist
 ```
 
 ### Fixture and marker mapping:
 
-- `fx_federation_tr` - for task_runner_basic and task_runner_docker
+- `fx_federation_tr` - for task_runner_basic
 - `fx_federation_tr_dws` - for task_runner_dockerized_ws
 
 

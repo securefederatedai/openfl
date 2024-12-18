@@ -51,9 +51,9 @@ def fx_federation_tr(request):
     """
     test_env = fh.get_test_env_from_markers(request)
 
-    if test_env not in ["task_runner_docker", "task_runner_basic"]:
+    if test_env != "task_runner_basic":
         raise ValueError(
-            "Fixture fx_federation_tr is only supported for task_runner_basic and task_runner_docker markers"
+            "Fixture fx_federation_tr is only supported for task_runner_basic marker"
         )
 
     collaborators = []
@@ -73,15 +73,6 @@ def fx_federation_tr(request):
 
     # Create workspace for given model name
     fh.create_persistent_store(model_owner.name, local_bind_path)
-
-    # Start the docker container for aggregator in case of docker environment
-    if test_env == "task_runner_docker":
-        container = dh.start_docker_container(
-            container_name="aggregator",
-            workspace_path=workspace_path,
-            local_bind_path=local_bind_path,
-        )
-        model_owner.container_id = container.id
 
     model_owner.create_workspace()
     fh.add_local_workspace_permission(local_bind_path)

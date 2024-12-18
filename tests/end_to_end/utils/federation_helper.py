@@ -384,11 +384,7 @@ def _verify_completion_for_participant(
 
     test_env = get_test_env_from_markers()
     # In case of docker environment, get the logs from local path which is mounted to the container
-    if test_env == "task_runner_docker":
-        result_file = constants.AGG_COL_RESULT_FILE.format(
-            local_bind_path, participant.name
-        )
-    elif test_env == "task_runner_dockerized_ws":
+    if test_env == "task_runner_dockerized_ws":
         result_file = constants.AGG_COL_RESULT_FILE.format(
             local_bind_path, participant.name
         )
@@ -448,16 +444,14 @@ def get_test_env_from_markers(request=None):
 
     # Determine the test type based on the markers
     markers = [m.name for m in request.node.iter_markers()]
-    if "task_runner_docker" in markers:
-        test_env = "task_runner_docker"
-    elif "task_runner_basic" in markers:
+    if "task_runner_basic" in markers:
         test_env = "task_runner_basic"
     elif "task_runner_dockerized_ws" in markers:
         test_env = "task_runner_dockerized_ws"
     else:
         raise ValueError(
             "Invalid test environment. Provide one of the valid markers: "
-            "task_runner_docker, task_runner_basic, task_runner_dockerized_ws"
+            "task_runner_basic and task_runner_dockerized_ws"
         )
 
     os.environ["TEST_ENV"] = test_env
@@ -488,23 +482,13 @@ def federation_env_setup_and_validate(request):
     )
     workspace_path = local_bind_path
 
-    if test_env in ["task_runner_docker", "task_runner_dockerized_ws"]:
+    if test_env == "task_runner_dockerized_ws":
 
         agg_domain_name = "aggregator"
         # Cleanup docker containers
         dh.cleanup_docker_containers()
         dh.remove_docker_network()
         dh.create_docker_network()
-
-        # Note: In case of dockerized workspace, image name would be same as workspace name and to be created at later stage.
-        if test_env == "task_runner_docker":
-            # Check if the docker image and network exists
-            dh.check_docker_image()
-
-            # Absolute path is required for docker
-            workspace_path = os.path.join(
-                "/", request.config.results_dir, request.config.model_name
-            )
 
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
@@ -599,13 +583,7 @@ def run_command(
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
 
-    is_docker = (
-        True
-        if (os.getenv("TEST_ENV") == "task_runner_docker" or run_for_dockerized_ws)
-        else False
-    )
-
-    if is_docker and container_id:
+    if run_for_dockerized_ws and container_id:
         log.debug("Running command in docker container")
         if len(workspace_path):
             docker_command = f"docker exec -w {workspace_path} {container_id} sh -c "
@@ -628,7 +606,7 @@ def run_command(
         log.info(f"Running command: {command}")
 
     log.debug("Running command on local machine")
-    if run_in_background and not is_docker:
+    if run_in_background and not run_for_dockerized_ws:
         bg_file = open(bg_file, "w", buffering=1)
         ssh.run_command_background(
             command,
@@ -691,19 +669,6 @@ def setup_collaborator(count, workspace_path, local_bind_path):
     except Exception as e:
         raise ex.PersistentStoreCreationException(
             f"Failed to create persistent store for {collaborator.name}: {e}"
-        )
-
-    try:
-        if test_env == "task_runner_docker":
-            container = dh.start_docker_container(
-                container_name=collaborator.name,
-                workspace_path=workspace_path,
-                local_bind_path=local_bind_path,
-            )
-            collaborator.container_id = container.id
-    except Exception as e:
-        raise ex.DockerException(
-            f"Failed to start {collaborator.name} docker environment: {e}"
         )
 
     try:

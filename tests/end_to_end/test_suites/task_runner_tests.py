@@ -4,18 +4,19 @@
 import pytest
 import logging
 
-from tests.end_to_end.utils.common_fixtures import fx_federation_tr
+from tests.end_to_end.utils.common_fixtures import fx_federation_tr, fx_federation_tr_dws
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 log = logging.getLogger(__name__)
 
 
-# NOTE: This test file contains the test cases for the task runner federation using bare metal and docker approaches.
-
 @pytest.mark.task_runner_basic
 def test_federation_via_native(request, fx_federation_tr):
     """
     Test federation via native task runner.
+    Args:
+        request (Fixture): Pytest fixture
+        fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
     # Start the federation
     results = fed_helper.run_federation(fx_federation_tr)
@@ -26,18 +27,16 @@ def test_federation_via_native(request, fx_federation_tr):
     ), "Federation completion failed"
 
 
-@pytest.mark.task_runner_docker
-def test_federation_via_docker(request, fx_federation_tr):
+@pytest.mark.task_runner_dockerized_ws
+def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     """
-    Test federation via docker.
+    Test federation via dockerized workspace.
     Args:
         request (Fixture): Pytest fixture
-        fx_federation_tr (Fixture): Pytest fixture
+        fx_federation_tr_dws (Fixture): Pytest fixture for dockerized workspace
     """
     # Start the federation
-    results = fed_helper.run_federation(fx_federation_tr)
+    results = fed_helper.run_federation_for_dws(fx_federation_tr_dws, use_tls=request.config.use_tls)
 
     # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(
-        fx_federation_tr, results, request.config.num_rounds
-    ), "Federation completion failed"
+    assert fed_helper.verify_federation_run_completion(fx_federation_tr_dws, results, request.config.num_rounds), "Federation completion failed"

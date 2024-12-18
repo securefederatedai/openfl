@@ -40,22 +40,6 @@ def test_federation_basic(request, fx_federation_tr):
     ), "Federation completion failed"
 
 
-@pytest.mark.task_runner_docker
-def test_federation_via_docker(request, fx_federation_tr):
-    """
-    Add a proper docstring here.
-    """
-    log.info(f"Running sample model test {fx_federation_tr}")
-
-    # Start the federation
-    results = fed_helper.run_federation(fx_federation_tr)
-
-    # Verify the completion of the federation run
-    assert fed_helper.verify_federation_run_completion(
-        fx_federation_tr, results, num_rounds=request.config.num_rounds
-    ), "Federation completion failed"
-
-
 @pytest.mark.task_runner_dockerized_ws
 def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     """
