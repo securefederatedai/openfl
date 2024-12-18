@@ -65,15 +65,15 @@ Round
    :maxdepth: 2
 
    installation
-   tutorials/taskrunner
+   tutorials/workflow
 
 .. toctree::
    :hidden:
    :caption: Tutorials
    :maxdepth: 2
 
-   tutorials
-   get_started/examples
+   tutorials/taskrunner
+   tutorials/workflow
 
 .. toctree::
    :hidden:
