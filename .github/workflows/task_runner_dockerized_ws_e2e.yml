@@ -1,9 +1,7 @@
 ---
-#---------------------------------------------------------------------------
-# Workflow to run Task Runner end to end tests using dockerized workspace
-# Authors - Noopur, Payal Chaurasiya
-#---------------------------------------------------------------------------
-name: Task_Runner_E2E_via_Dockerized_Workspace  # Please do not modify the name as it is used in the composite action
+# Task Runner E2E tests for dockerized approach
+
+name: Task_Runner_Dockerized_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
   workflow_dispatch:

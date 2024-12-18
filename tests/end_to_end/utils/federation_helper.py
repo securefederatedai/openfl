@@ -224,13 +224,13 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True, run_for_dockerized_ws=False):
+def run_federation(fed_obj, install_dependencies=True, with_docker=False):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
         install_dependencies (bool): Install dependencies on collaborators (default is True)
-        run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
+        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
         list: List of response files for all the participants
     """
@@ -245,7 +245,7 @@ def run_federation(fed_obj, install_dependencies=True, run_for_dockerized_ws=Fal
             constants.AGG_COL_RESULT_FILE.format(
                 fed_obj.workspace_path, participant.name
             ),
-            run_for_dockerized_ws=run_for_dockerized_ws,
+            with_docker=with_docker,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -276,7 +276,7 @@ def run_federation_for_dws(fed_obj, use_tls):
                 workspace_path="",
                 error_msg=f"Failed to extract certificates for {participant.name}",
                 container_id=participant.container_id,
-                run_for_dockerized_ws=True,
+                with_docker=True,
             )
             for participant in [fed_obj.aggregator] + fed_obj.collaborators
         ]
@@ -293,7 +293,7 @@ def run_federation_for_dws(fed_obj, use_tls):
                 executor.submit(
                     collaborator.import_pki,
                     zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
-                    run_for_dockerized_ws=True,
+                    with_docker=True,
                 )
                 for collaborator in fed_obj.collaborators
             ]
@@ -305,7 +305,7 @@ def run_federation_for_dws(fed_obj, use_tls):
             raise e
 
     # Start federation run for all the participants
-    return run_federation(fed_obj, run_for_dockerized_ws=True)
+    return run_federation(fed_obj, with_docker=True)
 
 
 def install_dependencies_on_collaborators(fed_obj):
@@ -540,7 +540,7 @@ def run_command(
     run_in_background=False,
     bg_file=None,
     print_output=False,
-    run_for_dockerized_ws=False,
+    with_docker=False,
 ):
     """
     Run the command
@@ -551,14 +551,14 @@ def run_command(
         run_in_background (bool): Run the command in background
         bg_file (str): Background file (with path)
         print_output (bool): Print the output
-        run_for_dockerized_ws (bool): Flag specific to dockerized workspace scenario. Default is False.
+        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
         tuple: Return code, output and error
     """
     return_code, output, error = 0, None, None
     error_msg = error_msg or "Failed to run the command"
 
-    if run_for_dockerized_ws and container_id:
+    if with_docker and container_id:
         log.debug("Running command in docker container")
         if len(workspace_path):
             docker_command = f"docker exec -w {workspace_path} {container_id} sh -c "
@@ -580,8 +580,7 @@ def run_command(
     if print_output:
         log.info(f"Running command: {command}")
 
-    log.debug("Running command on local machine")
-    if run_in_background and not run_for_dockerized_ws:
+    if run_in_background and not with_docker:
         bg_file = open(bg_file, "w", buffering=1)
         ssh.run_command_background(
             command,

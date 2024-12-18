@@ -1,8 +1,6 @@
 ---
-#---------------------------------------------------------------------------
-# Workflow to run Task Runner end to end tests using bare metal approach
-# Authors - Noopur, Payal Chaurasiya
-#---------------------------------------------------------------------------
+# Task Runner E2E tests for bare metal approach
+
 name: Task_Runner_E2E  # Please do not modify the name as it is used in the composite action
 
 on:

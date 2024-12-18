@@ -1,13 +1,6 @@
 ---
-#---------------------------------------------------------------------------
 # Composite Action to run post-test functions for task runner end to end tests
-# Includes:
-# - Print test summary
-# - Create tar file
-# - Upload artifacts
-#
-# Authors - Noopur, Payal Chaurasiya
-#---------------------------------------------------------------------------
+
 name: 'Post-Test Functions'
 description: 'Run post-test functions'
 inputs:
