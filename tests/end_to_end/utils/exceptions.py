@@ -57,6 +57,17 @@ class CollaboratorCreationException(Exception):
     """Exception for aggregator creation"""
     pass
 
+
+class WorkspaceDockerizationException(Exception):
+    """Exception for workspace dockerization"""
+    pass
+
+
+class WorkspaceLoadException(Exception):
+    """Exception for workspace load"""
+    pass
+
+
 class ReferenceFlowException(Exception):
     """Exception for reference flow"""
     pass

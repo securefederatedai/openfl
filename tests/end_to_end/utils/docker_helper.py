@@ -60,6 +60,10 @@ def start_docker_container(
     workspace_path,
     local_bind_path,
     image=constants.DEFAULT_OPENFL_IMAGE,
+    network=constants.DOCKER_NETWORK_NAME,
+    env_keyval_list=None,
+    security_opt=None,
+    mount_mapping=None,
 ):
     """
     Start the docker container with provided name.
@@ -68,22 +72,41 @@ def start_docker_container(
         workspace_path: Workspace path
         local_bind_path: Local bind path
         image: Docker image to use
+        network: Docker network to use (default is openfl)
+        env_keyval_list: List of environment variables to set.
+            Provide in key=val format. For example ["KERAS_HOME=/tmp"]
+        security_opt: Security options for the container
+        mount_mapping: Mapping of local path to docker path. Format ["local_path:docker_path"]
     Returns:
         container: Docker container object
     """
     try:
         client = get_docker_client()
 
-        # Local bind path
-        local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
-
-        # Docker container bind path
-        docker_participant_path = f"{workspace_path}/{container_name}/workspace"
+        # Set Local bind path and Docker container bind path
+        if mount_mapping:
+            local_participant_path = mount_mapping[0].split(":")[0]
+            docker_participant_path = mount_mapping[0].split(":")[1]
+        else:
+            local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
+            docker_participant_path = f"{workspace_path}/{container_name}/workspace"
 
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
         }
+        log.debug(f"Volumes for {container_name}: {volumes}")
 
+        environment = {
+            "WORKSPACE_PATH": docker_participant_path,
+            "NO_PROXY": "aggregator",
+            "no_proxy": "aggregator"
+        }
+        if env_keyval_list:
+            for keyval in env_keyval_list:
+                key, val = keyval.split("=")
+                environment[key] = val
+
+        log.debug(f"Environment variables for {container_name}: {environment}")
         # Start a container from the image
         container = client.containers.run(
             image,
@@ -92,13 +115,10 @@ def start_docker_container(
             auto_remove=False,
             tty=True,
             name=container_name,
-            network="openfl",
+            network=network,
+            security_opt=security_opt,
             volumes=volumes,
-            environment={
-                "WORKSPACE_PATH": docker_participant_path,
-                "NO_PROXY": "aggregator",
-                "no_proxy": "aggregator",
-            },
+            environment=environment,
             use_config_proxy=False,  # Do not use proxy for docker container
         )
         log.info(f"Container for {container_name} started with ID: {container.id}")
