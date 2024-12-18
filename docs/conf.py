@@ -112,7 +112,7 @@ nb_execution_mode = "force"
 nb_execution_allow_errors = False
 nb_merge_streams = True
 nb_execution_show_tb = True
-nb_execution_timeout = 100
+nb_execution_timeout = 600  # secs
 
 # Tell sphinx autodoc how to render type aliases.
 autodoc_typehints = "description"
