@@ -8,7 +8,7 @@ import json
 
 from tests.end_to_end.utils.common_fixtures import fx_federation_tr, fx_federation_tr_dws
 import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils import federation_helper as fed_helper
+from tests.end_to_end.utils import federation_helper as fed_helper, ssh_helper as ssh
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +21,6 @@ def test_log_memory_usage_basic(request, fx_federation_tr):
         - request: The pytest request object containing configuration options.
         - fx_federation_tr: The fixture representing the federated learning setup.
     """
-    # Skip test if fx_federation.log_memory_usage is False
     if not request.config.log_memory_usage:
         pytest.skip("Memory usage logging is disabled")
 
@@ -36,7 +35,6 @@ def test_log_memory_usage_dockerized_ws(request, fx_federation_tr_dws):
         - request: The pytest request object containing configuration options.
         - fx_federation_tr_dws: The fixture representing the federated learning setup with dockerized workspace.
     """
-    # Skip test if fx_federation.log_memory_usage is False
     if not request.config.log_memory_usage:
         pytest.skip("Memory usage logging is disabled")
 
@@ -55,7 +53,7 @@ def _log_memory_usage(request, fed_obj):
         6. Log the availability of memory usage details for all participants.
     """
     # Start the federation
-    if request.config.test_env == "task_runner_basic": 
+    if request.config.test_env == "task_runner_basic":
         results = fed_helper.run_federation(fed_obj)
     else:
         results = fed_helper.run_federation_for_dws(
@@ -67,8 +65,15 @@ def _log_memory_usage(request, fed_obj):
         fed_obj, results, test_env=request.config.test_env, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
 
+    breakpoint()
     # Verify the aggregator memory logs
     aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fed_obj.workspace_path)
+
+    if request.config.test_env == "task_runner_dockerized_ws":
+        ssh.copy_file_from_docker(
+            "aggregator", f"/workspace/logs/aggregator_memory_usage.json", aggregator_memory_usage_file
+        )
+
     assert os.path.exists(
         aggregator_memory_usage_file
     ), "Aggregator memory usage file is not available"
@@ -86,7 +91,10 @@ def _log_memory_usage(request, fed_obj):
         collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
             fed_obj.workspace_path, collaborator.name
         )
-
+        if request.config.test_env == "task_runner_dockerized_ws":
+            ssh.copy_file_from_docker(
+                collaborator.name, f"/workspace/logs/{collaborator.name}_memory_usage.json", collaborator_memory_usage_file
+            )
         assert os.path.exists(
             collaborator_memory_usage_file
         ), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"

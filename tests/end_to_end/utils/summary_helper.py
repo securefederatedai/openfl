@@ -4,7 +4,6 @@
 import xml.etree.ElementTree as ET
 from lxml import etree
 import os
-import re
 
 import tests.end_to_end.utils.constants as constants
 
