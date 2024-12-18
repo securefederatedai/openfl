@@ -4,13 +4,14 @@
 import xml.etree.ElementTree as ET
 from lxml import etree
 import os
+from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
 
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding="utf-8")
 
-result_path = os.path.join(os.getenv("HOME"), "results")
+result_path = os.path.join(Path().home(), "results")
 result_xml = os.path.join(result_path, "results.xml")
 if not os.path.exists(result_xml):
     print(f"Results XML file not found at {result_xml}. Exiting...")

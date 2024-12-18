@@ -7,7 +7,7 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 import logging
-
+from pathlib import Path
 
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
@@ -60,7 +60,7 @@ def setup_logging(pytestconfig):
     tmp_results_dir = pytestconfig.getini("results_dir")
     log_level = pytestconfig.getini("log_level")
 
-    results_dir = os.path.join(os.getenv("HOME"), tmp_results_dir)
+    results_dir = os.path.join(Path().home(), tmp_results_dir)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 

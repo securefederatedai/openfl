@@ -265,9 +265,9 @@ def fx_local_federated_workflow(request):
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
 
-    # Get the callback functions from the globals using string
-    collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
-    agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
+    # Get the callback functions from the locals using string
+    collab_callback_func_name = locals()[collab_callback_func] if collab_callback_func else None
+    agg_callback_func_name = locals()[agg_callback_func] if agg_callback_func else None
     collaborators_list = []
 
     if agg_callback_func_name:
@@ -328,10 +328,11 @@ def fx_local_federated_workflow_prvt_attr(request):
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
 
-     # Get the callback functions from the globals using string
-    collab_callback_func_name = globals()[collab_callback_func] if collab_callback_func else None
-    agg_callback_func_name = globals()[agg_callback_func] if agg_callback_func else None
+    # Get the callback functions from the locals using string
+    collab_callback_func_name = locals()[collab_callback_func] if collab_callback_func else None
+    agg_callback_func_name = locals()[agg_callback_func] if agg_callback_func else None
     collaborators_list = []
+
     # Setup aggregator
     if agg_callback_func_name:
         aggregator = Aggregator(name="agg",

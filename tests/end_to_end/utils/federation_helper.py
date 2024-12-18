@@ -7,6 +7,7 @@ import logging
 import os
 import json
 import re
+from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -451,7 +452,7 @@ def federation_env_setup_and_validate(request):
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path
-    home_dir = os.getenv("HOME")
+    home_dir = Path().home()
     local_bind_path = os.path.join(
         home_dir, request.config.results_dir, request.config.model_name
     )
@@ -521,7 +522,7 @@ def create_persistent_store(participant_name, local_bind_path):
         log.debug(f"Creating persistent store")
         return_code, output, error = run_command(
             cmd_persistent_store,
-            workspace_path=os.getenv("HOME"),
+            workspace_path=Path().home(),
         )
         if error:
             raise ex.PersistentStoreCreationException(f"{error_msg}: {error}")
