@@ -4,8 +4,6 @@
 Privacy Meter
 ==============
 
-On the Integration of Privacy and OpenFL
------------------------------------------------
 Federated learning (FL) enables parties to learn from each other without sharing their data. In FL, parties share the local update about a global model in each round with a server. The server aggregates the local updates from all parties to produce the next version of the global model, which will be used by all parties as the initialization for training in the next round. 
 
 Although each party's data remains local, the shared local updates and aggregate global model each round can leak significant information about the private local training datasets. Specifically, the server can infer information about (even potentially reconstruct) the private data from each party based on their shared local update. Even when the server is trusted, collaborating parties of FL can infer other parties' sensitive data based on the updated global model in each round due to the fact that it is influenced by all local model updates. Due to this serious privacy issue, enabling parties to audit their privacy loss becomes a compelling need. 

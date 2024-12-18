@@ -1,11 +1,7 @@
-.. # Copyright (C) 2020-2024 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
-
 .. _workflow_interface:
 
-******************
-Workflow Interface
-******************
+Workflow API
+============
 
 **Important Note**
 
@@ -306,14 +302,14 @@ The `fx director start` command is used to start the Director. You can run it wi
 **With TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx director start -c <path_to_director_config_yaml_file> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx director start --disable-tls -c <path_to_director_config_yaml_file>
 
@@ -352,14 +348,14 @@ The `fx envoy start` command is used to start the Envoy. You can run it with or 
 **With TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx envoy start -n <envoy_name> -ec <path_to_envoy_config_yaml_file> -dh <director_host> -dp <director_port> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx envoy start -n <envoy_name> --disable-tls -ec <path_to_envoy_config_yaml_file>
 

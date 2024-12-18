@@ -21,27 +21,27 @@ between 0 and 9. More info at `wiki <https://en.wikipedia.org/wiki/MNIST_databas
 -----------------------------------
 Step 0: Installation
 -----------------------------------
-- If you haven't done so already, create a virtual environment, upgrade pip and install OpenFL (See :ref:`install_package`)
+- If you haven't done so already, create a virtual environment, upgrade pip and install OpenFL (See :ref:`installation`)
 
 -----------------------------------
 Step 1: Set up environment
 -----------------------------------
 Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment) and activate the virtual environment created in Step 0
 
-.. code-block:: console
+.. code-block:: shell
 
     $ source venv/bin/activate
 
 Clone the OpenFL repository:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ git clone https://github.com/securefederatedai/openfl.git
 
 
 Navigate to the tutorial:
 
-.. code-block:: console
+.. code-block:: shell
     
     $ cd openfl/openfl-tutorials/interactive_api/Tensorflow_MNIST
 
@@ -50,7 +50,7 @@ Step 2: Setting up Director
 -----------------------------------
 In the first terminal, run the director:
 
-.. code-block:: console
+.. code-block:: shell
     
     $ cd director
     $ ./start_director.sh
@@ -60,7 +60,7 @@ Step 3: Setting up Envoy
 -----------------------------------
 In the second terminal, run the envoy:
 
-.. code-block:: console
+.. code-block:: shell
     
     $ cd envoy
     $ ./start_envoy.sh env_one envoy_config_one.yaml
@@ -71,7 +71,7 @@ Optional: Run a second envoy in an additional terminal:
 
 - Run the second envoy:
 
-.. code-block:: console
+.. code-block:: shell
     
     $ cd envoy
     $ ./start_envoy.sh env_two envoy_config_two.yaml
@@ -81,7 +81,7 @@ Step 4: Run the federation
 -----------------------------------
 In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ cd workspace
     $ jupyter lab Tensorflow_MNIST.ipynb
@@ -93,7 +93,7 @@ Contents of this notebook can be found `here <https://github.com/securefederated
 
 Install additional dependencies if not already installed
 
-.. code-block:: console
+.. code-block:: shell
 
     $ pip install tensorflow==2.8
 

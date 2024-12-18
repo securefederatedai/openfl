@@ -3,9 +3,8 @@
 
 .. _running_tutorial:
 
-*************************************************
-Open Federated Learning (OpenFL) Tutorials
-*************************************************
+OpenFL Tutorials
+================
 
 These tutorials use the Jupyter\* \  Lab server to help you become familiar with the APIs used in Open Federated Learning (OpenFL).
 

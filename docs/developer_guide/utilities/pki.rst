@@ -1,9 +1,9 @@
 .. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-*******************************************************
-OpenFL Public Key Infrastructure (PKI) Solutions
-*******************************************************
+*******************************
+Public Key Infrastructure (PKI)
+*******************************
 
 .. _pki_overview:
 
@@ -47,7 +47,7 @@ The OpenFL PKI pipeline involves creating a local certificate authority (CA) on 
 
 1. Create the CA.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
 
@@ -60,7 +60,7 @@ The OpenFL PKI pipeline involves creating a local certificate authority (CA) on 
 
 2. Run the CA server.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki run -p </path/to/ca/dir>
 
@@ -69,7 +69,7 @@ The OpenFL PKI pipeline involves creating a local certificate authority (CA) on 
 
 3. Create a token for client.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
 
@@ -82,7 +82,7 @@ The OpenFL PKI pipeline involves creating a local certificate authority (CA) on 
 
 4. Copy the token to the clients (director or envoy) via a secure channel, and certify the token.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ cd <path/to/subject/folder>
          $ fx pki certify -n <subject> -t <generated token for subject>

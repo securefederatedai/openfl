@@ -73,7 +73,7 @@ The use of mutual Transport Layer Security (mTLS) is recommended for deployments
 STEP 1: Install Open Federated Learning (OpenFL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install OpenFL in a virtual Python\*\  environment. See :ref:`install_package` for details.
+Install OpenFL in a virtual Python\*\  environment. See :ref:`installation` for details.
 
 .. _step1_start_the_director:
 
@@ -84,7 +84,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
 1. Create a Director workspace with a default config file.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ fx director create-workspace -p path/to/director_workspace_dir
 
@@ -98,13 +98,13 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
  If mTLS protection is not set up, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx director start --disable-tls -c director_config.yaml
 
  If you have a federation with PKI certificates, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx director start -c director_config.yaml \
             -rc cert/root_ca.crt \
@@ -145,7 +145,7 @@ The use of mTLS is recommended for deployments in untrusted environments to esta
 STEP 1: Install OpenFL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install OpenFL in a Python\*\ virtual environment. See :ref:`install_package` for details.
+Install OpenFL in a Python\*\ virtual environment. See :ref:`installation` for details.
 
 
 .. _step1_start_the_envoy:
@@ -155,7 +155,7 @@ STEP 2: Start the Envoy
 
 1. Create an Envoy workspace with a default config file and shard descriptor Python\*\  script.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ fx envoy create-workspace -p path/to/envoy_workspace_dir
 
@@ -179,7 +179,7 @@ STEP 2: Start the Envoy
 
  If mTLS protection is not set up, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         ENVOY_NAME=envoy_example_name
 
@@ -192,7 +192,7 @@ STEP 2: Start the Envoy
 
  If you have a federation with PKI certificates, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ ENVOY_NAME=envoy_example_name
 

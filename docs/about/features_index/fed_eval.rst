@@ -1,7 +1,7 @@
 .. # Copyright (C) 2020-2024 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-Federated Evaluation with OpenFL
+Federated Evaluation
 =======================================
 
 Introduction to Federated Evaluation
@@ -28,7 +28,7 @@ To demonstrate usage of the task runner API (aggregator-based workflow) for fede
 
 This script can be directly executed as follows:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ python test_hello_federation.py --template torch_cnn_mnist_fed_eval
     

@@ -26,7 +26,7 @@ It was borne through conversations with researchers and existing users who had n
 **Getting Started**
 First we start by installing the necessary dependencies for the workflow interface:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ pip install git+https://github.com/intel/openfl.git
     $ pip install -r workflow_interface_requirements.txt
