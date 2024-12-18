@@ -15,4 +15,5 @@ venv/*
 .eggs
 eggs/*
 *.pyi
+.metaflow/*
 results/*
