@@ -65,7 +65,7 @@ Round
    :maxdepth: 2
 
    installation
-   tutorials/workflow
+   tutorials/taskrunner
 
 .. toctree::
    :hidden:
