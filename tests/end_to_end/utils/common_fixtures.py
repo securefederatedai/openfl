@@ -8,12 +8,12 @@ import logging
 import numpy as np
 
 import tests.end_to_end.utils.constants as constants
-# from tests.end_to_end.utils.wf_helper import (
-#     init_collaborator_private_attr_index,
-#     init_collaborator_private_attr_name,
-#     init_collaborate_pvt_attr_np,
-#     init_agg_pvt_attr_np
-# )
+from tests.end_to_end.utils.wf_helper import (
+    init_collaborator_private_attr_index,
+    init_collaborator_private_attr_name,
+    init_collaborate_pvt_attr_np,
+    init_agg_pvt_attr_np
+)
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
@@ -45,12 +45,7 @@ def fx_federation_tr(request):
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
-    test_env = fh.get_test_env_from_markers(request)
-
-    if test_env != "task_runner_basic":
-        raise ValueError(
-            "Fixture fx_federation_tr is only supported for task_runner_basic marker"
-        )
+    request.config.test_env = "task_runner_basic"
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
@@ -143,10 +138,7 @@ def fx_federation_tr_dws(request):
 
     Note: As this is a function level fixture, thus no import is required at test level.
     """
-    if fh.get_test_env_from_markers(request) != "task_runner_dockerized_ws":
-        raise ValueError(
-            "Fixture fx_federation_tr_dws is only supported for task_runner_dockerized_ws marker"
-        )
+    request.config.test_env = "task_runner_dockerized_ws"
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()

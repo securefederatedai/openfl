@@ -36,7 +36,10 @@ def test_federation_basic(request, fx_federation_tr):
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
-        fx_federation_tr, results, num_rounds=request.config.num_rounds
+        fx_federation_tr,
+        results,
+        test_env=request.config.test_env,
+        num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
 
@@ -54,5 +57,8 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
-        fx_federation_tr_dws, results, request.config.num_rounds
+        fx_federation_tr_dws,
+        results,
+        test_env=request.config.test_env,
+        num_rounds=request.config.num_rounds,
     ), "Federation completion failed"

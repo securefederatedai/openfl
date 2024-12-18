@@ -7,7 +7,6 @@ import logging
 import os
 import json
 import re
-from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -330,12 +329,13 @@ def install_dependencies_on_collaborators(fed_obj):
         raise Exception("Failed to install dependencies on one or more collaborators")
 
 
-def verify_federation_run_completion(fed_obj, results, num_rounds):
+def verify_federation_run_completion(fed_obj, results, test_env, num_rounds):
     """
     Verify the completion of the process for all the participants
     Args:
         fed_obj (object): Federation fixture object
         results (list): List of results
+        test_env (str): Test environment
         num_rounds (int): Number of rounds
     Returns:
         list: List of response (True or False) for all the participants
@@ -350,6 +350,7 @@ def verify_federation_run_completion(fed_obj, results, num_rounds):
             participant,
             num_rounds,
             results[i],
+            test_env,
             local_bind_path=fed_obj.local_bind_path,
         )
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
@@ -365,7 +366,7 @@ def verify_federation_run_completion(fed_obj, results, num_rounds):
 
 
 def _verify_completion_for_participant(
-    participant, num_rounds, result_file, time_for_each_round=100, local_bind_path=None
+    participant, num_rounds, result_file, test_env, time_for_each_round=100, local_bind_path=None
 ):
     """
     Verify the completion of the process for the participant
@@ -382,7 +383,6 @@ def _verify_completion_for_participant(
     # Set timeout based on the number of rounds and time for each round
     timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
 
-    test_env = get_test_env_from_markers()
     # In case of docker environment, get the logs from local path which is mounted to the container
     if test_env == "task_runner_dockerized_ws":
         result_file = constants.AGG_COL_RESULT_FILE.format(
@@ -433,31 +433,6 @@ def _verify_completion_for_participant(
         return True
 
 
-@lru_cache(maxsize=50)
-def get_test_env_from_markers(request=None):
-    """
-    Get test environment based on test case markers
-    Keeping request argument as optional so that it can be used in other functions as well
-    """
-    if os.getenv("TEST_ENV"):
-        return os.getenv("TEST_ENV")
-
-    # Determine the test type based on the markers
-    markers = [m.name for m in request.node.iter_markers()]
-    if "task_runner_basic" in markers:
-        test_env = "task_runner_basic"
-    elif "task_runner_dockerized_ws" in markers:
-        test_env = "task_runner_dockerized_ws"
-    else:
-        raise ValueError(
-            "Invalid test environment. Provide one of the valid markers: "
-            "task_runner_basic and task_runner_dockerized_ws"
-        )
-
-    os.environ["TEST_ENV"] = test_env
-    return test_env
-
-
 def federation_env_setup_and_validate(request):
     """
     Setup the federation environment and validate the configurations
@@ -469,7 +444,7 @@ def federation_env_setup_and_validate(request):
     agg_domain_name = "localhost"
 
     # Determine the test type based on the markers
-    test_env = get_test_env_from_markers(request)
+    test_env = request.config.test_env
 
     # Validate the model name and create the workspace name
     if not request.config.model_name.upper() in constants.ModelName._member_names_:
