@@ -65,7 +65,6 @@ def _log_memory_usage(request, fed_obj):
         fed_obj, results, test_env=request.config.test_env, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
 
-    breakpoint()
     # Verify the aggregator memory logs
     aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fed_obj.workspace_path)
 
