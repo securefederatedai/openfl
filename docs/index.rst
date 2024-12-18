@@ -85,12 +85,12 @@ Round
    developer_guide/openfl_structure
  
 .. toctree::
-   :hidden:
-   :caption: API Reference
+   :hidden: 
+   :caption: Resources 
    :maxdepth: 2
 
-   developer_ref/api_documentation
-   developer_ref/troubleshooting
+   openfl
+   troubleshooting
 
 
 .. toctree::

@@ -7,7 +7,6 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
    aggregation_functions
@@ -23,3 +22,5 @@
    plan
    tutorial
    workspace
+
+.. TODO(MasterSkepticista) Shrink API namespace

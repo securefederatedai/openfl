@@ -7,8 +7,9 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
    native
    fastestimator
+
+.. TODO(MasterSkepticista) Shrink API namespace

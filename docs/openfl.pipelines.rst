@@ -7,7 +7,6 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
    eden_pipeline
@@ -18,3 +17,5 @@
    skc_pipeline
    stc_pipeline
    tensor_codec
+
+.. TODO(MasterSkepticista) Shrink API namespace

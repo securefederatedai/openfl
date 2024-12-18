@@ -7,8 +7,9 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
    interceptors
    utils
+
+.. TODO(MasterSkepticista) Shrink API namespace

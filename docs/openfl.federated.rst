@@ -7,9 +7,10 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
    plan
    task
    data
+
+.. TODO(MasterSkepticista) Shrink API namespace
