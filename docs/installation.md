@@ -9,23 +9,17 @@ We recommend using a Python virtual environment. Refer to the [venv installation
 * From PyPI (latest stable release):
 
     ```bash
-    # [Optional] Create and activate a virtual environment
-    python -m venv venv
-    source venv/bin/activate
-
-    # Install OpenFL
     pip install openfl
     ```
 
-* For development:
+* For development (editable build):
 
     ```bash
     git clone https://github.com/securefederatedai/openfl.git && cd openfl
-    pip install -U pip setuptools wheel
     pip install -e .
     ```
 
-* Nightly (from the `develop` branch):
+* Nightly (from the tip of `develop` branch):
 
     ```bash
     pip install git+https://github.com/securefederatedai/openfl.git@develop
@@ -76,8 +70,5 @@ This method can be used to run federated learning experiments in an isolated env
 	git checkout develop
     ```
     ```bash
-	docker build 
-        -t openfl \
-        -f Dockerfile.base \
-        --build-arg OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@develop .
+	./scripts/build_base_image.sh
 	```
