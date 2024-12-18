@@ -44,16 +44,16 @@ def get_aggregated_accuracy(agg_log_file):
         0.15911591053009033, 'round': 0}
     """
     try:
-        with open(agg_log_file, "r") as file:
-            lines = file.readlines()
-            for line in lines:
-                match = re.search(
-                    r"'metric_origin': 'aggregator', 'task_name': 'aggregated_model_validation', 'metric_name': 'accuracy', 'metric_value':\s*([\d.]+)",
-                    line,
-                )
-                if match:
-                    agg_accuracy = float(match.group(1))
-                    break
+        with open(agg_log_file, 'r') as f:
+            for line in f:
+                if "'metric_origin': 'aggregator'" in line and "aggregated_model_validation" in line:
+                    # In Python versions < 3.11, aggregator.py file name appears in the line
+                    # whereas in Python version 3.11, it is utils.py
+                    line = line.split("aggregator.py:")[0].strip()
+                    line = line.split("utils.py:")[0].strip()
+                    # If the line does not contain closing bracket "}", then concatenate the next line
+                    reqd_line = line if "}" in line else line + next(f).strip()
+                    agg_accuracy = eval(reqd_line.split("METRIC")[1].strip('"'))["metric_value"]
     except Exception as e:
         # Do not fail the test if the accuracy cannot be fetched
         print(f"Error while reading aggregator log file: {e}")
