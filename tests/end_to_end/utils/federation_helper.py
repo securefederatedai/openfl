@@ -655,7 +655,6 @@ def setup_collaborator(count, workspace_path, local_bind_path):
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
     """
-    test_env = os.getenv("TEST_ENV")
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:

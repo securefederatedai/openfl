@@ -4,26 +4,22 @@
 import pytest
 import collections
 import concurrent.futures
-import os
 import logging
 import numpy as np
 
 import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.docker_helper as dh
-from tests.end_to_end.utils.wf_helper import (
-    init_collaborator_private_attr_index,
-    init_collaborator_private_attr_name,
-    init_collaborate_pvt_attr_np,
-    init_agg_pvt_attr_np
-)
+# from tests.end_to_end.utils.wf_helper import (
+#     init_collaborator_private_attr_index,
+#     init_collaborator_private_attr_name,
+#     init_collaborate_pvt_attr_np,
+#     init_agg_pvt_attr_np
+# )
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 
 log = logging.getLogger(__name__)
 
-
-log = logging.getLogger(__name__)
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
