@@ -113,6 +113,10 @@ nb_execution_allow_errors = False
 nb_merge_streams = True
 nb_execution_show_tb = True
 nb_execution_timeout = 600  # secs
+nb_execution_excludepatterns = [
+    # TODO(MasterSkepticista) this requires fx experimental enabled, conflicts with taskrunner CLI
+    "tutorials/workflow.ipynb",
+]
 
 # Tell sphinx autodoc how to render type aliases.
 autodoc_typehints = "description"
