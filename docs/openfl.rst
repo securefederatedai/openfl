@@ -21,9 +21,3 @@ Subpackages
     openfl.protocols
     openfl.transport
     openfl.utilities
-
-
-.. toctree::
-   :hidden:
-
-   openfl.interface
