@@ -57,13 +57,13 @@ Now you're ready to run your first federation! Copying these commands to your te
    #################################################################
 
    # Generate a Certificate Signing Request (CSR) for the Aggregator
-   fx aggregator generate-cert-request
+   fx aggregator generate-cert-request --fqdn localhost
 
    # The CA signs the aggregator's request, which is now available in the workspace
-   fx aggregator certify --silent
+   fx aggregator --fqdn localhost certify --silent
 
    # Initialize FL Plan and Model Weights for the Federation
-   fx plan initialize
+   fx plan initialize --aggregator_address localhost
 
    ################################
    # Step 3: Setup Collaborator 1 #
