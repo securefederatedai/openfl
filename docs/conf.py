@@ -48,10 +48,10 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx_substitution_extensions',
 ]
-autodoc_default_options = {
-    'imported-members': True,
-}
+
+pygments_style = None
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
+napolean_use_rtype = False
 
 source_suffix = ['.rst', '.md', '.ipynb']
 
@@ -101,7 +101,9 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-# html_style = 'css/Intel_One_Mono_Font_Theme.css'
+html_css_files = [
+    'style.css',
+]
 
 # -- Options for myst ----------------------------------------------
 myst_heading_anchors = 3  # auto-generate 3 levels of heading anchors
@@ -111,6 +113,13 @@ nb_execution_allow_errors = False
 nb_merge_streams = True
 nb_execution_show_tb = True
 nb_execution_timeout = 100
+
+# Tell sphinx autodoc how to render type aliases.
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "all"
+
+# Remove auto-generated API docs from sidebars. They take too long to build.
+remove_from_toctrees = ["_autosummary/*"]
 
 # Customize code links via sphinx.ext.linkcode
 
