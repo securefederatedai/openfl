@@ -1,8 +1,12 @@
+# Copyright 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from metaflow import Flow
 import logging
 import numpy as np
 
 log = logging.getLogger(__name__)
+
 
 def validate_flow(flow_obj, expected_flow_steps):
     """
