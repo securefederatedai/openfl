@@ -66,3 +66,8 @@ class WorkspaceDockerizationException(Exception):
 class WorkspaceLoadException(Exception):
     """Exception for workspace load"""
     pass
+
+
+class ReferenceFlowException(Exception):
+    """Exception for reference flow"""
+    pass
