@@ -27,7 +27,8 @@ log = logging.getLogger(__name__)
 
 def test_exclude_flow(request, fx_local_federated_workflow):
     """
-    Test if variable is excluded, variables not show in next step and all other variables will show
+    Test if variable is excluded, variables not show in next step
+    and all other variables will be visible to next step
     """
     log.info("Starting test_exclude_flow")
     flflow = TestFlowExclude(checkpoint=True)
@@ -40,8 +41,8 @@ def test_exclude_flow(request, fx_local_federated_workflow):
 
 def test_include_exclude_flow(request, fx_local_federated_workflow):
     """
-    Test variables which is excluded will not show in next step
-    Test variables which are included will show in next step
+    Test variables which are excluded will not show up in next step
+    Test variables which are included will show up in next step
     """
     log.info("Starting test_include_exclude_flow")
     flflow = TestFlowIncludeExclude(checkpoint=True)
@@ -54,7 +55,8 @@ def test_include_exclude_flow(request, fx_local_federated_workflow):
 
 def test_include_flow(request, fx_local_federated_workflow):
     """
-    Test if variable is included, variables woll show in next step and all other variables will not show
+    Test if variable is included, variables will show up in next step
+    All other variables will not show up
     """
     log.info("Starting test_include_flow")
     flflow = TestFlowInclude(checkpoint=True)
@@ -67,7 +69,7 @@ def test_include_flow(request, fx_local_federated_workflow):
 
 def test_internal_loop(request, fx_local_federated_workflow):
     """
-    Verify that thru internal loop, rounds to train is set
+    Verify that through internal loop, rounds to train is set
     """
     log.info("Starting test_internal_loop")
     model = None
@@ -210,7 +212,7 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
 
 def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr):
     """
-    Set private attribute without callable function i.e thru direct assignment
+    Set private attribute without callable function i.e through direct assignment
     """
     log.info("Starting test_private_attr_wo_callable")
     flflow = TestFlowPrivateAttributesWoCallable(checkpoint=True)
@@ -224,7 +226,7 @@ def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
 def test_private_attributes(request, fx_local_federated_workflow):
     """
-    Set private attribute thru callable function
+    Set private attribute through callable function
     """
     log.info("Starting test_private_attributes")
     flflow = TestFlowPrivateAttributes(checkpoint=True)
@@ -238,7 +240,7 @@ def test_private_attributes(request, fx_local_federated_workflow):
 @pytest.mark.parametrize("fx_local_federated_workflow_prvt_attr", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
 def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
     """
-    Set private attribute thru callable function and direct assignment
+    Set private attribute through callable function and direct assignment
     """
     log.info("Starting test_private_attr_both")
     flflow = TestFlowPrivateAttributesBoth(checkpoint=True)
