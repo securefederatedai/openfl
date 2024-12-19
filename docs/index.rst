@@ -1,6 +1,3 @@
-.. # Copyright (C) 2020-2024 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0.
-=================
 Overview
 =================
 
@@ -10,7 +7,8 @@ OpenFL is a community supported project originally developed by Intel Labs and t
 
 .. note::
 
-   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design. We encourage community contributions! Refer to the `Contributing <about/contributing.html>`_ section for more information.
+   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design. 
+   We encourage community contributions! Refer to the `contributing <contributing.html>`_ guidelines for more details.
    
 Training of statistical models may be done with any deep learning framework, such as `TensorFlow <https://www.tensorflow.org/>`_\* \ or `PyTorch <https://pytorch.org/>`_\*\, via a plugin mechanism.
 
