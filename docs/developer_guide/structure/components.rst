@@ -110,4 +110,4 @@ regarding collaborator machine resource utilization. Refer to :ref:`device monit
 Static Diagram
 ==============
 
-.. figure:: ../../source/openfl/director_workflow.svg
+.. figure:: ../../images/director_workflow.svg
