@@ -70,7 +70,6 @@ Round
    :caption: Tutorials
    :maxdepth: 2
 
-   tutorials/taskrunner
    tutorials/workflow
 
 .. toctree::
