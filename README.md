@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="https://github.com/securefederatedai/artwork/blob/main/PNG/OpenFL%20Logo%20-%20color.png?raw=true" width="50%">
+  <img src="https://github.com/securefederatedai/artwork/blob/main/PNG/OpenFL%20Logo%20-%20color.png?raw=true" width="70%">
 </div>
 
+[![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
+[![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
+[![DockerHub](https://img.shields.io/docker/pulls/intel/openfl.svg)](https://hub.docker.com/r/intel/openfl)
 [![Ubuntu CI status](https://github.com/securefederatedai/openfl/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/ubuntu.yml)
 [![Windows CI status](https://github.com/securefederatedai/openfl/actions/workflows/windows.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/windows.yml)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
-[![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
-[![DockerHub](https://img.shields.io/docker/pulls/intel/openfl.svg)](https://hub.docker.com/r/intel/openfl)
-[![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6599/badge)](https://bestpractices.coreinfrastructure.org/projects/6599)
 <a href="https://scan.coverity.com/projects/securefederatedai-openfl">
@@ -54,9 +54,8 @@ OpenFL supports two ways to set up a Federated Learning experiment:
 
 - [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html): This API uses short-lived components like the `Aggregator` and `Collaborator`, which terminate at the end of an FL experiment. TaskRunner supports mTLS-based secure communication channels, and TEE-based confidential computing environments.
 
-- [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html): This API allows for experiments beyond the traditional horizontal federated learning paradigm using a pythonic interface. It allows an experiment to be simulated locally, then seamlessly scaled to a federated setting by switching from a local runtime to a distributed, federated runtime.
-	> [!NOTE]
-	> Workflow API is an experimental capability.
+- [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html): This API allows for experiments beyond the traditional horizontal federated learning paradigm using a pythonic interface. It allows an experiment to be simulated locally, and then to be seamlessly scaled to a federated setting by switching from a local runtime to a distributed, federated runtime.
+	> **Note:** This is experimental capability.
 
 ## Framework Compatibility
 
