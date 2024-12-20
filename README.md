@@ -50,6 +50,7 @@ For more installation options, checkout the [installation guide](https://openfl.
 
 ## Features
 
+### Ways to set up an FL experiment
 OpenFL supports two ways to set up a Federated Learning experiment:
 
 - [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html): This API uses short-lived components like the `Aggregator` and `Collaborator`, which terminate at the end of an FL experiment. TaskRunner supports mTLS-based secure communication channels, and TEE-based confidential computing environments.
@@ -57,24 +58,26 @@ OpenFL supports two ways to set up a Federated Learning experiment:
 - [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html): This API allows for experiments beyond the traditional horizontal federated learning paradigm using a pythonic interface. It allows an experiment to be simulated locally, and then to be seamlessly scaled to a federated setting by switching from a local runtime to a distributed, federated runtime.
 	> **Note:** This is experimental capability.
 
-## Framework Compatibility
+### Framework Compatibility
 
 OpenFL is backend-agnostic. It comes with support for popular NumPy-based ML frameworks like TensorFlow, PyTorch and Jax which should be installed separately. Users may extend the list of supported backends if needed.
 
-## Aggregation Algorithms
-We support the following popular aggregation algorithms out-of-the-box. 
+### Aggregation Algorithms
+OpenFL supports popular aggregation algorithms out-of-the-box, with more algorithms coming soon.
 |  | Reference | PyTorch backend | TensorFlow backend | NumPy backend |
 | -------------- | ----- | :--------------------: | :-----------------------: | :----------------------------: |
-| FedAvg | [McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf) | ✅ | ✅ | ✅ |
-| FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | ✅ | ✅ | ❌ |
-| FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ |
-| FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ |
+| FedAvg | [McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf) | yes | yes | yes |
+| FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | yes | yes | yes |
+| FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | yes | yes | - |
+| FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | yes | - | - |
 
+## Contributing
+We welcome contributions! Please refer to the [contributing guidelines](https://openfl.readthedocs.io/en/latest/contributing.html).
 
-## Support
-The OpenFL community is growing, and we invite you to be a part of it. Join the [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) to connect with fellow enthusiasts, share insights, and contribute to the future of federated learning.
+The OpenFL community is expanding, and we encourage you to join us. Connect with other enthusiasts, share knowledge, and contribute to the advancement of federated learning by joining our [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw).
 
-Subscribe to the OpenFL mailing list: [openfl-announce@lists.lfaidata.foundation](mailto:openfl-announce@lists.lfaidata.foundation).
+Stay updated by subscribing to the OpenFL mailing list: [openfl-announce@lists.lfaidata.foundation](mailto:openfl-announce@lists.lfaidata.foundation).
+
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
