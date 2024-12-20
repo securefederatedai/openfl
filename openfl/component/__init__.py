@@ -6,7 +6,7 @@ from openfl.component.aggregator.aggregator import Aggregator
 from openfl.component.aggregator.straggler_handling import (
     CutoffPolicy,
     PercentagePolicy,
-    StragglerHandlingPolicy,
+    StragglerPolicy,
 )
 from openfl.component.assigner.assigner import Assigner
 from openfl.component.assigner.random_grouped_assigner import RandomGroupedAssigner

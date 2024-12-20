@@ -12,8 +12,10 @@ from typing import Callable
 
 import numpy as np
 
+logger = getLogger(__name__)
 
-class StragglerHandlingPolicy(ABC):
+
+class StragglerPolicy(ABC):
     """Federated Learning straggler handling interface."""
 
     @abstractmethod
@@ -24,23 +26,12 @@ class StragglerHandlingPolicy(ABC):
 
         Args:
             **kwargs
-
-        Returns:
-            None
         """
         raise NotImplementedError
 
     @abstractmethod
     def reset_policy_for_round(self) -> None:
-        """
-        Reset policy variable for the next round.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
+        """Reset policy for the next round."""
         raise NotImplementedError
 
     @abstractmethod
@@ -65,7 +56,7 @@ class StragglerHandlingPolicy(ABC):
         raise NotImplementedError
 
 
-class CutoffPolicy(StragglerHandlingPolicy):
+class CutoffPolicy(StragglerPolicy):
     """Cutoff time based Straggler Handling function."""
 
     def __init__(
@@ -90,17 +81,12 @@ class CutoffPolicy(StragglerHandlingPolicy):
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
         self.is_timer_started = False
-        self.logger = getLogger(__name__)
 
         if self.straggler_cutoff_time == np.inf:
-            self.logger.warning(
-                "CutoffPolicy is disabled as straggler_cutoff_time " "is set to np.inf."
-            )
+            logger.warning("CutoffPolicy is disabled as straggler_cutoff_time " "is set to np.inf.")
 
     def reset_policy_for_round(self) -> None:
-        """
-        Reset timer for the next round.
-        """
+        """Reset timer for the next round."""
         if hasattr(self, "timer"):
             self.timer.cancel()
         self.is_timer_started = False
@@ -113,9 +99,6 @@ class CutoffPolicy(StragglerHandlingPolicy):
         Args:
             callback: Callable
                 Callback function for when straggler_cutoff_time elapses
-
-        Returns:
-            None
         """
         # If straggler_cutoff_time is set to infinity
         # or if the timer is already running,
@@ -159,13 +142,13 @@ class CutoffPolicy(StragglerHandlingPolicy):
         # Time has expired
         # Check if minimum_reporting collaborators have reported results
         elif self.__minimum_collaborators_reported(num_collaborators_done):
-            self.logger.info(
+            logger.info(
                 f"{num_collaborators_done} collaborators have reported results. "
                 "Applying cutoff policy and proceeding with end of round."
             )
             return True
         else:
-            self.logger.info(
+            logger.info(
                 f"Waiting for minimum {self.minimum_reporting} collaborator(s) to report results."
             )
             return False
@@ -194,7 +177,7 @@ class CutoffPolicy(StragglerHandlingPolicy):
         return num_collaborators_done >= self.minimum_reporting
 
 
-class PercentagePolicy(StragglerHandlingPolicy):
+class PercentagePolicy(StragglerPolicy):
     """Percentage based Straggler Handling function."""
 
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
@@ -212,18 +195,13 @@ class PercentagePolicy(StragglerHandlingPolicy):
 
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
-        self.logger = getLogger(__name__)
 
     def reset_policy_for_round(self) -> None:
-        """
-        Not required in PercentagePolicy.
-        """
+        """Not required in PercentagePolicy."""
         pass
 
     def start_policy(self, **kwargs) -> None:
-        """
-        Not required in PercentagePolicy.
-        """
+        """Not required in PercentagePolicy."""
         pass
 
     def straggler_cutoff_check(
