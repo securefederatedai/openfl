@@ -7,22 +7,17 @@
 TaskRunner API
 ================
 
-Let's take a deeper dive into the Task Runner API. If you haven't already, we suggest checking out the :ref:`quick_start` for a primer on doing a simple experiment on a single node.
-
-The steps to transition from a local experiment to a distributed federation can be understood best with the following diagram.
+This is a deep dive into the TaskRunner API. To gain familiarity with this API, we recommend going through the `quickstart <../../tutorials/taskrunner.html>`_ guide. Note that the quickstart guide is focused on simulating an experiment locally. The design choices of this API are best understood when transitioning from a local experiment to a distributed federation, which is how real-world federated learning experiments are conducted.
 
 .. figure:: ../../images/openfl_flow.png
 
-.. centered:: Overview of a Task Runner experiment distributed across multiple nodes
-:
+The Task Runner API uses short-lived components in a federation, which are terminated once the experiment finishes. These components are:
 
-The Task Runner API uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
-
-- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregates them to create the new global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
+- The :code:`Collaborator` uses a local dataset to train a global model and the :code:`Aggregator` receives model updates from :code:`Collaborator` s and aggregates them to create the new global model.
+- The :code:`Aggregator` is framework-agnostic, while the :code:`Collaborator` can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
 
 
-For this workflow, you modify the federation workspace to your requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
+For this workflow, one needs modify the federation workspace to their requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
 
 .. _plan_settings:
