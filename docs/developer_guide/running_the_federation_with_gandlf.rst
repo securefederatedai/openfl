@@ -3,9 +3,8 @@
 
 .. _running_the_federation_with_gandlf:
 
-****************************************************
-Run the Federation with a model defined using GaNDLF
-****************************************************
+Federated Learning using GaNDLF
+===============================
 
 This guide will show you how to take an existing model using the `Generally Nuanced Deep Learning Framework (GaNDLF) <https://github.com/mlcommons/GaNDLF>`_ experiment to a federated environment. 
 
@@ -16,17 +15,17 @@ This guide will show you how to take an existing model using the `Generally Nuan
 
 .. _running_the_federation_aggregator_based_gandlf:
 
-Aggregator-Based Workflow
+TaskRunner API
 =========================
 
 An overview of this workflow is shown below.
 
 .. figure:: ../images/openfl_flow.png
 
-.. centered:: Overview of the Aggregator-Based Workflow
+.. centered:: Overview of the TaskRunner API
 
 
-This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
+This method uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and sends the model updates to the *Aggregator*, which aggregates them to create the new global model.
 - The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\. `GaNDLF <https://github.com/mlcommons/GaNDLF>`_ provides a straightforward way to define complete model training pipelines for healthcare data, and is directly compatible with OpenFL.
@@ -81,9 +80,9 @@ Simulate a federation
 
 .. note::
 
-    Ensure you have installed the |productName| package on every node (aggregator and collaborators) in the federation.
+    Ensure you have installed the OpenFL package on every node (aggregator and collaborators) in the federation.
 
-    See :ref:`install_package` for details.
+    See :ref:`installation` for details.
 
 
 You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
@@ -114,7 +113,7 @@ However, continue with the following procedure for details in creating a federat
 STEP 1: Install GaNDLF prerequisites and Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm OpenFL is available.
 
 	.. code-block:: python
 
@@ -125,7 +124,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
 3.     Create GaNDLF's Data CSVs. The example below is for 3D Segmentation using the unit test data:
 
-    .. code-block:: console
+    .. code-block:: shell
         
         $ python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
         # Creates training CSV
@@ -143,27 +142,27 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
 	Set the environment variables to use the :code:`gandlf_seg_test` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ export WORKSPACE_TEMPLATE=gandlf_seg_test
         $ export WORKSPACE_PATH=${HOME}/my_federation
 
 4.  Create a workspace directory for the new federation project.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
 
 
 5.  Change to the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ cd ${WORKSPACE_PATH}
 
 6.  Copy the GaNDLF Data CSVs into the default path for model initialization
 
-     .. code-block:: console
+     .. code-block:: shell
 
         # 'one' is the default name of the first collaborator in `plan/data.yaml`. 
         $ mkdir -p data/one
@@ -175,13 +174,13 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
     This step will initialize the federated learning plan and initialize the random model weights that will be used by all collaborators at the start of the expeirment.
 
-    .. code-block:: console
+    .. code-block:: shell
 
 	$ fx plan initialize
 
     Alternatively, to use your own GaNDLF configuration file, you can import it into the plan with the following command:
 
-    .. code-block:: console
+    .. code-block:: shell
 
 	$ fx plan initialize --gandlf_config ${PATH_TO_GANDLF_CONFIG}.yaml
 
@@ -207,19 +206,19 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
 	- OPTION 1: override the auto populated FQDN value with the :code:`-a` flag.
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 
 	- OPTION 2: override the apparent FQDN of the system by setting an FQDN environment variable.
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ export FQDN=x.x.x.x
 
 		and initializing the FL plan
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ fx plan initialize
 
@@ -260,7 +259,7 @@ Setting Up the Certificate Authority
 
 1. Change to the path of your workspace:
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ cd WORKSPACE_PATH
 
@@ -268,13 +267,13 @@ Setting Up the Certificate Authority
 
  All certificates will be signed by the aggregator node. Follow the instructions and enter the information as prompted. The command will create a simple database file to keep track of all issued certificates.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace certify
 
 3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator generate-cert-request --fqdn AFQDN
 
@@ -282,7 +281,7 @@ Setting Up the Certificate Authority
 
        On Linux\*\, you can discover the FQDN with this command:
 
-           .. code-block:: console
+           .. code-block:: shell
 
               $ hostname --all-fqdns | awk '{print $1}'
 
@@ -290,20 +289,20 @@ Setting Up the Certificate Authority
 
       You can override the apparent FQDN of the system by setting an FQDN environment variable before creating the certificate.
 
-        .. code-block:: console
+        .. code-block:: shell
 
             $ export FQDN=x.x.x.x
             $ fx aggregator generate-cert-request 
 
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address.
 
-        .. code-block:: console
+        .. code-block:: shell
 
             $ fx aggregator generate-cert-request
 
 4. Run the aggregator certificate signing command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator certify
 
@@ -329,7 +328,7 @@ Exporting the Workspace
 
 1. Export the workspace so that it can be imported to the collaborator nodes.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace export
 
@@ -350,7 +349,7 @@ Importing the Workspace
 
 3. Import the workspace archive.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace import --archive WORKSPACE.zip
 
@@ -360,7 +359,7 @@ Importing the Workspace
 
  Replace :code:`COL_LABEL` with the label you assigned to the collaborator. This label does not have to be the FQDN; it can be any unique alphanumeric label.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator generate-cert-request -n {COL_LABEL} -d data/{COL_LABEL}
 
@@ -381,14 +380,14 @@ The creation script will specify the path to the data. In this case, the GaNDLF 
 
 5. Copy/scp the WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip file to the aggregator node (or local workspace if using the same system)
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ scp WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip AGGREGATOR_NODE:WORKSPACE_PATH/
 
 
 6. On the aggregator node (i.e., the certificate authority in this example), sign the Collaborator CSR Package from the collaborator nodes.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
 
@@ -404,14 +403,14 @@ The creation script will specify the path to the data. In this case, the GaNDLF 
 
 7. Copy/scp the WORKSPACE.PATH/agg_to_col_{COL_LABEL}_signed_cert.zip file to the collaborator node (or local workspace if using the same system)
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ scp WORKSPACE.PATH/agg_to_col_{COL_LABEL}_signed_cert.zip COLLABORATOR_NODE:WORKSPACE_PATH/
 
 
 8. On the collaborator node, import the signed certificate and certificate chain into your workspace.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
 
@@ -427,7 +426,7 @@ STEP 3: Start the Federation
 
 1. Start the Aggregator.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator start
 
@@ -441,7 +440,7 @@ STEP 3: Start the Federation
 
 2. Run the Collaborator.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator start -n {COLLABORATOR_LABEL}
 
@@ -473,7 +472,7 @@ Post Experiment
 Experiment owners may access the final model in its native format. Once the model has been converted to its native format, inference can be done using `GaNDLF's inference API <https://mlcommons.github.io/GaNDLF/usage/#running-gandlf-traininginference>`_.
 Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx model save -i model_protobuf_path.pth -o save_model_path
 

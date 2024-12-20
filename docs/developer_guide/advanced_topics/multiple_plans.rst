@@ -30,7 +30,7 @@ Save a New FL Plan
 
 When you are working on an FL plan, you can save it for future use.
 
-    .. code-block:: console
+    .. code-block:: shell
     
        $ fx plan save -n NEW.PLAN.NAME
       
@@ -45,7 +45,7 @@ Switch FL Plans
 
 To switch to a different FL plan, run the following command from the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
     
        $ fx plan switch -n PLAN.NAME
 
@@ -62,7 +62,7 @@ Remove FL Plans
 
 To remove an FL plan, run the following command from the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
     
         $ fx plan remove -n PLAN.NAME
 

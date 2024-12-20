@@ -10,7 +10,7 @@ Get faster access to available commands by activating bash completion in CLI mod
 STEP 1: Preparation
 ===================
 
-Make sure you are inside a virtual environment with Open Federated Learning (|productName|) installed. See :ref:`install_package` for details.
+Make sure you are inside a virtual environment with Open Federated Learning (OpenFL) installed. See :ref:`installation` for details.
 
 
 STEP 2: Create the fx-autocomplete.sh Script
@@ -22,20 +22,20 @@ STEP 2: Create the fx-autocomplete.sh Script
 
 1. Create the script.
    
-   .. code-block:: console
+   .. code-block:: shell
 
       $ _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
 
    
 2. Check that the script was created properly.
 
-   .. code-block:: console
+   .. code-block:: shell
 
       $ cat ~/.fx-autocomplete.sh
 
  The output should look like the example below (Click==8.0.1), but could be different depend on `Click <https://click.palletsprojects.com/en/8.0.x/>`_ version:
    
-   .. code-block:: console
+   .. code-block:: shell
 
       _fx_completion() {
           local IFS=$'\n'
@@ -72,7 +72,7 @@ STEP 3: Activate the Autocomplete Feature
 
 Perform this command every time you open a new terminal window.
 
-   .. code-block:: console
+   .. code-block:: shell
 
       $ source ~/.fx-autocomplete.sh
 
@@ -81,7 +81,7 @@ To save time, add the script into **.bashrc** so the script is activated when yo
 
 1. Edit the **.bashrc** file. The **nano** command line editor is used in this example.
 
-   .. code-block:: console
+   .. code-block:: shell
 
       $ nano ~/.bashrc
 
@@ -94,4 +94,3 @@ To save time, add the script into **.bashrc** so the script is activated when yo
 3. Save your changes.
 
 4. Open a new terminal to use the updated bash shell.
-

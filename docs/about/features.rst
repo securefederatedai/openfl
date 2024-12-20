@@ -1,7 +1,3 @@
-.. # Copyright (C) 2020-2024 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
-
-==========
 Features
 ==========
 
@@ -11,7 +7,7 @@ Features
 Running a Federation
 ---------------------
 
-|productName| has multiple options for setting up a federation and running experiments, depending on the users needs. 
+OpenFL has multiple options for setting up a federation and running experiments, depending on the users needs. 
 
 Task Runner
     Define an experiment and distribute it manually. All participants can verify model code and FL plan prior to execution. 
@@ -51,12 +47,12 @@ Aggregation Algorithms
 
 FedAvg
     Paper: `McMahan et al., 2017 <https://arxiv.org/pdf/1602.05629.pdf>`_
-    Default aggregation algorithm in |productName|. Multiplies local model weights with relative data size and averages this multiplication result.
+    Default aggregation algorithm in OpenFL. Multiplies local model weights with relative data size and averages this multiplication result.
 
 FedProx
     Paper: `Li et al., 2020 <https://arxiv.org/abs/1812.06127>`_
 
-    FedProx in |productName| is implemented as a custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
+    FedProx in OpenFL is implemented as a custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
 
     1. PyTorch:
 
@@ -74,7 +70,7 @@ FedProx
 FedOpt
     Paper: `Reddi et al., 2020 <https://arxiv.org/abs/2003.00295>`_
 
-    FedOpt in |productName|: :ref:`adaptive_aggregation_functions`
+    FedOpt in OpenFL: :ref:`adaptive_aggregation_functions`
 
 FedCurv
     Paper: `Shoham et al., 2019 <https://arxiv.org/abs/1910.07796>`_
