@@ -14,6 +14,7 @@ class CallbackList(Callback):
     Attributes:
         callbacks: A list of `openfl.callbacks.Callback` instances.
         add_memory_profiler: If True, adds a `MemoryProfiler` callback to the list.
+        add_metric_writer: If True, adds a `MetricWriter` callback to the list.
         tensor_db: Optional `TensorDB` instance of the respective participant.
             If provided, callbacks can access TensorDB for various actions.
         params: Additional parameters saved for use within the callbacks.
