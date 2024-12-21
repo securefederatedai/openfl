@@ -1,6 +1,6 @@
 .. currentmodule:: openfl
 
-Public API: ``openfl`` package
+API Reference: ``openfl``
 ===========================
 
 Subpackages
@@ -10,6 +10,7 @@ Subpackages
     :maxdepth: 1
 
     openfl.component
+    openfl.callbacks
     openfl.cryptography
     openfl.experimental
     openfl.databases
