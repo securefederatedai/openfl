@@ -41,8 +41,7 @@ class Aggregator:
         tensor_db (TensorDB): Object for tensor database.
         db_store_rounds* (int): Rounds to store in TensorDB.
         logger: Object for logging.
-        write_logs (bool): Flag to enable log writing.
-        log_metric_callback: Callback for logging metrics.
+        write_logs (bool): Flag to enable metric writer callback.
         best_model_score (optional): Score of the best model. Defaults to
             None.
         metric_queue (queue.Queue): Queue for metrics.
@@ -82,7 +81,6 @@ class Aggregator:
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
-        log_metric_callback=False,
         callbacks: Optional[List] = None,
     ):
         """Initializes the Aggregator.
@@ -188,8 +186,14 @@ class Aggregator:
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
+            add_metric_writer=write_logs,
             origin="aggregator",
         )
+
+        # TODO: Aggregator has no concrete notion of round_begin.
+        # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
+        self.callbacks.on_experiment_begin()
+        self.callbacks.on_round_begin(self.round_number)
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -864,11 +868,14 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name):
+    def _compute_validation_related_task_metrics(self, task_name) -> dict:
         """Compute all validation related metrics.
 
         Args:
             task_name (str): Task name.
+
+        Returns:
+            A dictionary of reportable metrics.
         """
         # By default, print out all of the metrics that the validation
         # task sent
@@ -903,6 +910,7 @@ class Aggregator:
         task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
 
+        metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
             assert (
@@ -919,17 +927,20 @@ class Aggregator:
             )
 
             if report:
-                # Caution: This schema must be followed. It is also used in
-                # gRPC message streams for director/envoy.
-                metrics = {
-                    "metric_origin": "aggregator",
-                    "task_name": task_name,
-                    "metric_name": tensor_key.tensor_name,
-                    "metric_value": float(agg_results),
-                    "round": round_number,
-                }
+                # Metric must be a scalar.
+                value = float(agg_results)
 
-                self.metric_queue.put(metrics)
+                # TODO: Deprecate `metric_queue` going forward.
+                self.metric_queue.put(
+                    {
+                        "metric_origin": "aggregator",
+                        "task_name": task_name,
+                        "metric_name": tensor_key.tensor_name,
+                        "metric_value": value,
+                        "round": round_number,
+                    }
+                )
+                metrics.update({f"aggregator/{task_name}/{tensor_key.tensor_name}": value})
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
@@ -943,6 +954,8 @@ class Aggregator:
                         self._save_model(round_number, self.best_state_path)
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
+
+        return metrics
 
     def _end_of_round_check(self):
         """Check if the round complete.
@@ -961,11 +974,12 @@ class Aggregator:
             return
 
         # Compute all validation related metrics
+        logs = {}
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
-            self._compute_validation_related_task_metrics(task_name)
+            logs.update(self._compute_validation_related_task_metrics(task_name))
 
         # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number)
+        self.callbacks.on_round_end(self.round_number, logs)
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
@@ -979,6 +993,9 @@ class Aggregator:
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+
+        # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
+        self.callbacks.on_round_begin(self.round_number)
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -1043,6 +1060,9 @@ class Aggregator:
         # So the experiment set to a finished state
         if failed_collaborator:
             self.quit_job_sent_to.append(failed_collaborator)
+
+        # End of experiment callbacks.
+        self.callbacks.on_experiment_end()
 
         # This code does not actually send `quit` tasks to collaborators,
         # it just mimics it by filling arrays.
