@@ -500,12 +500,7 @@ class Collaborator:
             tensor_name, origin, fl_round, report, tags = tensor
 
             if report:
-                # This tensor must be a scalar metric
-                assert (
-                    tensor_dict[tensor].ndim == 0
-                ), "Expected `report` tensor to be a scalar, instead got one with shape {}".format(
-                    tensor_dict[tensor].shape
-                )
+                # Reportable metric must be a scalar
                 value = float(tensor_dict[tensor])
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
 
