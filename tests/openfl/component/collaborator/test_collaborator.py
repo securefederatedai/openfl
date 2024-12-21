@@ -285,7 +285,7 @@ def test_run(collaborator_mock):
     collaborator_mock.get_tasks = mock.Mock()
     collaborator_mock.get_tasks.side_effect = [(['task'], round_number, 0, False),
                                                (['task'], round_number, 0, True)]
-    collaborator_mock.do_task = mock.Mock()
+    collaborator_mock.do_task = mock.Mock(return_value={'metric': 0.0})
     collaborator_mock.run()
     collaborator_mock.do_task.assert_called_with('task', round_number)
 
