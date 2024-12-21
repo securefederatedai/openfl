@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
+from openfl.callbacks.metric_writer import MetricWriter
 
 
 class CallbackList(Callback):
@@ -22,13 +23,14 @@ class CallbackList(Callback):
         self,
         callbacks: list,
         add_memory_profiler=False,
+        add_metric_writer=False,
         tensor_db=None,
         **params,
     ):
         super().__init__()
         self.callbacks = _flatten(callbacks) if callbacks else []
 
-        self._add_default_callbacks(add_memory_profiler)
+        self._add_default_callbacks(add_memory_profiler, add_metric_writer)
 
         self.set_tensor_db(tensor_db)
         self.set_params(params)
@@ -45,15 +47,24 @@ class CallbackList(Callback):
             for callback in self.callbacks:
                 callback.set_tensor_db(tensor_db)
 
-    def _add_default_callbacks(self, add_memory_profiler):
+    def _add_default_callbacks(self, add_memory_profiler, add_metric_writer):
+        """Add default callbacks to callbacks list if not already present."""
         self._memory_profiler = None
+        self._metric_writer = None
+
         for cb in self.callbacks:
             if isinstance(cb, MemoryProfiler):
                 self._memory_profiler = cb
+            if isinstance(cb, MetricWriter):
+                self._metric_writer = cb
 
         if add_memory_profiler and self._memory_profiler is None:
             self._memory_profiler = MemoryProfiler()
             self.callbacks.append(self._memory_profiler)
+
+        if add_metric_writer and self._metric_writer is None:
+            self._metric_writer = MetricWriter()
+            self.callbacks.append(self._metric_writer)
 
     def on_round_begin(self, round_num: int, logs=None):
         for callback in self.callbacks:
