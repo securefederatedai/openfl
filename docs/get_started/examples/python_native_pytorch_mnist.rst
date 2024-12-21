@@ -12,14 +12,14 @@ See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe886
 
 .. note::
 
-    Ensure you have installed the |productName| package.
+    Ensure you have installed the OpenFL package.
 
-    See :ref:`install_package` for details.
+    See :ref:`installation` for details.
 
 
 Install additional dependencies if not already installed
 
-.. code-block:: console
+.. code-block:: shell
 
     $ pip install torch torchvision
 

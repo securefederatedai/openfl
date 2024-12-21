@@ -1,0 +1,5 @@
+envoy_two:
+  callable_func:
+    settings:
+      collab_name: envoy_two
+    template: private_attributes.collaborator_private_attrs.callable_to_initialize_collaborator_private_attributes

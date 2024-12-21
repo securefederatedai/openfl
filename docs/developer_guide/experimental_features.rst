@@ -7,8 +7,8 @@
 Experimental Features
 *********************
 
-This section includes a set of experimental features that our team wants feedback on before adding them into core |productName|. 
-Experimental features are *not* ready for production. These features are under active development and intended to make their way into core |productName|, but there are several key considerations to make when building on top of these:
+This section includes a set of experimental features that our team wants feedback on before adding them into core OpenFL. 
+Experimental features are *not* ready for production. These features are under active development and intended to make their way into core OpenFL, but there are several key considerations to make when building on top of these:
 
 1. *Backward compatibility is not guaranteed* - Our goal is to maintain backward compatibility whenever possible, but user feedback (and our own internal research)
    may result in necessary changes to the APIs.

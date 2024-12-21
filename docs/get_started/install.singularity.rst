@@ -13,7 +13,7 @@ Singularity Installation
 
 .. note::
 
-   Make sure you've run the :ref:`the initial steps <install_package>` section first.
+   Make sure you've run the :ref:`the initial steps <installation>` section first.
 
 .. note::
     You'll need Docker installed on the node where you'll 
@@ -21,7 +21,7 @@ Singularity Installation
     that Docker is installed and running properly, you
     can run the Docker *Hello World* command like this:
 
-    .. code-block:: console
+    .. code-block:: shell
 
       $ docker run hello-world
       Hello from Docker!
@@ -34,7 +34,7 @@ Singularity Installation
     You'll need Singularity installed on all nodes. 
     To check that Singularity is installed, run the following:
 
-    .. code-block:: console
+    .. code-block:: shell
 
       $ singularity help
      

@@ -1,0 +1,5 @@
+settings:
+  listen_host: localhost
+  listen_port: 50050
+  envoy_health_check_period: 5  # in seconds
+

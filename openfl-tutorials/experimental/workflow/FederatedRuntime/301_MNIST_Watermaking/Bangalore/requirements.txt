@@ -1,0 +1,8 @@
+mistune>=2.0.3 # not directly required, pinned by Snyk to avoid a vulnerability
+numpy>=1.13.3
+openfl>=1.2.1
+scikit-learn>=0.24.1
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+torch==2.3.1
+torchvision==0.18.1
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
