@@ -7,11 +7,10 @@
 
 .. autosummary::
    :toctree: _autosummary
-   :template: custom-module-template.rst
    :recursive:
 
-   callback
-   callback_list
-   lambda_callback
-   memory_profiler
-   metric_writer
+   Callback
+   CallbackList
+   LambdaCallback
+   MetricWriter
+   MemoryProfiler
