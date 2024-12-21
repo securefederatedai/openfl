@@ -8,8 +8,6 @@ aggregator :
     init_state_path     : save/torch_cnn_mnist_init.pbuf
     best_state_path     : save/torch_cnn_mnist_best.pbuf
     last_state_path     : save/torch_cnn_mnist_last.pbuf
-    log_metric_callback :
-      template : src.mnist_utils.write_metric
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
