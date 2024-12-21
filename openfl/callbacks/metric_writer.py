@@ -27,6 +27,7 @@ class MetricWriter(Callback):
 
     def on_experiment_begin(self, logs=None):
         """Open file handles for logging."""
+        os.makedirs(self.log_dir, exist_ok=True)
 
         if not self._log_file_handle:
             self._log_file_handle = open(
