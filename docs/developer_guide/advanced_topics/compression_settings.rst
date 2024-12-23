@@ -7,12 +7,12 @@
 Apply Compression Settings
 **************************
 
-The Open Federated Learning (|productName|) framework supports lossless and lossy compression pipelines. Federated learning enables a large number of participants to work together on the same model. Without a compression pipeline, this scalability results in increased communication cost. Furthermore, large models exacerbate this problem.
+The Open Federated Learning (OpenFL) framework supports lossless and lossy compression pipelines. Federated learning enables a large number of participants to work together on the same model. Without a compression pipeline, this scalability results in increased communication cost. Furthermore, large models exacerbate this problem.
 
 .. note::
     In general, the weights of a model are typically not robust to information loss, so no compression is applied by default to the model weights sent bidirectionally; however, the deltas between the model weights for each round are inherently more sparse and better suited for lossy compression.
 
-The following are the compression pipelines supported in |productName|:
+The following are the compression pipelines supported in OpenFL:
 
 ``NoCompressionPipeline``
     The default option applied to model weights
@@ -55,4 +55,3 @@ The example template, **keras_cnn_with_compression**, uses the ``KCPipeline`` wi
          template : openfl.pipelines.KCPipeline
          settings :
            n_clusters : 6
-

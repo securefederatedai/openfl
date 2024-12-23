@@ -1,13 +1,8 @@
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
-
 # Minimal makefile for Sphinx documentation
-#
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?= -D autodoc_default_options.imported-members=True
+SPHINXOPTS    ?= -D autodoc_default_options.imported-members=True -D nb_execution_mode=force
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build

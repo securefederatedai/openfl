@@ -568,7 +568,7 @@ def run_command(
             docker_command = f"docker exec -i {container_id} sh -c "
 
         if run_in_background and bg_file:
-            docker_command += f"'{command} > {bg_file} &'"
+            docker_command += f"'{command} > {bg_file}' &"
         else:
             docker_command += f"'{command}'"
 
