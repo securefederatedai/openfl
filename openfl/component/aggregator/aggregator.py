@@ -994,14 +994,13 @@ class Aggregator:
         # resetting collaborators_done for next round
         self.collaborators_done = []
 
-        # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
-        self.callbacks.on_round_begin(self.round_number)
-
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
         else:
             logger.info("Starting round %s...", self.round_number)
+            # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
+            self.callbacks.on_round_begin(self.round_number)
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
