@@ -8,15 +8,15 @@ Dataset Splitters
 *****************
 
 
-|productName| allows you to specify custom data splits **for simulation runs on a single dataset**.
+OpenFL allows you to specify custom data splits **for simulation runs on a single dataset**.
 
-You may apply data splitters differently depending on the |productName| workflow that you follow. 
+You may apply data splitters differently depending on the OpenFL workflow that you follow. 
 
 
 OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data (Deprecated)
 ===========================================================================================
 
-Predefined |productName| data splitters functions are as follows:
+Predefined OpenFL data splitters functions are as follows:
 
 - ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
 - ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``

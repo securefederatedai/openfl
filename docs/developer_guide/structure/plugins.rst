@@ -5,20 +5,20 @@
 Plugin Components
 *****************
 
-Open Federated Learning (|productName|) is designed to be a flexible and extensible framework. Plugins are interchangeable parts of |productName| components. Different plugins support varying usage scenarios.
+Open Federated Learning (OpenFL) is designed to be a flexible and extensible framework. Plugins are interchangeable parts of OpenFL components. Different plugins support varying usage scenarios.
 A plugin may be **required** or **optional**. 
 
-You can provide your implementations of |productName| plugins to achieve a desired behavior. Technically, a plugin is just a class that implements some interface. You may enable a plugin by putting its 
-import path and initialization parameters to the config file of a corresponding |productName| component or to the frontend Python API. See `openfl-tutorials <https://github.com/intel/openfl/tree/develop/openfl-tutorials>`_ for more details.
+You can provide your implementations of OpenFL plugins to achieve a desired behavior. Technically, a plugin is just a class that implements some interface. You may enable a plugin by putting its 
+import path and initialization parameters to the config file of a corresponding OpenFL component or to the frontend Python API. See `openfl-tutorials <https://github.com/intel/openfl/tree/develop/openfl-tutorials>`_ for more details.
 
 .. _framework_adapter:
 
 Framework Adapter
 ######################
 
-The Framework Adapter plugin enables |productName| support for Deep Learning frameworks usage in FL experiments. 
+The Framework Adapter plugin enables OpenFL support for Deep Learning frameworks usage in FL experiments. 
 It is a **required** plugin for the frontend API component and Envoy.
-All the framework-specific operations on model weights are isolated in this plugin so |productName| can be framework-agnostic.
+All the framework-specific operations on model weights are isolated in this plugin so OpenFL can be framework-agnostic.
 
 The Framework adapter plugin interface has two required methods to load and extract tensors from a model and an optimizer:
 

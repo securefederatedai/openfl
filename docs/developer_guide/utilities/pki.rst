@@ -1,9 +1,9 @@
 .. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-*******************************************************
-|productName| Public Key Infrastructure (PKI) Solutions
-*******************************************************
+*******************************
+Public Key Infrastructure (PKI)
+*******************************
 
 .. _pki_overview:
 
@@ -15,14 +15,14 @@ Transport Layer Security (`TLS <https://en.wikipedia.org/wiki/Transport_Layer_Se
 If you have trusted workspaces and connections, you can start your experiment with the :code:`disable_tls` option.
 
 
-Otherwise, you can certify nodes with your own PKI solution or use the PKI solution workflows provided by |productName|. 
+Otherwise, you can certify nodes with your own PKI solution or use the PKI solution workflows provided by OpenFL. 
 
     - :ref:`semi_automatic_certification`
     - :ref:`manual_certification`
 
 .. note::
 
-    The |productName| PKI solution is based on `step-ca <https://github.com/smallstep/certificates>`_ as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded during the workspace setup.
+    The OpenFL PKI solution is based on `step-ca <https://github.com/smallstep/certificates>`_ as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded during the workspace setup.
 
 .. note::
 
@@ -43,11 +43,11 @@ Otherwise, you can certify nodes with your own PKI solution or use the PKI solut
 Semi-Automatic PKI Workflow
 ===========================
 
-The |productName| PKI pipeline involves creating a local certificate authority (CA) on a \HTTPS \ server that listens for signing requests. Certificates from each client are signed by the CA via a token. The token must be copied to clients in a secure manner. 
+The OpenFL PKI pipeline involves creating a local certificate authority (CA) on a \HTTPS \ server that listens for signing requests. Certificates from each client are signed by the CA via a token. The token must be copied to clients in a secure manner. 
 
 1. Create the CA.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
 
@@ -60,7 +60,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
 2. Run the CA server.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki run -p </path/to/ca/dir>
 
@@ -69,7 +69,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
 3. Create a token for client.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
 
@@ -82,7 +82,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
 4. Copy the token to the clients (director or envoy) via a secure channel, and certify the token.
 
-      .. code-block:: console
+      .. code-block:: shell
 
          $ cd <path/to/subject/folder>
          $ fx pki certify -n <subject> -t <generated token for subject>
