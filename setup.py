@@ -95,7 +95,7 @@ setup(
         'protobuf>=4.22,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
     ],
-    python_requires='>=3.9, <3.12',
+    python_requires='>=3.10, <3.13',
     project_urls={
         'Bug Tracker': 'https://github.com/securefederatedai/openfl/issues',
         'Documentation': 'https://openfl.readthedocs.io/en/stable/',
@@ -109,9 +109,9 @@ setup(
         'Topic :: System :: Distributed Computing',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ],
     entry_points={'console_scripts': ['fx=openfl.interface.cli:entry']},
     cmdclass={

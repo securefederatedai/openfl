@@ -81,7 +81,7 @@ pipeline {
                         SNYK_ALLOW_LONG_PROJECT_NAME = true
                         SNYK_USE_MULTI_PROC = true
                         SNYK_DEBUG = true
-                        SNYK_PYTHON_VERSION = '3.9'
+                        SNYK_PYTHON_VERSION = '3.10'
 
                         BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
                         BANDIT_SEVERITY_LEVEL = 'high'
@@ -114,7 +114,7 @@ pipeline {
                 stage('Build Package') {
                     agent {
                         docker {
-                            image 'python:3.9'
+                            image 'python:3.10'
                         }
                     }
                     steps {
