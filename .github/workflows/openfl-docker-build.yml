@@ -1,6 +1,9 @@
 name: Build and Push Openfl Docker Image
 
 on:
+  pull_request: # test
+    branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: 
       - develop
