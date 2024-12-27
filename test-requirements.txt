@@ -4,3 +4,6 @@ paramiko
 pytest==8.3.4
 pytest-asyncio==0.25.0
 pytest-mock==3.14.0
+defusedxml==0.7.1
+matplotlib==3.10.0
+fpdf==1.7.2
