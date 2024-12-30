@@ -9,6 +9,7 @@ import json
 from tests.end_to_end.utils.common_fixtures import fx_federation_tr, fx_federation_tr_dws
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils import federation_helper as fed_helper, ssh_helper as ssh
+from tests.end_to_end.utils.generate_report import generate_memory_report
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +79,9 @@ def _log_memory_usage(request, fed_obj):
     ), "Aggregator memory usage file is not available"
 
     # Log the aggregator memory usage details
-    memory_usage_dict = json.load(open(aggregator_memory_usage_file))
+    memory_usage_dict = _convert_to_json(aggregator_memory_usage_file)
+    aggregator_path = os.path.join(fed_obj.workspace_path, "aggregator")
+    generate_memory_report(memory_usage_dict, aggregator_path)
 
     # check memory usage entries for each round
     assert (
@@ -98,10 +101,30 @@ def _log_memory_usage(request, fed_obj):
             collaborator_memory_usage_file
         ), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"
 
-        memory_usage_dict = json.load(open(collaborator_memory_usage_file))
+        memory_usage_dict = _convert_to_json(collaborator_memory_usage_file)
+        collaborator_path = os.path.join(fed_obj.workspace_path, collaborator.name)
+        generate_memory_report(memory_usage_dict, collaborator_path)
 
         assert (
             len(memory_usage_dict) == request.config.num_rounds
         ), f"Memory usage details are not available for all rounds for collaborator {collaborator.collaborator_name}"
 
     log.info("Memory usage details are available for all participants")
+
+
+def _convert_to_json(file):
+    """
+    Reads a file containing JSON objects, one per line, and converts them into a list of parsed JSON objects.
+
+    Args:
+        file (str): The path to the file containing JSON objects.
+
+    Returns:
+        list: A list of parsed JSON objects.
+    """
+    with open(file, 'r') as infile:
+        json_objects = infile.readlines()
+
+    # Parse each JSON object
+    parsed_json_objects = [json.loads(obj) for obj in json_objects]
+    return parsed_json_objects

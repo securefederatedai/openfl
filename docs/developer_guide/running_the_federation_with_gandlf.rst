@@ -113,7 +113,7 @@ However, continue with the following procedure for details in creating a federat
 STEP 1: Install GaNDLF prerequisites and Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.9 (>=3.9, <3.12) virtual environment and confirm OpenFL is available.
+1.	Start a Python 3.10 (>=3.10, <3.13) virtual environment and confirm OpenFL is available.
 
 	.. code-block:: python
 
