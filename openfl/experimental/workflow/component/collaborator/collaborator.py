@@ -8,7 +8,7 @@ import time
 from logging import getLogger
 from typing import Any, Callable, Dict, Tuple
 
-import dill
+import cloudpickle
 
 
 class Collaborator:
@@ -121,9 +121,9 @@ class Collaborator:
         """
         self.client.call_checkpoint(
             self.name,
-            dill.dumps(ctx),
-            dill.dumps(f),
-            dill.dumps(stream_buffer),
+            cloudpickle.dumps(ctx),
+            cloudpickle.dumps(f),
+            cloudpickle.dumps(stream_buffer),
         )
 
     def run(self) -> None:
@@ -163,7 +163,12 @@ class Collaborator:
         self.logger.info(
             f"Round {self.round_number}," f" collaborator {self.name} is sending results..."
         )
-        self.client.send_task_results(self.name, self.round_number, next_step, dill.dumps(clone))
+        self.client.send_task_results(
+            self.name,
+            self.round_number,
+            next_step,
+            cloudpickle.dumps(clone)
+        )
 
     def get_tasks(self) -> Tuple:
         """Get tasks from the aggregator.
@@ -182,7 +187,7 @@ class Collaborator:
         self.round_number, next_step, clone_bytes, sleep_time, time_to_quit = temp
         if time_to_quit:
             return next_step, "", sleep_time, time_to_quit
-        return next_step, dill.loads(clone_bytes), sleep_time, time_to_quit
+        return next_step, cloudpickle.loads(clone_bytes), sleep_time, time_to_quit
 
     def do_task(self, f_name: str, ctx: Any) -> Tuple:
         """Run collaborator steps until transition.

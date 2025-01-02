@@ -12,7 +12,7 @@ from logging import getLogger
 from threading import Event
 from typing import Any, Callable, Dict, List, Tuple
 
-import dill
+import cloudpickle
 
 from openfl.experimental.workflow.interface import FLSpec
 from openfl.experimental.workflow.runtime import FederatedRuntime
@@ -270,14 +270,14 @@ class Aggregator:
         # Perform checkpoint if enabled
         if self.checkpoint:
             if not isinstance(ctx, FLSpec):
-                ctx = dill.loads(ctx)
+                ctx = cloudpickle.loads(ctx)
                 # Update metaflow interface object
                 ctx._metaflow_interface = self.flow._metaflow_interface
             # Deserialize objects if passed in serialized form
             if not isinstance(f, Callable):
-                f = dill.loads(f)
+                f = cloudpickle.loads(f)
             if stream_buffer and isinstance(stream_buffer, bytes):
-                f.__func__._stream_buffer = dill.loads(stream_buffer)
+                f.__func__._stream_buffer = cloudpickle.loads(stream_buffer)
 
             stdout = checkpoint(ctx, f)
             # Retrieve and log stdout
@@ -339,7 +339,7 @@ class Aggregator:
         return (
             self.current_round,
             next_step,
-            dill.dumps(clone),
+            cloudpickle.dumps(clone),
             0,
             self.time_to_quit,
         )
@@ -465,7 +465,7 @@ class Aggregator:
                 f"Collaborator {collab_name} sent task results" f" for round {round_number}."
             )
         # Unpickle the clone (FLSpec object)
-        clone = dill.loads(clone_bytes)
+        clone = cloudpickle.loads(clone_bytes)
         # Update the clone in clones_dict dictionary
         self.clones_dict[clone.input] = clone
         self.next_step = next_step[0]
