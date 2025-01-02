@@ -1,7 +1,7 @@
 # Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import xml.etree.ElementTree as ET
+from defusedxml.ElementTree import parse as defused_parse
 from lxml import etree
 import os
 from pathlib import Path
@@ -17,7 +17,7 @@ if not os.path.exists(result_xml):
     print(f"Results XML file not found at {result_xml}. Exiting...")
     exit(1)
 
-tree = ET.parse(result_xml, parser=parser)
+tree = defused_parse(result_xml, parser=parser)
 
 # Get the root element
 testsuites = tree.getroot()
