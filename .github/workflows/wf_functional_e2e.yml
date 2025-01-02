@@ -1,9 +1,7 @@
 ---
-#---------------------------------------------------------------------------
-# Workflow to run Task Runner E2E tests via Docker
-# Authors - Noopur, Payal Chaurasiya
-#---------------------------------------------------------------------------
-name: Workflow Functional E2E
+# Workflow functional E2E tests
+
+name: Workflow_Functional_E2E
 
 on:
   pull_request:

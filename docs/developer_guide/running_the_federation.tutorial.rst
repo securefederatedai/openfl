@@ -3,11 +3,10 @@
 
 .. _running_tutorial:
 
-*************************************************
-Open Federated Learning (|productName|) Tutorials
-*************************************************
+OpenFL Tutorials
+================
 
-These tutorials use the Jupyter\* \  Lab server to help you become familiar with the APIs used in Open Federated Learning (|productName|).
+These tutorials use the Jupyter\* \  Lab server to help you become familiar with the APIs used in Open Federated Learning (OpenFL).
 
 :ref:`running_notebook`
     Use this tutorial to familiarize with the APIs of the short-lived components (*Aggregator* and *Collaborator*).

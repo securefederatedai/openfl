@@ -1,11 +1,7 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
+OpenFL Utilities
+================
 
-*************************************************
-Open Federated Learning (|productName|) Utilities
-*************************************************
-
-The following are utilities available in Open Federated Learning (|productName|).
+The following are utilities available in Open Federated Learning (OpenFL).
 
 :doc:`utilities/pki`
     Use the Public Key Infrastructure (PKI) solution workflows to certify the nodes in your federation.
