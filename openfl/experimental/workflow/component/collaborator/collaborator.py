@@ -164,10 +164,7 @@ class Collaborator:
             f"Round {self.round_number}," f" collaborator {self.name} is sending results..."
         )
         self.client.send_task_results(
-            self.name,
-            self.round_number,
-            next_step,
-            cloudpickle.dumps(clone)
+            self.name, self.round_number, next_step, cloudpickle.dumps(clone)
         )
 
     def get_tasks(self) -> Tuple:
