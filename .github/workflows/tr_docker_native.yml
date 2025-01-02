@@ -3,7 +3,6 @@ name: TaskRunner (docker/native)
 
 on:
   pull_request:
-    branches: [ develop ]
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
@@ -20,7 +19,7 @@ jobs:
     - name: Set up Python 3
       uses: actions/setup-python@v3
       with:
-        python-version: "3.9"
+        python-version: "3.10"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -44,7 +43,7 @@ jobs:
         fx collaborator create -d 1 -n charlie --silent
         fx collaborator generate-cert-request -n charlie --silent
         fx collaborator certify --request-pkg col_charlie_to_agg_cert_request.zip --silent
-        
+
         # Pack the collaborator's private key, signed cert, and data.yaml into a tarball
         tarfiles="plan/data.yaml agg_to_col_charlie_signed_cert.zip"
         for entry in cert/client/*; do

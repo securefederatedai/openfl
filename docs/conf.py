@@ -1,8 +1,6 @@
-"""Docs configuration module."""
-
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+"""Docs configuration module."""
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -17,6 +15,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import inspect
+import operator
 import sys
 from datetime import datetime
 
@@ -31,80 +31,38 @@ sys.path.insert(0, os.path.abspath('../'))
 # import sphinxcontrib.napoleon # NOQA:E800
 
 extensions = [
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme',
-    'sphinx.ext.autosectionlabel',
-    'sphinx-prompt',
-    'sphinx_copybutton',
-    'sphinx_substitution_extensions',
-    'sphinx.ext.ifconfig',
-    'sphinxcontrib.mermaid',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'recommonmark'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.linkcode',
+    'sphinx.ext.mathjax',
+    'sphinx_remove_toctrees',
+    'sphinx_copybutton',
+    'sphinx_design',
+    'sphinxext.rediraffe',
+    'sphinxcontrib.mermaid',
+    'sphinx-prompt',
+    'recommonmark',
+    'myst_nb',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.autosectionlabel',
+    'sphinx_substitution_extensions',
 ]
-autodoc_default_options = {
-    'imported-members': True,
-}
-autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
-source_suffix = ['.rst', '.md']
+pygments_style = None
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+napolean_use_rtype = False
+
+source_suffix = ['.rst', '.md', '.ipynb']
 
 # -- Project information -----------------------------------------------------
-
 # This will replace the |variables| within the rST documents automatically
-
-PRODUCT_VERSION = 'Intel'
-
 project = 'OpenFL'
-copyright = f'{datetime.now().year}, Intel'  # NOQA
-author = 'Intel Corporation'
-version = f'{datetime.now().year}.{datetime.now().month}'
-release = version
-master_doc = 'index'
-
-# Global variables for rST
-rst_prolog = '''
-.. |productName| replace:: OpenFL
-.. |productZip| replace:: openfl.zip
-.. |productDir| replace:: openfl
-.. |productWheel| replace:: openfl
-
-'''
-
-napoleon_google_docstring = True
-
-# Config the returns section to behave like the Args section
-napoleon_custom_sections = [('Returns', 'params_style')]
-
-# This code extends Sphinx's GoogleDocstring class to support 'Keys',
-# 'Attributes', and 'Class Attributes' sections in docstrings. Allows for more
-# detailed and structured documentation of Python classes and their attributes.
-from sphinx.ext.napoleon.docstring import GoogleDocstring # NOQA
-
-# Define new sections and their corresponding parse methods
-new_sections = {
-    'keys': 'Keys',
-    'attributes': 'Attributes',
-    'class attributes': 'Class Attributes'
-}
-
-# Add new sections to GoogleDocstring class
-for section, title in new_sections.items():
-    setattr(GoogleDocstring, f'_parse_{section}_section',
-            lambda self, section: self._format_fields(title, self._consume_fields()))
-
-
-# Patch the parse method to include new sections
-def patched_parse(self):
-    for section in new_sections:
-        self._sections[section] = getattr(self, f'_parse_{section}_section')
-    self._unpatched_parse()
-
-
-# Apply the patch
-GoogleDocstring._unpatched_parse = GoogleDocstring._parse
-GoogleDocstring._parse = patched_parse
+copyright = f'{datetime.now().year}, The OpenFL Team'
+author = 'The OpenFL Team'
+version = ''
+release = ''
+main_doc = 'index'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -113,11 +71,10 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', 'README.md', 'structurizer_dsl/README.md',
-                    '.DS_Store', 'tutorials/*', 'graveyard/*', '_templates']
+                    '.DS_Store', 'graveyard/*', '_templates']
 
 # add temporary unused files
-exclude_patterns.extend(['modules.rst',
-                         'install.singularity.rst',
+exclude_patterns.extend(['install.singularity.rst',
                          'overview.what_is_intel_federated_learning.rst',
                          'overview.how_can_intel_protect_federated_learning.rst',
                          'source/workflow/running_the_federation.singularity.rst'])
@@ -126,16 +83,72 @@ exclude_patterns.extend(['modules.rst',
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
+html_logo = '_static/openfl_logo.png'
+html_favicon = '_static/favicon.png'
+html_theme = 'sphinx_book_theme'
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    'show_toc_level': 2,
+    'repository_url': 'https://github.com/securefederatedai/openfl',
+    'use_repository_button': True,     # add a "link to repository" button
+    'navigation_with_keys': False,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_style = 'css/Intel_One_Mono_Font_Theme.css'
-autosectionlabel_prefix_document = True
+html_css_files = [
+    'style.css',
+]
 
+# -- Options for myst ----------------------------------------------
+myst_heading_anchors = 3  # auto-generate 3 levels of heading anchors
+myst_enable_extensions = ['dollarmath']
+nb_execution_mode = "force"
+nb_execution_allow_errors = False
+nb_merge_streams = True
+nb_execution_show_tb = True
+nb_execution_timeout = 600  # secs
+nb_execution_excludepatterns = [
+    # TODO(MasterSkepticista) this requires fx experimental enabled, conflicts with taskrunner CLI
+    "tutorials/workflow.ipynb",
+]
 
-def setup(app):
-    app.add_css_file('css/custom.css')
+# Tell sphinx autodoc how to render type aliases.
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "all"
+
+# Remove auto-generated API docs from sidebars. They take too long to build.
+remove_from_toctrees = ["_autosummary/*"]
+
+# Customize code links via sphinx.ext.linkcode
+
+def linkcode_resolve(domain, info):
+  import openfl
+
+  if domain != 'py':
+    return None
+  if not info['module']:
+    return None
+  if not info['fullname']:
+    return None
+  if info['module'].split(".")[0] != 'openfl':
+     return None
+  try:
+    mod = sys.modules.get(info['module'])
+    obj = operator.attrgetter(info['fullname'])(mod)
+    if isinstance(obj, property):
+        obj = obj.fget
+    while hasattr(obj, '__wrapped__'):  # decorated functions
+        obj = obj.__wrapped__
+    filename = inspect.getsourcefile(obj)
+    source, linenum = inspect.getsourcelines(obj)
+  except:
+    return None
+  filename = os.path.relpath(filename, start=os.path.dirname(openfl.__file__))
+  lines = f"#L{linenum}-L{linenum + len(source)}" if linenum else ""
+  return f"https://github.com/securefederatedai/openfl/blob/develop/openfl/{filename}{lines}"

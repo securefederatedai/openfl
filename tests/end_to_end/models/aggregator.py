@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
@@ -49,24 +50,27 @@ class Aggregator():
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
-    def start(self, res_file):
+    def start(self, res_file, with_docker=False):
         """
         Start the aggregator
         Args:
             res_file (str): Result file to track the logs
+            with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.name}")
+            res_file = res_file if not with_docker else os.path.basename(res_file)
             error_msg = "Failed to start the aggregator"
             fh.run_command(
                 "fx aggregator start",
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
+                workspace_path=self.workspace_path if not with_docker else "",
                 run_in_background=True,
                 bg_file=res_file,
+                with_docker=with_docker
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."

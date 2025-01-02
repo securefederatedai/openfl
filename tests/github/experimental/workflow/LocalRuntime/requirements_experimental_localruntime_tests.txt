@@ -2,4 +2,8 @@ dill==0.3.6
 metaflow==2.7.15
 ray==2.9.2
 torch
+tabulate==0.9.0
 torchvision
+nbformat==5.10.4
+nbdev==2.3.12
+tensorboard

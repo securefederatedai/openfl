@@ -3,7 +3,6 @@ name: TaskRunner (docker/gramine-direct)
 
 on:
   pull_request:
-    branches: [ develop ]
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
@@ -20,7 +19,7 @@ jobs:
     - name: Set up Python 3
       uses: actions/setup-python@v3
       with:
-        python-version: "3.9"
+        python-version: "3.10"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

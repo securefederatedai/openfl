@@ -8,6 +8,7 @@ import logging
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.ssh_helper as ssh
 
 log = logging.getLogger(__name__)
 
@@ -51,14 +52,13 @@ class ModelOwner():
             log.info(f"Creating workspace for model {self.model_name} at the path: {self.workspace_path}")
             error_msg = "Failed to create the workspace"
 
-            # Docker environment requires the path to be relative
-            ws_path = self.workspace_path.lstrip('/') if os.getenv("TEST_ENV") == "docker" else self.workspace_path
+            ws_path = self.workspace_path
 
             return_code, output, error = fh.run_command(
                 f"fx workspace create --prefix {ws_path} --template {self.model_name}",
+                workspace_path="", # No workspace path required for this command
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path="", # No workspace path required for this command
             )
             fh.verify_cmd_output(
                 output,
@@ -104,9 +104,9 @@ class ModelOwner():
             error_msg = f"Failed to sign the CSR {zip_name}"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
 
             fh.verify_cmd_output(
@@ -122,35 +122,33 @@ class ModelOwner():
             raise e
         return True
 
-    def modify_plan(self, plan_path, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
+    def modify_plan(self, param_config, plan_path):
         """
         Modify the plan to train the model
         Args:
+            param_config (object): Config object containing various params to be modified
             plan_path (str): Path to the plan file
-            new_rounds (int): Number of rounds to train
-            num_collaborators (int): Number of collaborators
-            disable_client_auth (bool): Disable client authentication
-            disable_tls (bool): Disable TLS communication
         """
         # Copy the cols.yaml file from remote machine to local machine for docker environment
         plan_file = os.path.join(plan_path, "plan.yaml")
 
         # Open the file and modify the entries
-        self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train
-        self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
+        self.rounds_to_train = param_config.num_rounds if param_config.num_rounds else self.rounds_to_train
+        self.num_collaborators = param_config.num_collaborators if param_config.num_collaborators else self.num_collaborators
 
         try:
             with open(plan_file) as fp:
                 data = yaml.load(fp, Loader=yaml.FullLoader)
 
+            # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
             # Memory Leak related
             data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
             data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
 
             data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
-            data["network"]["settings"]["require_client_auth"] = not disable_client_auth
-            data["network"]["settings"]["use_tls"] = not disable_tls
+            data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
+            data["network"]["settings"]["use_tls"] = param_config.use_tls
 
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)
@@ -172,9 +170,9 @@ class ModelOwner():
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path
             )
             fh.verify_cmd_output(
                 output,
@@ -185,7 +183,7 @@ class ModelOwner():
             )
 
         except Exception as e:
-            raise ex.PlanInitializationException(f"Failed to initialize the plan: {e}")
+            raise ex.PlanInitializationException(f"{error_msg}: {e}")
 
     def certify_workspace(self):
         """
@@ -199,9 +197,9 @@ class ModelOwner():
             error_msg = "Failed to certify the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
-                error_msg="Failed to certify the workspace",
-                container_id=self.container_id,
                 workspace_path=self.workspace_path,
+                error_msg=error_msg,
+                container_id=self.container_id,
             )
             fh.verify_cmd_output(
                 output,
@@ -212,7 +210,45 @@ class ModelOwner():
             )
 
         except Exception as e:
-            raise ex.WorkspaceCertificationException(f"Failed to certify the workspace: {e}")
+            raise ex.WorkspaceCertificationException(f"{error_msg}: {e}")
+
+    def dockerize_workspace(self):
+        """
+        Dockerize the workspace. It internally uses workspace name as the image name
+        """
+        log.info("Dockerizing the workspace. It will take some time to complete..")
+        try:
+            if not os.getenv("GITHUB_REPOSITORY") or not os.getenv("GITHUB_BRANCH"):
+                repo, branch = ssh.get_git_repo_and_branch()
+            else:
+                repo = os.getenv("GITHUB_REPOSITORY")
+                branch = os.getenv("GITHUB_BRANCH")
+
+            cmd = f"fx workspace dockerize --save --revision {repo}@{branch}"
+            error_msg = "Failed to dockerize the workspace"
+            return_code, output, error = fh.run_command(
+                cmd,
+                workspace_path=self.workspace_path,
+                error_msg=error_msg,
+                container_id=self.container_id,
+            )
+            fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
+
+        except Exception as e:
+            raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
+
+    def load_workspace(self, workspace_tar_name):
+        """
+        Load the workspace
+        """
+        log.info("Loading the workspace..")
+        try:
+            return_code, output, error = ssh.run_command(f"docker load -i {workspace_tar_name}", work_dir=self.workspace_path)
+            if return_code != 0:
+                raise Exception(f"Failed to load the workspace: {error}")
+
+        except Exception as e:
+            raise ex.WorkspaceLoadException(f"Error loading workspace: {e}")
 
     def register_collaborators(self, plan_path, num_collaborators=None):
         """
@@ -262,9 +298,9 @@ class ModelOwner():
             error_msg = "Failed to certify the aggregator request"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "CA signed the request from aggregator")
 
@@ -280,9 +316,9 @@ class ModelOwner():
             error_msg = "Failed to export the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
+                workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path,
             )
             fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
 

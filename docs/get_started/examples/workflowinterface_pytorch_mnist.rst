@@ -20,13 +20,13 @@ This tutorial introduces the API to get up and running with your first horizonta
 See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/101_MNIST.ipynb>`_.
 
 **What is it?**
-The workflow interface is a new way of composing federated learning experiments with |productName|. 
+The workflow interface is a new way of composing federated learning experiments with OpenFL. 
 It was borne through conversations with researchers and existing users who had novel use cases that didn't quite fit the standard horizontal federated learning paradigm.
 
 **Getting Started**
 First we start by installing the necessary dependencies for the workflow interface:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ pip install git+https://github.com/intel/openfl.git
     $ pip install -r workflow_interface_requirements.txt
@@ -144,7 +144,7 @@ Next we import the FLSpec, LocalRuntime, and placement decorators.
         return new_model
 
 Now we come to the flow definition. 
-The |productName| Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with `start` 
+The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with `start` 
 and concludes with the `end` task. The aggregator begins with an optionally passed in model and optimizer. 
 The aggregator begins the flow with the `start` task, 
 where the list of collaborators is extracted from the runtime (`self.collaborators = self.runtime.collaborators`) 
