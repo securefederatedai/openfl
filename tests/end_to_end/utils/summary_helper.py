@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.generate_report as convert_to_json
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding="utf-8")
