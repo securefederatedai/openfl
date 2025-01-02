@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import linregress
@@ -96,3 +97,20 @@ def add_conclusion(pdf, slope):
     else:
         conclusion_text = "There is no continuous memory growth."
     pdf.chapter_body(conclusion_text)
+
+def convert_to_json(file):
+    """
+    Reads a file containing JSON objects, one per line, and converts them into a list of parsed JSON objects.
+
+    Args:
+        file (str): The path to the file containing JSON objects.
+
+    Returns:
+        list: A list of parsed JSON objects.
+    """
+    with open(file, 'r') as infile:
+        json_objects = infile.readlines()
+
+    # Parse each JSON object
+    parsed_json_objects = [json.loads(obj) for obj in json_objects]
+    return parsed_json_objects
