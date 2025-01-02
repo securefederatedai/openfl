@@ -1,4 +1,4 @@
-name: Trivy
+name: Trivy #dummy change
 on:
   push:
     branches: [ develop ]
