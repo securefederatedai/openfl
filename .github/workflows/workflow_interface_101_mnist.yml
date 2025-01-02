@@ -6,7 +6,7 @@ name: Workflow Interface 101 MNIST Notebook
 
 on:
   pull_request:
-    branches: [ develop, v1.7.x ]
+    branches: [ develop ]
     types: [opened, synchronize, reopened, ready_for_review]
 
   workflow_dispatch:
