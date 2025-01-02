@@ -1,5 +1,3 @@
-# openfl*
-# models*
-# data*
 /_build
 **/.ipynb_checkpoints
+_autosummary

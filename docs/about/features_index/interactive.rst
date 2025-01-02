@@ -26,7 +26,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 - *Collaborator manager* is Data owner's representative controlling Envoy.
 
 .. note::
-    The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python\*\  script.
+    The Open Federated Learning (OpenFL) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python\*\  script.
 
     See `Interactive Python API (Beta)`_ for details.
 
@@ -66,14 +66,14 @@ On the other hand, if the Director rejects the experiment, the experiment is abo
 OPTIONAL STEP: Create PKI Certificates Using Step-CA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The use of mutual Transport Layer Security (mTLS) is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by |productName|.
+The use of mutual Transport Layer Security (mTLS) is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by OpenFL.
 
 .. _step0_install_director_prerequisites:
 
-STEP 1: Install Open Federated Learning (|productName|)
+STEP 1: Install Open Federated Learning (OpenFL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install |productName| in a virtual Python\*\  environment. See :ref:`install_package` for details.
+Install OpenFL in a virtual Python\*\  environment. See :ref:`installation` for details.
 
 .. _step1_start_the_director:
 
@@ -84,7 +84,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
 1. Create a Director workspace with a default config file.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ fx director create-workspace -p path/to/director_workspace_dir
 
@@ -98,13 +98,13 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
  If mTLS protection is not set up, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx director start --disable-tls -c director_config.yaml
 
  If you have a federation with PKI certificates, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx director start -c director_config.yaml \
             -rc cert/root_ca.crt \
@@ -137,15 +137,15 @@ If any of the Envoys rejects the experiment, a :code:`set_experiment_failed` req
 OPTIONAL STEP: Sign PKI Certificates (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or use the :ref:`semi-automatic PKI certificate <semi_automatic_certification>` provided by |productName|.
+The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or use the :ref:`semi-automatic PKI certificate <semi_automatic_certification>` provided by OpenFL.
 
 
 .. _step0_install_envoy_prerequisites:
 
-STEP 1: Install |productName|
+STEP 1: Install OpenFL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install |productName| in a Python\*\ virtual environment. See :ref:`install_package` for details.
+Install OpenFL in a Python\*\ virtual environment. See :ref:`installation` for details.
 
 
 .. _step1_start_the_envoy:
@@ -155,7 +155,7 @@ STEP 2: Start the Envoy
 
 1. Create an Envoy workspace with a default config file and shard descriptor Python\*\  script.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ fx envoy create-workspace -p path/to/envoy_workspace_dir
 
@@ -179,7 +179,7 @@ STEP 2: Start the Envoy
 
  If mTLS protection is not set up, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         ENVOY_NAME=envoy_example_name
 
@@ -192,7 +192,7 @@ STEP 2: Start the Envoy
 
  If you have a federation with PKI certificates, run this command.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ ENVOY_NAME=envoy_example_name
 
@@ -222,7 +222,7 @@ that is allow to communicate with the Director using a gRPC client.
 Interactive Python API (Beta)
 -----------------------------
 
-The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
+The Open Federated Learning (OpenFL) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
 
     - `Prerequisites`_
     - `Define a Federated Learning Experiment`_
@@ -345,11 +345,11 @@ Instantiate and initialize a model and optimizer in your preferred deep learning
         from openfl.interface.interactive_api.experiment import ModelInterface
         MI = ModelInterface(model, optimizer, framework_plugin: str)
 
-The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the |productName| package
+The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the OpenFL package
 or from local workspace.
 
 .. note::
-    The |productName| interactive API supports *TensorFlow* and *PyTorch* frameworks via existing plugins.
+    The OpenFL interactive API supports *TensorFlow* and *PyTorch* frameworks via existing plugins.
     User can add support for other deep learning frameworks via the plugin interface and point to your implementation of a :code:`framework_plugin` in :code:`ModelInterface`.
 
 
@@ -384,7 +384,7 @@ Register an FL task and accompanying information.
 FL tasks return a dictionary object with metrics: :code:`{metric name: metric value for this task}`.
 
 .. note::
-    The |productName| interactive API currently allows registering only standalone functions defined in the main module or imported from other modules inside the workspace.
+    The OpenFL interactive API currently allows registering only standalone functions defined in the main module or imported from other modules inside the workspace.
 
     The :code:`TaskInterface` class must be instantiated before you can use its methods to register FL tasks.
 

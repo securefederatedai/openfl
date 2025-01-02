@@ -391,18 +391,9 @@ class Plan:
         defaults[SETTINGS]["assigner"] = self.get_assigner()
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
-        log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
 
-        if log_metric_callback:
-            if isinstance(log_metric_callback, dict):
-                log_metric_callback = Plan.import_(**log_metric_callback)
-            elif not callable(log_metric_callback):
-                raise TypeError(
-                    f"log_metric_callback should be callable object "
-                    f"or be import from code part, get {log_metric_callback}"
-                )
+        # TODO: Load callbacks from plan.
 
-        defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
         if self.aggregator_ is None:
             self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
@@ -576,6 +567,8 @@ class Plan:
         defaults[SETTINGS]["collaborator_name"] = collaborator_name
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
+
+        # TODO: Load callbacks from the plan.
 
         if task_runner is not None:
             defaults[SETTINGS]["task_runner"] = task_runner

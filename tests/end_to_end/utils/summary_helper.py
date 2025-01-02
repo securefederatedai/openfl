@@ -1,22 +1,24 @@
 # Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import xml.etree.ElementTree as ET
+from defusedxml.ElementTree import parse as defused_parse
 from lxml import etree
 import os
+from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 # Initialize the XML parser
-parser = etree.XMLParser(recover=True, encoding='utf-8')
+parser = etree.XMLParser(recover=True, encoding="utf-8")
 
-result_path = os.path.join(os.getenv("HOME"), "results")
+result_path = os.path.join(Path().home(), "results")
 result_xml = os.path.join(result_path, "results.xml")
 if not os.path.exists(result_xml):
     print(f"Results XML file not found at {result_xml}. Exiting...")
     exit(1)
 
-tree = ET.parse(result_xml, parser=parser)
+tree = defused_parse(result_xml, parser=parser)
 
 # Get the root element
 testsuites = tree.getroot()
@@ -32,27 +34,13 @@ def get_aggregated_accuracy(agg_log_file):
     """
     agg_accuracy = "Not Found"
     if not os.path.exists(agg_log_file):
-        print(f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy")
+        print(
+            f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy"
+        )
         return agg_accuracy
 
-    # Example line(s) containing spaces and special characters:
-    """
-    METRIC   {'metric_origin': 'aggregator', 'task_name': 'aggregated_model_validation', 'metric_name': 'accuracy', 'metric_value':     aggregator.py:933
-        0.15911591053009033, 'round': 0}
-    """
-    try:
-        with open(agg_log_file, 'r') as f:
-            for line in f:
-                if "'metric_origin': 'aggregator'" in line and "aggregated_model_validation" in line:
-                    line = line.split("aggregator.py:")[0].strip()
-                    # If the line does not contain closing bracket "}", then concatenate the next line
-                    reqd_line = line if "}" in line else line + next(f).strip()
-                    agg_accuracy = eval(reqd_line.split("METRIC")[1].strip('"'))["metric_value"]
-                    break
-    except Exception as e:
-        # Do not fail the test if the accuracy cannot be fetched
-        print(f"Error while reading aggregator log file: {e}")
-
+    agg_accuracy_dict = convert_to_json(agg_log_file)
+    agg_accuracy = agg_accuracy_dict[-1].get("aggregator/aggregated_model_validation/accuracy", "Not Found")
     return agg_accuracy
 
 
@@ -118,8 +106,20 @@ def main():
     """
     result = get_testcase_result()
 
-    if not all([os.getenv(var) for var in ["NUM_COLLABORATORS", "NUM_ROUNDS", "MODEL_NAME", "GITHUB_STEP_SUMMARY"]]):
-        print("One or more environment variables not set. Skipping writing to GitHub step summary")
+    if not all(
+        [
+            os.getenv(var)
+            for var in [
+                "NUM_COLLABORATORS",
+                "NUM_ROUNDS",
+                "MODEL_NAME",
+                "GITHUB_STEP_SUMMARY",
+            ]
+        ]
+    ):
+        print(
+            "One or more environment variables not set. Skipping writing to GitHub step summary"
+        )
         return
 
     num_cols = os.getenv("NUM_COLLABORATORS")
@@ -129,21 +129,34 @@ def main():
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
-        print(f"Invalid model name: {model_name}. Skipping writing to GitHub step summary")
+        print(
+            f"Invalid model name: {model_name}. Skipping writing to GitHub step summary"
+        )
         return
 
     # Assumption - result directory is present in the home directory
-    agg_log_file = os.path.join(result_path, model_name, "aggregator", "workspace", "aggregator.log")
+    agg_log_file = os.path.join(
+        result_path, model_name, "aggregator", "workspace", "logs", "aggregator_metrics.txt"
+    )
     agg_accuracy = get_aggregated_accuracy(agg_log_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
-    with open(summary_file, 'a') as fh:
+    with open(summary_file, "a") as fh:
         # DO NOT change the print statements
-        print("| Name | Time (in seconds) | Result | Error (if any) | Collaborators | Rounds to train | Score (if applicable) |", file=fh)
-        print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
+        print(
+            "| Name | Time (in seconds) | Result | Error (if any) | Collaborators | Rounds to train | Score (if applicable) |",
+            file=fh,
+        )
+        print(
+            "| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |",
+            file=fh,
+        )
         for item in result:
-            print(f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |", file=fh)
+            print(
+                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |",
+                file=fh,
+            )
 
 
 if __name__ == "__main__":

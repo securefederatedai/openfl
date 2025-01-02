@@ -9,8 +9,6 @@ aggregator :
     best_state_path     : save/torch_llm_best.pbuf
     last_state_path     : save/torch_llm_last.pbuf
     rounds_to_train     : 5
-    log_metric_callback :
-      template : src.emotion_utils.write_metric
 
 
 collaborator :

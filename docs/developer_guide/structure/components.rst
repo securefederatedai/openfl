@@ -7,7 +7,7 @@
 Core Components
 *****************************
 
-Open Federated Learning (|productName|) has the following components:
+Open Federated Learning (OpenFL) has the following components:
 
     - :ref:`openfl_short_lived_components`
     - :ref:`openfl_ll_components`
@@ -45,7 +45,7 @@ Collaborator
 The Collaborator is a short-lived entity that manages training the model on local data, which includes
 
     - executing assigned tasks,
-    - converting deep learning framework-specific tensor objects to |productName| inner representation, and
+    - converting deep learning framework-specific tensor objects to OpenFL inner representation, and
     - exchanging model parameters with the Aggregator.
 
 The Collaborator is created by the :ref:`Envoy <openfl_ll_components_envoy>` when a new experiment is submitted
@@ -57,9 +57,9 @@ included in an FL experiment. At the end of the training task, weight tensors ar
 and aggregated.
 
 Converting tensor objects is handled by :ref:`framework adapter <framework_adapter>` plugins.
-Included in |productName| are framework adapters for PyTorch and TensorFlow 2.x.
+Included in OpenFL are framework adapters for PyTorch and TensorFlow 2.x.
 The list of framework adapters is extensible. User can contribute new framework adapters for deep learning frameworks
-they would like see supported in |productName|.
+they would like see supported in OpenFL.
 
 
 .. _openfl_ll_components:
@@ -110,4 +110,4 @@ regarding collaborator machine resource utilization. Refer to :ref:`device monit
 Static Diagram
 ==============
 
-.. figure:: ../../source/openfl/director_workflow.svg
+.. figure:: ../../images/director_workflow.svg

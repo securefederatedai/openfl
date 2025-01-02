@@ -9,8 +9,6 @@ aggregator :
     best_state_path     : save/torch_cnn_mnist_best.pbuf
     last_state_path     : save/torch_cnn_mnist_last.pbuf
     rounds_to_train     : 6
-    log_metric_callback :
-      template : src.mnist_utils.write_metric
 
 
 collaborator :

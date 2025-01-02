@@ -1,0 +1,18 @@
+# Copyright (C) 2020-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
+recommonmark
+sphinx>=3.0.4 # not directly required, pinned by Snyk to avoid a vulnerability
+sphinx-copybutton
+sphinx-prompt 
+sphinx-book-theme
+sphinx_substitution_extensions
+sphinxcontrib-mermaid
+sphinx-remove-toctrees
+sphinx-design
+sphinxext-rediraffe
+myst-nb>=1.0.0
+
+# Packages used for notebook execution
+rich[jupyter]
+-e .

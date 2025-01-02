@@ -70,7 +70,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 TLS connection.
             **kwargs: Additional keyword arguments.
         """
-        print(f"{use_tls=}")
         self.aggregator = aggregator
         self.uri = f"[::]:{agg_port}"
         self.use_tls = use_tls
