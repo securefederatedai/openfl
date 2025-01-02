@@ -145,6 +145,9 @@ class ModelOwner():
             # Memory Leak related
             data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
             data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+            # Aggregator and collaborators metric logging related
+            data["aggregator"]["settings"]["write_logs"] = True
+            data["collaborator"]["settings"]["write_logs"] = True
 
             data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
