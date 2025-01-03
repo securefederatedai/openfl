@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding="utf-8")
@@ -38,26 +39,10 @@ def get_aggregated_accuracy(agg_log_file):
         )
         return agg_accuracy
 
-    # Example line(s) containing spaces and special characters:
-    """
-    METRIC   {'metric_origin': 'aggregator', 'task_name': 'aggregated_model_validation', 'metric_name': 'accuracy', 'metric_value':     aggregator.py:933
-        0.15911591053009033, 'round': 0}
-    """
-    try:
-        with open(agg_log_file, 'r') as f:
-            for line in f:
-                if "'metric_origin': 'aggregator'" in line and "aggregated_model_validation" in line:
-                    # In Python versions < 3.11, aggregator.py file name appears in the line
-                    # whereas in Python version 3.11, it is utils.py
-                    line = line.split("aggregator.py:")[0].strip()
-                    line = line.split("utils.py:")[0].strip()
-                    # If the line does not contain closing bracket "}", then concatenate the next line
-                    reqd_line = line if "}" in line else line + next(f).strip()
-                    agg_accuracy = eval(reqd_line.split("METRIC")[1].strip('"'))["metric_value"]
-    except Exception as e:
-        # Do not fail the test if the accuracy cannot be fetched
-        print(f"Error while reading aggregator log file: {e}")
-
+    agg_accuracy_dict = convert_to_json(agg_log_file)
+    agg_accuracy = agg_accuracy_dict[-1].get(
+        "aggregator/aggregated_model_validation/accuracy", "Not Found"
+    )
     return agg_accuracy
 
 
@@ -153,7 +138,12 @@ def main():
 
     # Assumption - result directory is present in the home directory
     agg_log_file = os.path.join(
-        result_path, model_name, "aggregator", "workspace", "aggregator.log"
+        result_path,
+        model_name,
+        "aggregator",
+        "workspace",
+        "logs",
+        "aggregator_metrics.txt",
     )
     agg_accuracy = get_aggregated_accuracy(agg_log_file)
 
