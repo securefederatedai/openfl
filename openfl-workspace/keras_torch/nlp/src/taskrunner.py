@@ -5,7 +5,7 @@ Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
 import os
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "torch"
 import keras
 
 from openfl.federated import KerasTaskRunner

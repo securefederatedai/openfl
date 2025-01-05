@@ -14,20 +14,24 @@ collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
+    db_store_rounds: 2
     delta_updates    : false
     opt_treatment    : RESET
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.dataloader.KerasMNISTInMemory
+  template : src.dataloader.NLPDataLoader
   settings :
     collaborator_count : 2
-    data_group_name    : mnist
-    batch_size         : 256
+    batch_size         : 64
+    split_ratio: 0.2
+    num_samples: 10000
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.taskrunner.KerasCNN
+  template : src.taskrunner.KerasNLP
+  settings :
+    latent_dim : 256
 
 network :
   defaults : plan/defaults/network.yaml
@@ -40,7 +44,3 @@ tasks :
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
-  # To use different Compression Pipeline, uncomment the following lines
-  # template : openfl.pipelines.KCPipeline
-  # settings :
-  #   n_clusters : 6
