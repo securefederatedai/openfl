@@ -315,6 +315,7 @@ class WorkspaceExport:
         """
         parent_directory = self.output_workspace_path.parent
         archive_path = parent_directory / "experiment"
+        self._clean_generated_workspace()
 
         # Create a ZIP archive of the generated_workspace directory
         arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
@@ -356,6 +357,20 @@ class WorkspaceExport:
             for i, line in enumerate(data):
                 if i not in line_nos:
                     f.write(line)
+
+    def _clean_generated_workspace(self) -> None:
+        """
+        Removes unnecessary files (cols.yaml and data.yaml)
+        from the director workspace
+
+        """
+        cols_file = self.created_workspace_path.joinpath("plan", "cols.yaml")
+        data_file = self.created_workspace_path.joinpath("plan", "data.yaml")
+
+        if cols_file.exists():
+            cols_file.unlink()
+        if data_file.exists():
+            data_file.unlink()
 
     def generate_plan_yaml(self) -> None:
         """
