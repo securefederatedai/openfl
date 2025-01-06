@@ -10,6 +10,7 @@ You may copy this file as the starting point of your own keras model.
 
 import copy
 import os
+from importlib import util
 from warnings import catch_warnings, simplefilter
 
 import numpy as np
@@ -18,7 +19,12 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
-os.environ["KERAS_BACKEND"] = "torch"
+if util.find_spec("tensorflow") is not None:
+    os.environ["KERAS_BACKEND"] = "tensorflow"
+elif util.find_spec("torch") is not None:
+    os.environ["KERAS_BACKEND"] = "torch"
+elif util.find_spec("jax") is not None:
+    os.environ["KERAS_BACKEND"] = "jax"
 
 with catch_warnings():
     simplefilter(action="ignore")
