@@ -12,7 +12,7 @@ from click import group, option, pass_context
 from dynaconf import Validator
 
 from openfl.experimental.workflow.component.envoy import Envoy
-from openfl.utilities import click_types, merge_configs
+from openfl.utilities import merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
@@ -32,27 +32,13 @@ def envoy(context):
 @envoy.command(name="start")
 @option("-n", "--envoy_name", required=True, help="Current shard name")
 @option(
-    "-dh",
-    "--director-host",
-    required=True,
-    help="The FQDN of the federation director",
-    type=click_types.FQDN,
-)
-@option(
-    "-dp",
-    "--director-port",
-    required=True,
-    help="The federation director port",
-    type=click.IntRange(1, 65535),
-)
-@option(
     "--tls/--disable-tls",
     default=True,
     is_flag=True,
     help="Use TLS or not (By default TLS is enabled)",
 )
 @option(
-    "-ec",
+    "-c",
     "--envoy-config-path",
     default="envoy_config.yaml",
     help="The envoy config path",
@@ -84,8 +70,6 @@ def envoy(context):
 )
 def start_(
     envoy_name,
-    director_host,
-    director_port,
     tls,
     envoy_config_path,
     root_certificate,
@@ -96,8 +80,6 @@ def start_(
 
     Args:
         envoy_name (str): Name of the Envoy.
-        director_host (str): The FQDN of the federation director.
-        director_port (int): The federation director port.
         tls (bool): Use TLS or not.
         envoy_config_path (str): The envoy config path.
         root_certificate (str): Path to a root CA cert.
@@ -118,6 +100,8 @@ def start_(
             "certificate": certificate,
         },
         validators=[
+            Validator("settings.director_host", default="localhost"),
+            Validator("settings.director_port", default=50051, gte=1024, lte=65535),
             Validator("params.install_requirements", default=True),
         ],
     )
@@ -138,8 +122,8 @@ def start_(
 
     envoy = Envoy(
         envoy_name=envoy_name,
-        director_host=director_host,
-        director_port=director_port,
+        director_host=config.settings.director_host,
+        director_port=config.settings.director_port,
         envoy_config=Path(envoy_config_path).absolute(),
         root_certificate=config.root_certificate,
         private_key=config.private_key,
