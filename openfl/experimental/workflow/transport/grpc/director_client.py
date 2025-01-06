@@ -11,15 +11,18 @@ import grpc
 from grpc._channel import _MultiThreadedRendezvous as DataStream
 
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
-from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
+from openfl.experimental.workflow.transport.grpc.exceptions import (
+    DirectorServiceError,
+    EnvoyNotFoundError,
+)
 
 from .grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)
 
 
-class DirectorClient:
-    """Director client class for experiment managers/envoys.
+class EnvoyClient:
+    """Envoy client class for envoys.
 
     This class communicates with the director to manage the envoys
     participation in the federation.
@@ -43,7 +46,7 @@ class DirectorClient:
         certificate: Optional[Union[Path, str]] = None,
     ) -> None:
         """
-        Initialize director client object.
+        Initialize envoy client object.
 
         Args:
             director_host (str): The host name for Director server.
@@ -139,6 +142,101 @@ class DirectorClient:
         """
         return director_pb2.WaitExperimentRequest(collaborator_name=self.envoy_name)
 
+    def send_health_check(
+        self,
+        *,
+        envoy_name: str,
+        is_experiment_running: bool,
+    ) -> int:
+        """Send envoy health check.
+
+        Args:
+            envoy_name (str): The name of the envoy.
+            is_experiment_running (bool): Whether an experiment is currently
+                running.
+
+        Returns:
+            health_check_period (int): The period for health checks.
+        """
+        status = director_pb2.UpdateEnvoyStatusRequest(
+            name=envoy_name,
+            is_experiment_running=is_experiment_running,
+        )
+
+        logger.debug("Sending health check status: %s", status)
+        try:
+            response = self.stub.UpdateEnvoyStatus(status)
+        except grpc.RpcError as rpc_error:
+            logger.error(rpc_error)
+            if rpc_error.code() == grpc.StatusCode.NOT_FOUND:
+                raise EnvoyNotFoundError
+        else:
+            health_check_period = response.health_check_period.seconds
+
+            return health_check_period
+
+
+class FederatedRuntimeClient:
+    """
+    FederatedRuntimeclient class for experiment manager.
+
+    This class communicates with the director to manage the user's
+    participation in the federation.
+
+    Attributes:
+        stub (director_pb2_grpc.DirectorStub): The gRPC stub for communication
+        with the director.
+    """
+
+    def __init__(
+        self,
+        *,
+        director_host: str,
+        director_port: int,
+        tls: bool = False,
+        root_certificate: Optional[Union[Path, str]] = None,
+        private_key: Optional[Union[Path, str]] = None,
+        certificate: Optional[Union[Path, str]] = None,
+    ) -> None:
+        """
+        Initialize FederatedRuntimeClient object.
+
+        Args:
+            director_host (str): The host name for Director server.
+            director_port (int): The port number for Director server.
+            tls (bool): Whether to use TLS for the connection.
+            root_certificate (Optional[Union[Path, str]]): The path to the root certificate for the
+                TLS connection.
+            private_key (Optional[Union[Path, str]]): The path to the private key for the TLS
+                connection.
+            certificate (Optional[Union[Path, str]]): The path to the certificate for the TLS
+                connection.
+
+        """
+        director_addr = f"{director_host}:{director_port}"
+        if not tls:
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
+        else:
+            if not (root_certificate and private_key and certificate):
+                raise Exception("No certificates provided for TLS connection")
+            try:
+                with open(root_certificate, "rb") as f:
+                    root_certificate_b = f.read()
+                with open(private_key, "rb") as f:
+                    private_key_b = f.read()
+                with open(certificate, "rb") as f:
+                    certificate_b = f.read()
+            except FileNotFoundError as exc:
+                raise Exception(f"Provided certificate file is not exist: {exc.filename}")
+
+            credentials = grpc.ssl_channel_credentials(
+                root_certificates=root_certificate_b,
+                private_key=private_key_b,
+                certificate_chain=certificate_b,
+            )
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
+        self.stub = director_pb2_grpc.DirectorStub(channel)
+
     def set_new_experiment(
         self, experiment_name, col_names, archive_path
     ) -> director_pb2.SetNewExperimentResponse:
@@ -196,15 +294,29 @@ class DirectorClient:
                 yield experiment_info
                 chunk = arch.read(max_buffer_size)
 
-    def get_envoys(self) -> director_pb2.GetEnvoysRequest:
+    def get_envoys(self) -> director_pb2.GetEnvoysResponse:
         """Display envoys info in a tabular format.
 
         Returns:
             envoys (director_pb2.GetEnvoysResponse): The envoy status response
                 from the gRPC server.
+
+        Raises:
+            DirectorServiceError: For any errors encountered while retrieving envoys info.
         """
-        envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
-        return envoys
+        try:
+            envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
+            return envoys
+
+        except Exception as error:
+            message = (
+                "Director may be offline. Please ensure that Director is online."
+                if isinstance(error, grpc.RpcError) and error.code() == grpc.StatusCode.UNAVAILABLE
+                else f"Unexpected error occurred: {str(error)}"
+            )
+            logger.error(message)
+
+            raise DirectorServiceError("Error occurred while retrieving envoys info") from None
 
     def get_flow_state(self) -> Tuple:
         """
@@ -219,39 +331,6 @@ class DirectorClient:
         response = self.stub.GetFlowState(director_pb2.GetFlowStateRequest())
 
         return response.completed, response.flspec_obj
-
-    def send_health_check(
-        self,
-        *,
-        envoy_name: str,
-        is_experiment_running: bool,
-    ) -> int:
-        """Send envoy health check.
-
-        Args:
-            envoy_name (str): The name of the envoy.
-            is_experiment_running (bool): Whether an experiment is currently
-                running.
-
-        Returns:
-            health_check_period (int): The period for health checks.
-        """
-        status = director_pb2.UpdateEnvoyStatusRequest(
-            name=envoy_name,
-            is_experiment_running=is_experiment_running,
-        )
-
-        logger.debug("Sending health check status: %s", status)
-        try:
-            response = self.stub.UpdateEnvoyStatus(status)
-        except grpc.RpcError as rpc_error:
-            logger.error(rpc_error)
-            if rpc_error.code() == grpc.StatusCode.NOT_FOUND:
-                raise EnvoyNotFoundError
-        else:
-            health_check_period = response.health_check_period.seconds
-
-            return health_check_period
 
     def stream_experiment_stdout(self, experiment_name) -> Iterator[Dict[str, Any]]:
         """Stream experiment stdout RPC.
