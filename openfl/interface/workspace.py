@@ -96,10 +96,11 @@ def get_templates():
         list: A list of default templates.
     """
     templates = []
-    for root, dirs, files in os.walk(WORKSPACE):
+    excluded_dirs = ["workspace", "experimental"]
+    for root, _, files in os.walk(WORKSPACE):
         if any(file.endswith(".workspace") for file in files):
             for dir in str(root).split(str(WORKSPACE) + "/"):
-                if dir and not any(dir.startswith(prefix) for prefix in ["__pycache__", "workspace", "experimental"]):
+                if dir and not any(dir.startswith(prefix) for prefix in excluded_dirs):
                     templates.append(dir)
     return templates
 
