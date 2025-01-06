@@ -93,7 +93,7 @@ setup(
         'flatten_json',
         'tensorboardX',
         'protobuf>=4.22,<6.0.0',
-        'grpcio>=1.56.2,<1.66.0',
+        'grpcio>=1.56.2,<1.70.0',
     ],
     python_requires='>=3.10, <3.13',
     project_urls={
