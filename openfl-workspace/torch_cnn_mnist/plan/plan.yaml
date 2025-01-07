@@ -34,16 +34,8 @@ data_loader:
     batch_size: 64
     collaborator_count: 2
   template: src.dataloader.PyTorchMNISTInMemory
-network:
-  settings:
-    agg_addr: localhost
-    agg_port: 59583
-    cert_folder: cert
-    client_reconnect_interval: 5
-    require_client_auth: true
-    hash_salt: auto
-    use_tls: true
-  template: openfl.federation.Network
+network :
+  defaults : plan/defaults/network.yaml
 task_runner:
   settings: {}
   template: src.taskrunner.TemplateTaskRunner
