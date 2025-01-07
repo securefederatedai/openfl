@@ -22,7 +22,7 @@ def main():
         if any(file.endswith(".workspace") for file in files):
             for dir in str(root).split(str('openfl-workspace') + "\\"):
                 if dir and not any(dir.startswith(prefix) for prefix in excluded_dirs):
-                    workspace_choice.append(dir.replace("openfl-workspace/", ""))
+                    workspace_choice.append(dir.replace("openfl-workspace/", "").replace("\\", "/"))
     parser.add_argument('--template', default='keras/cnn_mnist', choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one123dragons')
