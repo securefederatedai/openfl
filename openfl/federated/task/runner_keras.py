@@ -19,12 +19,13 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
+# Set the KERAS_BACKEND environment variable based on the available deep learning framework
 if util.find_spec("tensorflow") is not None:
-    os.environ["KERAS_BACKEND"] = "tensorflow"
+    os.environ["KERAS_BACKEND"] = "tensorflow"  # Use TensorFlow as the backend
 elif util.find_spec("torch") is not None:
-    os.environ["KERAS_BACKEND"] = "torch"
+    os.environ["KERAS_BACKEND"] = "torch"  # Use PyTorch as the backend
 elif util.find_spec("jax") is not None:
-    os.environ["KERAS_BACKEND"] = "jax"
+    os.environ["KERAS_BACKEND"] = "jax"  # Use JAX as the backend
 
 with catch_warnings():
     simplefilter(action="ignore")

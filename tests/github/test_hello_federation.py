@@ -17,7 +17,7 @@ def main():
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
-    excluded_dirs = ['workspace', 'default']
+    excluded_dirs = ['workspace', 'default', "experimental"]
     for root, _, files in os.walk('openfl-workspace'):
         if any(file.endswith(".workspace") for file in files):
             for dir in str(root).split(str('openfl-workspace') + "/"):
