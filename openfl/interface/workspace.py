@@ -99,9 +99,10 @@ def get_templates():
     excluded_dirs = ["workspace", "experimental"]
     for root, _, files in os.walk(WORKSPACE):
         if any(file.endswith(".workspace") for file in files):
-            for dir in str(root).split(str(WORKSPACE) + "/"):
-                if dir and not any(dir.startswith(prefix) for prefix in excluded_dirs):
-                    templates.append(dir)
+            dir_path = os.path.relpath(root, WORKSPACE)
+            dir_path = dir_path.replace(os.sep, "/")
+            if dir_path and not any(dir_path.startswith(prefix) for prefix in excluded_dirs):
+                templates.append(dir_path)
     return templates
 
 
