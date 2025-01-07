@@ -1,2 +1,6 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
 envoy_one:
   private_attributes: private_attributes.collaborator_private_attrs.collaborator_private_attributes
