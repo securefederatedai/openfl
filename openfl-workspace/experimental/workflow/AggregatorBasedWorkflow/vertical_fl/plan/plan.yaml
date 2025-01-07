@@ -6,8 +6,6 @@ aggregator :
   template : openfl.experimental.workflow.component.aggregator.Aggregator
   settings :
     rounds_to_train     : 1
-    log_metric_callback :
-      template : src.utils.write_metric
 
 
 collaborator :
