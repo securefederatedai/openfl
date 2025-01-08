@@ -4,7 +4,7 @@
 <br/>
 
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
-  - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
+  - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/installation.html).
 
 <br/>
  
@@ -22,7 +22,7 @@
    - Navigate to the tutorial:
     
    ```sh
-   cd openfl/openfl-tutorials/experimental/workflow/FederatedRuntime/101_MNIST/
+   cd openfl/openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/
    ```
 
 <br/>
@@ -57,7 +57,7 @@ cd Chandler
 
 ```sh
 cd workspace
-jupyter lab mnist_watermarking.ipynb
+jupyter lab MNIST_Watermarking.ipynb
 ```
 - A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
