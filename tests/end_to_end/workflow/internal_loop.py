@@ -13,6 +13,8 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 class TestFlowInternalLoop(FLSpec):
+    __test__ = False # to prevent pytest from trying to discover tests in the class
+
     def __init__(self, model=None, optimizer=None, rounds=None, **kwargs):
         super().__init__(**kwargs)
         self.training_rounds = rounds
