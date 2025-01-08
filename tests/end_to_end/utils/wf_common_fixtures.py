@@ -7,13 +7,6 @@ import numpy as np
 
 from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
-from tests.end_to_end.utils.wf_helper import (
-    init_collaborator_private_attr_index,
-    init_collaborator_private_attr_name,
-    init_collaborate_pvt_attr_np,
-    init_agg_pvt_attr_np
-)
-
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 workflow_local_fixture = collections.namedtuple(
@@ -37,6 +30,13 @@ def fx_local_federated_workflow(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    # Inline import
+    from tests.end_to_end.utils.wf_helper import (
+        init_collaborator_private_attr_index,
+        init_collaborator_private_attr_name,
+        init_collaborate_pvt_attr_np,
+        init_agg_pvt_attr_np
+    )
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
@@ -91,6 +91,13 @@ def fx_local_federated_workflow_prvt_attr(request):
         LocalRuntime: An instance of `LocalRuntime` configured with the aggregator,
                     collaborators, and backend.
     """
+    # Inline import
+    from tests.end_to_end.utils.wf_helper import (
+        init_collaborator_private_attr_index,
+        init_collaborator_private_attr_name,
+        init_collaborate_pvt_attr_np,
+        init_agg_pvt_attr_np
+    )
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None
     agg_callback_func = request.param[2] if hasattr(request, 'param') and request.param else None
