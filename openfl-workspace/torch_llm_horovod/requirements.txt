@@ -1,3 +1,4 @@
+setuptools==59.6.0
 accelerate
 datasets
 evaluate
