@@ -27,7 +27,7 @@ jobs:
         run: echo "REPORT_DATE=$(date +'%d-%b-%Y')" >> $GITHUB_ENV
 
       - name: Define JSON Report Path
-        run: echo "JSON_REPORT_PATH=${{ github.workspace }}/bandit_report.json" >> $GITHUB_ENV
+        run: echo "JSON_REPORT_PATH=${{ github.workspace }}/bandit_report_${{ env.REPORT_DATE }}.json" >> $GITHUB_ENV
 
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
