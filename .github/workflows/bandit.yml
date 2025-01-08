@@ -26,12 +26,13 @@ jobs:
       - name: Set Report Date
         run: echo "REPORT_DATE=$(date +'%d-%b-%Y')" >> $GITHUB_ENV
 
+      - name: Define JSON Report Path
+        run: echo "JSON_REPORT_PATH=${{ github.workspace }}/bandit_report.json" >> $GITHUB_ENV
+
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
         with:
           args: -r . -f json -o ${{ env.JSON_REPORT_PATH }}
-        env:
-          JSON_REPORT_PATH: ${{ github.workspace }}/${{ env.JSON_REPORT }}
 
       - name: Upload Bandit Report as Artifact
         if: always()
