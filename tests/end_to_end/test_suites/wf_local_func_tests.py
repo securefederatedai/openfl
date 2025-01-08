@@ -8,7 +8,7 @@ import shutil
 import random
 from metaflow import Step
 
-from tests.end_to_end.utils.common_fixtures import fx_local_federated_workflow, fx_local_federated_workflow_prvt_attr
+from tests.end_to_end.utils.wf_common_fixtures import fx_local_federated_workflow, fx_local_federated_workflow_prvt_attr
 from tests.end_to_end.workflow.exclude_flow import TestFlowExclude
 from tests.end_to_end.workflow.include_exclude_flow import TestFlowIncludeExclude
 from tests.end_to_end.workflow.include_flow import TestFlowInclude
