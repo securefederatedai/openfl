@@ -4,7 +4,7 @@
 <br/>
 
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
-  - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
+  - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/installation.html).
 
 <br/>
  
