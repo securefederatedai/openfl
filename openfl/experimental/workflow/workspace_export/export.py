@@ -88,7 +88,6 @@ class WorkspaceExport:
                 f"{export_filename}.py",
             )
         ).resolve()
-        print_tree(self.created_workspace_path, level=2)
 
         # Generated python script name without .py extension
         self.script_name = self.script_path.name.split(".")[0].strip()
@@ -301,6 +300,7 @@ class WorkspaceExport:
             output_workspace (str): Path for the generated workspace directory.
         """
         instance = cls(notebook_path, output_workspace)
+        print_tree(output_workspace, level=2)
         instance.generate_requirements()
         instance.generate_plan_yaml()
         instance.generate_data_yaml()
@@ -320,6 +320,7 @@ class WorkspaceExport:
         # Create a ZIP archive of the generated_workspace directory
         arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
 
+        print_tree(self.output_workspace_path, level=2)
         print(f"Archive created at {archive_path}.zip")
 
         return arch_path, self.flow_class_name
@@ -364,8 +365,8 @@ class WorkspaceExport:
         from the director workspace
 
         """
-        cols_file = self.created_workspace_path.joinpath("plan", "cols.yaml")
-        data_file = self.created_workspace_path.joinpath("plan", "data.yaml")
+        cols_file = self.output_workspace_path.joinpath("plan", "cols.yaml")
+        data_file = self.output_workspace_path.joinpath("plan", "data.yaml")
 
         if cols_file.exists():
             cols_file.unlink()
