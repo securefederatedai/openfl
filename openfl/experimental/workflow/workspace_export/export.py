@@ -361,8 +361,8 @@ class WorkspaceExport:
 
     def _clean_generated_workspace(self) -> None:
         """
-        Removes unnecessary files (cols.yaml and data.yaml)
-        from the director workspace
+        Remove cols.yaml and data.yaml from the generated workspace
+        as these are not needed in FederatedRuntime (Director based workflow)
 
         """
         cols_file = self.output_workspace_path.joinpath("plan", "cols.yaml")
