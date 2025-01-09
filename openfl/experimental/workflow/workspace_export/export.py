@@ -289,6 +289,8 @@ class WorkspaceExport:
         instance = cls(notebook_path, output_workspace)
         instance.generate_requirements()
         instance.generate_plan_yaml()
+        instance._clean_generated_workspace()
+        print_tree(output_workspace, level=2)
         return instance.generate_experiment_archive()
 
     @classmethod
@@ -300,10 +302,10 @@ class WorkspaceExport:
             output_workspace (str): Path for the generated workspace directory.
         """
         instance = cls(notebook_path, output_workspace)
-        print_tree(output_workspace, level=2)
         instance.generate_requirements()
         instance.generate_plan_yaml()
         instance.generate_data_yaml()
+        print_tree(output_workspace, level=2)
 
     def generate_experiment_archive(self) -> Tuple[str, str]:
         """
@@ -315,12 +317,10 @@ class WorkspaceExport:
         """
         parent_directory = self.output_workspace_path.parent
         archive_path = parent_directory / "experiment"
-        self._clean_generated_workspace()
 
         # Create a ZIP archive of the generated_workspace directory
         arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
 
-        print_tree(self.output_workspace_path, level=2)
         print(f"Archive created at {archive_path}.zip")
 
         return arch_path, self.flow_class_name
