@@ -1,5 +1,28 @@
 # Releases
 
+## 1.7
+[Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.7)
+
+### New Features
+- [**FederatedRuntime**](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans) for Workflow API: enables a seamless transition from a local simulation (via LocalRuntime) to a distributed Federated Learning deployment - all orchestrated from a familiar Jupyter notebook environment. Check out the [FederatedRuntime 101 Tutorial](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/FederatedRuntime/101_MNIST) to try it yourself. The initial version of the FederatedRuntime included in this release is an experimental feature that should be used only in an internal environment. We further recommend that users operate only on artificial or public data that is not considered intellectual property. The experimental tag and restrictions will be removed in future releases of OpenFL.
+
+- [**Federated XGBoost**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/xgb_higgs): Adding support for XGBoost training in OpenFL via TaskRunner API, illustrated with the Higgs dataset.
+
+- [**Callbacks**](https://openfl.readthedocs.io/en/latest/openfl.callbacks.html): An abstraction for running user-defined actions in TaskRunner API or Workflow API. Callbacks can be used to perform custom actions at different stages of the Federated Learning process.
+
+### Enhanced Developer Experience
+- **Streamlining OpenFL APIs**: With this release, the OpenFL Team will concentrate on the TaskRunner API and Workflow API. Consequently, the Python Native API and Interactive API have been deprecated and are scheduled for removal in future iterations.
+
+- **FL Workspace Dockerization**: Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). Follow the [updated instructions](https://github.com/securefederatedai/openfl/blob/develop/openfl-docker/README.md) to enhance the privacy and security of your FL experiments.
+
+- **Federated Evaluation via TaskRunner API**: OpenFL 1.7 further simplifies the creation of Federated Evaluation experiments via the TaskRunner API (see the example [FedEval workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch_cnn_mnist_fed_eval)).
+
+- **Keras 3 API**: Upgrading the base TaskRunner classes and example workspaces to Keras 3 for building state-of-the-art FL experiments with TensorFlow (more backends to be included in the upcoming OpenFL releases).
+
+- **Updated Tutorials**: This includes fixes to existing tutorial and example code, and migrating a selection of key OpenFL tutorials from deprecated APIs to Workflow API. Check out the updated [Tutorials](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow) folder.
+
+- **Updated Official Documentation**: The [OpenFL documentation website](https://openfl.readthedocs.io/en/latest/index.html) has been comprehensively reviewed and reorganized to improve navigation and provide clearer content.
+
 ## 1.6
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.6)
 
