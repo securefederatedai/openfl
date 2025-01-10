@@ -32,17 +32,17 @@ def envoy(context):
 @envoy.command(name="start")
 @option("-n", "--envoy_name", required=True, help="Current shard name")
 @option(
-    "--tls/--disable-tls",
-    default=True,
-    is_flag=True,
-    help="Use TLS or not (By default TLS is enabled)",
-)
-@option(
     "-c",
     "--envoy-config-path",
     default="envoy_config.yaml",
     help="The envoy config path",
     type=ClickPath(exists=True),
+)
+@option(
+    "--tls/--disable-tls",
+    default=True,
+    is_flag=True,
+    help="Use TLS or not (By default TLS is enabled)",
 )
 @option(
     "-rc",
