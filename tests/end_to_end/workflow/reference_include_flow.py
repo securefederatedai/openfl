@@ -29,6 +29,7 @@ class Net(nn.Module):
 
 class TestFlowReferenceWithInclude(FLSpec):
 
+    __test__ = False # to prevent pytest from trying to discover tests in the class
     step_one_collab_attrs = []
     step_two_collab_attrs = []
 
