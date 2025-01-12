@@ -32,8 +32,8 @@ jobs:
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
         with:
-          args: -r . -f json -o ${{ env.JSON_REPORT_PATH }}
-
+         targets: "."
+        
       - name: Upload Bandit Report as Artifact
         if: always()
         uses: actions/upload-artifact@v4
