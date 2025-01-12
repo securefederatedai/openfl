@@ -25,10 +25,12 @@ jobs:
       - name: Set Report Date
         run: echo "REPORT_DATE=$(date +'%d-%b-%Y')" >> $GITHUB_ENV
 
-      - name: Define SARIF Report Path
-        run: echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
+      - name: Define Report Paths
+        run: |
+          echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
+          echo "HTML_REPORT_PATH=${{ github.workspace }}/results.html" >> $GITHUB_ENV
 
-      - name: Perform Bandit Analysis
+      - name: Perform Bandit Analysis (SARIF)
         uses: PyCQA/bandit-action@v1
         with:
           configfile: 'DEFAULT'
@@ -42,6 +44,12 @@ jobs:
           ini: 'DEFAULT'
           targets: '.'
 
+      - name: Install SARIF Tools
+        run: pip install sarif-tools
+
+      - name: Convert SARIF to HTML
+        run: sarif-tools html ${{ env.SARIF_REPORT_PATH }} -o ${{ env.HTML_REPORT_PATH }}
+
       - name: Upload Bandit SARIF Report as Artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -49,7 +57,9 @@ jobs:
           name: "bandit-report-summary_${{ env.REPORT_DATE }}"
           path: ${{ env.SARIF_REPORT_PATH }}
 
-      - name: Upload SARIF file to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Bandit HTML Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: ${{ env.SARIF_REPORT_PATH }}
+          name: "bandit-html-report_${{ env.REPORT_DATE }}"
+          path: ${{ env.HTML_REPORT_PATH }}
