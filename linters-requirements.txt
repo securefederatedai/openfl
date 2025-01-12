@@ -1,2 +1,2 @@
 pre-commit
-ruff
+ruff==0.8.1
