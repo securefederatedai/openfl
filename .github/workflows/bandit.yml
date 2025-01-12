@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 15
     
     steps:
+   steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -32,8 +33,18 @@ jobs:
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
         with:
-         targets: "."
-        
+          configfile: 'DEFAULT'
+          profile: 'DEFAULT'
+          tests: 'DEFAULT'
+          skips: 'DEFAULT'
+          severity: 'DEFAULT'
+          confidence: 'DEFAULT'
+          exclude: '.svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg'
+          baseline: 'DEFAULT'
+          ini: 'DEFAULT'
+          targets: '.'
+          args: '-r . -f json -o ${{ env.JSON_REPORT_PATH }}'
+
       - name: Upload Bandit Report as Artifact
         if: always()
         uses: actions/upload-artifact@v4
