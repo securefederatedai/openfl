@@ -22,8 +22,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: Set Report Date
-        run: echo "REPORT_DATE=$(date +'%d-%b-%Y')" >> $GITHUB_ENV
+      - name: Set Filename Suffix Report Date and Time
+        run: |
+          echo "REPORT_DATE=$(date +'%d-%b-%Y %H:%M:%S')" >> $GITHUB_ENV
     
       - name: Define SARIF Report Path
         run: echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
