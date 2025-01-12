@@ -18,9 +18,7 @@ jobs:
     name: Bandit Scan
     runs-on: ubuntu-22.04
     timeout-minutes: 15
-    
     steps:
-   steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
