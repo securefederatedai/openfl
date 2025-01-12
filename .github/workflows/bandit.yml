@@ -21,15 +21,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+        
       - name: Set Report Date
         run: echo "REPORT_DATE=$(date +'%d-%b-%Y')" >> $GITHUB_ENV
-
-      - name: Define Report Paths
-        run: |
-          echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
-          echo "HTML_REPORT_PATH=${{ github.workspace }}/results.html" >> $GITHUB_ENV
-      - name: Perform Bandit Analysis (SARIF)
+    
+      - name: Define SARIF Report Path
+        run: echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
+    
+      - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
         with:
           configfile: 'DEFAULT'
@@ -42,13 +41,7 @@ jobs:
           baseline: 'DEFAULT'
           ini: 'DEFAULT'
           targets: '.'
-
-      - name: Install SARIF Tools
-        run: pip install sarif-tools
-
-      - name: Convert SARIF to HTML
-        run: sarif-tools html ${{ env.SARIF_REPORT_PATH }} -o ${{ env.HTML_REPORT_PATH }}
-
+    
       - name: Upload Bandit SARIF Report as Artifact
         if: always()
         uses: actions/upload-artifact@v4
