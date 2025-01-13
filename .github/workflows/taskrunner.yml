@@ -30,9 +30,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
-    - name: Run Federation
+    - name: Task Runner API
       run: |
-          python -m tests.github.test_hello_federation --template torch_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+          python -m tests.github.test_hello_federation --template torch_cnn_mnist --fed_workspace aggregator --col1 collaborator1 --col2 collaborator2  --rounds-to-train 3 --save-model output_model
     # - name: Create save folder
     #   run: |
     #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
