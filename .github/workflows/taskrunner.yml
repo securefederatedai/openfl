@@ -30,36 +30,39 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
-    - name: Create save folder
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          mkdir save
-    - name: Workspace initialize
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
-    - name: Create certificate authority for workspace
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx workspace certify
-    - name: Setup Aggregator
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx aggregator generate-cert-request --fqdn localhost
-          fx aggregator certify --fqdn localhost --silent
-    - name: Setup Collaborator 1 
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx collaborator create -n collaborator1 -d 1
-          fx collaborator generate-cert-request -n collaborator1
-          fx collaborator certify -n collaborator1 --silent
-    - name: Setup Collaborator 2 
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx collaborator create -n collaborator2 -d 2
-          fx collaborator generate-cert-request -n collaborator2
-          fx collaborator certify -n collaborator2 --silent
-    - name: Run Federation
-      run: |
-          cd ${PWD}/openfl-workspace/torch_cnn_mnist
-          fx aggregator start & fx collaborator start -n collaborator1 & fx collaborator start -n collaborator2
+        - name: Run Federation
+        run: |
+          python -m tests.github.test_hello_federation --template torch_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+    # - name: Create save folder
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       mkdir save
+    # - name: Workspace initialize
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
+    # - name: Create certificate authority for workspace
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx workspace certify
+    # - name: Setup Aggregator
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx aggregator generate-cert-request --fqdn localhost
+    #       fx aggregator certify --fqdn localhost --silent
+    # - name: Setup Collaborator 1 
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx collaborator create -n collaborator1 -d 1
+    #       fx collaborator generate-cert-request -n collaborator1
+    #       fx collaborator certify -n collaborator1 --silent
+    # - name: Setup Collaborator 2 
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx collaborator create -n collaborator2 -d 2
+    #       fx collaborator generate-cert-request -n collaborator2
+    #       fx collaborator certify -n collaborator2 --silent
+    # - name: Run Federation
+    #   run: |
+    #       cd ${PWD}/openfl-workspace/torch_cnn_mnist
+    #       fx aggregator start & fx collaborator start -n collaborator1 & fx collaborator start -n collaborator2
