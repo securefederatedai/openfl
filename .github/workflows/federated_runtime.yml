@@ -1,0 +1,131 @@
+#---------------------------------------------------------------------------
+# Workflow to run 301_MNIST_Watermarking notebook
+# Authors - Noopur, Payal Chaurasiya
+#---------------------------------------------------------------------------
+name: Federated Runtime 301 MNIST Watermarking
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run_notebook:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 2 # needed for detecting changes
+        submodules: "true"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Install Jupyter Lab Package
+      run: pip install jupyterlab
+
+    - name: Install dependencies # Without this step, fx command will not work
+      id: install_dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+
+    - name: Create results folder for logs
+      run: | # Present working director - /home/runner/work/openfl/openfl
+        mkdir -p /home/runner/results
+        cd /home/runner/results
+        touch director.log bangalore.log chandler.log && chmod 755 director.log bangalore.log chandler.log
+
+    - name: Activate and run the director in background
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
+        fx experimental activate
+        cd director
+        nohup ./start_director.sh &> ~/results/director.log &
+        sleep 30 # DO NOT remove - envoys will simply exit if director is not ready
+
+    - name: Run the envoy Bangalore in background
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Bangalore
+        nohup ./start_envoy.sh Bangalore Bangalore_config.yaml &> ~/results/bangalore.log &
+
+    - name: Run the envoy Chandler in background
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Chandler
+        nohup ./start_envoy.sh Chandler Chandler_config.yaml &> ~/results/chandler.log &
+
+    - name: Check if envoys are connected to the director
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
+        timeout=60
+        connected=false
+        while [ $timeout -gt 0 ]; do
+          if grep "Bangalore is connected to the director" ~/results/bangalore.log && grep "Chandler is connected to the director" ~/results/chandler.log; then
+            connected=true
+            break
+          else
+            echo "Waiting for both envoys to connect to the director"
+          fi
+          sleep 5
+          timeout=$((timeout-5))
+        done
+        if [ $connected = false ]; then
+          echo "Envoys are not connected to the director in 60 seconds"
+          echo "| Failure Reason |" >> $GITHUB_STEP_SUMMARY
+          echo "| -------------- |" >> $GITHUB_STEP_SUMMARY
+          echo "Envoys are not connected to the director in 60 seconds" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+    - name: Run Notebook
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace
+        jupyter nbconvert --execute --to notebook ./MNIST_Watermarking.ipynb
+        echo "Notebook run completed"
+
+    - name: Check if the experiment was successful using logs
+      run: |
+        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
+
+        if ! grep "End of Federation reached." ~/results/bangalore.log; then
+          echo "Federation didn't reach end for Bangalore envoy"
+        fi
+        if ! grep "End of Federation reached." ~/results/chandler.log; then
+          echo "Federation didn't reach end for Chandler envoy"
+        fi
+        if ! grep "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" ~/results/director.log; then
+          echo "Experiment didn't finish successfully"
+          exit 1
+        fi
+
+        echo "Notebook run was successful"
+        echo "| Aggregated model validation score |" >> $GITHUB_STEP_SUMMARY
+        echo "| -------------- |" >> $GITHUB_STEP_SUMMARY
+        echo $(grep -oP 'Aggregated model validation score = \K[\d.]+' ~/results/director.log | tail -1) >> $GITHUB_STEP_SUMMARY
+
+    - name: Tar files
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      run: |
+        tar -cvf notebook.tar \
+          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.nbconvert.ipynb \
+          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb \
+          ~/results \
+          --ignore-failed-read
+        echo "TAR file created"
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      with:
+        name: federated_runtime_301_watermarking_${{ github.run_id }}
+        path: notebook.tar
