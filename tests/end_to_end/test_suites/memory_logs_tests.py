@@ -5,7 +5,7 @@ import pytest
 import logging
 import os
 
-from tests.end_to_end.utils.common_fixtures import fx_federation_tr, fx_federation_tr_dws
+from tests.end_to_end.utils.tr_common_fixtures import fx_federation_tr, fx_federation_tr_dws
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils import federation_helper as fed_helper, ssh_helper as ssh
 from tests.end_to_end.utils.generate_report import generate_memory_report, convert_to_json
