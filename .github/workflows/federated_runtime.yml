@@ -36,77 +36,26 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
+        pip install -r test-requirements.txt
 
-    - name: Install Jupyter Lab Package
-      run: pip install jupyterlab
-
-    - name: Create results folder for logs
-      run: | # Present working director - /home/runner/work/openfl/openfl
-        mkdir -p /home/runner/results
-        cd /home/runner/results
-        touch director.log bangalore.log chandler.log && chmod 755 director.log bangalore.log chandler.log
-
-    - name: Activate and run the director in background
+    - name: Run Federated Runtime 301 MNIST Watermarking via pytest
+      id: run_tests
       run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
-        fx experimental activate
-        cd director
-        nohup ./start_director.sh &> ~/results/director.log &
-        echo "Director started with 30s sleep time. This will be removed once the retry logic at envoy side is implemented."
-        sleep 30 # DO NOT remove - envoys will simply exit if director is not ready
+        python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_301_watermarking
+        echo "Federated Runtime 301 MNIST Watermarking test run completed"
 
-    - name: Run the envoy Bangalore in background
+    - name: Print test summary
+      id: print_test_summary
+      if: ${{ always() }}
       run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Bangalore
-        nohup ./start_envoy.sh Bangalore Bangalore_config.yaml &> ~/results/bangalore.log &
-        echo "Bangalore envoy started"
-
-    - name: Run the envoy Chandler in background
-      run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Chandler
-        nohup ./start_envoy.sh Chandler Chandler_config.yaml &> ~/results/chandler.log &
-        echo "Chandler envoy started"
-
-    - name: Check if envoys are connected to the director
-      run: |
-        python_path="tests/end_to_end/utils/github_helper.py"
-        python3 $python_path --func_name "verify_envoys_director_conn_federated_runtime" \
-          --notebook_path "openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb" \
-          --expected_envoys "['Bangalore', 'Chandler']"
-
-    - name: Run Notebook
-      run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace
-        jupyter nbconvert --execute --to markdown ./MNIST_Watermarking.ipynb --no-input --stdout
-        echo "Notebook run completed"
-
-    - name: Check if the experiment was successful using logs
-      run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
-
-        if ! grep "End of Federation reached." ~/results/bangalore.log; then
-          echo "Federation didn't reach end for Bangalore envoy"
-        fi
-        if ! grep "End of Federation reached." ~/results/chandler.log; then
-          echo "Federation didn't reach end for Chandler envoy"
-        fi
-        if ! grep "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" ~/results/director.log; then
-          echo "Experiment didn't finish successfully"
-          exit 1
-        fi
-
-        echo "Notebook run was successful"
-        echo "| Aggregated model validation score |" >> $GITHUB_STEP_SUMMARY
-        echo "| -------------- |" >> $GITHUB_STEP_SUMMARY
-        echo $(grep -oP 'Aggregated model validation score = \K[\d.]+' ~/results/director.log | tail -1) >> $GITHUB_STEP_SUMMARY
+        export PYTHONPATH="$PYTHONPATH:."
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score"
+        echo "Test summary printed"
 
     - name: Tar files
       if: ${{ always() }}   # collect artifacts regardless of failures
       run: |
-        tar -cvf notebook.tar \
-          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace \
-          ~/results \
-          --ignore-failed-read
+        tar -cvf notebook_301.tar --exclude="__pycache__" $HOME/results --ignore-failed-read
         echo "TAR file created"
 
     - name: Upload Artifacts
@@ -114,4 +63,4 @@ jobs:
       if: ${{ always() }}   # collect artifacts regardless of failures
       with:
         name: federated_runtime_301_watermarking_${{ github.run_id }}
-        path: notebook.tar
+        path: notebook_301.tar

@@ -142,14 +142,3 @@ def fx_local_federated_workflow_prvt_attr(request):
         collaborators=collaborators_list,
         runtime=local_runtime,
     )
-
-
-@pytest.fixture(scope="function")
-def fx_federated_runtime(request):
-    request.config.test_env = "workflow_federation_runtime"
-
-    envoys = ["Portland, Seattle, Chandler, Bangalore"]
-    return workflow_federated_runtime_fixture(
-        director="director",
-        envoys=envoys
-    )
