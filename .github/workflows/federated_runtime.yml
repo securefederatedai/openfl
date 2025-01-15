@@ -52,17 +52,20 @@ jobs:
         fx experimental activate
         cd director
         nohup ./start_director.sh &> ~/results/director.log &
+        echo "Director started"
         sleep 30 # DO NOT remove - envoys will simply exit if director is not ready
 
     - name: Run the envoy Bangalore in background
       run: |
         cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Bangalore
         nohup ./start_envoy.sh Bangalore Bangalore_config.yaml &> ~/results/bangalore.log &
+        echo "Bangalore envoy started"
 
     - name: Run the envoy Chandler in background
       run: |
         cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/Chandler
         nohup ./start_envoy.sh Chandler Chandler_config.yaml &> ~/results/chandler.log &
+        echo "Chandler envoy started"
 
     - name: Check if envoys are connected to the director
       run: |
@@ -74,7 +77,7 @@ jobs:
     - name: Run Notebook (expect output in MNIST_Watermarking.convert.ipynb file in the artifacts)
       run: |
         cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace
-        jupyter nbconvert --execute --to notebook ./MNIST_Watermarking.ipynb
+        jupyter nbconvert --execute --to notebook ./MNIST_Watermarking.ipynb --stdout
         echo "Notebook run completed"
 
     - name: Check if the experiment was successful using logs
