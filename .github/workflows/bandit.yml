@@ -32,7 +32,7 @@ jobs:
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
         with:
-          configfile: 'pre_commit.toml'
+          configfile: 'DEFAULT'
           profile: 'DEFAULT'
           tests: 'DEFAULT'
           skips: 'DEFAULT'
