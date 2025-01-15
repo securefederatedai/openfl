@@ -74,7 +74,7 @@ jobs:
         if: ${{ always() }}
         run: |
           export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
+          python tests/end_to_end/utils/summary_helper.py --func_name "print_local_runtime_score"
           echo "Test summary printed"
 
       - name: Create Tar (exclude cert and data folders)

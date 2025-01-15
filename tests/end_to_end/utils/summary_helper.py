@@ -229,7 +229,7 @@ if __name__ == "__main__":
     # Fetch input arguments
     args = fetch_args()
     func_name = args.func_name
-    if func_name == "print_task_runner_score":
+    if func_name in ["print_task_runner_score", "print_local_runtime_score"]:
         print_task_runner_score()
     elif func_name == "print_federated_runtime_score":
         print_federated_runtime_score()
