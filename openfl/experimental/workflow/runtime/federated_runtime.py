@@ -194,7 +194,10 @@ class FederatedRuntime(Runtime):
         return status, flow_object
 
     def get_envoys(self) -> None:
-        """Prints the status of Envoys in a formatted way."""
+        """
+        Prints the status of Envoys in a formatted way.
+        Also returns the list of online envoys.
+        """
         # Fetch envoy data
         envoys = self._dir_client.get_envoys()
         DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -204,6 +207,7 @@ class FederatedRuntime(Runtime):
         headers = ["Name", "Online", "Last Updated", "Experiment Running", "Experiment Name"]
         # Prepare the table rows
         rows = []
+        online_envoys = []
         for envoy in envoys.envoy_infos:
             rows.append(
                 [
@@ -214,11 +218,15 @@ class FederatedRuntime(Runtime):
                     envoy.experiment_name if envoy.experiment_name else "None",
                 ]
             )
+            if envoy.is_online:
+                online_envoys.append(envoy.envoy_name)
+
         # Use tabulate to format the table
         result = tabulate(rows, headers=headers, tablefmt="grid")
         # Display the current timestamp
         print(f"Status of Envoys connected to Federation at: {now}\n")
         print(result)
+        return online_envoys
 
     def stream_experiment_stdout(self, experiment_name) -> None:
         """Stream experiment stdout.

@@ -31,14 +31,14 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install Jupyter Lab Package
-      run: pip install jupyterlab
-
     - name: Install dependencies # Without this step, fx command will not work
       id: install_dependencies
       run: |
         python -m pip install --upgrade pip
         pip install .
+
+    - name: Install Jupyter Lab Package
+      run: pip install jupyterlab
 
     - name: Create results folder for logs
       run: | # Present working director - /home/runner/work/openfl/openfl
@@ -66,26 +66,10 @@ jobs:
 
     - name: Check if envoys are connected to the director
       run: |
-        cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking
-        timeout=60
-        connected=false
-        while [ $timeout -gt 0 ]; do
-          if grep "Bangalore is connected to the director" ~/results/bangalore.log && grep "Chandler is connected to the director" ~/results/chandler.log; then
-            connected=true
-            break
-          else
-            echo "Waiting for both envoys to connect to the director"
-          fi
-          sleep 5
-          timeout=$((timeout-5))
-        done
-        if [ $connected = false ]; then
-          echo "Envoys are not connected to the director in 60 seconds"
-          echo "| Failure Reason |" >> $GITHUB_STEP_SUMMARY
-          echo "| -------------- |" >> $GITHUB_STEP_SUMMARY
-          echo "Envoys are not connected to the director in 60 seconds" >> $GITHUB_STEP_SUMMARY
-          exit 1
-        fi
+        python_path="tests/end_to_end/utils/github_helper.py"
+        python3 $python_path --func_name "verify_envoys_director_conn_federated_runtime" \
+          --notebook_path "openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb" \
+          --expected_envoys "['Bangalore', 'Chandler']"
 
     - name: Run Notebook
       run: |
