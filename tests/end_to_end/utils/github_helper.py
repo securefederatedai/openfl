@@ -3,6 +3,7 @@
 import argparse
 import ast
 import logging
+import time
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +47,9 @@ def verify_envoys_director_conn_federated_runtime(notebook_path, expected_envoys
     """
     from openfl.experimental.workflow.runtime import FederatedRuntime
 
+    # Number of retries and delay between retries in seconds
+    MAX_RETRIES = RETRY_DELAY = 5
+
     log.debug(f"Notebook path: {notebook_path}")
     expected_envoys = ast.literal_eval(expected_envoys)
     log.debug(f"Expected envoys: {expected_envoys}")
@@ -60,12 +64,18 @@ def verify_envoys_director_conn_federated_runtime(notebook_path, expected_envoys
         director=director_info, 
         notebook_path=notebook_path
     )
-    actual_envoys = federated_runtime.get_envoys()
-    if all(sorted(expected_envoys) == sorted(actual_envoys) for expected_envoys, actual_envoys in [(expected_envoys, actual_envoys)]):
-        log.info("All the envoys are connected to the director")
-        return True
-    else:
-        raise Exception("Not all envoys are connected to the director")
+    # Retry logic
+    for attempt in range(MAX_RETRIES):
+        actual_envoys = federated_runtime.get_envoys()
+        if all(sorted(expected_envoys) == sorted(actual_envoys) for expected_envoys, actual_envoys in [(expected_envoys, actual_envoys)]):
+            log.info("All the envoys are connected to the director")
+            return True
+        else:
+            log.warning(f"Attempt {attempt + 1}/{MAX_RETRIES}: Not all envoys are connected. Retrying in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+
+    # If the loop completes without returning, raise an exception
+    raise Exception("Not all envoys are connected to the director after multiple attempts")
 
 
 if __name__ == "__main__":
