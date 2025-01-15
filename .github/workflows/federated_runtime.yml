@@ -71,7 +71,7 @@ jobs:
           --notebook_path "openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb" \
           --expected_envoys "['Bangalore', 'Chandler']"
 
-    - name: Run Notebook
+    - name: Run Notebook (expect output in MNIST_Watermarking.convert.ipynb file in the artifacts)
       run: |
         cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace
         jupyter nbconvert --execute --to notebook ./MNIST_Watermarking.ipynb
