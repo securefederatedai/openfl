@@ -25,6 +25,6 @@ jobs:
     - name: Install linters
       run: |
         python -m pip install --upgrade pip
-        pip install -r linters-requirements.txt 
+        pip install -r linters-requirements.txt
     - name: Lint with OpenFL-specific rules
       run: bash scripts/lint.sh

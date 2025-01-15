@@ -88,7 +88,6 @@ class WorkspaceExport:
                 f"{export_filename}.py",
             )
         ).resolve()
-        print_tree(self.created_workspace_path, level=2)
 
         # Generated python script name without .py extension
         self.script_name = self.script_path.name.split(".")[0].strip()
@@ -290,6 +289,8 @@ class WorkspaceExport:
         instance = cls(notebook_path, output_workspace)
         instance.generate_requirements()
         instance.generate_plan_yaml()
+        instance._clean_generated_workspace()
+        print_tree(output_workspace, level=2)
         return instance.generate_experiment_archive()
 
     @classmethod
@@ -304,6 +305,7 @@ class WorkspaceExport:
         instance.generate_requirements()
         instance.generate_plan_yaml()
         instance.generate_data_yaml()
+        print_tree(output_workspace, level=2)
 
     def generate_experiment_archive(self) -> Tuple[str, str]:
         """
@@ -356,6 +358,20 @@ class WorkspaceExport:
             for i, line in enumerate(data):
                 if i not in line_nos:
                     f.write(line)
+
+    def _clean_generated_workspace(self) -> None:
+        """
+        Remove cols.yaml and data.yaml from the generated workspace
+        as these are not needed in FederatedRuntime (Director based workflow)
+
+        """
+        cols_file = self.output_workspace_path.joinpath("plan", "cols.yaml")
+        data_file = self.output_workspace_path.joinpath("plan", "data.yaml")
+
+        if cols_file.exists():
+            cols_file.unlink()
+        if data_file.exists():
+            data_file.unlink()
 
     def generate_plan_yaml(self) -> None:
         """
