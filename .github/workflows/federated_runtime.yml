@@ -74,10 +74,10 @@ jobs:
           --notebook_path "openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb" \
           --expected_envoys "['Bangalore', 'Chandler']"
 
-    - name: Run Notebook (expect output in MNIST_Watermarking.convert.ipynb file in the artifacts)
+    - name: Run Notebook
       run: |
         cd openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace
-        jupyter nbconvert --execute --to notebook ./MNIST_Watermarking.ipynb --stdout
+        jupyter nbconvert --execute --to markdown ./MNIST_Watermarking.ipynb --no-input --stdout
         echo "Notebook run completed"
 
     - name: Check if the experiment was successful using logs
@@ -104,8 +104,7 @@ jobs:
       if: ${{ always() }}   # collect artifacts regardless of failures
       run: |
         tar -cvf notebook.tar \
-          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.nbconvert.ipynb \
-          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace/MNIST_Watermarking.ipynb \
+          ./openfl-tutorials/experimental/workflow/FederatedRuntime/301_MNIST_Watermarking/workspace \
           ~/results \
           --ignore-failed-read
         echo "TAR file created"
