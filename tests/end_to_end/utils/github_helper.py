@@ -64,7 +64,7 @@ def verify_envoys_director_conn_federated_runtime(notebook_path, expected_envoys
 
     federated_runtime = FederatedRuntime(
         collaborators=expected_envoys,
-        director=director_info, 
+        director=director_info,
         notebook_path=notebook_path
     )
     # Retry logic
