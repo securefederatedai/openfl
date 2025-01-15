@@ -776,7 +776,7 @@ def start_director(workspace_path, dir_res_file):
             run_in_background=True,
             bg_file=dir_res_file,
         )
-        log.info(f"Director start: Return code: {return_code}, Output: {output}, Error: {error}")
+        log.debug(f"Director start: Return code: {return_code}, Output: {output}, Error: {error}")
         log.info(
             "Waiting for 30s for the director to start. With no retry mechanism in place, "
             "envoys will fail immediately if the director is not ready."
@@ -800,13 +800,13 @@ def start_envoy(envoy_name, workspace_path, res_file):
     try:
         error_msg = f"Failed to start {envoy_name} envoy"
         return_code, output, error = run_command(
-            f"./start_envoy.sh {envoy_name} {envoy_name}_config.yaml", 
+            f"./start_envoy.sh {envoy_name} {envoy_name}_config.yaml",
             error_msg=error_msg,
             workspace_path=os.path.join(workspace_path, envoy_name),
             run_in_background=True,
             bg_file=res_file,
         )
-        log.info(f"{envoy_name} start: Return code: {return_code}, Output: {output}, Error: {error}")
+        log.debug(f"{envoy_name} start: Return code: {return_code}, Output: {output}, Error: {error}")
     except ex.EnvoyStartException as e:
         raise e
     return True
@@ -820,7 +820,7 @@ def create_federated_runtime_participant_res_files(results_dir, envoys, model_na
         envoys (list): List of envoys
         model_name (str): Model name
     Returns:
-        tuple: Result path and participant result files
+        tuple: Result path and participant result files (including director)
     """
     participant_res_files = {}
     result_path = os.path.join(
@@ -828,18 +828,12 @@ def create_federated_runtime_participant_res_files(results_dir, envoys, model_na
     )
     os.makedirs(result_path, exist_ok=True)
 
-    dir_res_file = os.path.join(result_path, "director.log")
-    participant_res_files["director"] = dir_res_file
-
-    for envoy in envoys:
-        envoy_res_file = os.path.join(result_path, f"{envoy.lower()}.log")
-        participant_res_files[envoy.lower()] = envoy_res_file
-        
-    for _, res_file in participant_res_files.items():
+    for participant in envoys + ["director"]:
+        res_file = os.path.join(result_path, f"{participant.lower()}.log")
+        participant_res_files[participant.lower()] = res_file
         # Create the file
         open(res_file, 'w').close()
-        # Set the file permissions to 755
-        os.chmod(dir_res_file, 0o755)
+
 
     return result_path, participant_res_files
 
@@ -898,11 +892,12 @@ def run_notebook(notebook_path, output_notebook_path):
         bool: True if successful, else False
     """
     try:
-        log.info(f"Input notebook path: {notebook_path}, output notebook path: {output_notebook_path}")
+        log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
         output = pm.execute_notebook(
             input_path=notebook_path,
             output_path=output_notebook_path,
             request_save_on_cell_execute=True,
+            autosave_cell_every=5, # autosave every 5 seconds
             log_output=True,
         )
     except pm.exceptions.PapermillExecutionError as e:

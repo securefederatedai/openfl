@@ -209,7 +209,7 @@ def print_federated_runtime_score():
         print("| ------------- |", file=fh)
         print(f"| {aggregated_model_score} |", file=fh)
 
-    
+
 def fetch_args():
     """
     Function to fetch the commandline arguments.
