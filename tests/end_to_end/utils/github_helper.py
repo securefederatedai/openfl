@@ -46,6 +46,9 @@ def verify_envoys_director_conn_federated_runtime(notebook_path, expected_envoys
         director_port (int): Director port number (default is 50050)
     """
     from openfl.experimental.workflow.runtime import FederatedRuntime
+    # Based on the pattern, the envoys take time to connect to the director
+    # Hence, adding a sleep of 10 seconds anyways.
+    time.sleep(10)
 
     # Number of retries and delay between retries in seconds
     MAX_RETRIES = RETRY_DELAY = 5
