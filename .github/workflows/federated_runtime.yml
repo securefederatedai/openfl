@@ -52,7 +52,7 @@ jobs:
         fx experimental activate
         cd director
         nohup ./start_director.sh &> ~/results/director.log &
-        echo "Director started"
+        echo "Director started with 30s sleep time. This will be removed once the retry logic at envoy side is implemented."
         sleep 30 # DO NOT remove - envoys will simply exit if director is not ready
 
     - name: Run the envoy Bangalore in background
