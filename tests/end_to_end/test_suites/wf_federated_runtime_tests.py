@@ -90,3 +90,5 @@ def test_federated_runtime_301_watermarking(request):
     assert fh.verify_federated_runtime_experiment_completion(
         participant_res_files
     ), "Experiment failed"
+
+    log.info("Experiment completed successfully")

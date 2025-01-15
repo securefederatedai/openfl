@@ -929,10 +929,10 @@ def verify_federated_runtime_experiment_completion(participant_res_files):
             name == "director"
             and [1 for content in last_7_lines if "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" in content]
         ):
-            log.info(f"Process completed for {name}")
+            log.debug(f"Process completed for {name}")
             continue
         elif name != "director" and [1 for content in last_7_lines if "End of Federation reached." in content]:
-            log.info(f"Process completed for {name}")
+            log.debug(f"Process completed for {name}")
             continue
         else:
             log.error(f"Process failed for {name}")
