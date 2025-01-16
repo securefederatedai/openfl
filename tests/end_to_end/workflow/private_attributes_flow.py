@@ -16,6 +16,7 @@ class TestFlowPrivateAttributes(FLSpec):
     Testflow to validate Aggregator private attributes are not accessible to collaborators
     and vice versa
     """
+    __test__ = False # to prevent pytest from trying to discover tests in the class
 
     @aggregator
     def start(self):
@@ -97,6 +98,7 @@ class TestFlowPrivateAttributes(FLSpec):
         """
         log.info("Testing FederatedFlow - Ending Test for accessibility of private attributes")
         log.info("...Test case passed...")
+
 
 def validate_collab_private_attr(self, private_attr, step_name):
     """

@@ -14,6 +14,7 @@ class TestFlowSubsetCollaborators(FLSpec):
     """
     Testflow to validate working of Subset Collaborators in Federated Flow.
     """
+    __test__ = False # to prevent pytest from trying to discover tests in the class
 
     def __init__(self, random_ints=[], **kwargs) -> None:
         """

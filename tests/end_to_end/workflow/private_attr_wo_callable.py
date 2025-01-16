@@ -14,6 +14,7 @@ class TestFlowPrivateAttributesWoCallable(FLSpec):
     Testflow to validate Aggregator private attributes are not accessible to collaborators
     and vice versa
     """
+    __test__ = False # to prevent pytest from trying to discover tests in the class
 
     @aggregator
     def start(self):
