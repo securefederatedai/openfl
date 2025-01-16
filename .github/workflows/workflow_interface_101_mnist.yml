@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  run_notebook:
+  wf_local_101_mnist:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     timeout-minutes: 30
@@ -36,7 +36,8 @@ jobs:
 
     - name: Run Notebook
       run: |
-        papermill ./openfl-tutorials/experimental/workflow/101_MNIST.ipynb ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
+        cd openfl-tutorials/experimental/workflow
+        papermill 101_MNIST.ipynb 101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
         echo "Notebook run completed"
 
     - name: Tar files
