@@ -29,9 +29,9 @@ def check_precision_loss(logger, converted_data, original_data):
     reconstructed_json = reconstructed_bytes.decode("utf-8")
     reconstructed_data = json.loads(reconstructed_json)
 
-    assert type(original_data) is type(
-        reconstructed_data
-    ), "Reconstructed datatype does not match original."
+    assert type(original_data) is type(reconstructed_data), (
+        "Reconstructed datatype does not match original."
+    )
 
     # Compare the original and reconstructed data
     if original_data != reconstructed_data:

@@ -855,9 +855,9 @@ class Aggregator:
             tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
-        assert (
-            "compressed" in tags or "lossy_compressed" in tags
-        ), f"Named tensor {tensor_key} is not compressed"
+        assert "compressed" in tags or "lossy_compressed" in tags, (
+            f"Named tensor {tensor_key} is not compressed"
+        )
         if "compressed" in tags:
             dec_tk, decompressed_nparray = self.tensor_codec.decompress(
                 tensor_key,
@@ -1039,9 +1039,9 @@ class Aggregator:
         metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (
-                collaborators_for_task[0] in tags
-            ), f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            assert collaborators_for_task[0] in tags, (
+                f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            )
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -1073,8 +1073,7 @@ class Aggregator:
                     # Compare the accuracy of the model, potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         logger.info(
-                            f"Round {round_number}: saved the best "
-                            f"model with score {agg_results:f}"
+                            f"Round {round_number}: saved the best model with score {agg_results:f}"
                         )
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
