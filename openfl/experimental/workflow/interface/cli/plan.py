@@ -85,8 +85,7 @@ def initialize(context, plan_config, cols_config, data_config, aggregator_addres
         plan_origin["network"]["settings"]["agg_addr"] = aggregator_address or getfqdn_env()
 
         logger.warn(
-            f"Patching Aggregator Addr in Plan"
-            f" 🠆 {plan_origin['network']['settings']['agg_addr']}"
+            f"Patching Aggregator Addr in Plan 🠆 {plan_origin['network']['settings']['agg_addr']}"
         )
 
         Plan.dump(plan_config, plan_origin)

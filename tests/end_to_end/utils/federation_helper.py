@@ -7,6 +7,7 @@ import logging
 import os
 import json
 import re
+import papermill as pm
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
@@ -16,6 +17,7 @@ import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 
 log = logging.getLogger(__name__)
+home_dir = Path().home()
 
 
 def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
@@ -542,6 +544,7 @@ def run_command(
     bg_file=None,
     print_output=False,
     with_docker=False,
+    return_error=False,
 ):
     """
     Run the command
@@ -553,6 +556,7 @@ def run_command(
         bg_file (str): Background file (with path)
         print_output (bool): Print the output
         with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
+        return_error (bool): Return error message
     Returns:
         tuple: Return code, output and error
     """
@@ -591,7 +595,7 @@ def run_command(
         )
     else:
         return_code, output, error = ssh.run_command(command)
-        if return_code != 0:
+        if return_code != 0 and not return_error:
             log.error(f"{error_msg}: {error}")
             raise Exception(f"{error_msg}: {error}")
 
@@ -752,3 +756,185 @@ def start_docker_containers_for_dws(
             raise ex.DockerException(
                 f"Failed to start {participant.name} docker environment: {e}"
             )
+
+
+def start_director(workspace_path, dir_res_file):
+    """
+    Start the director.
+    Args:
+        workspace_path (str): Workspace path
+        dir_res_file (str): Director result file
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        error_msg = "Failed to start the director"
+        return_code, output, error = run_command(
+            "./start_director.sh",
+            error_msg=error_msg,
+            workspace_path=os.path.join(workspace_path, "director"),
+            run_in_background=True,
+            bg_file=dir_res_file,
+        )
+        log.debug(f"Director start: Return code: {return_code}, Output: {output}, Error: {error}")
+        log.info(
+            "Waiting for 30s for the director to start. With no retry mechanism in place, "
+            "envoys will fail immediately if the director is not ready."
+        )
+        time.sleep(30)
+    except ex.DirectorStartException as e:
+        raise e
+    return True
+
+
+def start_envoy(envoy_name, workspace_path, res_file):
+    """
+    Start given envoy.
+    Args:
+        envoy_name (str): Name of the envoy. For e.g. Bangalore, Chandler (case sensitive)
+        workspace_path (str): Workspace path
+        res_file (str): Result file to track the logs.
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        error_msg = f"Failed to start {envoy_name} envoy"
+        return_code, output, error = run_command(
+            f"./start_envoy.sh {envoy_name} {envoy_name}_config.yaml",
+            error_msg=error_msg,
+            workspace_path=os.path.join(workspace_path, envoy_name),
+            run_in_background=True,
+            bg_file=res_file,
+        )
+        log.debug(f"{envoy_name} start: Return code: {return_code}, Output: {output}, Error: {error}")
+    except ex.EnvoyStartException as e:
+        raise e
+    return True
+
+
+def create_federated_runtime_participant_res_files(results_dir, envoys, model_name="301_mnist_watermarking"):
+    """
+    Create result log files for the director and envoys.
+    Args:
+        results_dir (str): Results directory
+        envoys (list): List of envoys
+        model_name (str): Model name
+    Returns:
+        tuple: Result path and participant result files (including director)
+    """
+    participant_res_files = {}
+    result_path = os.path.join(
+        home_dir, results_dir, model_name
+    )
+    os.makedirs(result_path, exist_ok=True)
+
+    for participant in envoys + ["director"]:
+        res_file = os.path.join(result_path, f"{participant.lower()}.log")
+        participant_res_files[participant.lower()] = res_file
+        # Create the file
+        open(res_file, 'w').close()
+
+
+    return result_path, participant_res_files
+
+
+def check_envoys_director_conn_federated_runtime(
+    notebook_path, expected_envoys, director_node_fqdn="localhost", director_port=50050
+):
+    """
+    Function to check if the envoys are connected to the director for Federated Runtime notebooks.
+    Args:
+        notebook_path (str): Path to the notebook
+        expected_envoys (list): List of expected envoys
+        director_node_fqdn (str): Director node FQDN
+        director_port (int): Director port
+    Returns:
+        bool: True if all the envoys are connected to the director, else False
+    """
+    from openfl.experimental.workflow.runtime import FederatedRuntime
+
+    # Number of retries and delay between retries in seconds
+    MAX_RETRIES = RETRY_DELAY = 5
+
+    federated_runtime = FederatedRuntime(
+        collaborators=expected_envoys,
+        director={
+            "director_node_fqdn": director_node_fqdn,
+            "director_port": director_port,
+        },
+        notebook_path=notebook_path,
+    )
+    # Retry logic
+    for attempt in range(MAX_RETRIES):
+        actual_envoys = federated_runtime.get_envoys()
+        if all(
+            sorted(expected_envoys) == sorted(actual_envoys)
+            for expected_envoys, actual_envoys in [(expected_envoys, actual_envoys)]
+        ):
+            log.info("All the envoys are connected to the director")
+            return True
+        else:
+            log.warning(
+                f"Attempt {attempt + 1}/{MAX_RETRIES}: Not all envoys are connected. Retrying in {RETRY_DELAY} seconds..."
+            )
+            time.sleep(RETRY_DELAY)
+
+    return False
+
+
+def run_notebook(notebook_path, output_notebook_path):
+    """
+    Function to run the notebook.
+    Args:
+        notebook_path (str): Path to the notebook
+        participant_res_files (dict): Dictionary containing participant names and their result log files
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
+        output = pm.execute_notebook(
+            input_path=notebook_path,
+            output_path=output_notebook_path,
+            request_save_on_cell_execute=True,
+            autosave_cell_every=5, # autosave every 5 seconds
+            log_output=True,
+        )
+    except pm.exceptions.PapermillExecutionError as e:
+        log.error(f"PapermillExecutionError: {e}")
+        raise e
+
+    except ex.NotebookRunException as e:
+        log.error(f"Failed to run the notebook: {e}")
+        raise e
+    return True
+
+
+def verify_federated_runtime_experiment_completion(participant_res_files):
+    """
+    Verify the completion of the experiment using the participant logs.
+    Args:
+        participant_res_files (dict): Dictionary containing participant names and their result log files
+    Returns:
+        bool: True if successful, else False
+    """
+    # Check participant logs for successful completion
+    for name, result_file in participant_res_files.items():
+        # Do not open file here as it will be opened in the loop below
+        # Also it takes time for the federation run to start and write the logs
+        with open(result_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        last_7_lines = list(filter(str.rstrip, lines))[-7:]
+        if (
+            name == "director"
+            and [1 for content in last_7_lines if "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" in content]
+        ):
+            log.debug(f"Process completed for {name}")
+            continue
+        elif name != "director" and [1 for content in last_7_lines if "End of Federation reached." in content]:
+            log.debug(f"Process completed for {name}")
+            continue
+        else:
+            log.error(f"Process failed for {name}")
+            return False
+    return True

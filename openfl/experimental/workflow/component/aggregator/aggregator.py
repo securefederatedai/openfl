@@ -461,9 +461,7 @@ class Aggregator:
                 f" for the wrong round: {round_number}. Ignoring..."
             )
         else:
-            logger.info(
-                f"Collaborator {collab_name} sent task results" f" for round {round_number}."
-            )
+            logger.info(f"Collaborator {collab_name} sent task results for round {round_number}.")
         # Unpickle the clone (FLSpec object)
         clone = dill.loads(clone_bytes)
         # Update the clone in clones_dict dictionary

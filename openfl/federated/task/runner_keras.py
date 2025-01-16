@@ -182,7 +182,16 @@ class KerasTaskRunner(TaskRunner):
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
         #  defined) then the model must be recompiled.
-        results = self.model.get_metrics_result()
+        try:
+            results = self.model.get_metrics_result()
+        except ValueError:
+            if "batch_size" in kwargs:
+                batch_size = kwargs["batch_size"]
+            else:
+                batch_size = 1
+            # evaluation needed before metrics can be resolved
+            self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+            results = self.model.get_metrics_result()
 
         # TODO if there are new metrics in the flplan that were not included
         #  in the originally

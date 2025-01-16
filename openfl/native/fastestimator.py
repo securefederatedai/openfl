@@ -82,7 +82,7 @@ class FederatedFastEstimator:
             tensor_dict=tensor_dict, round_number=0, tensor_pipe=tensor_pipe
         )
 
-        self.logger.info(f"Creating Initial Weights File" f"    🠆 {init_state_path}")
+        self.logger.info(f"Creating Initial Weights File    🠆 {init_state_path}")
 
         utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
