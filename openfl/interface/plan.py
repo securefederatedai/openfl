@@ -169,7 +169,7 @@ def initialize(
     # This is needed to bypass data being locally available
     if input_shape is not None:
         logger.info(
-            "Attempting to generate initial model weights with" f" custom input shape {input_shape}"
+            f"Attempting to generate initial model weights with custom input shape {input_shape}"
         )
 
     data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
@@ -237,7 +237,7 @@ def freeze_plan(plan_config):
     init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
 
     if not Path(init_state_path).exists():
-        logger.info("Plan has not been initialized! Run 'fx plan" " initialize' before proceeding")
+        logger.info("Plan has not been initialized! Run 'fx plan initialize' before proceeding")
         return
 
     Plan.dump(Path(plan_config), plan.config, freeze=True)

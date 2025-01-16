@@ -115,7 +115,7 @@ class FLExperiment:
         """Assure experiment is sent to director and accepted."""
         if not self.experiment_submitted:
             self.logger.error("The experiment was not submitted to a Director service.")
-            self.logger.error("Report the experiment first: " "use the Experiment.start() method.")
+            self.logger.error("Report the experiment first: use the Experiment.start() method.")
             return False
         return True
 
@@ -192,10 +192,10 @@ class FLExperiment:
             return
         for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
-                f'Round {metric_message_dict["round"]}, '
-                f'collaborator {metric_message_dict["metric_origin"]} '
-                f'{metric_message_dict["task_name"]} result '
-                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}'
+                f"Round {metric_message_dict['round']}, "
+                f"collaborator {metric_message_dict['metric_origin']} "
+                f"{metric_message_dict['task_name']} result "
+                f"{metric_message_dict['metric_name']}:\t{metric_message_dict['metric_value']:f}"
             )
 
             if tensorboard_logs:
@@ -209,7 +209,7 @@ class FLExperiment:
             self.summary_writer = SummaryWriter(f"./logs/{self.experiment_name}", flush_secs=5)
 
         self.summary_writer.add_scalar(
-            f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
+            f"{metric['metric_origin']}/{metric['task_name']}/{metric['metric_name']}",
             metric["metric_value"],
             metric["round"],
         )
@@ -393,8 +393,7 @@ class FLExperiment:
         if not is_train_task_exist and rounds_to_train != 1:
             # Since we have only validation tasks, we do not have to train it multiple times
             raise Exception(
-                "Variable rounds_to_train must be equal 1, "
-                "because only validation tasks were given"
+                "Variable rounds_to_train must be equal 1, because only validation tasks were given"
             )
         if is_train_task_exist and self.is_validate_task_exist:
 
@@ -816,7 +815,7 @@ class TaskKeeper:
         def decorator_with_args(training_method):
             if not isinstance(aggregation_function, AggregationFunction):
                 raise Exception(
-                    "aggregation_function must implement " "AggregationFunction interface."
+                    "aggregation_function must implement AggregationFunction interface."
                 )
             self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method

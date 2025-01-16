@@ -232,9 +232,9 @@ class FederatedRuntime(Runtime):
         print(f"Getting standard output for experiment: {experiment_name}...")
         for stdout_message_dict in self._dir_client.stream_experiment_stdout(experiment_name):
             print(
-                f'Origin: {stdout_message_dict["stdout_origin"]}, '
-                f'Task: {stdout_message_dict["task_name"]}'
-                f'\n{stdout_message_dict["stdout_value"]}'
+                f"Origin: {stdout_message_dict['stdout_origin']}, "
+                f"Task: {stdout_message_dict['task_name']}"
+                f"\n{stdout_message_dict['stdout_value']}"
             )
 
     def __repr__(self) -> str:

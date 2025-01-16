@@ -147,7 +147,7 @@ def start_(
         for plugin_name, plugin_settings in optional_plugins_section.items():
             template = plugin_settings.get("template")
             if not template:
-                raise Exception("You should put a template" f"for plugin {plugin_name}")
+                raise Exception(f"You should put a templatefor plugin {plugin_name}")
             module_path, _, class_name = template.rpartition(".")
             plugin_params = plugin_settings.get("params", {})
 
@@ -221,7 +221,7 @@ def shard_descriptor_from_config(shard_config: dict):
     """
     template = shard_config.get("template")
     if not template:
-        raise Exception("You should define a shard " "descriptor template in the envoy config")
+        raise Exception("You should define a shard descriptor template in the envoy config")
     class_name = template.split(".")[-1]
     module_path = ".".join(template.split(".")[:-1])
     params = shard_config.get("params", {})

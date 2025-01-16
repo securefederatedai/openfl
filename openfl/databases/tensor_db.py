@@ -213,9 +213,9 @@ class TensorDB:
             None: if not all values are present.
         """
         if len(collaborator_weight_dict) != 0:
-            assert (
-                np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01
-            ), f"Collaborator weights do not sum to 1.0: {collaborator_weight_dict}"
+            assert np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01, (
+                f"Collaborator weights do not sum to 1.0: {collaborator_weight_dict}"
+            )
 
         collaborator_names = collaborator_weight_dict.keys()
         agg_tensor_dict = {}
