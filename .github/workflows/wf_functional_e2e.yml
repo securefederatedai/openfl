@@ -29,9 +29,9 @@ env:
   NUM_COLLABORATORS: ${{ github.event.inputs.num_collaborators || '2' }}
 
 jobs:
-  test_wf_func:
+  test_wf_functional_local_runtime:
     if: github.event.pull_request.draft == false
-    name: wf_func
+    name: wf_functional_local_runtime
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -74,7 +74,7 @@ jobs:
         if: ${{ always() }}
         run: |
           export PYTHONPATH="$PYTHONPATH:."
-          python tests/end_to_end/utils/summary_helper.py
+          python tests/end_to_end/utils/summary_helper.py --func_name "print_local_runtime_score"
           echo "Test summary printed"
 
       - name: Create Tar (exclude cert and data folders)

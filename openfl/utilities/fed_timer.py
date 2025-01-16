@@ -116,8 +116,7 @@ class PrepareTask:
             await asyncio.wait_for(task, timeout=self._max_timeout)
         except asyncio.TimeoutError:
             raise asyncio.TimeoutError(
-                f"Timeout after {self._max_timeout} second(s), "
-                f"Exception method: ({self._fn_name})"
+                f"Timeout after {self._max_timeout} second(s), Exception method: ({self._fn_name})"
             )
         except Exception:
             raise Exception(f"Generic Exception: {self._fn_name}")
@@ -151,8 +150,7 @@ class PrepareTask:
         # exception.
         if task.is_alive():
             raise TimeoutError(
-                f"Timeout after {self._max_timeout} second(s), "
-                f"Exception method: ({self._fn_name})"
+                f"Timeout after {self._max_timeout} second(s), Exception method: ({self._fn_name})"
             )
 
         return task.result()
@@ -276,6 +274,6 @@ class fedtiming(SyncAsyncTaskDecoFactory):  # noqa: N801
             logger.info(f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}")
         except Exception as e:
             logger.exception(
-                f"An exception of type {type(e).__name__} occurred. " f"Arguments:\n{e.args[0]!r}"
+                f"An exception of type {type(e).__name__} occurred. Arguments:\n{e.args[0]!r}"
             )
             os._exit(status=os.EX_TEMPFAIL)

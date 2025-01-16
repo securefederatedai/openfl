@@ -106,7 +106,7 @@ class Experiment:
         """
         self.status = Status.IN_PROGRESS
         try:
-            logger.info(f"New experiment {self.name} for " f"collaborators {self.collaborators}")
+            logger.info(f"New experiment {self.name} for collaborators {self.collaborators}")
 
             with ExperimentWorkspace(
                 experiment_name=self.name,
