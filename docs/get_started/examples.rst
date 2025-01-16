@@ -7,7 +7,7 @@
 Examples for Running a Federation
 =================================
 
-OpenFL currently offers four ways to set up and run experiments with a federation: the Task Runner API and the Workflow API. The Task Runner API is advised for production scenarios where the workload needs to be verified prior to execution. The experimental Workflow API is introduced to provide significant flexility to researchers and developers in the construction of federated learning experiments.
+OpenFL currently offers two ways to set up and run experiments with a federation: the Task Runner API and the Workflow API. The Task Runner API is advised for production scenarios where the workload needs to be verified prior to execution. The experimental Workflow API is introduced to provide significant flexility to researchers and developers in the construction of federated learning experiments.
 
 As OpenFL nears it's 2.0 release, we expect to consolidate these APIs and make the Workflow API the primary interface going forward. See our `roadmap <https://github.com/securefederatedai/openfl/blob/develop/ROADMAP.md>`_ for more details. 
 
