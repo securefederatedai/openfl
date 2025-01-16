@@ -12,7 +12,7 @@ from click import group, option, pass_context
 from dynaconf import Validator
 
 from openfl.experimental.workflow.component.envoy import Envoy
-from openfl.utilities import merge_configs
+from openfl.utilities import is_fqdn, merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,31 @@ def start_(
             "certificate": certificate,
         },
         validators=[
-            Validator("settings.director_host", default="localhost"),
-            Validator("settings.director_port", default=50051, gte=1024, lte=65535),
+            Validator(
+                "settings",
+                must_exist=True,
+                messages={
+                    "must_exist_true": "Missing 'settings' in the configuration. Please provide it."
+                },
+            ),
+            Validator(
+                "settings.director_host",
+                must_exist=True,
+                condition=lambda x: bool(x) and is_fqdn(x),
+                messages={
+                    "must_exist_true": "Missing 'director_host' in the configuration.",
+                    "condition": "Invalid 'director_host'. Must be a valid FQDN and not undefined.",
+                },
+            ),
+            Validator(
+                "settings.director_port",
+                must_exist=True,
+                condition=lambda value: isinstance(value, int) and 1024 <= value <= 65535,
+                messages={
+                    "must_exist_true": "Missing 'director_port' in the configuration.",
+                    "condition": "Invalid 'director_port'. Must be an integer between 1024 & 65535",
+                },
+            ),
             Validator("params.install_requirements", default=True),
         ],
     )
