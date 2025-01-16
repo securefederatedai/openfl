@@ -31,16 +31,16 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install Jupyter Lab Package
-      run: pip install jupyterlab
+    - name: Install Papermill Package
+      run: pip install papermill
 
     - name: Run Notebook
       run: |
-        jupyter nbconvert --execute --to notebook ./openfl-tutorials/experimental/workflow/101_MNIST.ipynb
+        papermill ./openfl-tutorials/experimental/workflow/101_MNIST.ipynb ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
         echo "Notebook run completed"
 
     - name: Tar files
-      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST.nbconvert.ipynb
+      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
