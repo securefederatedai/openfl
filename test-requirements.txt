@@ -2,7 +2,7 @@ docker
 lxml==5.3.0
 paramiko
 pytest==8.3.4
-pytest-asyncio==0.25.1
+pytest-asyncio==0.25.2
 pytest-mock==3.14.0
 defusedxml==0.7.1
 matplotlib==3.10.0
