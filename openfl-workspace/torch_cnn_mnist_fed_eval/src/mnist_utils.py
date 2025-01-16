@@ -41,7 +41,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
         2 tuples: (image, label) of the training, validation dataset
     """
     train_data, val_data = (
-        datasets.MNIST('data', train=train, download=True, transform=transform)
+        datasets.MNIST('/tmp/mnist', train=train, download=True, transform=transform)
         for train in (True, False)
     )
     X_train_tot, y_train_tot = train_data.train_data, train_data.train_labels
