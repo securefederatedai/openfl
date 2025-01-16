@@ -1,4 +1,4 @@
-setuptools==59.6.0
+setuptools==65.5.1
 tensorboard
 torch==2.4.1
 torchvision==0.19.1

@@ -1,4 +1,4 @@
-setuptools==59.6.0
+setuptools==65.5.1
 accelerate
 datasets
 evaluate
