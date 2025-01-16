@@ -164,8 +164,7 @@ class Plan:
 
             if gandlf_config_path is not None:
                 Plan.logger.info(
-                    f"Importing GaNDLF Config into plan "
-                    f"from file [red]{gandlf_config_path}[/].",
+                    f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
                     extra={"markup": True},
                 )
 
@@ -202,8 +201,7 @@ class Plan:
 
         except Exception:
             Plan.logger.exception(
-                f"Parsing Federated Learning Plan : "
-                f"[red]FAILURE[/] : [blue]{plan_config_path}[/].",
+                f"Parsing Federated Learning Plan : [red]FAILURE[/] : [blue]{plan_config_path}[/].",
                 extra={"markup": True},
             )
             raise
@@ -249,8 +247,7 @@ class Plan:
         class_name = splitext(template)[1].strip(".")
         module_path = splitext(template)[0]
         Plan.logger.info(
-            f"Importing [red]🡆[/] Object [red]{class_name}[/] "
-            f"from [red]{module_path}[/] Module.",
+            f"Importing [red]🡆[/] Object [red]{class_name}[/] from [red]{module_path}[/] Module.",
             extra={"markup": True},
         )
         module = import_module(module_path)

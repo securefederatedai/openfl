@@ -519,8 +519,7 @@ class WorkspaceExport:
                         runtime_created = True
                     if not runtime_collab_created:
                         f.write(
-                            f"\nruntime_collaborators = "
-                            f"{runtime_name}._LocalRuntime__collaborators"
+                            f"\nruntime_collaborators = {runtime_name}._LocalRuntime__collaborators"
                         )
                         runtime_collab_created = True
                     f.write(
@@ -528,8 +527,7 @@ class WorkspaceExport:
                         f"runtime_collaborators['{collab_name}'].private_attributes"
                     )
                 data[collab_name] = {
-                    "private_attributes": f"src."
-                    f"{self.script_name}.{collab_name}_private_attributes"
+                    "private_attributes": f"src.{self.script_name}.{collab_name}_private_attributes"
                 }
 
         self.__write_yaml(data_yaml, data)

@@ -7,3 +7,4 @@ pytest-mock==3.14.0
 defusedxml==0.7.1
 matplotlib==3.10.0
 fpdf==1.7.2
+papermill==2.6.0

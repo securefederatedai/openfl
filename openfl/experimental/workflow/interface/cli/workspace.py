@@ -258,7 +258,7 @@ def export_(pip_install_options: Tuple[str]):
         if confirm("Create a default '.workspace' file?"):
             copy2(WORKSPACE / "workspace" / ".workspace", tmp_dir)
         else:
-            echo("To proceed, you must have a '.workspace' " "file in the current directory.")
+            echo("To proceed, you must have a '.workspace' file in the current directory.")
             raise
 
     # Create Zip archive of directory
