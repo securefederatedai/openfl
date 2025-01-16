@@ -1,18 +1,33 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Aggregator module."""
 
 import sys
 from logging import getLogger
 from pathlib import Path
 
-from click import Path as ClickPath
-from click import confirm, echo, group, option, pass_context, style
+from click import (
+    Path as ClickPath,
+)
+from click import (
+    confirm,
+    echo,
+    group,
+    option,
+    pass_context,
+    style,
+)
 
 from openfl.cryptography.ca import sign_certificate
-from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
+from openfl.cryptography.io import (
+    get_csr_hash,
+    read_crt,
+    read_csr,
+    read_key,
+    write_crt,
+    write_key,
+)
 from openfl.cryptography.participant import generate_csr
 from openfl.federated import Plan
 from openfl.interface.cli_helper import CERT_DIR
@@ -52,9 +67,20 @@ def aggregator(context):
     default="plan/cols.yaml",
     type=ClickPath(exists=True),
 )
-def start_(plan, authorized_cols):
-    """Start the aggregator service."""
+@option(
+    "--task_group",
+    required=False,
+    default="learning",
+    help="Selected task-group for assignment - defaults to learning",
+)
+def start_(plan, authorized_cols, task_group):
+    """Start the aggregator service.
 
+    Args:
+        plan (str): Path to plan config file
+        authorized_cols (str): Path to authorized collaborators file
+        task_group (str): Selected task-group for assignement - defaults to 'learning'
+    """
     if is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -62,14 +88,21 @@ def start_(plan, authorized_cols):
         echo("Authorized collaborator list file path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    plan = Plan.parse(
+    # Parse plan and override mode if specified
+    parsed_plan = Plan.parse(
         plan_config_path=Path(plan).absolute(),
         cols_config_path=Path(authorized_cols).absolute(),
     )
 
+    # Set task_group in aggregator settings
+    if "settings" not in parsed_plan.config["aggregator"]:
+        parsed_plan.config["aggregator"]["settings"] = {}
+    parsed_plan.config["aggregator"]["settings"]["task_group"] = task_group
+    logger.info(f"Setting aggregator to assign: {task_group} task_group")
+
     logger.info("🧿 Starting the Aggregator Service.")
 
-    plan.get_server().serve()
+    parsed_plan.get_server().serve()
 
 
 @aggregator.command(name="generate-cert-request")
