@@ -193,10 +193,11 @@ class FederatedRuntime(Runtime):
 
         return status, flow_object
 
-    def get_envoys(self) -> None:
+    def get_envoys(self) -> List[str]:
         """
         Prints the status of Envoys in a formatted way.
-        Also returns the list of online envoys.
+        Returns:
+            online_envoys (List[str]): List of online envoys.
         """
         # Fetch envoy data
         envoys = self._dir_client.get_envoys()
