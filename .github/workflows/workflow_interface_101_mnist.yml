@@ -32,7 +32,7 @@ jobs:
         python-version: "3.10"
 
     - name: Install Papermill Package
-      run: pip install papermill
+      run: python -m pip install --upgrade pip ipython ipykernel papermill
 
     - name: Run Notebook
       run: |
