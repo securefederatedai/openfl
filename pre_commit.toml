@@ -1,6 +1,6 @@
 [tool.bandit]
 # Exclude specific directories or files from the scan
-exclude = ["tests/", "doc/"]
+# exclude = ["tests/", "docs/"]
 
 # Specify the test IDs to be skipped
 skips = [
