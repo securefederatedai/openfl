@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  run_notebook:
+  test_federated_runtime_301_watermarking_notebook:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     timeout-minutes: 20
