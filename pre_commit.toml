@@ -2,16 +2,6 @@
 # Exclude specific directories or files from the scan
 # exclude = ["tests/", "docs/"]
 
-# Specify the test IDs to be skipped
-skips = [
-    "B323",  # _create_unverified_context
-    "B314",  # xml.etree.ElementTree.parse
-    "B404",  # subprocess module
-    "B405",  # xml.etree.ElementTree
-    "B311",  # Standard pseudo-random generators
-    "B403"   # pickle module
-]
-
 # Set the severity and confidence levels
-severity = "LOW"
+severity = "HIGH"
 confidence = "HIGH"
