@@ -99,7 +99,7 @@ def start_(plan, authorized_cols, secure):
     "--fqdn",
     required=False,
     type=click_types.FQDN,
-    help=f"The fully qualified domain name of" f" aggregator node [{getfqdn_env()}]",
+    help=f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
     default=getfqdn_env(),
 )
 def _generate_cert_request(fqdn):
@@ -118,8 +118,8 @@ def generate_cert_request(fqdn):
 
     echo(
         f"Creating AGGREGATOR certificate key pair with following settings: "
-        f'CN={style(common_name, fg="red")},'
-        f' SAN={style(subject_alternative_name, fg="red")}'
+        f"CN={style(common_name, fg='red')},"
+        f" SAN={style(subject_alternative_name, fg='red')}"
     )
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
