@@ -13,7 +13,10 @@ on:
         default: 'latest'
 
 env:
-  DEFAULT_VERSION: ${{ github.ref == 'refs/heads/develop' && 'latest' || '1.7' }}
+  DEFAULT_VERSION: ${{ 
+    github.ref == 'refs/heads/develop' && 'latest' || 
+    github.ref == 'refs/heads/v1.7.x' && '1.7' || 
+    'fail' }}
 
 permissions:
   contents: read
@@ -24,6 +27,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:      
+    - name: Fail if invalid branch
+      if: env.DEFAULT_VERSION == 'fail'
+      run: |
+        echo "Invalid branch. The workflow only supports 'develop' or 'v1.7.x'."
+        exit 1
+
     - name: Checkout code
       uses: actions/checkout@v3
 
