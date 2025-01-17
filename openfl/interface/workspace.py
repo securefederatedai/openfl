@@ -66,6 +66,7 @@ def create_dirs(prefix):
     (prefix / "data").mkdir(parents=True, exist_ok=True)  # training data
     (prefix / "logs").mkdir(parents=True, exist_ok=True)  # training logs
     (prefix / "save").mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
+    (prefix / "local_state").mkdir(parents=True, exist_ok=True)  # persistent state
     (prefix / "src").mkdir(parents=True, exist_ok=True)  # model code
 
     shutil.copyfile(WORKSPACE / "workspace" / ".workspace", prefix / ".workspace")
@@ -354,6 +355,7 @@ def export_() -> str:
     # os.makedirs(os.path.join(tmp_dir, 'save'), exist_ok=True)
     os.makedirs(os.path.join(tmp_dir, "logs"), exist_ok=True)
     os.makedirs(os.path.join(tmp_dir, "data"), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "local_state"), exist_ok=True)
     shutil.copytree("src", os.path.join(tmp_dir, "src"), ignore=ignore)
     shutil.copytree("plan", os.path.join(tmp_dir, "plan"), ignore=ignore)
     shutil.copytree("save", os.path.join(tmp_dir, "save"))

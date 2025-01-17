@@ -87,3 +87,27 @@ docker run --rm \
   --mount type=bind,source=./certs.tar,target=/certs.tar \
   example_workspace bash -c "gramine-sgx fx collaborator start ..."
 ```
+
+### Running OpenFL Container in Production
+For running [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#running-the-task-runner) in a production environment with enhanced security, use the following parameters to limit CPU, memory, and process IDs, and to prevent privilege escalation:
+
+**Example Command**:
+```shell
+docker run --rm --name <Aggregator/Collaborator> --network openfl \
+  -v $WORKING_DIRECTORY:/workdir-openfl \
+  --cpus="0.1" \
+  --memory="512m" \
+  --pids-limit 100 \
+  --security-opt no-new-privileges \
+  openfl:latest
+```
+**Parameters**:
+```shell
+--cpus="0.1": Limits the container to 10% of a single CPU core.
+--memory="512m": Limits the container to 512MB of memory.
+--pids-limit 100: Limits the number of processes to 100.
+--security-opt no-new-privileges: Prevents the container from gaining additional privileges.
+```
+These settings help ensure that your containerized application runs securely and efficiently in a production environment
+
+**Note**: The numbers suggested here are examples/minimal suggestions and need to be adjusted according to the environment and the type of experiments you are aiming to run.
