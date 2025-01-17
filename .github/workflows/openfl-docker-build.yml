@@ -13,7 +13,7 @@ on:
         default: 'latest'
 
 env:
-  VERSION: ${{ github.ref == 'refs/heads/develop' && 'latest' || '1.7' }}
+  DEFAULT_VERSION: ${{ github.ref == 'refs/heads/develop' && 'latest' || '1.7' }}
 
 permissions:
   contents: read
@@ -36,6 +36,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Determine Image Tag
+      run: echo "IMAGE_TAG=${{ github.event.inputs.version || env.DEFAULT_VERSION }}" >> $GITHUB_ENV
 
     - name: Build and Push OpenFL Base Image
       uses: docker/build-push-action@v4
@@ -44,4 +47,4 @@ jobs:
         file: openfl-docker/Dockerfile.base
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}/openfl:${{ env.VERSION }}
+          ghcr.io/${{ github.repository }}/openfl:${{ env.IMAGE_TAG }}
