@@ -28,3 +28,9 @@ repos:
           - --remove-unused-variables
           - --recursive
           - --ignore-pass-statements
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.4
+    hooks:
+      - id: bandit
+        args: ["-c", "pre_commit.toml"]
+        additional_dependencies: ["bandit[toml]"]
