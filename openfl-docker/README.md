@@ -88,7 +88,7 @@ docker run --rm \
   example_workspace bash -c "gramine-sgx fx collaborator start ..."
 ```
 ### Running OpenFL Container in Production
-For running [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#running-the-task-runner) in a production environment with enhanced security, use the following parameters to limit CPU, memory, and process IDs, and to prevent privilege escalation:
+For running [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#running-the-task-runner) in a production environment with enhanced security, use the following parameters to limit CPU, memory, and process IDs to prevent resource exhaustion and privilege escalation:
 
 **Example Command**:
 ```shell
