@@ -8,7 +8,7 @@ To develop or simulate experiments within a container, build the base image (or 
 
 ```shell
 # Pull latest stable base image
-$> docker pull intel/openfl
+$> docker pull ghcr.io/securefederatedai/openfl/openfl:latest
 
 # Or, build a base image from the latest source code
 $> docker build . -t openfl -f Dockerfile.base \
@@ -17,7 +17,7 @@ $> docker build . -t openfl -f Dockerfile.base \
 
 Run the container:
 ```shell
-user@vm:~/openfl$ docker run -it --rm openfl:latest bash
+user@vm:~/openfl$ docker run -it --rm ghcr.io/securefederatedai/openfl/openfl:latest bash
 user@7b40624c207a:/$ fx
 OpenFL - Open Federated Learning                                                
 
