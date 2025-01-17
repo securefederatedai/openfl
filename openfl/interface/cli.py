@@ -148,13 +148,12 @@ class CLI(Group):
             help_str = cmd.get_short_help_str()
             if level == 0:
                 formatter.write(
-                    f'\n{style(name, fg="blue", bold=True):<30}'
-                    f" {style(help_str, bold=True)}" + "\n"
+                    f"\n{style(name, fg='blue', bold=True):<30} {style(help_str, bold=True)}" + "\n"
                 )
                 formatter.write("─" * 80 + "\n")
             if level == 1:
                 formatter.write(
-                    f'  {style("*", fg="green")}' f' {style(name, fg="cyan"):<21} {help_str}' + "\n"
+                    f"  {style('*', fg='green')} {style(name, fg='cyan'):<21} {help_str}" + "\n"
                 )
 
 

@@ -1,7 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Aggregator module."""
 
 import logging
@@ -85,6 +84,7 @@ class Aggregator:
         callbacks: Optional[List] = None,
         persist_checkpoint=True,
         persistent_db_path=None,
+        task_group: str = "learning",
     ):
         """Initializes the Aggregator.
 
@@ -111,7 +111,9 @@ class Aggregator:
                 Defaults to 1.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
             callbacks: List of callbacks to be used during the experiment.
+            task_group (str, optional): Selected task_group for assignment.
         """
+        self.task_group = task_group
         self.round_number = 0
         self.next_model_round_number = 0
 
@@ -298,9 +300,13 @@ class Aggregator:
             self.model, compression_pipeline=self.compression_pipeline
         )
 
-        if round_number > self.round_number:
+        # Check selected task_group before updating round number
+        if self.task_group == "evaluation":
+            logger.info(f"Skipping round_number check for {self.task_group} task_group")
+        elif round_number > self.round_number:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
+
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
             for k, v in tensor_dict.items()
@@ -855,9 +861,9 @@ class Aggregator:
             tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
-        assert (
-            "compressed" in tags or "lossy_compressed" in tags
-        ), f"Named tensor {tensor_key} is not compressed"
+        assert "compressed" in tags or "lossy_compressed" in tags, (
+            f"Named tensor {tensor_key} is not compressed"
+        )
         if "compressed" in tags:
             dec_tk, decompressed_nparray = self.tensor_codec.decompress(
                 tensor_key,
@@ -1039,9 +1045,9 @@ class Aggregator:
         metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (
-                collaborators_for_task[0] in tags
-            ), f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            assert collaborators_for_task[0] in tags, (
+                f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            )
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -1070,11 +1076,10 @@ class Aggregator:
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
-                    # Compare the accuracy of the model, potentially save it
+                    # Compare the accuracy of the model, potentially save it.
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         logger.info(
-                            f"Round {round_number}: saved the best "
-                            f"model with score {agg_results:f}"
+                            f"Round {round_number}: saved the best model with score {agg_results:f}"
                         )
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)

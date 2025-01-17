@@ -193,8 +193,12 @@ class FederatedRuntime(Runtime):
 
         return status, flow_object
 
-    def get_envoys(self) -> None:
-        """Prints the status of Envoys in a formatted way."""
+    def get_envoys(self) -> List[str]:
+        """
+        Prints the status of Envoys in a formatted way.
+        Returns:
+            online_envoys (List[str]): List of online envoys.
+        """
         # Fetch envoy data
         envoys = self._dir_client.get_envoys()
         DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -204,6 +208,7 @@ class FederatedRuntime(Runtime):
         headers = ["Name", "Online", "Last Updated", "Experiment Running", "Experiment Name"]
         # Prepare the table rows
         rows = []
+        online_envoys = []
         for envoy in envoys.envoy_infos:
             rows.append(
                 [
@@ -214,11 +219,15 @@ class FederatedRuntime(Runtime):
                     envoy.experiment_name if envoy.experiment_name else "None",
                 ]
             )
+            if envoy.is_online:
+                online_envoys.append(envoy.envoy_name)
+
         # Use tabulate to format the table
         result = tabulate(rows, headers=headers, tablefmt="grid")
         # Display the current timestamp
         print(f"Status of Envoys connected to Federation at: {now}\n")
         print(result)
+        return online_envoys
 
     def stream_experiment_stdout(self, experiment_name) -> None:
         """Stream experiment stdout.
@@ -232,9 +241,9 @@ class FederatedRuntime(Runtime):
         print(f"Getting standard output for experiment: {experiment_name}...")
         for stdout_message_dict in self._dir_client.stream_experiment_stdout(experiment_name):
             print(
-                f'Origin: {stdout_message_dict["stdout_origin"]}, '
-                f'Task: {stdout_message_dict["task_name"]}'
-                f'\n{stdout_message_dict["stdout_value"]}'
+                f"Origin: {stdout_message_dict['stdout_origin']}, "
+                f"Task: {stdout_message_dict['task_name']}"
+                f"\n{stdout_message_dict['stdout_value']}"
             )
 
     def __repr__(self) -> str:

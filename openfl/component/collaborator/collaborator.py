@@ -141,7 +141,7 @@ class Collaborator:
         if hasattr(DevicePolicy, device_assignment_policy):
             self.device_assignment_policy = DevicePolicy[device_assignment_policy]
         else:
-            logger.error("Unknown device_assignment_policy: " f"{device_assignment_policy.name}.")
+            logger.error(f"Unknown device_assignment_policy: {device_assignment_policy.name}.")
             raise NotImplementedError(
                 f"Unknown device_assignment_policy: {device_assignment_policy}."
             )
@@ -216,8 +216,7 @@ class Collaborator:
                 for task in tasks:
                     self.do_task(task, round_number)
                 logger.info(
-                    f"All tasks completed on {self.collaborator_name} "
-                    f"for round {round_number}..."
+                    f"All tasks completed on {self.collaborator_name} for round {round_number}..."
                 )
                 break
 
@@ -376,8 +375,7 @@ class Collaborator:
                     )
                     if nparray is not None:
                         logger.debug(
-                            f"Found tensor {tensor_name} in local TensorDB "
-                            f"for round {prior_round}"
+                            f"Found tensor {tensor_name} in local TensorDB for round {prior_round}"
                         )
                         return nparray
                     prior_round -= 1
@@ -413,8 +411,7 @@ class Collaborator:
                     self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
                     logger.info(
-                        "Could not find previous model layer."
-                        "Fetching latest layer from aggregator"
+                        "Could not find previous model layer.Fetching latest layer from aggregator"
                     )
                     # The original model tensor should be fetched from aggregator
                     nparray = self.get_aggregated_tensor_from_aggregator(

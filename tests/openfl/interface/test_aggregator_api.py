@@ -17,7 +17,19 @@ def test_aggregator_start(mock_parse):
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    mock_parse.return_value = mock.Mock()
+    # Create a mock plan with the required fields
+    mock_plan = mock.MagicMock()
+    mock_plan.__getitem__.side_effect = {'task_group': 'learning'}.get
+    mock_plan.get = {'task_group': 'learning'}.get
+    # Add the config attribute with proper nesting
+    mock_plan.config = {
+        'aggregator': {
+            'settings': {
+                'task_group': 'learning'
+            }
+        }
+    }
+    mock_parse.return_value = mock_plan
 
     ret = start_(['-p', plan_config,
                   '-c', cols_config], standalone_mode=False)
@@ -32,7 +44,20 @@ def test_aggregator_start_illegal_plan(mock_parse, mock_is_directory_traversal):
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    mock_parse.return_value = mock.Mock()
+    # Create a mock plan with the required fields
+    mock_plan = mock.MagicMock()
+    mock_plan.__getitem__.side_effect = {'task_group': 'learning'}.get
+    mock_plan.get = {'task_group': 'learning'}.get
+    # Add the config attribute with proper nesting
+    mock_plan.config = {
+        'aggregator': {
+            'settings': {
+                'task_group': 'learning'
+            }
+        }
+    }
+    mock_parse.return_value = mock_plan
+
     mock_is_directory_traversal.side_effect = [True, False]
 
     with TestCase.assertRaises(test_aggregator_start_illegal_plan, SystemExit):
@@ -48,7 +73,20 @@ def test_aggregator_start_illegal_cols(mock_parse, mock_is_directory_traversal):
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    mock_parse.return_value = mock.Mock()
+    # Create a mock plan with the required fields
+    mock_plan = mock.MagicMock()
+    mock_plan.__getitem__.side_effect = {'task_group': 'learning'}.get
+    mock_plan.get = {'task_group': 'learning'}.get
+    # Add the config attribute with proper nesting
+    mock_plan.config = {
+        'aggregator': {
+            'settings': {
+                'task_group': 'learning'
+            }
+        }
+    }
+    mock_parse.return_value = mock_plan
+
     mock_is_directory_traversal.side_effect = [False, True]
 
     with TestCase.assertRaises(test_aggregator_start_illegal_cols, SystemExit):

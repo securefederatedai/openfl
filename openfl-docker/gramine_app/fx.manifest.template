@@ -64,6 +64,7 @@ sgx.trusted_files = [
 # One should be conservative as to which files are allowed, these can be modified by enclave.
 sgx.allowed_files = [
   "file:{{ workspace_root }}/save",
+  "file:{{ workspace_root }}/local_state",
   "file:{{ workspace_root }}/logs",
   "file:{{ workspace_root }}/cert",
   "file:{{ workspace_root }}/data",
