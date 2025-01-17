@@ -13,6 +13,7 @@ class ModelName(Enum):
     TORCH_CNN_MNIST = "torch_cnn_mnist"
     KERAS_CNN_MNIST = "keras_cnn_mnist"
     TORCH_CNN_HISTOLOGY = "torch_cnn_histology"
+    XGB_HIGGS = "xgb_higgs"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5

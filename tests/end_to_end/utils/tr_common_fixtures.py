@@ -104,6 +104,9 @@ def fx_federation_tr(request):
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
+    if model_name.lower() == "xgb_higgs":
+        fh.setup_data_for_collaborators(collaborators, model_name, local_bind_path)
+ 
     # Return the federation fixture
     return federation_fixture(
         model_owner=model_owner,

@@ -204,6 +204,29 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     return True
 
 
+def setup_data_for_collaborators(collaborators, model_name, local_bind_path):
+    """
+    Setup data for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    futures = [
+        executor.submit(
+            collaborator.data_setup,
+            model_name,
+            len(collaborators),
+            constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
+        )
+        for collaborator in collaborators
+    ]
+    if not all([f.result() for f in futures]):
+        raise Exception("Failed to setup data for one or more collaborators.")
+    return True
+
+
 def copy_file_between_participants(
     local_src_path, local_dest_path, file_name, run_with_sudo=False
 ):
