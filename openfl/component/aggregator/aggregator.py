@@ -1076,7 +1076,7 @@ class Aggregator:
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
-                    # Compare the accuracy of the model, potentially save it
+                    # Compare the accuracy of the model, potentially save it.
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         logger.info(
                             f"Round {round_number}: saved the best model with score {agg_results:f}"
