@@ -103,6 +103,7 @@ class FLExperiment:
         # Create a folder to store plans
         os.makedirs("./plan", exist_ok=True)
         os.makedirs("./save", exist_ok=True)
+        os.makedirs("./local_state", exist_ok=True)
         # Load the default plan
         base_plan_path = WORKSPACE / "workspace/plan/plans/default/base_plan_interactive_api.yaml"
         plan = Plan.parse(base_plan_path, resolve=False)
