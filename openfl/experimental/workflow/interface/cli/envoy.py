@@ -104,7 +104,7 @@ def start_(
                 "settings",
                 must_exist=True,
                 messages={
-                    "must_exist_true": "Missing 'settings' in the configuration. Please provide it."
+                    "must_exist_true": "Missing 'settings' in Envoy Configuration file."
                 },
             ),
             Validator(
@@ -112,8 +112,9 @@ def start_(
                 must_exist=True,
                 condition=lambda x: bool(x) and is_fqdn(x),
                 messages={
-                    "must_exist_true": "Missing 'director_host' in the configuration.",
-                    "condition": "Invalid 'director_host'. Must be a valid FQDN and not undefined.",
+                    "must_exist_true": "Missing 'director_host' in Envoy Configuration file",
+                    "condition": "Invalid 'director_host' in Envoy Configuration file."
+                    "Must be a valid FQDN",
                 },
             ),
             Validator(
@@ -121,8 +122,9 @@ def start_(
                 must_exist=True,
                 condition=lambda value: isinstance(value, int) and 1024 <= value <= 65535,
                 messages={
-                    "must_exist_true": "Missing 'director_port' in the configuration.",
-                    "condition": "Invalid 'director_port'. Must be an integer between 1024 & 65535",
+                    "must_exist_true": "Missing 'director_port' in Envoy Configuration file",
+                    "condition": "Invalid 'director_port' in Envoy Configuration file"
+                    "Must be an integer between 1024 & 65535",
                 },
             ),
             Validator("params.install_requirements", default=True),
