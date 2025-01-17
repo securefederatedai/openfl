@@ -83,7 +83,7 @@ class CutoffPolicy(StragglerPolicy):
         self.is_timer_started = False
 
         if self.straggler_cutoff_time == np.inf:
-            logger.warning("CutoffPolicy is disabled as straggler_cutoff_time " "is set to np.inf.")
+            logger.warning("CutoffPolicy is disabled as straggler_cutoff_time is set to np.inf.")
 
     def reset_policy_for_round(self) -> None:
         """Reset timer for the next round."""
