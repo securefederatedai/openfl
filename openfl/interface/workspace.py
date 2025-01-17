@@ -3,10 +3,11 @@
 
 
 """Workspace module."""
-
-import setuptools # this import is added to avoid error: assert '_distutils' in core.__file__, core.__file__
-import logging
 import os
+
+os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
+
+import logging
 import shutil
 import subprocess  # nosec
 import sys
