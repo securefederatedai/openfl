@@ -37,11 +37,12 @@ pip install -e .
 ```
 3) Install the requirements for Workflow API
 ```shell
-cd openfl-tutorials/experimental/workflow/CrowdGuard
+cd openfl-tutorials/experimental/workflow
 pip install -r workflow_interface_requirements.txt
 ```
 4) Start the training script<br/>
 Note that the number of training rounds can be adjusted via the `--comm_round` parameter:
 ```shell
+cd CrowdGuard
 python cifar10_crowdguard.py --comm_round 5
 ```
