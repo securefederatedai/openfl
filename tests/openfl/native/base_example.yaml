@@ -1,8 +1,0 @@
-Planet:
-  Earth:
-    Continent:
-      North-America:
-        USA:
-          Oregon: 'Portland'
-  Mars: ['Water', 'Ice']
-  Pluto: []
