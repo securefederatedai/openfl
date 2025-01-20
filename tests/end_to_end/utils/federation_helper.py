@@ -7,7 +7,7 @@ import logging
 import os
 import json
 import re
-import subprocess
+import subprocess   # nosec B404
 import papermill as pm
 from pathlib import Path
 import shutil
@@ -711,7 +711,7 @@ def download_data(collaborators, model_name, local_bind_path):
 
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     try:
-        subprocess.run(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}", shell=True)
+        subprocess.run(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}", shell=True)    # nosec B602
     except Exception:
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
