@@ -1,7 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Aggregator module."""
 
 import logging
@@ -12,10 +11,11 @@ from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
-from openfl.databases import TensorDB
+from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
+from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,9 @@ class Aggregator:
         log_memory_usage=False,
         write_logs=False,
         callbacks: Optional[List] = None,
+        persist_checkpoint=True,
+        persistent_db_path=None,
+        task_group: str = "learning",
     ):
         """Initializes the Aggregator.
 
@@ -108,8 +111,11 @@ class Aggregator:
                 Defaults to 1.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
             callbacks: List of callbacks to be used during the experiment.
+            task_group (str, optional): Selected task_group for assignment.
         """
+        self.task_group = task_group
         self.round_number = 0
+        self.next_model_round_number = 0
 
         if single_col_cert_common_name:
             logger.warning(
@@ -137,6 +143,16 @@ class Aggregator:
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
+        if persist_checkpoint:
+            persistent_db_path = persistent_db_path or "tensor.db"
+            logger.info(
+                "Persistent checkpoint is enabled, setting persistent db at path %s",
+                persistent_db_path,
+            )
+            self.persistent_db = PersistentTensorDB(persistent_db_path)
+        else:
+            logger.info("Persistent checkpoint is disabled")
+            self.persistent_db = None
         # FIXME: I think next line generates an error on the second round
         # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
@@ -154,8 +170,25 @@ class Aggregator:
         # TODO: Remove. Used in deprecated interactive and native APIs
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
+        # these enable getting all tensors for a task
+        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
+        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
-        if initial_tensor_dict:
+        # maintain a list of collaborators that have completed task and
+        # reported results in a given round
+        self.collaborators_done = []
+        # Initialize a lock for thread safety
+        self.lock = Lock()
+        self.use_delta_updates = use_delta_updates
+
+        self.model = None  # Initialize the model attribute to None
+        if self.persistent_db and self._recover():
+            logger.info("recovered state of aggregator")
+
+        # The model is built by recovery if at least one round has finished
+        if self.model:
+            logger.info("Model was loaded by recovery")
+        elif initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
                 tensor_dict=initial_tensor_dict,
@@ -167,20 +200,6 @@ class Aggregator:
             self._load_initial_tensors()  # keys are TensorKeys
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
-
-        # these enable getting all tensors for a task
-        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
-
-        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
-
-        # maintain a list of collaborators that have completed task and
-        # reported results in a given round
-        self.collaborators_done = []
-
-        # Initialize a lock for thread safety
-        self.lock = Lock()
-
-        self.use_delta_updates = use_delta_updates
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -195,6 +214,79 @@ class Aggregator:
         self.callbacks.on_experiment_begin()
         self.callbacks.on_round_begin(self.round_number)
 
+    def _recover(self):
+        """Populates the aggregator state to the state it was prior a restart"""
+        recovered = False
+        # load tensors persistent DB
+        tensor_key_dict = self.persistent_db.load_tensors(
+            self.persistent_db.get_tensors_table_name()
+        )
+        if len(tensor_key_dict) > 0:
+            logger.info(f"Recovering {len(tensor_key_dict)} model tensors")
+            recovered = True
+            self.tensor_db.cache_tensor(tensor_key_dict)
+            committed_round_number, self.best_model_score = (
+                self.persistent_db.get_round_and_best_score()
+            )
+            logger.info("Recovery - Setting model proto")
+            to_proto_tensor_dict = {}
+            for tk in tensor_key_dict:
+                tk_name, _, _, _, _ = tk
+                to_proto_tensor_dict[tk_name] = tensor_key_dict[tk]
+            self.model = utils.construct_model_proto(
+                to_proto_tensor_dict, committed_round_number, self.compression_pipeline
+            )
+            # round number is the current round which is still in process
+            #  i.e. committed_round_number + 1
+            self.round_number = committed_round_number + 1
+            logger.info(
+                "Recovery - loaded round number %s and best score %s",
+                self.round_number,
+                self.best_model_score,
+            )
+
+        next_round_tensor_key_dict = self.persistent_db.load_tensors(
+            self.persistent_db.get_next_round_tensors_table_name()
+        )
+        if len(next_round_tensor_key_dict) > 0:
+            logger.info(f"Recovering {len(next_round_tensor_key_dict)} next round model tensors")
+            recovered = True
+            self.tensor_db.cache_tensor(next_round_tensor_key_dict)
+
+        logger.debug("Recovery - this is the tensor_db after recovery: %s", self.tensor_db)
+
+        if self.persistent_db.is_task_table_empty():
+            logger.debug("task table is empty")
+            return recovered
+
+        logger.info("Recovery - Replaying saved task results")
+        task_id = 1
+        while True:
+            task_result = self.persistent_db.get_task_result_by_id(task_id)
+            if not task_result:
+                break
+            recovered = True
+            collaborator_name = task_result["collaborator_name"]
+            round_number = task_result["round_number"]
+            task_name = task_result["task_name"]
+            data_size = task_result["data_size"]
+            serialized_tensors = task_result["named_tensors"]
+            named_tensors = [
+                NamedTensor.FromString(serialized_tensor)
+                for serialized_tensor in serialized_tensors
+            ]
+            logger.info(
+                "Recovery - Replaying task results %s %s %s",
+                collaborator_name,
+                round_number,
+                task_name,
+            )
+            self.process_task_results(
+                collaborator_name, round_number, task_name, data_size, named_tensors
+            )
+            task_id += 1
+        return recovered
+
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
 
@@ -208,9 +300,13 @@ class Aggregator:
             self.model, compression_pipeline=self.compression_pipeline
         )
 
-        if round_number > self.round_number:
+        # Check selected task_group before updating round number
+        if self.task_group == "evaluation":
+            logger.info(f"Skipping round_number check for {self.task_group} task_group")
+        elif round_number > self.round_number:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
+
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
             for k, v in tensor_dict.items()
@@ -255,9 +351,12 @@ class Aggregator:
             for k, v in og_tensor_dict.items()
         ]
         tensor_dict = {}
+        tensor_tuple_dict = {}
         for tk in tensor_keys:
             tk_name, _, _, _, _ = tk
-            tensor_dict[tk_name] = self.tensor_db.get_tensor_from_cache(tk)
+            tensor_value = self.tensor_db.get_tensor_from_cache(tk)
+            tensor_dict[tk_name] = tensor_value
+            tensor_tuple_dict[tk] = tensor_value
             if tensor_dict[tk_name] is None:
                 logger.info(
                     "Cannot save model for round %s. Continuing...",
@@ -267,6 +366,19 @@ class Aggregator:
         if file_path == self.best_state_path:
             self.best_tensor_dict = tensor_dict
         if file_path == self.last_state_path:
+            # Transaction to persist/delete all data needed to increment the round
+            if self.persistent_db:
+                if self.next_model_round_number > 0:
+                    next_round_tensors = self.tensor_db.get_tensors_by_round_and_tags(
+                        self.next_model_round_number, ("model",)
+                    )
+                self.persistent_db.finalize_round(
+                    tensor_tuple_dict, next_round_tensors, self.round_number, self.best_model_score
+                )
+                logger.info(
+                    "Persist model and clean task result for round %s",
+                    round_number,
+                )
             self.last_tensor_dict = tensor_dict
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
@@ -366,7 +478,7 @@ class Aggregator:
         # if no tasks, tell the collaborator to sleep
         if len(tasks) == 0:
             tasks = None
-            sleep_time = self._get_sleep_time()
+            sleep_time = Aggregator._get_sleep_time()
 
             return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -396,7 +508,7 @@ class Aggregator:
         # been completed
         if len(tasks) == 0:
             tasks = None
-            sleep_time = self._get_sleep_time()
+            sleep_time = Aggregator._get_sleep_time()
 
             return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -606,6 +718,31 @@ class Aggregator:
         Returns:
             None
         """
+        # Save task and its metadata for recovery
+        serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
+        if self.persistent_db:
+            self.persistent_db.save_task_results(
+                collaborator_name, round_number, task_name, data_size, serialized_tensors
+            )
+            logger.debug(
+                f"Persisting task results {task_name} from {collaborator_name} round {round_number}"
+            )
+        logger.info(
+            f"Collaborator {collaborator_name} is sending task results "
+            f"for {task_name}, round {round_number}"
+        )
+        self.process_task_results(
+            collaborator_name, round_number, task_name, data_size, named_tensors
+        )
+
+    def process_task_results(
+        self,
+        collaborator_name,
+        round_number,
+        task_name,
+        data_size,
+        named_tensors,
+    ):
         if self._time_to_quit() or collaborator_name in self.stragglers:
             logger.warning(
                 f"STRAGGLER: Collaborator {collaborator_name} is reporting results "
@@ -619,11 +756,6 @@ class Aggregator:
                 f" for the wrong round: {round_number}. Ignoring..."
             )
             return
-
-        logger.info(
-            f"Collaborator {collaborator_name} is sending task results "
-            f"for {task_name}, round {round_number}"
-        )
 
         task_key = TaskResultKey(task_name, collaborator_name, round_number)
 
@@ -729,9 +861,9 @@ class Aggregator:
             tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
-        assert (
-            "compressed" in tags or "lossy_compressed" in tags
-        ), f"Named tensor {tensor_key} is not compressed"
+        assert "compressed" in tags or "lossy_compressed" in tags, (
+            f"Named tensor {tensor_key} is not compressed"
+        )
         if "compressed" in tags:
             dec_tk, decompressed_nparray = self.tensor_codec.decompress(
                 tensor_key,
@@ -864,7 +996,7 @@ class Aggregator:
             new_model_report,
             ("model",),
         )
-
+        self.next_model_round_number = new_model_round_number
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
@@ -913,9 +1045,9 @@ class Aggregator:
         metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (
-                collaborators_for_task[0] in tags
-            ), f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            assert collaborators_for_task[0] in tags, (
+                f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
+            )
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -944,11 +1076,10 @@ class Aggregator:
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
-                    # Compare the accuracy of the model, potentially save it
+                    # Compare the accuracy of the model, potentially save it.
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         logger.info(
-                            f"Round {round_number}: saved the best "
-                            f"model with score {agg_results:f}"
+                            f"Round {round_number}: saved the best model with score {agg_results:f}"
                         )
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)

@@ -1,0 +1,51 @@
+name: Bandit Code Scan
+
+on:
+  push:
+    branches: 
+      - develop
+      - v1.7.x
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  bandit_scan:
+    if: github.event.pull_request.draft == false
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    name: Bandit Scan
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set Filename Suffix Report Date and Time
+        run: |
+          echo "REPORT_DATE=$(date +'%d-%b-%Y_%H-%M-%S')" >> $GITHUB_ENV
+    
+      - name: Define SARIF Report Path
+        run: echo "SARIF_REPORT_PATH=${{ github.workspace }}/results.sarif" >> $GITHUB_ENV
+    
+      - name: Perform Bandit Analysis
+        uses: PyCQA/bandit-action@v1
+        with:
+          configfile: 'DEFAULT'
+          profile: 'DEFAULT'
+          tests: 'DEFAULT'
+          skips: 'DEFAULT'
+          severity: 'DEFAULT'
+          confidence: 'DEFAULT'
+          exclude: '.svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg'
+          baseline: 'DEFAULT'
+          ini: 'DEFAULT'
+          targets: '.'
+    
+      - name: Upload Bandit SARIF Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "bandit-report-summary_${{ env.REPORT_DATE }}"
+          path: ${{ env.SARIF_REPORT_PATH }}

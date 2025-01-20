@@ -62,8 +62,7 @@ class StaticGroupedAssigner(Assigner):
         unique_authorized_cols = set(self.authorized_cols)
 
         assert cols_amount == authorized_cols_amount and unique_cols == unique_authorized_cols, (
-            f"Collaborators in each group must be distinct: "
-            f"{unique_cols}, {unique_authorized_cols}"
+            f"Collaborators in each group must be distinct: {unique_cols}, {unique_authorized_cols}"
         )
 
         # Start by finding all of the tasks in all specified groups

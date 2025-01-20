@@ -714,7 +714,7 @@ def to_cpu_numpy(state):
         # When restoring, we currently assume all values are tensors.
         if not torch.is_tensor(v):
             raise ValueError(
-                "We do not currently support non-tensors " "coming from model.state_dict()"
+                "We do not currently support non-tensors coming from model.state_dict()"
             )
         # get as a numpy array, making sure is on cpu
         state[k] = v.cpu().numpy()

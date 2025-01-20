@@ -114,9 +114,9 @@ class TensorCodec:
         tensor_name, origin, round_number, report, tags = tensor_key
 
         assert len(transformer_metadata) > 0, "metadata must be included for decompression"
-        assert ("compressed" in tags) or (
-            "lossy_compressed" in tags
-        ), "Cannot decompress an uncompressed tensor"
+        assert ("compressed" in tags) or ("lossy_compressed" in tags), (
+            "Cannot decompress an uncompressed tensor"
+        )
         if require_lossless:
             assert "compressed" in tags, "Cannot losslessly decompress lossy tensor"
 
@@ -169,8 +169,7 @@ class TensorCodec:
                 f"layer shape of ({base_model_nparray.shape})"
             )
         assert "model" not in tags, (
-            "The tensorkey should be provided "
-            "from the layer with new weights, not the base model"
+            "The tensorkey should be provided from the layer with new weights, not the base model"
         )
         new_tags = change_tags(tags, add_field="delta")
         delta_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
