@@ -689,7 +689,7 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
         model_name (str): Model name
         local_bind_path (str): Local bind path
     """
-    if not pre_existing_data(collaborators, model_name, local_bind_path):
+    if not pre_existing_data(collaborators):
         download_data(collaborators, model_name, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
@@ -709,19 +709,12 @@ def download_data(collaborators, model_name, local_bind_path):
         raise ex.DataSetupException(f"Failed to copy data setup file: {e}")
 
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
-    error_msg = f"Failed to download data for {model_name}"
     try:
-        return_code, _, error = run_command(
-            f"python -v {constants.DATA_SETUP_FILE} {len(collaborators)}",
-            workspace_path=local_bind_path,
-            error_msg=error_msg,
-            return_error=True,
-        )
-        if return_code !=0 or error:
-            raise ex.DataSetupException(f"{error_msg}: {error}")
-
+        # Data setup file has logic to show progress bar
+        # Using os.system to make sure it is displayed
+        os.system(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}")
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for {model_name}") # Do not print error, it maybe too long
+        raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
     try:
         # Move the data to the respective workspace based on the index
