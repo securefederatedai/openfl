@@ -105,7 +105,7 @@ def fx_federation_tr(request):
         fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
     if model_name.lower() == "xgb_higgs":
-        fh.setup_data_for_collaborators(collaborators, model_name, local_bind_path)
+        fh.setup_data(collaborators, model_name, local_bind_path)
  
     # Return the federation fixture
     return federation_fixture(
@@ -159,6 +159,10 @@ def fx_federation_tr_dws(request):
 
     # Initialize the plan
     model_owner.initialize_plan(agg_domain_name=agg_domain_name)
+
+    # Setup data for the model
+    if model_name.lower() == "xgb_higgs":
+        fh.setup_data(collaborators, model_name, local_bind_path, use_local_path=True)
 
     # Command 'fx workspace dockerize --save ..' will use the workspace name for image name
     # which is 'workspace' in this case.

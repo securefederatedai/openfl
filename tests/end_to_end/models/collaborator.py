@@ -226,7 +226,7 @@ class Collaborator():
             if len(folders) == num_collaborators:
                 log.info(f"Data is already present at {data_path}. Skipping the download part..")
             else:
-                log.info("Data is invalid. Forcing download..")
+                log.info("Either data is not present or is invalid. Forcing download..")
                 error_msg = f"Failed to download data for {model_name}"
                 data_setup_file_path = os.path.join(self.workspace_path, "src", "setup_data.py")
                 if not os.path.exists(data_setup_file_path):

@@ -204,26 +204,33 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     return True
 
 
-def setup_data_for_collaborators(collaborators, model_name, local_bind_path):
+def setup_data(collaborators, model_name, local_bind_path, use_local_path=False):
     """
-    Setup data for all the collaborators
+    Setup data for the federation run
     Args:
         collaborators (list): List of collaborator objects
         model_name (str): Model name
         local_bind_path (str): Local bind path
+        use_local_path (bool): Use local path or not
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
-    futures = [
-        executor.submit(
-            collaborator.data_setup,
-            model_name,
-            len(collaborators),
-            constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
-        )
-        for collaborator in collaborators
-    ]
-    if not all([f.result() for f in futures]):
-        raise Exception("Failed to setup data for one or more collaborators.")
+    if use_local_path:
+        # single download
+        result = collaborators[0].data_setup(model_name, len(collaborators), constants.AGG_PLAN_PATH.format(local_bind_path))
+        if not result:
+            raise Exception("Failed to setup data")
+    else:
+        executor = concurrent.futures.ThreadPoolExecutor()
+        futures = [
+            executor.submit(
+                collaborator.data_setup,
+                model_name,
+                len(collaborators),
+                constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in futures]):
+            raise Exception("Failed to setup data for one or more collaborators.")
     return True
 
 
