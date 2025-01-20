@@ -71,3 +71,18 @@ class WorkspaceLoadException(Exception):
 class ReferenceFlowException(Exception):
     """Exception for reference flow"""
     pass
+
+
+class NotebookRunException(Exception):
+    """Exception for notebook run"""
+    pass
+
+
+class EnvoyStartException(Exception):
+    """Exception for envoy start"""
+    pass
+
+
+class DirectorStartException(Exception):
+    """Exception for director start"""
+    pass

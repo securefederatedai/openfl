@@ -71,6 +71,9 @@ OpenFL supports popular aggregation algorithms out-of-the-box, with more algorit
 | FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | yes | yes | - |
 | FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | yes | - | - |
 
+### Enabling Bandit Precommit
+To ensure that precommit is setup in your local for Bandit Scan. For more details, kindly follow this doc: [Setup Guide - Precommit](precommit-doc.md)
+
 ## Contributing
 We welcome contributions! Please refer to the [contributing guidelines](https://openfl.readthedocs.io/en/latest/contributing.html).
 

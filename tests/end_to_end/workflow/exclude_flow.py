@@ -12,6 +12,7 @@ class TestFlowExclude(FLSpec):
     """
     Testflow to validate exclude functionality in Federated Flow
     """
+    __test__ = False # to prevent pytest from trying to discover tests in the class
 
     @aggregator
     def start(self):

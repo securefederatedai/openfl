@@ -24,10 +24,14 @@ class PDF(FPDF):
 
 def generate_memory_report(memory_usage_dict, workspace_path):
     """
-    Generates a memory usage report from a CSV file.
+    Generates a memory usage report using input dictionary
+    and saves it to a PDF file.
+    Content of memory_usage_dict comes from reading the aggregator
+    and collaborator memory usage json files inside respective logs folder.
 
     Parameters:
-    file_path (str): The path to the CSV file containing memory usage data.
+        memory_usage_dict (dict): A dictionary containing memory usage data.
+        workspace_path (str): The path to the workspace where the report will be saved.
 
     Returns:
     None
@@ -37,22 +41,22 @@ def generate_memory_report(memory_usage_dict, workspace_path):
 
     # Plotting the chart
     plt.figure(figsize=(10, 5))
-    plt.plot(data["round_number"], data["virtual_memory/used"], marker="o")
+    plt.plot(data["round_number"], data["process_memory"], marker="o")
     plt.title("Memory Usage per Round")
     plt.xlabel("round_number")
-    plt.ylabel("Virtual Memory Used (MB)")
+    plt.ylabel("Process Memory Used (MB)")
     plt.grid(True)
     output_path = f"{workspace_path}/mem_usage_plot.png"
     plt.savefig(output_path)
     plt.close()
 
     # Calculate statistics
-    min_mem = round(data["virtual_memory/used"].min(), 2)
-    max_mem = round(data["virtual_memory/used"].max(), 2)
-    mean_mem = round(data["virtual_memory/used"].mean(), 2)
-    variance_mem = round(data["virtual_memory/used"].var(), 2)
-    std_dev_mem = round(data["virtual_memory/used"].std(), 2)
-    slope, _, _, _, _ = linregress(data.index, data["virtual_memory/used"])
+    min_mem = round(data["process_memory"].min(), 2)
+    max_mem = round(data["process_memory"].max(), 2)
+    mean_mem = round(data["process_memory"].mean(), 2)
+    variance_mem = round(data["process_memory"].var(), 2)
+    std_dev_mem = round(data["process_memory"].std(), 2)
+    slope, _, _, _, _ = linregress(data.index, data["process_memory"])
     slope = round(slope, 2)
     stats_path = f"{workspace_path}/mem_stats.txt"
     with open(stats_path, "w") as file:
@@ -87,7 +91,7 @@ def add_introduction(pdf):
 def add_chart_analysis(pdf, output_path, data):
     pdf.chapter_title("Chart Analysis")
     pdf.image(output_path, w=180)
-    diffs = data["virtual_memory/used"].diff().round(2)
+    diffs = data["process_memory"].diff().round(2)
     significant_changes = diffs[diffs.abs() > 500]
     for index, value in significant_changes.items():
         pdf.chapter_body(

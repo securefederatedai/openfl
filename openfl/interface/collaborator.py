@@ -208,8 +208,8 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     echo(
         f"Creating COLLABORATOR certificate key pair with following settings: "
-        f'CN={style(common_name, fg="red")},'
-        f' SAN={style(subject_alternative_name, fg="red")}'
+        f"CN={style(common_name, fg='red')},"
+        f" SAN={style(subject_alternative_name, fg='red')}"
     )
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
@@ -246,7 +246,7 @@ def generate_cert_request(collaborator_name, silent, skip_package):
         make_archive(archive_name, archive_type, tmp_dir)
         rmtree(tmp_dir)
 
-        echo(f"Archive {archive_file_name} with certificate signing" f" request created")
+        echo(f"Archive {archive_file_name} with certificate signing request created")
         echo(
             "This file should be sent to the certificate authority"
             " (typically hosted by the aggregator) for signing"
@@ -322,14 +322,14 @@ def register_collaborator(file_name):
     "-r",
     "--request-pkg",
     type=ClickPath(exists=True),
-    help="The archive containing the certificate signing" " request (*.zip) for a collaborator",
+    help="The archive containing the certificate signing request (*.zip) for a collaborator",
 )
 @option(
     "-i",
     "--import",
     "import_",
     type=ClickPath(exists=True),
-    help="Import the archive containing the collaborator's" " certificate (signed by the CA)",
+    help="Import the archive containing the collaborator's certificate (signed by the CA)",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
     """Certify the collaborator."""
