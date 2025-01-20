@@ -17,7 +17,7 @@ import dill
 from tabulate import tabulate
 
 from openfl.experimental.workflow.runtime.runtime import Runtime
-from openfl.experimental.workflow.transport.grpc.director_client import FederatedRuntimeClient
+from openfl.experimental.workflow.transport.grpc.director_client import RuntimeDirectorClient
 from openfl.experimental.workflow.workspace_export import WorkspaceExport
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class FederatedRuntime(Runtime):
         tls (bool): A flag indicating if TLS should be used for
             connections. Defaults to False.
         director (Optional[Dict[str, Any]]): Dictionary containing director info.
-        _runtime_client (FederatedRuntimeClient): The federatedruntime client.
+        _runtime_client (RuntimeDirectorClient): The Runtimedirector client.
         notebook_path (Optional[str]) : Path to the Jupyter notebook
         experiment_submitted (bool): Whether the experiment has been submitted.
         generated_workspace_path (Path): Path to generated workspace
@@ -123,13 +123,13 @@ class FederatedRuntime(Runtime):
         else:
             self.root_certificate = self.private_key = self.certificate = None
 
-    def _create_runtime_client(self) -> FederatedRuntimeClient:
-        """Create a FederatedRuntimeClient instance.
+    def _create_runtime_client(self) -> RuntimeDirectorClient:
+        """Create a RuntimeDirectorClient instance.
 
         Returns:
-            FederatedRuntimeClient: Instance of the client
+            RuntimeDirectorClient: Instance of the client
         """
-        return FederatedRuntimeClient(
+        return RuntimeDirectorClient(
             director_host=self.director["director_node_fqdn"],
             director_port=self.director["director_port"],
             tls=self.tls,

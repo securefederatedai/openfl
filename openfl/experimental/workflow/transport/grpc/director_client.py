@@ -11,18 +11,15 @@ import grpc
 from grpc._channel import _MultiThreadedRendezvous as DataStream
 
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
-from openfl.experimental.workflow.transport.grpc.exceptions import (
-    DirectorServiceError,
-    EnvoyNotFoundError,
-)
+from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
 
 from .grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)
 
 
-class EnvoyClient:
-    """Envoy client class for envoys.
+class DirectorClient:
+    """Director client class for envoys.
 
     This class communicates with the director to manage the envoys
     participation in the federation.
@@ -46,7 +43,7 @@ class EnvoyClient:
         certificate: Optional[Union[Path, str]] = None,
     ) -> None:
         """
-        Initialize envoy client object.
+        Initialize director client object.
 
         Args:
             director_host (str): The host name for Director server.
@@ -176,9 +173,9 @@ class EnvoyClient:
             return health_check_period
 
 
-class FederatedRuntimeClient:
+class RuntimeDirectorClient:
     """
-    FederatedRuntimeclient class for experiment manager.
+    RuntimeDirectorClient class for experiment manager.
 
     This class communicates with the director to manage the user's
     participation in the federation.
@@ -199,7 +196,7 @@ class FederatedRuntimeClient:
         certificate: Optional[Union[Path, str]] = None,
     ) -> None:
         """
-        Initialize FederatedRuntimeClient object.
+        Initialize RuntimeDirectorClient object.
 
         Args:
             director_host (str): The host name for Director server.
@@ -294,29 +291,15 @@ class FederatedRuntimeClient:
                 yield experiment_info
                 chunk = arch.read(max_buffer_size)
 
-    def get_envoys(self) -> director_pb2.GetEnvoysResponse:
+    def get_envoys(self) -> director_pb2.GetEnvoysRequest:
         """Display envoys info in a tabular format.
 
         Returns:
             envoys (director_pb2.GetEnvoysResponse): The envoy status response
                 from the gRPC server.
-
-        Raises:
-            DirectorServiceError: For any errors encountered while retrieving envoys info.
         """
-        try:
-            envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
-            return envoys
-
-        except Exception as error:
-            message = (
-                "Director may be offline. Please ensure that Director is online."
-                if isinstance(error, grpc.RpcError) and error.code() == grpc.StatusCode.UNAVAILABLE
-                else f"Unexpected error occurred: {str(error)}"
-            )
-            logger.error(message)
-
-            raise DirectorServiceError("Error occurred while retrieving envoys info") from None
+        envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
+        return envoys
 
     def get_flow_state(self) -> Tuple:
         """

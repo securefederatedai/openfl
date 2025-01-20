@@ -7,6 +7,3 @@
 
 class EnvoyNotFoundError(Exception):
     """Indicates that director has no information about that Envoy."""
-
-class DirectorServiceError(Exception):
-    """Exception raised for errors occurring when retrieving envoys information."""
