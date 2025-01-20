@@ -711,7 +711,8 @@ def download_data(collaborators, model_name, local_bind_path):
 
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     try:
-        subprocess.run(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}", shell=True)    # nosec B602
+        command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
+        subprocess.run(command, cwd=local_bind_path, check=True)
     except Exception:
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
