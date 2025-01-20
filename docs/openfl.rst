@@ -16,7 +16,6 @@ Subpackages
     openfl.databases
     openfl.federated
     openfl.interface
-    openfl.native
     openfl.pipelines
     openfl.plugins
     openfl.protocols
