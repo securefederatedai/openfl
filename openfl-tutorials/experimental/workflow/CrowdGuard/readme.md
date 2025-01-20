@@ -21,3 +21,25 @@ We implemented a simple scaling-based poisoning attack to demonstrate the effect
 For the local validation in CrowdGuard, each client uses its local dataset to obtain the hidden layer outputs for each local model. Then it calculates the Euclidean and Cosine Distance, before applying a PCA. Based on the first principal component, CrowdGuard employs several statistical tests to determine whether poisoned models remain and removes the poisoned models using clustering. This process is repeated until no more poisoned models are detected before sending the detected poisoned models to the server. On the server side, the votes of the individual clients are aggregated using a stacked-clustering scheme to prevent malicious clients from manipulating the aggregation process through manipulated votes. The client-side validation as well as the server-side operations, are executed with SGX to prevent privacy attacks.
 
 [1] Rieger, P., Krauß, T., Miettinen, M., Dmitrienko, A., & Sadeghi, A. R. CrowdGuard: Federated Backdoor Detection in Federated Learning. NDSS 2024.
+
+## Running the CIFAR-10 demo script
+The demo script requires a dedicated allocation of at least 18GB of RAM to run without issues.
+
+1) Create a Python virtual environment for better isolation
+```shell
+python -m venv venv
+source venv/bin/activate
+```
+2) Install OpenFL from PyPi
+```shell
+pip install -U openfl
+```
+3) Install the requirements for Workflow API
+```shell
+pip install -r workflow_interface_requirements.txt
+```
+4) Start the training script
+Note: you can adjust the number of training rounds via the `--comm_round` parameter, with 5 yielding a reasonable execution time on CPU
+```shell
+python cifar10_crowdguard.py --comm_round 5
+```
