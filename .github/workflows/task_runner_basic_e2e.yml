@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         # There are open issues for some of the models, so excluding them for now.
-        # Also models like xgb_higgs require runners with higher memory and CPU to run.
+        # Also models like XGBoost (xgb_higgs) require runners with higher memory and CPU to run.
         model_name: ["torch_cnn_mnist", "keras_cnn_mnist"]
         python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
