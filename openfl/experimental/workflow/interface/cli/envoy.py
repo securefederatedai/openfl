@@ -103,9 +103,7 @@ def start_(
             Validator(
                 "settings",
                 must_exist=True,
-                messages={
-                    "must_exist_true": "Missing 'settings' in Envoy Configuration file."
-                },
+                messages={"must_exist_true": "Missing 'settings' in Envoy Configuration file."},
             ),
             Validator(
                 "settings.director_host",
