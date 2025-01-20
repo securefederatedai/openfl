@@ -7,6 +7,7 @@ import logging
 import os
 import json
 import re
+import subprocess
 import papermill as pm
 from pathlib import Path
 import shutil
@@ -710,9 +711,7 @@ def download_data(collaborators, model_name, local_bind_path):
 
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     try:
-        # Data setup file has logic to show progress bar
-        # Using os.system to make sure it is displayed
-        os.system(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}")
+        subprocess.run(f"cd {local_bind_path}; python {constants.DATA_SETUP_FILE} {len(collaborators)}", shell=True)
     except Exception:
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
