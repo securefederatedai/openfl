@@ -30,16 +30,18 @@ The demo script requires a dedicated allocation of at least 18GB of RAM to run w
 python -m venv venv
 source venv/bin/activate
 ```
-2) Install OpenFL from PyPi
+2) Install OpenFL from the latest sources
 ```shell
-pip install -U openfl
+git clone https://github.com/securefederatedai/openfl.git && cd openfl
+pip install -e .
 ```
 3) Install the requirements for Workflow API
 ```shell
+cd openfl-tutorials/experimental/workflow/CrowdGuard
 pip install -r workflow_interface_requirements.txt
 ```
-4) Start the training script
-Note: you can adjust the number of training rounds via the `--comm_round` parameter, with 5 yielding a reasonable execution time on CPU
+4) Start the training script<br/>
+Note that the number of training rounds can be adjusted via the `--comm_round` parameter:
 ```shell
 python cifar10_crowdguard.py --comm_round 5
 ```
