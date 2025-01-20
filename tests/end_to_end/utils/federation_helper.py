@@ -9,6 +9,7 @@ import json
 import re
 import papermill as pm
 from pathlib import Path
+import shutil
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -110,18 +111,19 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
     return True
 
 
-def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
+def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, add_data=False):
     """
     Create tarball for all the collaborators
     Args:
         collaborators (list): List of collaborator objects
         local_bind_path (str): Local bind path
         use_tls (bool): Use TLS or not (default is True)
+        add_data (bool): Add data to the tarball (default is False)
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     try:
 
-        def _create_tarball(collaborator_name, local_bind_path):
+        def _create_tarball(collaborator_name, index, local_bind_path, add_data):
             local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
                 local_bind_path, collaborator_name
             )
@@ -134,7 +136,10 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
                 ]
                 client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
                 tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
+                if add_data:
+                    tarfiles += f" data/{index}"
 
+            log.info(f"Tarfile for {collaborator_name} includes: {tarfiles}")
             return_code, output, error = ssh.run_command(
                 f"tar -cf {tarfiles}", work_dir=local_col_ws_path
             )
@@ -146,9 +151,9 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
 
         results = [
             executor.submit(
-                _create_tarball, collaborator.name, local_bind_path=local_bind_path
+                _create_tarball, collaborator.name, index, local_bind_path=local_bind_path, add_data=add_data
             )
-            for collaborator in collaborators
+            for index, collaborator in enumerate(collaborators, start=1)
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to create tarball for one or more collaborators")
@@ -201,36 +206,6 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     except Exception as e:
         raise e
 
-    return True
-
-
-def setup_data(collaborators, model_name, local_bind_path, use_local_path=False):
-    """
-    Setup data for the federation run
-    Args:
-        collaborators (list): List of collaborator objects
-        model_name (str): Model name
-        local_bind_path (str): Local bind path
-        use_local_path (bool): Use local path or not
-    """
-    if use_local_path:
-        # single download
-        result = collaborators[0].data_setup(model_name, len(collaborators), constants.AGG_PLAN_PATH.format(local_bind_path))
-        if not result:
-            raise Exception("Failed to setup data")
-    else:
-        executor = concurrent.futures.ThreadPoolExecutor()
-        futures = [
-            executor.submit(
-                collaborator.data_setup,
-                model_name,
-                len(collaborators),
-                constants.COL_PLAN_PATH.format(local_bind_path, collaborator.name),
-            )
-            for collaborator in collaborators
-        ]
-        if not all([f.result() for f in futures]):
-            raise Exception("Failed to setup data for one or more collaborators.")
     return True
 
 
@@ -659,18 +634,22 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(count, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
+    Args:
+        index (int): Index of the collaborator. Starts with 1.
+        workspace_path (str): Workspace path
+        local_bind_path (str): Local bind path
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
-            collaborator_name=f"collaborator{count+1}",
-            data_directory_path=count + 1,
-            workspace_path=f"{workspace_path}/collaborator{count+1}/workspace",
+            collaborator_name=f"collaborator{index}",
+            data_directory_path=index,
+            workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
         create_persistent_store(collaborator.name, local_bind_path)
 
@@ -698,6 +677,72 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
     return collaborator
+
+
+def setup_collaborator_data(collaborators, model_name, local_bind_path):
+    """
+    This function is specific to the model and should be updated as per the model requirements.
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    """
+    # Check if data already exists, if yes, skip the download part
+    # This is mainly helpful in case of re-runs
+    for index, collaborator in enumerate(collaborators, start=1):
+        data_path = os.path.join(constants.COL_WORKSPACE_PATH.format(local_bind_path, collaborator.name), "data")
+        if os.path.exists(data_path):
+            folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(data_path, f))]
+            # For example, in case of xgb_higgs, data is present in folders like
+            # data/1, data/2, etc. under respective collaborator workspaces.
+            if folders and folders[0] != str(index):
+                raise ex.DataSetupException(f"Data is present but not for {collaborator.name}.")
+
+    # Download the data for the model in the local bind path (for e.g. /home/user/results/xgb_higgs)
+    # and then copy to the respective collaborator workspaces
+    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
+    try:
+        shutil.copyfile(
+            src=os.path.join(collaborators[0].workspace_path, "src", constants.DATA_SETUP_FILE),
+            dst=os.path.join(local_bind_path, constants.DATA_SETUP_FILE)
+        )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to copy data setup file: {e}")
+
+    error_msg = f"Failed to download data for {model_name}"
+    try:
+        return_code, output, error = run_command(
+            f"python -v {constants.DATA_SETUP_FILE} {len(collaborators)}",
+            workspace_path=local_bind_path,
+            error_msg=error_msg,
+            return_error=True,
+        )
+        log.info("Data download completed successfully. Modifying the data.yaml file..")
+        if error:
+            raise ex.DataSetupException(f"{error_msg}: {error}")
+
+    except Exception:
+        raise ex.DataSetupException(f"Failed to download data for {model_name}") # Do not print error, it maybe too long
+
+    try:
+        # Move the data to the respective workspace based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(local_bind_path, 'data', str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, 'data', str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+    return True
 
 
 def extract_memory_usage(log_file):

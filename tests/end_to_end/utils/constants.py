@@ -32,6 +32,10 @@ COL_WORKSPACE_PATH = "{}/{}/workspace"  # example - /tmp/my_federation/collabora
 AGG_PLAN_PATH = "{}/aggregator/workspace/plan"  # example - /tmp/my_federation/aggregator/workspace/plan
 COL_PLAN_PATH = "{}/{}/workspace/plan"  # example - /tmp/my_federation/collaborator1/workspace/plan
 
+COL_DATA_FILE = "{}/{}/workspace/plan/data.yaml"  # example - /tmp/my_federation/collaborator1/workspace/plan/data.yaml
+
+DATA_SETUP_FILE = "setup_data.py" # currently xgb_higgs is using this file to setup data
+
 AGG_COL_RESULT_FILE = "{0}/{1}/workspace/{1}.log"  # example - /tmp/my_federation/aggregator/workspace/aggregator.log
 
 AGG_WORKSPACE_ZIP_NAME = "workspace.zip"

@@ -206,51 +206,19 @@ class Collaborator():
             log.error(f"{error_msg}: {e}")
             raise e
 
-    def data_setup(self, model_name, num_collaborators, plan_path):
+    def modify_data_file(self, data_file, index):
         """
-        Perform the data setup for the model and modify the data.yaml file
+        Modify the data.yaml file for the model
         Args:
-            model_name (str): Model name
-            num_collaborators (int): Number of collaborators
-            plan_path (str): Path to the plan file
+            data_file (str): Path to the data file including the file name
         Returns:
             bool: True if successful, else False
         """
         try:
-            log.info(f"Setting up the data for {model_name}. This will take some time to complete based on the data size ..")
-
-            # Check if data already exists, if yes, skip the download part
-            # This is mainly helpful in case of re-runs
-            data_path = os.path.join(self.workspace_path, "data")
-            folders = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(data_path, f))]
-            if len(folders) == num_collaborators:
-                log.info(f"Data is already present at {data_path}. Skipping the download part..")
-            else:
-                log.info("Either data is not present or is invalid. Forcing download..")
-                error_msg = f"Failed to download data for {model_name}"
-                data_setup_file_path = os.path.join(self.workspace_path, "src", "setup_data.py")
-                if not os.path.exists(data_setup_file_path):
-                    raise FileNotFoundError(f"{data_setup_file_path} not found.")
-
-                return_code, output, error = fh.run_command(
-                    f"python -v {data_setup_file_path} {num_collaborators}",
-                    workspace_path=self.workspace_path,
-                    error_msg=error_msg,
-                    container_id=self.container_id,
-                )
-                log.info(f"Data setup output: {output}")
-        except Exception as e:
-            raise ex.DataSetupException(f"{error_msg}: {e}")
-
-        try:
             log.info("Data setup completed successfully. Modifying the data.yaml file..")
-            data_file = os.path.join(plan_path, "data.yaml")
-            content = ""
-            for i in range(1, num_collaborators + 1):
-                content += f"collaborator{i},data/{i}\n"
 
             with open(data_file, "w") as file:
-                file.write(content)
+                file.write(f"{self.collaborator_name},data/{index}")
 
         except Exception as e:
             log.error(f"Failed to modify the data file: {e}")
