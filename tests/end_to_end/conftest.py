@@ -192,7 +192,7 @@ def pytest_sessionfinish(session, exitstatus):
     if os.path.exists(cache_dir):
         shutil.rmtree(cache_dir, ignore_errors=False)
         log.debug(f"Cleared .pytest_cache directory at {cache_dir}")
-    
+
     # Cleanup docker containers related to aggregator and collaborators, if any.
     dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
     # Cleanup docker network created for openfl, if any.
