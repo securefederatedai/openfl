@@ -136,6 +136,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
                 ]
                 client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
                 tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
+                # IMPORTANT: Model xgb_higgs uses format like data/1 and data/2, thus adding data to tarball in the same format.
                 if add_data:
                     tarfiles += f" data/{index}"
 
@@ -681,7 +682,8 @@ def setup_collaborator(index, workspace_path, local_bind_path):
 
 def setup_collaborator_data(collaborators, model_name, local_bind_path):
     """
-    This function is specific to the model and should be updated as per the model requirements.
+    Function to setup the data for collaborators.
+    IMP: This function is specific to the model and should be updated as per the model requirements.
     Args:
         collaborators (list): List of collaborator objects
         model_name (str): Model name

@@ -5,8 +5,8 @@ import os
 import logging
 
 import tests.end_to_end.utils.docker_helper as dh
-import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.exceptions as ex
+import tests.end_to_end.utils.federation_helper as fh
 
 log = logging.getLogger(__name__)
 

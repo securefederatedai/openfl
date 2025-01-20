@@ -34,12 +34,10 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        # There are open issues for some of the models, so excluding them for now:
-        # model_name: [ "torch_cnn_mnist", "keras_cnn_mnist", "torch_cnn_histology" ]
-        # model_name: ["torch_cnn_mnist", "keras_cnn_mnist", "xgb_higgs"]
-        model_name: ["xgb_higgs"]
-        # python_version: ["3.10", "3.11", "3.12"]
-        python_version: ["3.10"]
+        # There are open issues for some of the models, so excluding them for now.
+        # Also models like xgb_higgs require runners with higher memory and CPU to run.
+        model_name: ["torch_cnn_mnist", "keras_cnn_mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -73,132 +71,132 @@ jobs:
         with:
           test_type: "tr_tls"
 
-  # test_with_non_tls:
-  #   name: tr_non_tls
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 30
-  #   strategy:
-  #     matrix:
-  #       # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
-  #       # If required, this can be extended to other models and python versions
-  #       model_name: ["torch_cnn_mnist"]
-  #       python_version: ["3.10"]
-  #     fail-fast: false # do not immediately fail if one of the combinations fail
+  test_with_non_tls:
+    name: tr_non_tls
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["torch_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
 
-  #   env:
-  #     MODEL_NAME: ${{ matrix.model_name }}
-  #     PYTHON_VERSION: ${{ matrix.python_version }}
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
 
-  #   steps:
-  #     - name: Checkout OpenFL repository
-  #       id: checkout_openfl
-  #       uses: actions/checkout@v4.1.1
-  #       with:
-  #         fetch-depth: 2 # needed for detecting changes
-  #         submodules: "true"
-  #         token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Pre test run
-  #       uses: ./.github/actions/tr_pre_test_run
-  #       if: ${{ always() }}
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
-  #     - name: Run Task Runner E2E tests without TLS
-  #       id: run_tests
-  #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-  #         -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-  #         --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
-  #         echo "Task runner end to end test run completed"
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
+          echo "Task runner end to end test run completed"
 
-  #     - name: Post test run
-  #       uses: ./.github/actions/tr_post_test_run
-  #       if: ${{ always() }}
-  #       with:
-  #         test_type: "tr_non_tls"
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_non_tls"
 
-  # test_with_no_client_auth:
-  #   name: tr_no_client_auth
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 30
-  #   strategy:
-  #     matrix:
-  #       # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
-  #       # If required, this can be extended to other models and python versions
-  #       model_name: ["keras_cnn_mnist"]
-  #       python_version: ["3.10"]
-  #     fail-fast: false # do not immediately fail if one of the combinations fail
+  test_with_no_client_auth:
+    name: tr_no_client_auth
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
 
-  #   env:
-  #     MODEL_NAME: ${{ matrix.model_name }}
-  #     PYTHON_VERSION: ${{ matrix.python_version }}
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
 
-  #   steps:
-  #     - name: Checkout OpenFL repository
-  #       id: checkout_openfl
-  #       uses: actions/checkout@v4.1.1
-  #       with:
-  #         fetch-depth: 2 # needed for detecting changes
-  #         submodules: "true"
-  #         token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Pre test run
-  #       uses: ./.github/actions/tr_pre_test_run
-  #       if: ${{ always() }}
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
-  #     - name: Run Task Runner E2E tests without TLS
-  #       id: run_tests
-  #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-  #         -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-  #         --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
-  #         echo "Task runner end to end test run completed"
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
+          echo "Task runner end to end test run completed"
 
-  #     - name: Post test run
-  #       uses: ./.github/actions/tr_post_test_run
-  #       if: ${{ always() }}
-  #       with:
-  #         test_type: "tr_no_client_auth"
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_no_client_auth"
 
-  # test_memory_logs:
-  #   name: tr_tls_memory_logs
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 30
-  #   strategy:
-  #     matrix:
-  #       # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
-  #       # If required, this can be extended to other models and python versions
-  #       model_name: ["torch_cnn_mnist"]
-  #       python_version: ["3.10"]
-  #     fail-fast: false # do not immediately fail if one of the combinations fail
+  test_memory_logs:
+    name: tr_tls_memory_logs
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["torch_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
 
-  #   env:
-  #     MODEL_NAME: ${{ matrix.model_name }}
-  #     PYTHON_VERSION: ${{ matrix.python_version }}
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
 
-  #   steps:
-  #     - name: Checkout OpenFL repository
-  #       id: checkout_openfl
-  #       uses: actions/checkout@v4.1.1
-  #       with:
-  #         fetch-depth: 2 # needed for detecting changes
-  #         submodules: "true"
-  #         token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Pre test run
-  #       uses: ./.github/actions/tr_pre_test_run
-  #       if: ${{ always() }}
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
-  #     - name: Run Task Runner E2E tests with TLS and memory logs
-  #       id: run_tests
-  #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
-  #         -k test_log_memory_usage_basic --model_name ${{ env.MODEL_NAME }} \
-  #         --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
-  #         --log_memory_usage
-  #         echo "Task runner memory logs test run completed"
+      - name: Run Task Runner E2E tests with TLS and memory logs
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
+          -k test_log_memory_usage_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
+          --log_memory_usage
+          echo "Task runner memory logs test run completed"
 
-  #     - name: Post test run
-  #       uses: ./.github/actions/tr_post_test_run
-  #       if: ${{ always() }}
-  #       with:
-  #         test_type: "tr_tls_memory_logs"
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_tls_memory_logs"
