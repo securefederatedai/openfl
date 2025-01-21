@@ -59,6 +59,7 @@ class DirectorClient:
         """
         director_addr = f"{director_host}:{director_port}"
         self.envoy_name = envoy_name
+        logger.info("Director address: %s", director_addr)
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
@@ -177,7 +178,7 @@ class RuntimeDirectorClient:
     """
     RuntimeDirectorClient class for experiment manager.
 
-    This class communicates with the director to manage the user's
+    This class communicates with the director to manage the experiment manager’s
     participation in the federation.
 
     Attributes:
@@ -211,6 +212,7 @@ class RuntimeDirectorClient:
 
         """
         director_addr = f"{director_host}:{director_port}"
+        logger.info("Director address: %s", director_addr)
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:

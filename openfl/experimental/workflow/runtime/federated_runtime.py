@@ -31,7 +31,7 @@ class FederatedRuntime(Runtime):
         tls (bool): A flag indicating if TLS should be used for
             connections. Defaults to False.
         director (Optional[Dict[str, Any]]): Dictionary containing director info.
-        _runtime_client (RuntimeDirectorClient): The Runtimedirector client.
+        _runtime_dir_client (RuntimeDirectorClient): The Runtimedirector client.
         notebook_path (Optional[str]) : Path to the Jupyter notebook
         experiment_submitted (bool): Whether the experiment has been submitted.
         generated_workspace_path (Path): Path to generated workspace
@@ -64,7 +64,7 @@ class FederatedRuntime(Runtime):
                 self.director.get("api_private_key", None),
                 self.director.get("api_cert", None),
             )
-            self._runtime_client = self._create_runtime_client()
+            self._runtime_dir_client = self._create_runtime_dir_client()
 
         self.notebook_path = notebook_path
         self.experiment_submitted = False
@@ -123,7 +123,7 @@ class FederatedRuntime(Runtime):
         else:
             self.root_certificate = self.private_key = self.certificate = None
 
-    def _create_runtime_client(self) -> RuntimeDirectorClient:
+    def _create_runtime_dir_client(self) -> RuntimeDirectorClient:
         """Create a RuntimeDirectorClient instance.
 
         Returns:
@@ -161,7 +161,7 @@ class FederatedRuntime(Runtime):
             exp_name (str): The name of the experiment to be submitted.
         """
         try:
-            response = self._runtime_client.set_new_experiment(
+            response = self._runtime_dir_client.set_new_experiment(
                 archive_path=archive_path, experiment_name=exp_name, col_names=self.__collaborators
             )
             self.experiment_submitted = response.status
@@ -184,7 +184,7 @@ class FederatedRuntime(Runtime):
             status (bool): The flow status.
             flow_object: The deserialized flow object.
         """
-        status, flspec_obj = self._runtime_client.get_flow_state()
+        status, flspec_obj = self._runtime_dir_client.get_flow_state()
 
         # Append generated workspace path to sys.path
         # to allow unpickling of flspec_obj
@@ -200,7 +200,7 @@ class FederatedRuntime(Runtime):
             online_envoys (List[str]): List of online envoys.
         """
         # Fetch envoy data
-        envoys = self._runtime_client.get_envoys()
+        envoys = self._runtime_dir_client.get_envoys()
         DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
         now = datetime.now().strftime(DATETIME_FORMAT)
 
@@ -239,7 +239,9 @@ class FederatedRuntime(Runtime):
             print("No experiment has been submitted yet.")
             return
         print(f"Getting standard output for experiment: {experiment_name}...")
-        for stdout_message_dict in self._runtime_client.stream_experiment_stdout(experiment_name):
+        for stdout_message_dict in self._runtime_dir_client.stream_experiment_stdout(
+            experiment_name
+        ):
             print(
                 f"Origin: {stdout_message_dict['stdout_origin']}, "
                 f"Task: {stdout_message_dict['task_name']}"
