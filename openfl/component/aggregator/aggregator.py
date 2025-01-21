@@ -352,6 +352,7 @@ class Aggregator:
         ]
         tensor_dict = {}
         tensor_tuple_dict = {}
+        next_round_tensors = {}
         for tk in tensor_keys:
             tk_name, _, _, _, _ = tk
             tensor_value = self.tensor_db.get_tensor_from_cache(tk)
