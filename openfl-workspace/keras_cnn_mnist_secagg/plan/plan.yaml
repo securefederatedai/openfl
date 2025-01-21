@@ -45,14 +45,14 @@ assigner :
           - decrypt_ciphertexts
 
 tasks:
-  decrypt_ciphertexts:
-    function: decrypt_ciphertexts
+  generate_keys:
+    function: generate_keys
     kwargs: {}
   generate_ciphertexts:
     function: generate_ciphertexts
     kwargs: {}
-  generate_keys:
-    function: generate_keys
+  decrypt_ciphertexts:
+    function: decrypt_ciphertexts
     kwargs: {}
 
 compression_pipeline :
