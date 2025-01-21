@@ -183,7 +183,7 @@ class RuntimeDirectorClient:
 
     Attributes:
         stub (director_pb2_grpc.DirectorStub): The gRPC stub for communication
-        with the director.
+            with the director.
     """
 
     def __init__(
