@@ -753,7 +753,7 @@ def download_data(collaborators, model_name, local_bind_path):
             )
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-    
+
     # Below step is specific to XGBoost model which uses higgs_data folder to create data folders.
     shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
 
