@@ -124,7 +124,12 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
     executor = concurrent.futures.ThreadPoolExecutor()
     try:
 
-        def _create_tarball(collaborator_name, index, local_bind_path, add_data):
+        def _create_tarball(collaborator_name, data_file_path, local_bind_path, add_data):
+            """
+            Internal function to create tarball for the collaborator.
+            If TLS is enabled - include client certificates and signed certificates in the tarball
+            If data needs to be added - include the data file in the tarball
+            """
             local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
                 local_bind_path, collaborator_name
             )
@@ -139,7 +144,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
                 tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
                 # IMPORTANT: Model XGBoost(xgb_higgs) uses format like data/1 and data/2, thus adding data to tarball in the same format.
                 if add_data:
-                    tarfiles += f" data/{index}"
+                    tarfiles += f" data/{data_file_path}"
 
             log.info(f"Tarfile for {collaborator_name} includes: {tarfiles}")
             return_code, output, error = ssh.run_command(
@@ -153,7 +158,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
 
         results = [
             executor.submit(
-                _create_tarball, collaborator.name, index, local_bind_path=local_bind_path, add_data=add_data
+                _create_tarball, collaborator.name, data_file_path=index, local_bind_path=local_bind_path, add_data=add_data
             )
             for index, collaborator in enumerate(collaborators, start=1)
         ]
@@ -690,7 +695,14 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
         model_name (str): Model name
         local_bind_path (str): Local bind path
     """
-    if not pre_existing_data(collaborators):
+    # Check if data already exists, if yes, skip the download part
+    # This is mainly helpful in case of re-runs
+    if all(os.path.exists(os.path.join(collaborator.workspace_path, "data", str(index))) for index, collaborator in enumerate(collaborators, start=1)):
+        log.info("Data already exists for all the collaborators. Skipping the download part..")
+        return
+    else:
+        log.info("Data does not exist for all the collaborators. Proceeding with the download..")
+        # Below step will also modify the data.yaml file for all the collaborators
         download_data(collaborators, model_name, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
@@ -699,6 +711,13 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
 def download_data(collaborators, model_name, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
     """
     log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
     try:
@@ -717,7 +736,7 @@ def download_data(collaborators, model_name, local_bind_path):
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
     try:
-        # Move the data to the respective workspace based on the index
+        # Copy the data to the respective workspaces based on the index
         for index, collaborator in enumerate(collaborators, start=1):
             src_folder = os.path.join(local_bind_path, "data", str(index))
             dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
@@ -734,26 +753,10 @@ def download_data(collaborators, model_name, local_bind_path):
             )
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-    return True
+    
+    # Below step is specific to XGBoost model which uses higgs_data folder to create data folders.
+    shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
 
-
-def pre_existing_data(collaborators):
-    """
-    Check if data already exists for the model
-    Args:
-        collaborators (list): List of collaborator objects
-    Returns:
-        bool: True if data already exists, else False
-    """
-    # Check if data already exists, if yes, skip the download part
-    # This is mainly helpful in case of re-runs
-    for index, collaborator in enumerate(collaborators, start=1):
-        dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
-        if os.path.exists(dst_folder):
-            log.info(f"Destination folder {dst_folder} already exists. Using the existing data..")
-            continue
-        else:
-            return False
     return True
 
 
