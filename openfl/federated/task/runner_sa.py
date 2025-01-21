@@ -20,6 +20,12 @@ from openfl.utilities.secagg import (
 
 
 class SATaskRunner(TaskRunner):
+    """
+    NOTE: This class is only for testing purposes.
+    The tasks/methods define din this class would be placed in TaskRunner
+    class. By doing so, the users would be able to leverage secure aggregation
+    using a framework of their choice: torch, keras, etc.
+    """
     def __init__(self, device: str = None, loss_fn=None, optimizer=None, **kwargs):
         super().__init__(self, **kwargs)
         self.required_tensorkeys_for_function = {}
