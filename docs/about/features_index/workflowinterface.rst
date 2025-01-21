@@ -342,7 +342,7 @@ An example configuration file `director_config.yaml` is shown below:
 
 **Envoy: Participating nodes in the Federation**
 
-The `fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
+The :code:`fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
 
 **With TLS:**
 Use the following command:
