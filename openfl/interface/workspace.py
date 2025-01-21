@@ -68,6 +68,7 @@ def create_dirs(prefix):
     (prefix / "data").mkdir(parents=True, exist_ok=True)  # training data
     (prefix / "logs").mkdir(parents=True, exist_ok=True)  # training logs
     (prefix / "save").mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
+    (prefix / "local_state").mkdir(parents=True, exist_ok=True)  # persistent state
     (prefix / "src").mkdir(parents=True, exist_ok=True)  # model code
 
     shutil.copyfile(WORKSPACE / "workspace" / ".workspace", prefix / ".workspace")
@@ -365,7 +366,7 @@ def export_() -> str:
     if not os.path.isfile(_ws_identifier_file):
         openfl_ws_identifier_file = os.path.join(WORKSPACE, "workspace", _ws_identifier_file)
         logging.warning(
-            f"`{_ws_identifier_file}` is missing, " f"copying {openfl_ws_identifier_file} as-is."
+            f"`{_ws_identifier_file}` is missing, copying {openfl_ws_identifier_file} as-is."
         )
         shutil.copy2(openfl_ws_identifier_file, tmp_dir)
     shutil.copy2(_ws_identifier_file, tmp_dir)
@@ -430,10 +431,7 @@ def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, revision: s
     # Build OpenFL base image.
     logging.info("Building OpenFL Base image")
     base_image_build_cmd = (
-        "DOCKER_BUILDKIT=1 docker build {options} "
-        "-t {image_name} "
-        "-f {dockerfile} "
-        "{build_context}"
+        "DOCKER_BUILDKIT=1 docker build {options} -t {image_name} -f {dockerfile} {build_context}"
     ).format(
         options=options,
         image_name="openfl",
