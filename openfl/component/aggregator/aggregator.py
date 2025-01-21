@@ -373,7 +373,7 @@ class Aggregator:
                         self.next_model_round_number, ("model",)
                     )
                 self.persistent_db.finalize_round(
-                    tensor_tuple_dict, next_round_tensors, self.round_number, self.best_model_score
+                    tensor_tuple_dict, next_round_tensors, round_number, self.best_model_score
                 )
                 logger.info(
                     "Persist model and clean task result for round %s",
