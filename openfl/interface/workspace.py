@@ -357,6 +357,7 @@ def export_() -> str:
     # os.makedirs(os.path.join(tmp_dir, 'save'), exist_ok=True)
     os.makedirs(os.path.join(tmp_dir, "logs"), exist_ok=True)
     os.makedirs(os.path.join(tmp_dir, "data"), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "local_state"), exist_ok=True)
     shutil.copytree("src", os.path.join(tmp_dir, "src"), ignore=ignore)
     shutil.copytree("plan", os.path.join(tmp_dir, "plan"), ignore=ignore)
     shutil.copytree("save", os.path.join(tmp_dir, "save"))
