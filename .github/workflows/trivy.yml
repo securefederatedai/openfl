@@ -4,8 +4,9 @@ on:
     branches: 
       - develop
       - v1.7.x
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
+  workflow_dispatch:
+
 jobs:
   build:
     if: github.event.pull_request.draft == false
