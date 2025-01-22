@@ -220,9 +220,8 @@ def FedAvg(models):  # NOQA: N802
         state_dicts = [model.state_dict() for model in models]
         state_dict = new_model.state_dict()
         for key in models[1].state_dict():
-            state_dict[key] = np.sum(
-                [state[key] for state in state_dicts], axis=0
-            ) / len(models)
+            state_dict[key] = torch.from_numpy(
+                np.average([state[key].numpy() for state in state_dicts], axis=0))
         new_model.load_state_dict(state_dict)
     return new_model
 
@@ -316,8 +315,7 @@ class FederatedFlow(FLSpec):
             exclude=["private"],
         )
 
-    # @collaborator  # Uncomment if you want ro run on CPU
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available on the machine
+    @collaborator
     def train(self):
         self.collaborator_name = self.input
         print(20 * "#")
@@ -428,7 +426,7 @@ class FederatedFlow(FLSpec):
 
         ac_e = AgglomerativeClustering(n_clusters=2, distance_threshold=None,
                                        compute_full_tree=True,
-                                       affinity="euclidean", memory=None, connectivity=None,
+                                       metric="euclidean", memory=None, connectivity=None,
                                        linkage='single',
                                        compute_distances=True).fit(binary_votes)
         ac_e_labels: list = ac_e.labels_.tolist()

@@ -377,7 +377,7 @@ class CrowdGuardClientValidation:
 
                 ac_e = AgglomerativeClustering(n_clusters=2, distance_threshold=None,
                                                compute_full_tree=True,
-                                               affinity="euclidean", memory=None,
+                                               metric="euclidean", memory=None,
                                                connectivity=None,
                                                linkage='single',
                                                compute_distances=True).fit(cluster_input)
