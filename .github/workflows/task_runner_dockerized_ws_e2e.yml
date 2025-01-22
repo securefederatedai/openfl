@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         model_name: ["keras_cnn_mnist"]
-        python_version: ["3.9", "3.10", "3.11"]
+        python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:

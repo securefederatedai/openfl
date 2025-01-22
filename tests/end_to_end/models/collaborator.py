@@ -5,8 +5,8 @@ import os
 import logging
 
 import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
-
 
 log = logging.getLogger(__name__)
 
@@ -205,3 +205,23 @@ class Collaborator():
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
+
+    def modify_data_file(self, data_file, index):
+        """
+        Modify the data.yaml file for the model
+        Args:
+            data_file (str): Path to the data file including the file name
+        Returns:
+            bool: True if successful, else False
+        """
+        try:
+            log.info("Data setup completed successfully. Modifying the data.yaml file..")
+
+            with open(data_file, "w") as file:
+                file.write(f"{self.collaborator_name},data/{index}")
+
+        except Exception as e:
+            log.error(f"Failed to modify the data file: {e}")
+            raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+        return True

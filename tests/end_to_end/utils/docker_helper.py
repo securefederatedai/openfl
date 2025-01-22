@@ -12,35 +12,40 @@ import tests.end_to_end.utils.exceptions as ex
 log = logging.getLogger(__name__)
 
 
-def remove_docker_network():
+def remove_docker_network(list_of_networks=[constants.DOCKER_NETWORK_NAME]):
     """
     Remove docker network.
+    Args:
+        list_of_networks (list): List of network names to remove.
     """
     client = get_docker_client()
-    networks = client.networks.list(names=[constants.DOCKER_NETWORK_NAME])
+    networks = client.networks.list(names=list_of_networks)
     if not networks:
-        log.debug(f"Network {constants.DOCKER_NETWORK_NAME} does not exist")
+        log.debug(f"Network(s) {list_of_networks} does not exist")
         return
 
     for network in networks:
         log.debug(f"Removing network: {network.name}")
         network.remove()
-    log.debug("Docker network removed successfully")
+    log.debug(f"Docker network(s) {list_of_networks} removed successfully")
 
 
-def create_docker_network():
+def create_docker_network(list_of_networks=[constants.DOCKER_NETWORK_NAME]):
     """
     Create docker network.
+    Args:
+        list_of_networks (list): List of network names to create.
     """
     client = get_docker_client()
-    networks = client.networks.list(names=[constants.DOCKER_NETWORK_NAME])
+    networks = client.networks.list(names=list_of_networks)
     if networks:
-        log.info(f"Network {constants.DOCKER_NETWORK_NAME} already exists")
+        log.info(f"Network(s) {list_of_networks} already exists")
         return
 
-    log.debug(f"Creating network: {constants.DOCKER_NETWORK_NAME}")
-    network = client.networks.create(constants.DOCKER_NETWORK_NAME)
-    log.info(f"Network {network.name} created successfully")
+    for network_name in list_of_networks:
+        log.debug(f"Creating network: {network_name}")
+        _ = client.networks.create(network_name)
+    log.info(f"Docker network(s) {list_of_networks} created successfully")
 
 
 def check_docker_image():
@@ -143,24 +148,24 @@ def get_docker_client():
     return client
 
 
-def cleanup_docker_containers():
+def cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"]):
     """
     Cleanup the docker containers meant for openfl.
+    Args:
+        list_of_containers: List of container names to cleanup.
     """
     log.debug("Cleaning up docker containers")
 
     client = get_docker_client()
 
-    # List all containers related to openfl
-    agg_containers = client.containers.list(all=True, filters={"name": "aggregator"})
-    col_containers = client.containers.list(all=True, filters={"name": "collaborator*"})
-    containers = agg_containers + col_containers
-    container_names = []
-    # Stop and remove all containers
-    for container in containers:
-        container.stop()
-        container.remove()
-        container_names.append(container.name)
+    for container_name in list_of_containers:
+        containers = client.containers.list(all=True, filters={"name": container_name})
+        container_names = []
+        # Stop and remove all containers
+        for container in containers:
+            container.stop()
+            container.remove()
+            container_names.append(container.name)
 
-    if containers:
-        log.info(f"Docker containers {container_names} cleaned up successfully")
+        if containers:
+            log.info(f"Docker containers {container_names} cleaned up successfully")

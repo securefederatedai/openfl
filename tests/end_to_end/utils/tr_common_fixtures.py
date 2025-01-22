@@ -92,13 +92,17 @@ def fx_federation_tr(request):
     futures = [
         executor.submit(
             fh.setup_collaborator,
-            count=i,
+            index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
         )
-        for i in range(request.config.num_collaborators)
+        for index in range(1, request.config.num_collaborators+1)
     ]
     collaborators = [f.result() for f in futures]
+
+    # Data setup requires total no of collaborators, thus keeping the function call outside of the loop
+    if model_name.lower() == "xgb_higgs":
+        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
@@ -181,20 +185,25 @@ def fx_federation_tr_dws(request):
     futures = [
         executor.submit(
             fh.setup_collaborator,
-            count=i,
+            index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
         )
-        for i in range(request.config.num_collaborators)
+        for index in range(1, request.config.num_collaborators+1)
     ]
     collaborators = [f.result() for f in futures]
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
 
+    # Data setup requires total no of collaborators, thus keeping the function call outside of the loop
+    if model_name.lower() == "xgb_higgs":
+        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
+
     # Note: In case of multiple machines setup, scp the created tar for collaborators to the other machine(s)
     fh.create_tarball_for_collaborators(
-        collaborators, local_bind_path, use_tls=request.config.use_tls
+        collaborators, local_bind_path, use_tls=request.config.use_tls,
+        add_data=True if model_name.lower() == "xgb_higgs" else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS

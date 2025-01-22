@@ -352,6 +352,7 @@ class Aggregator:
         ]
         tensor_dict = {}
         tensor_tuple_dict = {}
+        next_round_tensors = {}
         for tk in tensor_keys:
             tk_name, _, _, _, _ = tk
             tensor_value = self.tensor_db.get_tensor_from_cache(tk)
@@ -373,7 +374,7 @@ class Aggregator:
                         self.next_model_round_number, ("model",)
                     )
                 self.persistent_db.finalize_round(
-                    tensor_tuple_dict, next_round_tensors, self.round_number, self.best_model_score
+                    tensor_tuple_dict, next_round_tensors, round_number, self.best_model_score
                 )
                 logger.info(
                     "Persist model and clean task result for round %s",
