@@ -84,11 +84,11 @@ jobs:
           # ---------------------------------------------------------------
           # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
           # Thus these models are excluded from the matrix for now.
-          # Below combinations will be used by default if no input is provided.
-          # TLS - models [torch_cnn_mnist, keras_cnn_mnist] and python versions [3.10, 3.11, 3.12]
-          # Non-TLS - models [torch_cnn_mnist] and python version [3.10]
-          # No client auth - models [keras_cnn_mnist] and python version [3.10]
-          # Memory logs - models [torch_cnn_mnist] and python version [3.10]
+          # Default combination if no input is provided.
+          # * TLS - models [torch_cnn_mnist, keras_cnn_mnist] and python versions [3.10, 3.11, 3.12]
+          # * Non-TLS - models [torch_cnn_mnist] and python version [3.10]
+          # * No client auth - models [keras_cnn_mnist] and python version [3.10]
+          # * Memory logs - models [torch_cnn_mnist] and python version [3.10]
           # ---------------------------------------------------------------
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
@@ -121,6 +121,9 @@ jobs:
           echo "Selected jobs: ${{ steps.input_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
           echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_tls' ]; then
+            echo "| Test with TLS | ${{ steps.input_selection.outputs.models_for_tls }} | ${{ steps.input_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
 
   test_with_tls:
