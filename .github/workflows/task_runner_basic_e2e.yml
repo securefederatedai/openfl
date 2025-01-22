@@ -122,7 +122,7 @@ jobs:
           # Print the selected values as a summary for better visibility
           # ---------------------------------------------------------------
           echo "Selected jobs: ${{ steps.input_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
-          echo ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} >> $GITHUB_STEP_SUMMARY
+          # echo ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} >> $GITHUB_STEP_SUMMARY
           echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
           echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
           # if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_tls' ]; then
