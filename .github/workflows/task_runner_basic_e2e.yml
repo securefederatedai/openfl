@@ -215,7 +215,7 @@ jobs:
           test_type: "tr_non_tls"
 
   test_with_no_client_auth:
-    name: Test without client authentication
+    name: Test without client auth
     needs: input_value_selection
     if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
