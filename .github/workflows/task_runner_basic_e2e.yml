@@ -89,6 +89,7 @@ jobs:
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
         run: |
+          echo ${{ needs.initial_job.outputs.jobs_to_run }}
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
@@ -134,6 +135,7 @@ jobs:
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
+          echo ${{ needs.initial_job.outputs.jobs_to_run }}
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
@@ -179,6 +181,7 @@ jobs:
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
+          echo ${{ needs.initial_job.outputs.jobs_to_run }}
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
@@ -224,6 +227,7 @@ jobs:
       - name: Run Task Runner E2E tests with TLS and memory logs
         id: run_tests
         run: |
+          echo ${{ needs.initial_job.outputs.jobs_to_run }}
           python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
           -k test_log_memory_usage_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
