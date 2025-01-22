@@ -227,7 +227,10 @@ def _get_summary_file():
     """
     summary_file = os.getenv("GITHUB_STEP_SUMMARY")
     print(f"Summary file: {summary_file}")
-    if "step_summary" not in summary_file.name or ".env" not in summary_file.name:
+    # For local runs, the summary file can be .env file.
+    # For GitHub actions, the summary file name should start with prefix "step_summary".
+    # For e.g. /home/runner/work/_temp/_runner_file_commands/step_summary_ea653f69-bf1c-4a83-a115-c801b1d312a7
+    if "step_summary" not in summary_file or ".env" not in summary_file:
         print("Invalid summary file. Exiting...")
         exit(1)
     return summary_file

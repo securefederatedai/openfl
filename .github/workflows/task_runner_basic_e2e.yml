@@ -65,7 +65,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
-    name: Initial Job
+    name: Select input values
     runs-on: ubuntu-22.04
     outputs:
       selected_jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}
@@ -81,6 +81,15 @@ jobs:
       - name: Job to select input values
         id: input_value_selection
         run: |
+          # ---------------------------------------------------------------
+          # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
+          # Thus these models are excluded from the matrix for now.
+          # Below combinations will be used by default if no input is provided.
+          # TLS - models [torch_cnn_mnist, keras_cnn_mnist] and python versions [3.10, 3.11, 3.12]
+          # Non-TLS - models [torch_cnn_mnist] and python version [3.10]
+          # No client auth - models [keras_cnn_mnist] and python version [3.10]
+          # Memory logs - models [torch_cnn_mnist] and python version [3.10]
+          # --------------------------------------------------------------- 
           if [ "${{ env.MODEL_NAME }}" == 'all' ]; then
             echo "models_for_tls=[\"torch_cnn_mnist\", \"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_non_tls=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
@@ -105,18 +114,27 @@ jobs:
           fi
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
-          echo $GITHUB_OUTPUT
+          # ---------------------------------------------------------------
+          # Print the selected values as a summary for better visibility
+          # ---------------------------------------------------------------
+          echo "Selected jobs: $jobs_to_run" >> $GITHUB_STEP_SUMMARY
+          echo "Selected models for TLS: $models_for_tls" >> $GITHUB_STEP_SUMMARY
+          echo "Selected python versions for TLS: $python_for_tls" >> $GITHUB_STEP_SUMMARY
+          echo "Selected models for non-TLS: $models_for_non_tls" >> $GITHUB_STEP_SUMMARY
+          echo "Selected python versions for non-TLS: $python_for_non_tls" >> $GITHUB_STEP_SUMMARY
+          echo "Selected models for no client auth: $models_for_no_client_auth" >> $GITHUB_STEP_SUMMARY
+          echo "Selected python versions for no client auth: $python_for_no_client_auth" >> $GITHUB_STEP_SUMMARY
+          echo "Selected models for memory logs: $models_for_memory_logs" >> $GITHUB_STEP_SUMMARY
+          echo "Selected python versions for memory logs: $python_for_memory_logs" >> $GITHUB_STEP_SUMMARY
 
   test_with_tls:
-    name: tr_tls
+    name: Test with TLS
     needs: input_value_selection
     if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
-        # Thus these models are excluded from the matrix for now.
         model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_tls) }}
         python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_tls) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
@@ -153,15 +171,13 @@ jobs:
           test_type: "tr_tls"
 
   test_with_non_tls:
-    name: tr_non_tls
+    name: Test without TLS
     needs: input_value_selection
     if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_non_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Testing this scenario only for torch_cnn_mnist model and python 3.10
-        # If required, this can be extended to other models and python versions
         model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_non_tls) }}
         python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_non_tls) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
@@ -198,15 +214,13 @@ jobs:
           test_type: "tr_non_tls"
 
   test_with_no_client_auth:
-    name: tr_no_client_auth
+    name: Test without client authentication
     needs: input_value_selection
     if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Testing this scenario for keras_cnn_mnist model and python 3.10
-        # If required, this can be extended to other models and python versions
         model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_no_client_auth) }}
         python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_no_client_auth) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
@@ -243,15 +257,13 @@ jobs:
           test_type: "tr_no_client_auth"
 
   test_memory_logs:
-    name: tr_tls_memory_logs
+    name: Test memory usage
     needs: input_value_selection
     if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Testing this scenario only for torch_cnn_mnist model and python 3.10
-        # If required, this can be extended to other models and python versions
         model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_memory_logs) }}
         python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_memory_logs) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
