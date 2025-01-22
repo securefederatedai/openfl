@@ -42,7 +42,6 @@ def get_aggregated_accuracy(agg_log_file):
         return agg_accuracy
 
     agg_accuracy_dict = convert_to_json(agg_log_file)
-    print(f"agg_accuracy_dict is: {agg_accuracy_dict}")
 
     if not agg_accuracy_dict:
         print(f"Aggregator log file {agg_log_file} is empty. Cannot get aggregated accuracy, returning 'Not Found'")
