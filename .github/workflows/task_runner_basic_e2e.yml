@@ -124,6 +124,15 @@ jobs:
           if [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "all" ] || [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "test_with_tls" ]; then
             echo "| Test with TLS | ${{ steps.input_selection.outputs.models_for_tls }} | ${{ steps.input_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
           fi
+          if [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "all" ] || [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "test_with_non_tls" ]; then
+            echo "| Test without TLS | ${{ steps.input_selection.outputs.models_for_non_tls }} | ${{ steps.input_selection.outputs.python_for_non_tls }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "all" ] || [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "test_with_no_client_auth" ]; then
+            echo "| Test without client auth | ${{ steps.input_selection.outputs.models_for_no_client_auth }} | ${{ steps.input_selection.outputs.python_for_no_client_auth }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "all" ] || [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "test_memory_logs" ]; then
+            echo "| Test memory logs | ${{ steps.input_selection.outputs.models_for_memory_logs }} | ${{ steps.input_selection.outputs.python_for_memory_logs }} |" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
 
   test_with_tls:
