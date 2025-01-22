@@ -11,7 +11,7 @@ The Open Federated Learning (OpenFL) framework supports straggler handling inter
 
 The following are the straggler handling algorithms supported in OpenFL:
 
-``CutoffPolicy``
+``CutoffTimePolicy``
     Identifies stragglers based on the cutoff time specified in the settings. Arguments to the function are:
         - *Cutoff Time* (straggler_cutoff_time), specifies the cutoff time by which the aggregator should end the round early.
         - *Minimum Reporting* (minimum_reporting), specifies the minimum number of collaborators needed to aggregate the model.
@@ -29,12 +29,12 @@ The following are the straggler handling algorithms supported in OpenFL:
 Demonstration of adding the straggler handling interface
 =========================================================
 
-The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentagePolicy``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffPolicy** function instead:
+The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentagePolicy``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffTimePolicy** function instead:
 
     .. code-block:: yaml
     
         straggler_handling_policy :
-            template : openfl.component.aggregator.straggler_handling.CutoffPolicy
+            template : openfl.component.aggregator.straggler_handling.CutoffTimePolicy
             settings :
                 straggler_cutoff_time : 20
                 minimum_reporting : 1

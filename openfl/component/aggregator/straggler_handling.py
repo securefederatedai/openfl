@@ -22,7 +22,7 @@ class StragglerPolicy(ABC):
     def start_policy(self, **kwargs) -> None:
         """
         Start straggler handling policy for collaborator for a particular round.
-        NOTE: Refer CutoffPolicy for reference.
+        NOTE: Refer CutoffTimePolicy for reference.
 
         Args:
             **kwargs
@@ -56,14 +56,14 @@ class StragglerPolicy(ABC):
         raise NotImplementedError
 
 
-class CutoffPolicy(StragglerPolicy):
+class CutoffTimePolicy(StragglerPolicy):
     """Cutoff time based Straggler Handling function."""
 
     def __init__(
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
         """
-         Initialize a CutoffPolicy object.
+         Initialize a CutoffTimePolicy object.
 
         Args:
             round_start_time (optional): The start time of the round. Defaults
@@ -71,7 +71,8 @@ class CutoffPolicy(StragglerPolicy):
             straggler_cutoff_time (float, optional): The cutoff time for
                 stragglers. Defaults to np.inf.
             minimum_reporting (int, optional): The minimum number of
-                collaborators that should report. Defaults to 1.
+                collaborators that should report before moving to the next round.
+                Defaults to 1.
             **kwargs: Variable length argument list.
         """
         if minimum_reporting <= 0:
@@ -83,7 +84,9 @@ class CutoffPolicy(StragglerPolicy):
         self.is_timer_started = False
 
         if self.straggler_cutoff_time == np.inf:
-            logger.warning("CutoffPolicy is disabled as straggler_cutoff_time is set to np.inf.")
+            logger.warning(
+                "CutoffTimePolicy is disabled as straggler_cutoff_time is set to np.inf."
+            )
 
     def reset_policy_for_round(self) -> None:
         """Reset timer for the next round."""
