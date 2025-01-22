@@ -3,11 +3,9 @@
 
 
 """Workspace module."""
-import os
-
-os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
 
 import logging
+import os
 import shutil
 import subprocess  # nosec
 import sys
