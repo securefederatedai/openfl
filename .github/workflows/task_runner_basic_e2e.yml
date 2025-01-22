@@ -65,7 +65,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
-    name: Select input values
+    name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
       selected_jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}
@@ -89,7 +89,9 @@ jobs:
           # Non-TLS - models [torch_cnn_mnist] and python version [3.10]
           # No client auth - models [keras_cnn_mnist] and python version [3.10]
           # Memory logs - models [torch_cnn_mnist] and python version [3.10]
-          # --------------------------------------------------------------- 
+          # ---------------------------------------------------------------
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
+
           if [ "${{ env.MODEL_NAME }}" == 'all' ]; then
             echo "models_for_tls=[\"torch_cnn_mnist\", \"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_non_tls=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
@@ -112,23 +114,29 @@ jobs:
             echo "python_for_no_client_auth=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_memory_logs=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
           fi
-          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
       - name: Print output values
+        id: print_output_values
         run: |
           # ---------------------------------------------------------------
           # Print the selected values as a summary for better visibility
           # ---------------------------------------------------------------
-          echo "${{ toJSON(steps.input_value_selection.outputs) }}" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected jobs: $jobs_to_run" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected models for TLS: $models_for_tls" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected python versions for TLS: $python_for_tls" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected models for non-TLS: $models_for_non_tls" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected python versions for non-TLS: $python_for_non_tls" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected models for no client auth: $models_for_no_client_auth" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected python versions for no client auth: $python_for_no_client_auth" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected models for memory logs: $models_for_memory_logs" >> $GITHUB_STEP_SUMMARY
-          # echo "Selected python versions for memory logs: $python_for_memory_logs" >> $GITHUB_STEP_SUMMARY
+          echo "Selected jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
+          echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_tls" ]; then
+            echo "| Test with TLS | ${{ steps.input_value_selection.outputs.models_for_tls }} | ${{ steps.input_value_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
+            fi
+          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_non_tls" ]; then
+            echo "| Test without TLS | ${{ steps.input_value_selection.outputs.models_for_non_tls }} | ${{ steps.input_value_selection.outputs.python_for_non_tls }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_no_client_auth" ]; then
+            echo "| Test without client auth | ${{ steps.input_value_selection.outputs.models_for_no_client_auth }} | ${{ steps.input_value_selection.outputs.python_for_no_client_auth }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_memory_logs" ]; then
+            echo "| Test memory logs | ${{ steps.input_value_selection.outputs.models_for_memory_logs }} | ${{ steps.input_value_selection.outputs.python_for_memory_logs }} |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
 
   test_with_tls:
     name: Test with TLS
