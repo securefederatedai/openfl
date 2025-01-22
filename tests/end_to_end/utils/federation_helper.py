@@ -7,8 +7,10 @@ import logging
 import os
 import json
 import re
+import subprocess   # nosec B404
 import papermill as pm
 from pathlib import Path
+import shutil
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.docker_helper as dh
@@ -110,18 +112,24 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
     return True
 
 
-def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
+def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, add_data=False):
     """
     Create tarball for all the collaborators
     Args:
         collaborators (list): List of collaborator objects
         local_bind_path (str): Local bind path
         use_tls (bool): Use TLS or not (default is True)
+        add_data (bool): Add data to the tarball (default is False)
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     try:
 
-        def _create_tarball(collaborator_name, local_bind_path):
+        def _create_tarball(collaborator_name, data_file_path, local_bind_path, add_data):
+            """
+            Internal function to create tarball for the collaborator.
+            If TLS is enabled - include client certificates and signed certificates in the tarball
+            If data needs to be added - include the data file in the tarball
+            """
             local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
                 local_bind_path, collaborator_name
             )
@@ -134,7 +142,11 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
                 ]
                 client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
                 tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
+                # IMPORTANT: Model XGBoost(xgb_higgs) uses format like data/1 and data/2, thus adding data to tarball in the same format.
+                if add_data:
+                    tarfiles += f" data/{data_file_path}"
 
+            log.info(f"Tarfile for {collaborator_name} includes: {tarfiles}")
             return_code, output, error = ssh.run_command(
                 f"tar -cf {tarfiles}", work_dir=local_col_ws_path
             )
@@ -146,9 +158,9 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls):
 
         results = [
             executor.submit(
-                _create_tarball, collaborator.name, local_bind_path=local_bind_path
+                _create_tarball, collaborator.name, data_file_path=index, local_bind_path=local_bind_path, add_data=add_data
             )
-            for collaborator in collaborators
+            for index, collaborator in enumerate(collaborators, start=1)
         ]
         if not all([f.result() for f in results]):
             raise Exception("Failed to create tarball for one or more collaborators")
@@ -629,18 +641,22 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(count, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
+    Args:
+        index (int): Index of the collaborator. Starts with 1.
+        workspace_path (str): Workspace path
+        local_bind_path (str): Local bind path
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
-            collaborator_name=f"collaborator{count+1}",
-            data_directory_path=count + 1,
-            workspace_path=f"{workspace_path}/collaborator{count+1}/workspace",
+            collaborator_name=f"collaborator{index}",
+            data_directory_path=index,
+            workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
         create_persistent_store(collaborator.name, local_bind_path)
 
@@ -668,6 +684,80 @@ def setup_collaborator(count, workspace_path, local_bind_path):
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
     return collaborator
+
+
+def setup_collaborator_data(collaborators, model_name, local_bind_path):
+    """
+    Function to setup the data for collaborators.
+    IMP: This function is specific to the model and should be updated as per the model requirements.
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    """
+    # Check if data already exists, if yes, skip the download part
+    # This is mainly helpful in case of re-runs
+    if all(os.path.exists(os.path.join(collaborator.workspace_path, "data", str(index))) for index, collaborator in enumerate(collaborators, start=1)):
+        log.info("Data already exists for all the collaborators. Skipping the download part..")
+        return
+    else:
+        log.info("Data does not exist for all the collaborators. Proceeding with the download..")
+        # Below step will also modify the data.yaml file for all the collaborators
+        download_data(collaborators, model_name, local_bind_path)
+
+    log.info("Data setup is complete for all the collaborators")
+
+
+def download_data(collaborators, model_name, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
+    try:
+        shutil.copyfile(
+            src=os.path.join(collaborators[0].workspace_path, "src", constants.DATA_SETUP_FILE),
+            dst=os.path.join(local_bind_path, constants.DATA_SETUP_FILE)
+        )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to copy data setup file: {e}")
+
+    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
+    try:
+        command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
+        subprocess.run(command, cwd=local_bind_path, check=True)
+    except Exception:
+        raise ex.DataSetupException(f"Failed to download data for {model_name}")
+
+    try:
+        # Copy the data to the respective workspaces based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(local_bind_path, "data", str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+    # Below step is specific to XGBoost model which uses higgs_data folder to create data folders.
+    shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
+
+    return True
 
 
 def extract_memory_usage(log_file):
