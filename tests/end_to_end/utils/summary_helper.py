@@ -225,7 +225,7 @@ def _get_summary_file():
     Returns:
         summary_file: Path to the summary file
     """
-    summary_file = Path(os.getenv("GITHUB_STEP_SUMMARY"))
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
     print(f"Summary file: {summary_file}")
     if "step_summary" not in summary_file.name or ".env" not in summary_file.name:
         print("Invalid summary file. Exiting...")
