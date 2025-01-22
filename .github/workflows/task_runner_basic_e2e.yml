@@ -124,16 +124,16 @@ jobs:
           echo "Selected jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
           echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_tls" ]; then
+          if [ "${{ steps.input_value_selection.outputs.jobs_to_run }}" == 'all' || "${{ steps.input_value_selection.outputs.jobs_to_run }}" == "test_with_tls" ]; then
             echo "| Test with TLS | ${{ steps.input_value_selection.outputs.models_for_tls }} | ${{ steps.input_value_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
             fi
-          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_non_tls" ]; then
+          if [ "${{ steps.input_value_selection.outputs.jobs_to_run }}" == 'all' || "${{ steps.input_value_selection.outputs.jobs_to_run }}" == "test_with_non_tls" ]; then
             echo "| Test without TLS | ${{ steps.input_value_selection.outputs.models_for_non_tls }} | ${{ steps.input_value_selection.outputs.python_for_non_tls }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_with_no_client_auth" ]; then
+          if [ "${{ steps.input_value_selection.outputs.jobs_to_run }}" == 'all' || "${{ steps.input_value_selection.outputs.jobs_to_run }}" == "test_with_no_client_auth" ]; then
             echo "| Test without client auth | ${{ steps.input_value_selection.outputs.models_for_no_client_auth }} | ${{ steps.input_value_selection.outputs.python_for_no_client_auth }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ "${{ env.JOBS_TO_RUN }}" == 'all' || "${{ env.JOBS_TO_RUN }}" == "test_memory_logs" ]; then
+          if [ "${{ steps.input_value_selection.outputs.jobs_to_run }}" == 'all' || "${{ steps.input_value_selection.outputs.jobs_to_run }}" == "test_memory_logs" ]; then
             echo "| Test memory logs | ${{ steps.input_value_selection.outputs.models_for_memory_logs }} | ${{ steps.input_value_selection.outputs.python_for_memory_logs }} |" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
