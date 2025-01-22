@@ -3,6 +3,7 @@
 
 
 """openfl.federated package."""
+
 import os
 from importlib import util
 
@@ -16,7 +17,7 @@ if util.find_spec("keras") is not None:
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import KerasTaskRunner
 if util.find_spec("torch") is not None:
-    os.environ['SETUPTOOLS_USE_DISTUTILS'] = 'stdlib'
+    os.environ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib"
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import PyTorchDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
