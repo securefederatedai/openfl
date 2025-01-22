@@ -58,7 +58,7 @@ jobs:
   test_with_tls:
     name: tr_tls
     needs: initial_job
-    if: ${{ needs.initial_job.outputs.jobs_to_run == 'all' }} || ${{ needs.initial_job.outputs.jobs_to_run == 'test_with_tls' }}
+    if: needs.initial_job.outputs.jobs_to_run == 'all' || needs.initial_job.outputs.jobs_to_run == 'test_with_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -104,7 +104,7 @@ jobs:
   test_with_non_tls:
     name: tr_non_tls
     needs: initial_job
-    if: ${{ needs.initial_job.outputs.jobs_to_run == 'all' }} || ${{ needs.initial_job.outputs.jobs_to_run == 'test_with_non_tls' }}
+    if: needs.initial_job.outputs.jobs_to_run == 'all' || needs.initial_job.outputs.jobs_to_run == 'test_with_non_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -150,7 +150,7 @@ jobs:
   test_with_no_client_auth:
     name: tr_no_client_auth
     needs: initial_job
-    if: ${{ needs.initial_job.outputs.jobs_to_run == 'all' }} || ${{ needs.initial_job.outputs.jobs_to_run == 'test_with_no_client_auth' }}
+    if: needs.initial_job.outputs.jobs_to_run == 'all' || needs.initial_job.outputs.jobs_to_run == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -196,7 +196,7 @@ jobs:
   test_memory_logs:
     name: tr_tls_memory_logs
     needs: initial_job
-    if: ${{ needs.initial_job.outputs.jobs_to_run == 'all' }} || ${{ needs.initial_job.outputs.jobs_to_run == 'test_memory_logs' }}
+    if: needs.initial_job.outputs.jobs_to_run == 'all' || needs.initial_job.outputs.jobs_to_run == 'test_memory_logs'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
