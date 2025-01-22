@@ -104,7 +104,7 @@ def get_testcase_result():
 
 def print_task_runner_score():
     """
-    Main function to get the test case results and aggregator logs
+    Function to get the test case results and aggregator logs
     And write the results to GitHub step summary
     IMP: Do not fail the test in any scenario
     """
@@ -130,6 +130,8 @@ def print_task_runner_score():
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME")
     summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+
+    print(f"Summary file: {summary_file}")
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -169,8 +171,13 @@ def print_task_runner_score():
 
 
 def print_federated_runtime_score():
+    """
+    Function to get the federated runtime score from the director log file
+    And write the results to GitHub step summary
+    IMP: Do not fail the test in any scenario
+    """
     summary_file = os.getenv("GITHUB_STEP_SUMMARY")
-
+    print(f"Summary file: {summary_file}")
     search_string = "Aggregated model validation score"
 
     last_occurrence = aggregated_model_score = None
