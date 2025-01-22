@@ -448,7 +448,7 @@ def _verify_completion_for_participant(
         return True
 
 
-def federation_env_setup_and_validate(request):
+def federation_env_setup_and_validate(request, eval_scope=False):
     """
     Setup the federation environment and validate the configurations
     Args:
@@ -470,10 +470,19 @@ def federation_env_setup_and_validate(request):
     local_bind_path = os.path.join(
         home_dir, request.config.results_dir, request.config.model_name
     )
+    num_rounds = request.config.num_rounds
+
+    if eval_scope:
+        local_bind_path = f"{local_bind_path}_eval"
+        num_rounds = 1
+        log.info(f"Running evaluation for the model: {request.config.model_name}")
+
     workspace_path = local_bind_path
+    # if path exists delete it
+    if os.path.exists(workspace_path):
+        shutil.rmtree(workspace_path)
 
     if test_env == "task_runner_dockerized_ws":
-
         agg_domain_name = "aggregator"
         # Cleanup docker containers
         dh.cleanup_docker_containers()
@@ -483,7 +492,7 @@ def federation_env_setup_and_validate(request):
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {request.config.num_rounds}\n"
+        f"\tNumber of rounds: {num_rounds}\n"
         f"\tModel name: {request.config.model_name}\n"
         f"\tClient authentication: {request.config.require_client_auth}\n"
         f"\tTLS: {request.config.use_tls}\n"

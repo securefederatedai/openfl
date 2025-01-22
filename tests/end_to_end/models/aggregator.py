@@ -19,7 +19,7 @@ class Aggregator():
     2. Starting the aggregator
     """
 
-    def __init__(self, agg_domain_name=None, workspace_path=None, container_id=None):
+    def __init__(self, agg_domain_name=None, workspace_path=None, container_id=None, eval_scope=False):
         """
         Initialize the Aggregator class
         Args:
@@ -31,6 +31,7 @@ class Aggregator():
         self.agg_domain_name = agg_domain_name
         self.workspace_path = workspace_path
         self.container_id = container_id
+        self.eval_scope = eval_scope
 
     def generate_sign_request(self):
         """
@@ -63,8 +64,11 @@ class Aggregator():
             log.info(f"Starting {self.name}")
             res_file = res_file if not with_docker else os.path.basename(res_file)
             error_msg = "Failed to start the aggregator"
+            command = "fx aggregator start"
+            if self.eval_scope:
+                command = f"{command} --task_group evaluation"
             fh.run_command(
-                "fx aggregator start",
+                command=command,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path if not with_docker else "",
