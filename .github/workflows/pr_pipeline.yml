@@ -4,7 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
-  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
@@ -12,6 +11,7 @@ concurrency:
 
 jobs:
   bandit_code_scan:
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
@@ -52,6 +52,7 @@ jobs:
     uses: ./.github/workflows/taskrunner_eden_pipeline.yml
 
   trivy_scan:
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
