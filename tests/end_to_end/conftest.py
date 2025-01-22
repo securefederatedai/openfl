@@ -12,6 +12,7 @@ from pathlib import Path
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils.conftest_helper import parse_arguments
+import tests.end_to_end.utils.docker_helper as dh
 
 
 def pytest_addoption(parser):
@@ -191,6 +192,11 @@ def pytest_sessionfinish(session, exitstatus):
     if os.path.exists(cache_dir):
         shutil.rmtree(cache_dir, ignore_errors=False)
         log.debug(f"Cleared .pytest_cache directory at {cache_dir}")
+
+    # Cleanup docker containers related to aggregator and collaborators, if any.
+    dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
+    # Cleanup docker network created for openfl, if any.
+    dh.remove_docker_network(["openfl"])
 
 
 def pytest_configure(config):

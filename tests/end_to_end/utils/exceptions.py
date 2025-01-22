@@ -86,3 +86,8 @@ class EnvoyStartException(Exception):
 class DirectorStartException(Exception):
     """Exception for director start"""
     pass
+
+
+class DataSetupException(Exception):
+    """Exception for data setup for given model"""
+    pass
