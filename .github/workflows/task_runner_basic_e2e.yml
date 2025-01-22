@@ -121,7 +121,7 @@ jobs:
           echo "Selected jobs: ${{ steps.input_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
           echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
-          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_tls' ]; then
+          if [ "${{ steps.input_selection.outputs.jobs_to_run }}" == "all" || "${{ steps.input_selection.outputs.jobs_to_run }}" == "test_with_tls" ]; then
             echo "| Test with TLS | ${{ steps.input_selection.outputs.models_for_tls }} | ${{ steps.input_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
