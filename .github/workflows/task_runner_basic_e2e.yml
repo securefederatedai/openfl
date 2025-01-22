@@ -61,25 +61,25 @@ env:
   JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
 
 jobs:
-  input_value_selection:
+  input_selection:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
-      selected_jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}
-      selected_models_for_tls: ${{ steps.input_value_selection.outputs.models_for_tls }}
-      selected_python_for_tls: ${{ steps.input_value_selection.outputs.python_for_tls }}
-      selected_models_for_non_tls: ${{ steps.input_value_selection.outputs.models_for_non_tls }}
-      selected_models_for_no_client_auth: ${{ steps.input_value_selection.outputs.models_for_no_client_auth }}
-      selected_models_for_memory_logs: ${{ steps.input_value_selection.outputs.models_for_memory_logs }}
-      selected_python_for_non_tls: ${{ steps.input_value_selection.outputs.python_for_non_tls }}
-      selected_python_for_no_client_auth: ${{ steps.input_value_selection.outputs.python_for_no_client_auth }}
-      selected_python_for_memory_logs: ${{ steps.input_value_selection.outputs.python_for_memory_logs }}
+      selected_jobs: ${{ steps.input_selection.outputs.jobs_to_run }}
+      selected_models_for_tls: ${{ steps.input_selection.outputs.models_for_tls }}
+      selected_python_for_tls: ${{ steps.input_selection.outputs.python_for_tls }}
+      selected_models_for_non_tls: ${{ steps.input_selection.outputs.models_for_non_tls }}
+      selected_models_for_no_client_auth: ${{ steps.input_selection.outputs.models_for_no_client_auth }}
+      selected_models_for_memory_logs: ${{ steps.input_selection.outputs.models_for_memory_logs }}
+      selected_python_for_non_tls: ${{ steps.input_selection.outputs.python_for_non_tls }}
+      selected_python_for_no_client_auth: ${{ steps.input_selection.outputs.python_for_no_client_auth }}
+      selected_python_for_memory_logs: ${{ steps.input_selection.outputs.python_for_memory_logs }}
     steps:
       - name: Job to select input values
-        id: input_value_selection
+        id: input_selection
         run: |
           # ---------------------------------------------------------------
           # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
@@ -121,33 +121,33 @@ jobs:
           # ---------------------------------------------------------------
           # Print the selected values as a summary for better visibility
           # ---------------------------------------------------------------
-          echo "Selected jobs: ${{ steps.input_value_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "Selected jobs: ${{ steps.input_selection.outputs.jobs_to_run }}" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Model | Python Version |" >> $GITHUB_STEP_SUMMARY
           echo "| ---- | ---- | ---- |" >> $GITHUB_STEP_SUMMARY
-          if [ steps.input_value_selection.outputs.jobs_to_run == 'all' || steps.input_value_selection.outputs.jobs_to_run == 'test_with_tls' ]; then
-            echo "| Test with TLS | ${{ steps.input_value_selection.outputs.models_for_tls }} | ${{ steps.input_value_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_tls' ]; then
+            echo "| Test with TLS | ${{ steps.input_selection.outputs.models_for_tls }} | ${{ steps.input_selection.outputs.python_for_tls }} |" >> $GITHUB_STEP_SUMMARY
             fi
-          if [ steps.input_value_selection.outputs.jobs_to_run == 'all' || steps.input_value_selection.outputs.jobs_to_run == 'test_with_non_tls' ]; then
-            echo "| Test without TLS | ${{ steps.input_value_selection.outputs.models_for_non_tls }} | ${{ steps.input_value_selection.outputs.python_for_non_tls }} |" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_non_tls' ]; then
+            echo "| Test without TLS | ${{ steps.input_selection.outputs.models_for_non_tls }} | ${{ steps.input_selection.outputs.python_for_non_tls }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ steps.input_value_selection.outputs.jobs_to_run == 'all' || steps.input_value_selection.outputs.jobs_to_run == 'test_with_no_client_auth' ]; then
-            echo "| Test without client auth | ${{ steps.input_value_selection.outputs.models_for_no_client_auth }} | ${{ steps.input_value_selection.outputs.python_for_no_client_auth }} |" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_with_no_client_auth' ]; then
+            echo "| Test without client auth | ${{ steps.input_selection.outputs.models_for_no_client_auth }} | ${{ steps.input_selection.outputs.python_for_no_client_auth }} |" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ steps.input_value_selection.outputs.jobs_to_run == 'all' || steps.input_value_selection.outputs.jobs_to_run == 'test_memory_logs' ]; then
-            echo "| Test memory logs | ${{ steps.input_value_selection.outputs.models_for_memory_logs }} | ${{ steps.input_value_selection.outputs.python_for_memory_logs }} |" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'all' || ${{ fromJson(steps.input_selection.outputs.jobs_to_run) }} == 'test_memory_logs' ]; then
+            echo "| Test memory logs | ${{ steps.input_selection.outputs.models_for_memory_logs }} | ${{ steps.input_selection.outputs.python_for_memory_logs }} |" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
 
   test_with_tls:
     name: Test with TLS
-    needs: input_value_selection
-    if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_tls'
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_tls) }}
-        python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_tls) }}
+        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -183,14 +183,14 @@ jobs:
 
   test_with_non_tls:
     name: Test without TLS
-    needs: input_value_selection
-    if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_non_tls'
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_non_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_non_tls) }}
-        python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_non_tls) }}
+        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_non_tls) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_non_tls) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -226,14 +226,14 @@ jobs:
 
   test_with_no_client_auth:
     name: Test without client auth
-    needs: input_value_selection
-    if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_with_no_client_auth'
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_no_client_auth) }}
-        python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_no_client_auth) }}
+        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_no_client_auth) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_no_client_auth) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -269,14 +269,14 @@ jobs:
 
   test_memory_logs:
     name: Test memory usage
-    needs: input_value_selection
-    if: needs.input_value_selection.outputs.selected_jobs == 'all' || needs.input_value_selection.outputs.selected_jobs == 'test_memory_logs'
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_value_selection.outputs.selected_models_for_memory_logs) }}
-        python_version: ${{ fromJson(needs.input_value_selection.outputs.selected_python_for_memory_logs) }}
+        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_memory_logs) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_memory_logs) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
