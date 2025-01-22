@@ -29,7 +29,7 @@ def initialize_xml_parser():
 
     # Get the root element
     testsuites = tree.getroot()
-    return testsuites, result_path
+    return testsuites
 
 
 def get_aggregated_accuracy(agg_log_file):

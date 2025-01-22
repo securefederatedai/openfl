@@ -262,7 +262,7 @@ def run_federation(fed_obj, install_dependencies=True, with_docker=False):
             ),
             with_docker=with_docker,
         )
-        for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
 
     # Result will contain response files for all the participants.
