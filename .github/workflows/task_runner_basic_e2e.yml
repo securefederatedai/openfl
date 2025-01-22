@@ -146,8 +146,8 @@ jobs:
       matrix:
         # Testing this scenario only for torch_cnn_mnist model and python 3.10
         # If required, this can be extended to other models and python versions
-        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && ['torch_cnn_mnist'] || needs.input_value_selection.outputs.selected_models }}
-        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && ['3.10'] || needs.input_value_selection.outputs.selected_python_versions }}
+        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && [\'torch_cnn_mnist\'] || needs.input_value_selection.outputs.selected_models }}
+        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && [\'3.10\'] || needs.input_value_selection.outputs.selected_python_versions }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -191,8 +191,8 @@ jobs:
       matrix:
         # Testing this scenario for keras_cnn_mnist model and python 3.10
         # If required, this can be extended to other models and python versions
-        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && ['keras_cnn_mnist'] || needs.input_value_selection.outputs.selected_models }}
-        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && ['3.10'] || needs.input_value_selection.outputs.selected_python_versions }}
+        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && [\'keras_cnn_mnist\'] || needs.input_value_selection.outputs.selected_models }}
+        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && [\'3.10\'] || needs.input_value_selection.outputs.selected_python_versions }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -236,8 +236,8 @@ jobs:
       matrix:
         # Testing this scenario only for torch_cnn_mnist model and python 3.10
         # If required, this can be extended to other models and python versions
-        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && ['torch_cnn_mnist'] || needs.input_value_selection.outputs.selected_models }}
-        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && ['3.10'] || needs.input_value_selection.outputs.selected_python_versions }}
+        model_name: ${{ needs.input_value_selection.outputs.selected_models == 'all' && [\'torch_cnn_mnist\'] || needs.input_value_selection.outputs.selected_models }}
+        python_version: ${{ needs.input_value_selection.outputs.selected_python_versions == 'all' && [\'3.10\'] || needs.input_value_selection.outputs.selected_python_versions }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
