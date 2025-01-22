@@ -114,6 +114,8 @@ jobs:
           fi
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
+      - name: Print output values
+        run: |
           # ---------------------------------------------------------------
           # Print the selected values as a summary for better visibility
           # ---------------------------------------------------------------
