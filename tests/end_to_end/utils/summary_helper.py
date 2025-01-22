@@ -42,9 +42,14 @@ def get_aggregated_accuracy(agg_log_file):
         return agg_accuracy
 
     agg_accuracy_dict = convert_to_json(agg_log_file)
-    agg_accuracy = agg_accuracy_dict[-1].get(
-        "aggregator/aggregated_model_validation/accuracy", "Not Found"
-    )
+    print(f"agg_accuracy_dict is: {agg_accuracy_dict}")
+
+    if not agg_accuracy_dict:
+        print(f"Aggregator log file {agg_log_file} is empty. Cannot get aggregated accuracy, returning 'Not Found'")
+    else:
+        agg_accuracy = agg_accuracy_dict[-1].get(
+            "aggregator/aggregated_model_validation/accuracy", "Not Found"
+        )
     return agg_accuracy
 
 
@@ -129,9 +134,7 @@ def print_task_runner_score():
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME")
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
-
-    print(f"Summary file: {summary_file}")
+    summary_file = _get_summary_file()
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -176,8 +179,7 @@ def print_federated_runtime_score():
     And write the results to GitHub step summary
     IMP: Do not fail the test in any scenario
     """
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
-    print(f"Summary file: {summary_file}")
+    summary_file = _get_summary_file()
     search_string = "Aggregated model validation score"
 
     last_occurrence = aggregated_model_score = None
@@ -215,6 +217,20 @@ def print_federated_runtime_score():
         print("| Aggregated model validation score |", file=fh)
         print("| ------------- |", file=fh)
         print(f"| {aggregated_model_score} |", file=fh)
+
+
+def _get_summary_file():
+    """
+    Function to get the summary file path
+    Returns:
+        summary_file: Path to the summary file
+    """
+    summary_file = Path(os.getenv("GITHUB_STEP_SUMMARY"))
+    print(f"Summary file: {summary_file}")
+    if "step_summary" not in summary_file.name or ".env" not in summary_file.name:
+        print("Invalid summary file. Exiting...")
+        exit(1)
+    return summary_file
 
 
 def fetch_args():

@@ -18,6 +18,17 @@ on:
         required: false
         default: "2"
         type: string
+      jobs_to_run:
+        description: "Jobs to run"
+        type: choice
+        default: "all"
+        options:
+          - all
+          - test_with_tls
+          - test_with_non_tls
+          - test_with_no_client_auth
+          - test_memory_logs
+        required: false
 
 permissions:
   contents: read
@@ -26,10 +37,12 @@ permissions:
 env:
   NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
 
 jobs:
   test_with_tls:
     name: tr_tls
+    if: ${{ contains(env.JOBS_TO_RUN, 'all') || contains(env.JOBS_TO_RUN, 'test_with_tls') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -73,6 +86,7 @@ jobs:
 
   test_with_non_tls:
     name: tr_non_tls
+    if: ${{ contains(env.JOBS_TO_RUN, 'all') || contains(env.JOBS_TO_RUN, 'test_with_non_tls') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -116,6 +130,7 @@ jobs:
 
   test_with_no_client_auth:
     name: tr_no_client_auth
+    if: ${{ contains(env.JOBS_TO_RUN, 'all') || contains(env.JOBS_TO_RUN, 'test_with_no_client_auth') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -159,6 +174,7 @@ jobs:
 
   test_memory_logs:
     name: tr_tls_memory_logs
+    if: ${{ contains(env.JOBS_TO_RUN, 'all') || contains(env.JOBS_TO_RUN, 'test_memory_logs') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
