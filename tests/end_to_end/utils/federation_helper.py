@@ -287,7 +287,7 @@ def run_federation_for_dws(fed_obj, use_tls):
         results = [
             executor.submit(
                 run_command,
-                command=f"tar -xf /workspace/certs.tar",
+                command=f"tar -xf /workspace/cert_{participant.name}.tar",
                 workspace_path="",
                 error_msg=f"Failed to extract certificates for {participant.name}",
                 container_id=participant.container_id,
@@ -833,22 +833,12 @@ def start_docker_containers_for_dws(
     """
     for participant in participants:
         try:
-            if participant.name == "aggregator":
-                local_ws_path = f"{local_bind_path}/aggregator/workspace"
-                local_cert_tar = "cert_agg.tar"
-            else:
-                local_ws_path = f"{local_bind_path}/{participant.name}/workspace"
-                local_cert_tar = f"cert_col_{participant.name}.tar"
-
             # In case of dockerized workspace, the workspace gets created inside folder with image name
             container = dh.start_docker_container(
                 container_name=participant.name,
                 workspace_path=workspace_path,
                 local_bind_path=local_bind_path,
                 image=image_name,
-                mount_mapping=[
-                    f"{local_ws_path}/{local_cert_tar}:/{image_name}/certs.tar"
-                ],
             )
             participant.container_id = container.id
         except Exception as e:
