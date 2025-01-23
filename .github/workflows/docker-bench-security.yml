@@ -51,7 +51,7 @@ jobs:
           docker-bench-security | tee results/docker_bench_security_report.txt
 
     - name: Upload Security Bench Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: docker_bench_security-report
         path: results/docker_bench_security_report.txt

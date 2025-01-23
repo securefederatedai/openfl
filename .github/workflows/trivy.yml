@@ -35,7 +35,7 @@ jobs:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -55,7 +55,7 @@ jobs:
           .
 
       - name: Upload Code Vulnerability Scan Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-code-report-json
           path: trivy-code-results.json
@@ -74,7 +74,7 @@ jobs:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
   
       - name: Upload Docker Vulnerability Scan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report-json
           path: trivy-docker-results.json
@@ -91,7 +91,7 @@ jobs:
           .
   
       - name: Upload Code Vulnerability Scan Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-code-spdx-report-json
           path: trivy-code-spdx-results.json
@@ -110,7 +110,7 @@ jobs:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
     
       - name: Upload Docker Vulnerability Scan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-spdx-report-json
           path: trivy-docker-spdx-results.json
