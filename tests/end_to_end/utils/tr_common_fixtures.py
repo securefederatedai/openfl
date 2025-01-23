@@ -2,17 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-pass
-pass
-import logging
 
-import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.utils.federation_helper as fh
-import tests.end_to_end.utils.ssh_helper as ssh
-from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 from tests.end_to_end.utils.tr_workspace import create_tr_workspace, create_tr_workspace_dws
-
-log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="function")

@@ -115,6 +115,27 @@ def create_tr_workspace(request, eval_scope=False):
 
 
 def create_tr_workspace_dws(request, eval_scope=False):
+    """
+    Create a task runner workspace for distributed workload simulation.
+
+    This function sets up the necessary environment and configurations for a
+    task runner workspace, including model owner and collaborator workspaces,
+    plan modifications, and Docker container setups.
+
+    Args:
+        request: A request object containing configuration details.
+        eval_scope (bool, optional): If True, sets up the evaluation scope for
+            a single round. Defaults to False.
+
+    Returns:
+        federation_details: An object containing details about the federation
+        setup, including model owner, aggregator, collaborators, workspace path,
+        and local bind path.
+
+    Raises:
+        Exception: If there is an error during the creation of the tar for the
+        aggregator.
+    """
 
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
@@ -210,7 +231,7 @@ def create_tr_workspace_dws(request, eval_scope=False):
 
     # Note: In case of multiple machines setup, scp this tar to the other machine(s)
     return_code, output, error = ssh.run_command(
-        f"tar -cf cert_agg.tar plan cert save", work_dir=local_agg_ws_path
+        f"tar -cf cert_aggregator.tar plan cert save", work_dir=local_agg_ws_path
     )
     if return_code != 0:
         raise Exception(f"Failed to create tar for aggregator: {error}")

@@ -134,7 +134,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
                 local_bind_path, collaborator_name
             )
             client_cert_entries = ""
-            tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml"
+            tarfiles = f"cert_{collaborator_name}.tar plan/data.yaml"
             # If TLS is enabled, client certificates and signed certificates are also included
             if use_tls:
                 client_cert_entries = [
@@ -740,7 +740,7 @@ def download_data(collaborators, model_name, local_bind_path):
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     try:
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
-        subprocess.run(command, cwd=local_bind_path, check=True)
+        subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
