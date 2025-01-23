@@ -1,0 +1,147 @@
+name: OpenFL PR Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  bandit_code_scan:
+    name: Bandit Code Scan
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    uses: ./.github/workflows/bandit.yml
+
+  check_code_format:
+    name: Check code format
+    uses: ./.github/workflows/lint.yml
+
+  docker_bench_security:
+    name: Docker Bench for Security
+    uses: ./.github/workflows/docker-bench-security.yml
+
+  double_workspace_export:
+    name: Double workspace export
+    uses: ./.github/workflows/double_ws_export.yml
+
+  fr_301_watermark_nb_run:
+    name: Federated Runtime 301 MNIST Watermarking
+    uses: ./.github/workflows/federated_runtime.yml
+
+  gandlf_taskrunner:
+    name: GaNDLF TaskRunner
+    uses: ./.github/workflows/gandlf.yml
+
+  hadolint_security_scan:
+    name: Hadolint Security Scan
+    uses: ./.github/workflows/hadolint.yml
+
+  private_key_infrastructure:
+    name: Private Key Infrastructure
+    uses: ./.github/workflows/pki.yml
+
+  pytest_coverage:
+    name: Pytest and code coverage
+    uses: ./.github/workflows/pytest_coverage.yml
+
+  straggler_handling:
+    name: Straggler Handling Test
+    uses: ./.github/workflows/straggler-handling.yml
+
+  task_runner:
+    name: TaskRunner
+    uses: ./.github/workflows/taskrunner.yml
+
+  taskrunner_eden_compression:
+    name: TaskRunner (Eden Compression)
+    uses: ./.github/workflows/taskrunner_eden_pipeline.yml
+
+  tr_docker_gramine_direct:
+    name: TaskRunner (docker/gramine-direct)
+    uses: ./.github/workflows/tr_docker_gramine_direct.yml
+
+  tr_docker_native:
+    name: TaskRunner (docker/native)
+    uses: ./.github/workflows/tr_docker_native.yml
+
+  trivy_scan:
+    name: Trivy Scan
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    uses: ./.github/workflows/trivy.yml
+
+  wf_functional_e2e:
+    name: Workflow Functional E2E
+    uses: ./.github/workflows/wf_functional_e2e.yml
+
+  workflow_interface_101_mnist:
+    name: Workflow Interface 101 MNIST Notebook
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+
+  workflow_interface_tests:
+    name: Workflow Interface Tests
+    uses: ./.github/workflows/experimental_workflow_tests.yml
+
+  pipeline_status:
+    name: Pipeline Status
+    runs-on: ubuntu-22.04
+    if: always()
+    needs: # Ensure to add any job added above to this list as well as the steps below
+      [
+        bandit_code_scan,
+        check_code_format,
+        docker_bench_security,
+        double_workspace_export,
+        gandlf_taskrunner,
+        fr_301_watermark_nb_run,
+        hadolint_security_scan,
+        private_key_infrastructure,
+        pytest_coverage,
+        straggler_handling,
+        task_runner,
+        taskrunner_eden_compression,
+        trivy_scan,
+        tr_docker_gramine_direct,
+        tr_docker_native,
+        wf_functional_e2e,
+        workflow_interface_101_mnist,
+        workflow_interface_tests,
+      ]
+    steps:
+      - name: Fail job if any of the above jobs have failed
+        if: |
+          (needs.bandit_code_scan.result != 'success' && needs.bandit_code_scan.result != 'skipped') ||
+          (needs.check_code_format.result != 'success' && needs.check_code_format.result != 'skipped') ||
+          (needs.docker_bench_security.result != 'success' && needs.docker_bench_security.result != 'skipped') ||
+          (needs.double_workspace_export.result != 'success' && needs.double_workspace_export.result != 'skipped') ||
+          (needs.fr_301_watermark_nb_run.result != 'success' && needs.fr_301_watermark_nb_run.result != 'skipped') ||
+          (needs.gandlf_taskrunner.result != 'success' && needs.gandlf_taskrunner.result != 'skipped') ||
+          (needs.hadolint_security_scan.result != 'success' && needs.hadolint_security_scan.result != 'skipped') ||
+          (needs.private_key_infrastructure.result != 'success' && needs.private_key_infrastructure.result != 'skipped') ||
+          (needs.pytest_coverage.result != 'success' && needs.pytest_coverage.result != 'skipped') ||
+          (needs.straggler_handling.result != 'success' && needs.straggler_handling.result != 'skipped') ||
+          (needs.task_runner.result != 'success' && needs.task_runner.result != 'skipped') ||
+          (needs.taskrunner_eden_compression.result != 'success' && needs.taskrunner_eden_compression.result != 'skipped') ||
+          (needs.trivy_scan.result != 'success' && needs.trivy_scan.result != 'skipped') ||
+          (needs.tr_docker_gramine_direct.result != 'success' && needs.tr_docker_gramine_direct.result != 'skipped') ||
+          (needs.tr_docker_native.result != 'success' && needs.tr_docker_native.result != 'skipped') ||
+          (needs.wf_functional_e2e.result != 'success' && needs.wf_functional_e2e.result != 'skipped') ||
+          (needs.workflow_interface_101_mnist.result != 'success' && needs.workflow_interface_101_mnist.result != 'skipped') ||
+          (needs.workflow_interface_tests.result != 'success' && needs.workflow_interface_tests.result != 'skipped')
+        run: |
+          echo "One or more jobs failed. Exiting pipeline."
+          exit 1
+      
+      - name: Print pipeline status
+        run: |
+          echo "All jobs passed. Pipeline completed successfully."
