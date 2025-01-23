@@ -42,9 +42,13 @@ def get_aggregated_accuracy(agg_log_file):
         return agg_accuracy
 
     agg_accuracy_dict = convert_to_json(agg_log_file)
-    agg_accuracy = agg_accuracy_dict[-1].get(
-        "aggregator/aggregated_model_validation/accuracy", "Not Found"
-    )
+
+    if not agg_accuracy_dict:
+        print(f"Aggregator log file {agg_log_file} is empty. Cannot get aggregated accuracy, returning 'Not Found'")
+    else:
+        agg_accuracy = agg_accuracy_dict[-1].get(
+            "aggregator/aggregated_model_validation/accuracy", "Not Found"
+        )
     return agg_accuracy
 
 
@@ -104,7 +108,7 @@ def get_testcase_result():
 
 def print_task_runner_score():
     """
-    Main function to get the test case results and aggregator logs
+    Function to get the test case results and aggregator logs
     And write the results to GitHub step summary
     IMP: Do not fail the test in any scenario
     """
@@ -129,7 +133,7 @@ def print_task_runner_score():
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME")
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    summary_file = _get_summary_file()
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -169,8 +173,12 @@ def print_task_runner_score():
 
 
 def print_federated_runtime_score():
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
-
+    """
+    Function to get the federated runtime score from the director log file
+    And write the results to GitHub step summary
+    IMP: Do not fail the test in any scenario
+    """
+    summary_file = _get_summary_file()
     search_string = "Aggregated model validation score"
 
     last_occurrence = aggregated_model_score = None
@@ -208,6 +216,23 @@ def print_federated_runtime_score():
         print("| Aggregated model validation score |", file=fh)
         print("| ------------- |", file=fh)
         print(f"| {aggregated_model_score} |", file=fh)
+
+
+def _get_summary_file():
+    """
+    Function to get the summary file path
+    Returns:
+        summary_file: Path to the summary file
+    """
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    print(f"Summary file: {summary_file}")
+
+    # Check if the fetched summary file is valid
+    if summary_file and os.path.isfile(summary_file):
+        return summary_file
+    else:
+        print("Invalid summary file. Exiting...")
+        exit(1)
 
 
 def fetch_args():
