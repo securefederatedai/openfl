@@ -37,11 +37,22 @@ env:
   JOB_TO_RUN: ${{ inputs.job_to_run || 'all' }}
 
 jobs:
+  input_selection:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Input value selection
+    runs-on: ubuntu-22.04
+    outputs:
+      selected_jobs: ${{ env.JOB_TO_RUN }}
+      model_name: ${{ env.MODEL_NAME }} 
+
   test_with_tls_dockerized_ws:
     name: tr_tls_dockerized_ws
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
-    if: ${{ env.JOB_TO_RUN == 'tls' || env.JOB_TO_RUN == 'all' }}
+    if: needs.input_selection.outputs.selected_jobs == 'tls' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
         model_name: ["keras_cnn_mnist"]
@@ -81,9 +92,10 @@ jobs:
 
   test_with_non_tls_dockerized_ws:
     name: tr_non_tls_dockerized_ws
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
-    if: ${{ env.JOB_TO_RUN == 'non_tls' || env.JOB_TO_RUN == 'all' }}
+    if: needs.input_selection.outputs.selected_jobs == 'non_tls' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
         model_name: ["keras_cnn_mnist"]
@@ -123,9 +135,10 @@ jobs:
 
   test_with_no_client_auth_dockerized_ws:
     name: tr_no_client_auth_dockerized_ws
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
-    if: ${{ env.JOB_TO_RUN == 'no_client_auth' || env.JOB_TO_RUN == 'all' }}
+    if: needs.input_selection.outputs.selected_jobs == 'no_client_auth' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
         model_name: ["keras_cnn_mnist"]
