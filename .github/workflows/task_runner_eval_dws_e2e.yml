@@ -59,14 +59,14 @@ env:
 
 jobs:
   test_with_tls_dws_eval:
-    if: ${{ inputs.job_to_run == 'tls' || inputs.job_to_run == 'all' }}
+    if: ${{ env.job_to_run == 'tls' || env.job_to_run == 'all' }}
     name: tr_tls_dws_eval
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ${{ inputs.model_name == 'both' ? ['torch_cnn_mnist', 'keras_cnn_mnist'] : [inputs.model_name] }}
-        python_version: [${{ inputs.python_version }}]
+        model_name: ${{ fromJSON(env.model_name == 'both' && '["torch_cnn_mnist","keras_cnn_mnist"]' || '["' + env.model_name + '"]') }}
+        python_version: [${{ env.python_version }}]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -101,14 +101,14 @@ jobs:
           test_type: "tr_tls_dockerized_ws"
 
   test_with_non_tls_dws_eval:
-    if: ${{ inputs.job_to_run == 'non_tls' || inputs.job_to_run == 'all' }}
+    if: ${{ env.job_to_run == 'non_tls' || env.job_to_run == 'all' }}
     name: tr_non_tls_dws_eval
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ${{ inputs.model_name == 'both' ? ['torch_cnn_mnist', 'keras_cnn_mnist'] : [inputs.model_name] }}
-        python_version: [${{ inputs.python_version }}]
+        model_name: ${{ fromJSON(env.model_name == 'both' && '["torch_cnn_mnist","keras_cnn_mnist"]' || '["' + env.model_name + '"]') }}
+        python_version: [${{ env.python_version }}]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -143,14 +143,14 @@ jobs:
           test_type: "tr_non_tls_dockerized_ws"
 
   test_with_no_client_auth_dws_eval:
-    if: ${{ inputs.job_to_run == 'no_client_auth' || inputs.job_to_run == 'all' }}
+    if: ${{ env.job_to_run == 'no_client_auth' || env.job_to_run == 'all' }}
     name: tr_no_client_auth_dws_eval
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ${{ inputs.model_name == 'both' ? ['torch_cnn_mnist', 'keras_cnn_mnist'] : [inputs.model_name] }}
-        python_version: [${{ inputs.python_version }}]
+        model_name: ${{ fromJSON(env.model_name == 'both' && '["torch_cnn_mnist","keras_cnn_mnist"]' || '["' + env.model_name + '"]') }}
+        python_version: [${{ env.python_version }}]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
