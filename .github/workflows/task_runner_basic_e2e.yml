@@ -93,30 +93,29 @@ jobs:
           # * No client auth - models [keras_cnn_mnist] and python version [3.10]
           # * Memory logs - models [torch_cnn_mnist] and python version [3.10]
           # ---------------------------------------------------------------
-          echo 'jobs_to_run=${{ env.JOBS_TO_RUN }}' >> '$GITHUB_OUTPUT'
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
-          if [ '${{ env.MODEL_NAME }}' == 'all' ]; then
-            echo 'models_for_tls=[\'torch_cnn_mnist\', \'keras_cnn_mnist\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_non_tls=[\'torch_cnn_mnist\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_no_client_auth=[\'keras_cnn_mnist\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_memory_logs=[\'torch_cnn_mnist\']' >> '$GITHUB_OUTPUT'
+          if [ "${{ env.MODEL_NAME }}" == "all" ]; then
+            echo "models_for_tls=[\"torch_cnn_mnist\", \"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_non_tls=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_no_client_auth=[\"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_memory_logs=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
           else
-            echo 'models_for_tls=[\'${{env.MODEL_NAME}}\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_non_tls=[\'${{env.MODEL_NAME}}\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_no_client_auth=[\'${{env.MODEL_NAME}}\']' >> '$GITHUB_OUTPUT'
-            echo 'models_for_memory_logs=[\'${{env.MODEL_NAME}}\']' >> '$GITHUB_OUTPUT'
+            echo "models_for_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_non_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_no_client_auth=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_memory_logs=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
           fi
-          if [ '${{ env.PYTHON_VERSION }}' == 'all' ]; then
-            echo 'python_for_tls=[\'3.10\', \'3.11\', \'3.12\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_non_tls=[\'3.10\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_no_client_auth=[\'3.10\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_memory_logs=[\'3.10\']' >> '$GITHUB_OUTPUT'
+          if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
+            echo "python_for_tls=[\"3.10\", \"3.11\", \"3.12\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_non_tls=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_no_client_auth=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_memory_logs=[\"3.10\"]" >> "$GITHUB_OUTPUT"
           else
-            echo 'python_for_tls=[\'${{env.PYTHON_VERSION}}\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_non_tls=[\'${{env.PYTHON_VERSION}}\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_no_client_auth=[\'${{env.PYTHON_VERSION}}\']' >> '$GITHUB_OUTPUT'
-            echo 'python_for_memory_logs=[\'${{env.PYTHON_VERSION}}\']' >> '$GITHUB_OUTPUT'
-          fi
+            echo "python_for_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_non_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_no_client_auth=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_memory_logs=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
 
   test_with_tls:
     name: Test with TLS
