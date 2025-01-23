@@ -13,8 +13,6 @@
    aggregator
    assigner
    collaborator
-   director
-   envoy
    straggler_handling_functions
 
 .. TODO(MasterSkepticista) Shrink API namespace
