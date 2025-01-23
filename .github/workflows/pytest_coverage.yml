@@ -4,8 +4,7 @@
 name: Pytest and code coverage 
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
