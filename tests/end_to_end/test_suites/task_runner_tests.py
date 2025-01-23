@@ -60,6 +60,6 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
-    metric_file_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
+    metric_file_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
     model_accuracy = get_aggregated_accuracy(metric_file_path)
     log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
