@@ -1,5 +1,5 @@
 ---
-# Task Runner E2E tests for dockerized approach
+# Task Runner E2E Evaluation tests for dockerized approach
 
 name: Task_Runner_Eval_DWS_E2E  # Please do not modify the name as it is used in the composite action
 

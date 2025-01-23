@@ -154,15 +154,16 @@ class ModelOwner():
             data["network"]["settings"]["use_tls"] = param_config.use_tls
 
             if eval_scope:
-                # Remove all existing task_groups
-                data['assigner']['settings']['task_groups'] = []
+                # Remove all existing task_groups and set num_rounds to 1
+                data["assigner"]["settings"]["task_groups"] = []
                 # Add new task_groups for evaluation scope with task as aggregated_model_validation
                 new_task_group = {
                     "name": "evaluation",
                     "percentage": 1.0,
                     "tasks": ["aggregated_model_validation"]
                 }
-                data['assigner']['settings']['task_groups'].append(new_task_group)
+                data["assigner"]["settings"]["task_groups"].append(new_task_group)
+                data["aggregator"]["settings"]["rounds_to_train"] = 1
 
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)

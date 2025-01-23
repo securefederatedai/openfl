@@ -26,6 +26,7 @@ class Aggregator():
             agg_domain_name (str): Aggregator domain name
             workspace_path (str): Workspace path
             container_id (str): Container ID
+            eval_scope (bool, optional): Scope of aggregator is evaluation. Default is False.
         """
         self.name = "aggregator"
         self.agg_domain_name = agg_domain_name

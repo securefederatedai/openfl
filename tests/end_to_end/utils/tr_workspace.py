@@ -23,6 +23,15 @@ federation_details = collections.namedtuple(
 
 
 def create_tr_workspace(request, eval_scope=False):
+    """Summary: Create a task runner workspace.
+
+    Args:
+        request (object): Pytest request object.
+        eval_scope (bool, optional): If True, sets up the evaluation scope for a single round. Defaults to False.
+
+    Returns:
+        tuple : A named tuple containing the objects for model owner, aggregator, and collaborators.
+    """
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -47,10 +56,6 @@ def create_tr_workspace(request, eval_scope=False):
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
     param_config=request.config
-
-    if eval_scope:
-        log.info("Setting up evaluation scope, so update the plan for 1 round")
-        param_config.num_rounds = 1
 
     model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
 
@@ -117,27 +122,15 @@ def create_tr_workspace(request, eval_scope=False):
     )
 
 
-def create_tr_workspace_dws(request, eval_scope=False):
+def create_tr_dws_workspace(request, eval_scope=False):
     """
-    Create a task runner workspace for distributed workload simulation.
-
-    This function sets up the necessary environment and configurations for a
-    task runner workspace, including model owner and collaborator workspaces,
-    plan modifications, and Docker container setups.
-
+    Run task runner experiment thru dockerized workspace.
     Args:
-        request: A request object containing configuration details.
-        eval_scope (bool, optional): If True, sets up the evaluation scope for
-            a single round. Defaults to False.
+        request (object): Pytest request object.
+        eval_scope (bool, optional): If True, sets up the evaluation scope for a single round. Defaults to False.
 
     Returns:
-        federation_details: An object containing details about the federation
-        setup, including model owner, aggregator, collaborators, workspace path,
-        and local bind path.
-
-    Raises:
-        Exception: If there is an error during the creation of the tar for the
-        aggregator.
+        tuple: A named tuple containing the objects for model owner, aggregator, and collaborators.
     """
 
     collaborators = []
