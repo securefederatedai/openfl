@@ -116,6 +116,7 @@ jobs:
             echo "python_for_non_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_no_client_auth=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_memory_logs=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
+          fi
 
   test_with_tls:
     name: Test with TLS
