@@ -54,8 +54,8 @@ permissions:
 
 # Environment variables common for all the jobs
 env:
-  NUM_ROUNDS: ${{ inputs.num_rounds || "5" }}
-  NUM_COLLABORATORS: ${{ inputs.num_collaborators || "2" }}
+  NUM_ROUNDS: ${{ inputs.num_rounds || 5 }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
   MODEL_NAME: ${{ inputs.model_name || "all" }}
   PYTHON_VERSION: ${{ inputs.python_version || "all" }}
   JOBS_TO_RUN: ${{ inputs.jobs_to_run || "all" }}
