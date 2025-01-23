@@ -31,7 +31,7 @@ jobs:
         docker run -v ${PWD}/openfl-docker:/openfl-docker --rm -i hadolint/hadolint hadolint -t error /openfl-docker/Dockerfile.base
         docker run -v ${PWD}/openfl-docker:/openfl-docker --rm -i hadolint/hadolint hadolint -t error -f json /openfl-docker/Dockerfile.base > hadolint_output.json
     - name: Upload Hadolint JSON Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: hadolint-report
         path: hadolint_output.json
