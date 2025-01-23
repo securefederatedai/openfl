@@ -45,7 +45,11 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       selected_jobs: ${{ env.JOB_TO_RUN }}
-      model_name: ${{ env.MODEL_NAME }} 
+    steps:
+      - name: Job to select input values
+        id: input_selection
+        run: |
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}"
 
   test_with_tls_dockerized_ws:
     name: tr_tls_dockerized_ws
