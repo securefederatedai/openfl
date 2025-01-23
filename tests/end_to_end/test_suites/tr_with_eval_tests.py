@@ -90,7 +90,7 @@ def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws)
     # Create new workspace with evaluation scope
     new_fed_obj = create_tr_workspace_dws(request, eval_scope=True)
 
-    results_new = fed_helper.run_federation_for_dws(new_fed_obj)
+    results_new = fed_helper.run_federation_for_dws(new_fed_obj, use_tls=request.config.use_tls)
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
         new_fed_obj,
