@@ -17,7 +17,7 @@ on:
         default: "2"
         type: string
       job_to_run:
-        description: "Job to run"
+        description: "Job to run (tls, non_tls, no_client_auth, all)"
         required: true
         default: "all"
         type: choice
@@ -26,46 +26,32 @@ on:
           - non_tls
           - no_client_auth
           - all
-      model_name:
-        description: "Model name"
-        required: true
-        default: "torch_cnn_mnist"
-        type: choice
-        options:
-          - torch_cnn_mnist
-          - keras_cnn_mnist
-      python_version:
-        description: "Python version"
-        required: true
-        default: "3.10"
-        type: choice
-        options:
-          - "3.10"
-          - "3.11"
-          - "3.12"
 
 permissions:
   contents: read
 
 # Environment variables common for all the jobs
 env:
-  NUM_ROUNDS: ${{ inputs.num_rounds || 5 }}
-  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
-  MODEL_NAME: ${{ inputs.model_name || 'torch_cnn_mnist' }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
-  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
+  NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  JOB_TO_RUN: ${{ inputs.job_to_run || 'all' }}
 
 jobs:
-  test_with_tls_dws_eval:
-    if: ${{ env.job_to_run == 'tls' || env.job_to_run == 'all' }}
-    name: tr_tls_dws_eval
+  test_with_tls_dockerized_ws:
+    name: tr_tls_dockerized_ws
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    if: ${{ env.JOB_TO_RUN == 'tls' || env.JOB_TO_RUN == 'all' }}
     strategy:
       matrix:
-        model_name: [${{ env.MODEL_NAME }}]
-        python_version: [${{ env.python_version }}]
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
@@ -93,16 +79,20 @@ jobs:
         with:
           test_type: "tr_tls_dockerized_ws"
 
-  test_with_non_tls_dws_eval:
-    if: ${{ env.job_to_run == 'non_tls' || env.job_to_run == 'all' }}
-    name: tr_non_tls_dws_eval
+  test_with_non_tls_dockerized_ws:
+    name: tr_non_tls_dockerized_ws
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    if: ${{ env.JOB_TO_RUN == 'non_tls' || env.JOB_TO_RUN == 'all' }}
     strategy:
       matrix:
-        model_name: [${{ env.MODEL_NAME }}]
-        python_version: [${{ env.python_version }}]
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
 
     steps:
       - name: Checkout OpenFL repository
@@ -131,16 +121,20 @@ jobs:
         with:
           test_type: "tr_non_tls_dockerized_ws"
 
-  test_with_no_client_auth_dws_eval:
-    if: ${{ env.job_to_run == 'no_client_auth' || env.job_to_run == 'all' }}
-    name: tr_no_client_auth_dws_eval
+  test_with_no_client_auth_dockerized_ws:
+    name: tr_no_client_auth_dockerized_ws
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    if: ${{ env.JOB_TO_RUN == 'no_client_auth' || env.JOB_TO_RUN == 'all' }}
     strategy:
       matrix:
-        model_name: [${{ env.MODEL_NAME }}]
-        python_version: [${{ env.python_version }}]
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
 
     steps:
       - name: Checkout OpenFL repository
