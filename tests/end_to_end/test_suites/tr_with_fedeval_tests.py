@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 @pytest.mark.task_runner_basic
 def test_eval_federation_via_native(request, fx_federation_tr):
     """
-    Test federation via native task runner.
+    Test learning and evaluation steps via native task runner.
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr (Fixture): Pytest fixture for native task runner
@@ -63,7 +63,7 @@ def test_eval_federation_via_native(request, fx_federation_tr):
 @pytest.mark.task_runner_dockerized_ws
 def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     """
-    Test federation via dockerized workspace.
+    Test learning and evaluation steps via dockerized workspace.
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr_dws (Fixture): Pytest fixture for dockerized workspace
