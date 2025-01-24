@@ -1,0 +1,20 @@
+# IMPORTANT - Rules defined later in the file take precedence, so we define a default first.
+
+# When editing descriptions, DO NOT add lines which:
+# - Have no users, such as:
+#     /foo/
+#   This means that no reviews are needed.
+# - Have one user, such as:
+#    /foo/ @some_user
+#   That means that some_user needs no reviews.
+# In the above cases, it is better to remove the line and use the default rule.
+
+# Repository level default ownership
+*                       akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
+
+# Folder level ownership
+/.github/               akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
+/tests/                 akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com 
+
+# File level ownership
+test-requirements.txt   akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
