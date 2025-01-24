@@ -3,23 +3,21 @@
 # Each line is a file pattern followed by one or more owners.
 
 # Specify the owners for the entire repository
-*       @psfoley @teoparvanov @kta-intel
+*       psfoley teoparvanov kta-intel
 
 # Specify the owners for specific directories
-/.github/           @teoparvanov @noopurintel @payalcha @rajithkrishnegowda @tanwarsh @theakshaypant @ishaileshpant
-/.github/actions/   @noopurintel @payalcha
-/docs/              @psfoley @teoparvanov @kta-intel
-/openfl-docker/     @psfoley @teoparvanov @kta-intel
-/openfl-tutorials/  @psfoley @teoparvanov @kta-intel
-/openfl-workspace/  @psfoley @teoparvanov @kta-intel
-/openfl/            @openfl-owners
-/scripts/           @psfoley @teoparvanov @kta-intel
-/tests/             @teoparvanov @noopurintel @payalcha @rajithkrishnegowda @tanwarsh @theakshaypant @ishaileshpant
-/tests/end_to_end/  @teoparvanov @noopurintel @payalcha
-/tests/github/      @teoparvanov @noopurintel @payalcha @rajithkrishnegowda @tanwarsh @theakshaypant @ishaileshpant
-/tests/openfl/      @teoparvanov @noopurintel @payalcha @rajithkrishnegowda @tanwarsh @theakshaypant @ishaileshpant
+/.github/           teoparvanov noopur@intel.com payal.chaurasiya@intel.com rajithkrishnegowda tanwarsh theakshaypant ishaileshpant
+/.github/actions/   noopur@intel.com payal.chaurasiya@intel.com
+/docs/              psfoley teoparvanov kta-intel
+/openfl-docker/     psfoley teoparvanov kta-intel
+/openfl-tutorials/  psfoley teoparvanov kta-intel
+/openfl-workspace/  psfoley teoparvanov kta-intel
+/openfl/            openfl-owners
+/scripts/           psfoley teoparvanov kta-intel
+/tests/             teoparvanov noopur@intel.com payal.chaurasiya@intel.com rajithkrishnegowda tanwarsh theakshaypant ishaileshpant rahulga1
+/tests/end_to_end/  teoparvanov noopur@intel.com payal.chaurasiya@intel.com rahulga1
 
 # Specify the owners for specific files
-setup.py                @psfoley @teoparvanov @kta-intel
-README.md               @psfoley @teoparvanov @kta-intel
-test-requirements.txt   @teoparvanov @noopurintel @payalcha @rajithkrishnegowda @tanwarsh @theakshaypant @ishaileshpant
+setup.py                psfoley teoparvanov kta-intel
+README.md               psfoley teoparvanov kta-intel
+test-requirements.txt   teoparvanov noopur@intel.com payal.chaurasiya@intel.com rajithkrishnegowda tanwarsh theakshaypant ishaileshpant
