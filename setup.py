@@ -60,7 +60,7 @@ class BuildPyGRPC(build_py):
 
 setup(
     name='openfl',
-    version='1.6',
+    version='1.7',
     author='OpenFL Team',
     description='Federated Learning for the Edge',
     long_description=open("README.md", encoding="utf-8").read(),
