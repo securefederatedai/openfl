@@ -76,7 +76,7 @@ setup(
         )
     ),
     include_package_data=True,
-    setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],  # ensure it is in-sync with `install_requires`
+    setup_requires=['grpcio-tools>=1.56.2,<1.71.0'],  # ensure it is in-sync with `install_requires`
     install_requires=[
         'click',
         'psutil',
