@@ -1,3 +1,4 @@
+setuptools>=65.5.1
 scikit-image==0.24.0
-torch==2.3.1
-torchvision==0.18.1
+torch==2.4.1
+torchvision==0.19.1

@@ -1,7 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Proto utils."""
 
 from openfl.protocols import base_pb2
