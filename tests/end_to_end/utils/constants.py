@@ -11,7 +11,7 @@ class ModelName(Enum):
     # IMP - The model name must be same (and in uppercase) as the model value.
     # This is used to identify the model in the tests.
     TORCH_CNN_MNIST = "torch_cnn_mnist"
-    KERAS_CNN_MNIST = "keras_cnn_mnist"
+    KERAS_CNN_MNIST = "keras/cnn_mnist"
     TORCH_CNN_HISTOLOGY = "torch_cnn_histology"
     XGB_HIGGS = "xgb_higgs"
 
