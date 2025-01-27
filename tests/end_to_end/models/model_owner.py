@@ -138,7 +138,7 @@ class ModelOwner():
 
         try:
             with open(plan_file) as fp:
-                data = yaml.safe_load(fp, Loader=yaml.FullLoader)
+                data = yaml.safe_load(fp)
 
             # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
@@ -284,7 +284,7 @@ class ModelOwner():
             # This way even if there is a mismatch with some models having it blank
             # and others having values, it will be consistent
             with open(cols_file, "r", encoding="utf-8") as f:
-                doc = yaml.safe_load(f, Loader=yaml.FullLoader)
+                doc = yaml.safe_load(f)
 
             doc["collaborators"] = []  # Create empty list
 
