@@ -133,7 +133,7 @@ The OpenFL v1.2 release contains the following updates:
 - New [Interactive Python API](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api) (experimental)
 - Example FedProx algorithm implementation for PyTorch and Tensorflow
 - `AggregationFunctionInterface` for custom aggregation functions 
-- Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_nlp)
+- Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras/nlp)
 - Fixed lossy compression pipelines and added an [example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_cnn_with_compression) for usage
 - Bug fixes and documentation improvements
 
