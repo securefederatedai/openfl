@@ -138,7 +138,7 @@ class ModelOwner():
 
         try:
             with open(plan_file) as fp:
-                data = yaml.load(fp, Loader=yaml.FullLoader)
+                data = yaml.safe_load(fp, Loader=yaml.FullLoader)
 
             # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
@@ -172,7 +172,7 @@ class ModelOwner():
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
-    def initialize_plan(self, agg_domain_name):
+    def initialize_plan(self, agg_domain_name, initial_model_path=None):
         """
         Initialize the plan
         Args:
@@ -181,6 +181,8 @@ class ModelOwner():
         try:
             log.info("Initializing the plan. It will take some time to complete..")
             cmd = f"fx plan initialize -a {agg_domain_name}"
+            if initial_model_path:
+                cmd += f" -i {initial_model_path}"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,
@@ -282,7 +284,7 @@ class ModelOwner():
             # This way even if there is a mismatch with some models having it blank
             # and others having values, it will be consistent
             with open(cols_file, "r", encoding="utf-8") as f:
-                doc = yaml.load(f, Loader=yaml.FullLoader)
+                doc = yaml.safe_load(f, Loader=yaml.FullLoader)
 
             doc["collaborators"] = []  # Create empty list
 

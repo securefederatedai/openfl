@@ -4,8 +4,8 @@
 import collections
 import concurrent.futures
 import logging
-import os
-import shutil
+pass
+pass
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.federation_helper as fh
@@ -57,15 +57,16 @@ def create_tr_workspace(request, eval_scope=False):
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
     param_config=request.config
 
+    initial_model_path = None
+    if eval_scope:
+        log.info("Setting up evaluation scope, update the plan for 1 round and initial model to previous experiment best model")
+        param_config.num_rounds = 1
+        initial_model_path = request.config.best_model_path
+
     model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
 
     # Initialize the plan
-    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
-
-    if eval_scope:
-        # remove initial model and replace with best model of previous round
-        os.remove(os.path.join(agg_workspace_path, "save", "init.pbuf"))
-        shutil.copy(request.config.best_model_path, os.path.join(agg_workspace_path, "save", "init.pbuf"))
+    model_owner.initialize_plan(agg_domain_name=agg_domain_name, initial_model_path=initial_model_path)
 
     # Certify the workspace in case of TLS
     # Register the collaborators in case of non-TLS
@@ -158,19 +159,16 @@ def create_tr_dws_workspace(request, eval_scope=False):
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
     param_config=request.config
 
+    initial_model_path = None
     if eval_scope:
-        log.info("Setting up evaluation scope, so update the plan for 1 round")
+        log.info("Setting up evaluation scope, update the plan for 1 round and initial model to previous experiment best model")
         param_config.num_rounds = 1
+        initial_model_path = request.config.best_model_path
 
     model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
 
     # Initialize the plan
-    model_owner.initialize_plan(agg_domain_name=agg_domain_name)
-
-    if eval_scope:
-        # remove initial model and replace with best model of previous round
-        os.remove(os.path.join(agg_workspace_path, "save", "init.pbuf"))
-        shutil.copy(request.config.best_model_path, os.path.join(agg_workspace_path, "save", "init.pbuf"))
+    model_owner.initialize_plan(agg_domain_name=agg_domain_name, initial_model_path=initial_model_path)
 
     # Command 'fx workspace dockerize --save ..' will use the workspace name for image name
     # which is 'workspace' in this case.
