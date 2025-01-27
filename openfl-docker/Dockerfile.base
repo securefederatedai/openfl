@@ -43,7 +43,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     rm -rf /var/lib/apt/lists/*
 
 # Install OpenFL.
-ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@v1.6
+ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@develop
 RUN pip install --no-cache-dir git+${OPENFL_REVISION} && \
     INSTALL_SOURCES=yes /opt/venv/lib/python3.10/site-packages/openfl-docker/licenses.sh
 
