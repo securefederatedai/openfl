@@ -34,8 +34,8 @@ data_loader:
     batch_size: 64
     collaborator_count: 2
   template: src.dataloader.PyTorchMNISTInMemory
-network :
-  defaults : plan/defaults/network.yaml
+network:
+  defaults: plan/defaults/network.yaml
 task_runner:
   settings: {}
   template: src.taskrunner.TemplateTaskRunner
