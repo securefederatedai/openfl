@@ -1,3 +1,4 @@
+setuptools>=65.5.1
 accelerate
 datasets
 evaluate
@@ -8,7 +9,7 @@ peft
 sentencepiece
 seqeval
 tensorboard
-torch
-torchvision
+torch==2.4.1
+torchvision==0.19.1
 transformers[torch]
 wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
