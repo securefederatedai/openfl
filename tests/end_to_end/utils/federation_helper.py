@@ -134,7 +134,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
                 local_bind_path, collaborator_name
             )
             client_cert_entries = ""
-            tarfiles = f"cert_col_{collaborator_name}.tar plan/data.yaml"
+            tarfiles = f"cert_{collaborator_name}.tar plan/data.yaml"
             # If TLS is enabled, client certificates and signed certificates are also included
             if use_tls:
                 client_cert_entries = [
@@ -262,7 +262,7 @@ def run_federation(fed_obj, install_dependencies=True, with_docker=False):
             ),
             with_docker=with_docker,
         )
-        for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
 
     # Result will contain response files for all the participants.
@@ -287,7 +287,7 @@ def run_federation_for_dws(fed_obj, use_tls):
         results = [
             executor.submit(
                 run_command,
-                command=f"tar -xf /workspace/certs.tar",
+                command=f"tar -xf /workspace/cert_{participant.name}.tar",
                 workspace_path="",
                 error_msg=f"Failed to extract certificates for {participant.name}",
                 container_id=participant.container_id,
@@ -448,7 +448,7 @@ def _verify_completion_for_participant(
         return True
 
 
-def federation_env_setup_and_validate(request):
+def federation_env_setup_and_validate(request, eval_scope=False):
     """
     Setup the federation environment and validate the configurations
     Args:
@@ -470,10 +470,19 @@ def federation_env_setup_and_validate(request):
     local_bind_path = os.path.join(
         home_dir, request.config.results_dir, request.config.model_name
     )
+    num_rounds = request.config.num_rounds
+
+    if eval_scope:
+        local_bind_path = f"{local_bind_path}_eval"
+        num_rounds = 1
+        log.info(f"Running evaluation for the model: {request.config.model_name}")
+
     workspace_path = local_bind_path
+    # if path exists delete it
+    if os.path.exists(workspace_path):
+        shutil.rmtree(workspace_path)
 
     if test_env == "task_runner_dockerized_ws":
-
         agg_domain_name = "aggregator"
         # Cleanup docker containers
         dh.cleanup_docker_containers()
@@ -483,7 +492,7 @@ def federation_env_setup_and_validate(request):
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {request.config.num_rounds}\n"
+        f"\tNumber of rounds: {num_rounds}\n"
         f"\tModel name: {request.config.model_name}\n"
         f"\tClient authentication: {request.config.require_client_auth}\n"
         f"\tTLS: {request.config.use_tls}\n"
@@ -731,7 +740,7 @@ def download_data(collaborators, model_name, local_bind_path):
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     try:
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
-        subprocess.run(command, cwd=local_bind_path, check=True)
+        subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
         raise ex.DataSetupException(f"Failed to download data for {model_name}")
 
@@ -824,22 +833,12 @@ def start_docker_containers_for_dws(
     """
     for participant in participants:
         try:
-            if participant.name == "aggregator":
-                local_ws_path = f"{local_bind_path}/aggregator/workspace"
-                local_cert_tar = "cert_agg.tar"
-            else:
-                local_ws_path = f"{local_bind_path}/{participant.name}/workspace"
-                local_cert_tar = f"cert_col_{participant.name}.tar"
-
             # In case of dockerized workspace, the workspace gets created inside folder with image name
             container = dh.start_docker_container(
                 container_name=participant.name,
                 workspace_path=workspace_path,
                 local_bind_path=local_bind_path,
                 image=image_name,
-                mount_mapping=[
-                    f"{local_ws_path}/{local_cert_tar}:/{image_name}/certs.tar"
-                ],
             )
             participant.container_id = container.id
         except Exception as e:
