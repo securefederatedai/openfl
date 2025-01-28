@@ -342,36 +342,42 @@ An example configuration file `director_config.yaml` is shown below:
 
 **Envoy: Participating nodes in the Federation**
 
-The `fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
+The :code:`fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
 
 **With TLS:**
 Use the following command:
 
 .. code-block:: shell
 
-    $ fx envoy start -n <envoy_name> -ec <path_to_envoy_config_yaml_file> -dh <director_host> -dp <director_port> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
+    $ fx envoy start -n <envoy_name> -c <path_to_envoy_config_yaml_file> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
 .. code-block:: shell
 
-    $ fx envoy start -n <envoy_name> --disable-tls -ec <path_to_envoy_config_yaml_file>
+    $ fx envoy start -n <envoy_name> --disable-tls -c <path_to_envoy_config_yaml_file>
 
 **Explanation of Command Options**
 
 - `-n <envoy_name>`: Specifies the name of the Envoy.
-- `-ec <path_to_envoy_config_yaml_file>`: Path to the Envoy's configuration file.
-- `-dh <director_host>`: Hostname or IP address of the Director.
-- `-dp <director_port>`: Port on which the Director is running.
+- `-c <path_to_envoy_config_yaml_file>`: Path to the Envoy's configuration file.
 - `-rc <root_certificate_path>`: Path to the root certificate (used with TLS).
 - `-pk <private_key_path>`: Path to the private key file (used with TLS).
 - `-oc <api_certificate_path>`: Path to the API certificate file (used with TLS).
 - `--disable-tls`: Disables TLS encryption.
 
-The Envoy configuration file includes details about the private attributes. An example configuration file :code:`envoy_config.yaml` for :code:`envoy_one` is shown below:
+The Envoy configuration file includes details of director_host, director_port and private attributes. An example configuration file :code:`envoy_config.yaml` for :code:`settings` and :code:`envoy_one` is shown below:
+
+- Hostname (`director_host`)
+- Port (`director_port`)
+- Private attributes for envoy_one
 
 .. code-block:: yaml
+
+   settings:
+       director_host: localhost
+       director_port: 50050
 
    envoy_one:
        private_attributes: private_attributes.envoy_one_attrs
