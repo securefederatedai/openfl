@@ -13,20 +13,6 @@ def snykData = [
     'openfl-workspace_tf_3dunet_brats': 'openfl-workspace/tf_3dunet_brats/requirements.txt',
     'openfl-workspace_keras_cnn_with_compression': 'openfl-workspace/keras_cnn_with_compression/requirements.txt',
     'openfl-workspace_keras_cnn_mnist': 'openfl-workspace/keras_cnn_mnist/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_medmnist_2d_envoy': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_dogscats_vit_workspace': 'openfl-tutorials/interactive_api/PyTorch_DogsCats_ViT/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_histology_envoy': 'openfl-tutorials/interactive_api/PyTorch_Histology/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_mxnet_landmarks_workspace': 'openfl-tutorials/interactive_api/MXNet_landmarks/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_histology_fedcurv_envoy': 'openfl-tutorials/interactive_api/PyTorch_Histology_FedCurv/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_tensorflow_word_prediction_workspace': 'openfl-tutorials/interactive_api/Tensorflow_Word_Prediction/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_jax_linear_regression_envoy': 'openfl-tutorials/interactive_api/jax_linear_regression/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_medmnist_3d_envoy': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_3D/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_numpy_linear_regression_workspace': 'openfl-tutorials/interactive_api/numpy_linear_regression/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_numpy_linear_regression_envoy': 'openfl-tutorials/interactive_api/numpy_linear_regression/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_market_re-id_workspace': 'openfl-tutorials/interactive_api/PyTorch_Market_Re-ID/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_market_re-id_envoy': 'openfl-tutorials/interactive_api/PyTorch_Market_Re-ID/envoy/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_tinyimagenet_workspace': 'openfl-tutorials/interactive_api/PyTorch_TinyImageNet/workspace/requirements.txt',
-    'openfl-tutorials_interactive_api_pytorch_tinyimagenet_envoy': 'openfl-tutorials/interactive_api/PyTorch_TinyImageNet/envoy/requirements.txt'
 ]
 pipeline {
     agent { 
