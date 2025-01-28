@@ -26,7 +26,7 @@ Example Using the Task Runner API (Aggregator-based Workflow)
 
 The following steps can be leveraged to achieve practical e2e usage of FedEval
 
-*N.B*: We will be using torch_cnn_mnist plan itself for both training and with some minor changes for evaluation as well
+*N.B*: We will be using torch/mnist plan itself for both training and with some minor changes for evaluation as well
 
 *Prerequisites*: Please ensure that OpenFL version==1.7 is installed or you can also choose to install latest from source.
 
@@ -48,13 +48,13 @@ With OpenFL version==1.7 aggregator start command is enhanced to have an optiona
     --help                      Show this message and exit.
 
 1. **Setup**
-We will use the `torch_cnn_mnist` workspace for training
+We will use the `torch/mnist` workspace for training
 
 Let's first configure a workspace with all necesary certificates
 
 .. code-block:: shell
 
-    fx workspace create --prefix ./cnn_train_eval --template torch_cnn_mnist
+    fx workspace create --prefix ./cnn_train_eval --template torch/mnist
     cd cnn_train_eval
     fx workspace certify
     fx aggregator generate-cert-request
@@ -416,7 +416,7 @@ The updated plan post initialization with edits to make it ready for evaluation 
         metrics:
         - loss
 
-We have done following changes to the initialized torch_cnn_mnist plan in the new workspace:
+We have done following changes to the initialized torch/mnist plan in the new workspace:
  - Set the rounds_to_train to 1 as evaluation needs just one round of federation run across the collaborators
  - Removed all other training related tasks from assigner settings except "aggregated_model_validation"
 Now let's replace the ``init.pbuf`` with the previously saved ``trained_model.pbuf``

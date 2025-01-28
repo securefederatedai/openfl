@@ -24,7 +24,7 @@ def main():
             dir_path = dir_path.replace(os.sep, '/')
             if dir_path and not any(dir_path.startswith(prefix) for prefix in excluded_dirs):
                 workspace_choice.append(dir_path)
-    parser.add_argument('--template', default='keras/cnn_mnist', choices=workspace_choice)
+    parser.add_argument('--template', default='keras/mnist', choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one123dragons')
     parser.add_argument('--col2', default='beta34unicorns')
