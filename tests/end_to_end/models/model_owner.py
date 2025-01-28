@@ -122,7 +122,7 @@ class ModelOwner():
             raise e
         return True
 
-    def modify_plan(self, param_config, plan_path):
+    def modify_plan(self, param_config, plan_path, eval_scope=False):
         """
         Modify the plan to train the model
         Args:
@@ -138,7 +138,7 @@ class ModelOwner():
 
         try:
             with open(plan_file) as fp:
-                data = yaml.load(fp, Loader=yaml.FullLoader)
+                data = yaml.safe_load(fp)
 
             # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
@@ -153,15 +153,26 @@ class ModelOwner():
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
             data["network"]["settings"]["use_tls"] = param_config.use_tls
 
+            if eval_scope:
+                # Remove all existing task_groups and set num_rounds to 1
+                data["assigner"]["settings"]["task_groups"] = []
+                # Add new task_groups for evaluation scope with task as aggregated_model_validation
+                new_task_group = {
+                    "name": "evaluation",
+                    "percentage": 1.0,
+                    "tasks": ["aggregated_model_validation"]
+                }
+                data["assigner"]["settings"]["task_groups"].append(new_task_group)
+                data["aggregator"]["settings"]["rounds_to_train"] = 1
+
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)
-
             log.info(f"Modified the plan with provided parameters.")
         except Exception as e:
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
-    def initialize_plan(self, agg_domain_name):
+    def initialize_plan(self, agg_domain_name, initial_model_path=None):
         """
         Initialize the plan
         Args:
@@ -170,6 +181,8 @@ class ModelOwner():
         try:
             log.info("Initializing the plan. It will take some time to complete..")
             cmd = f"fx plan initialize -a {agg_domain_name}"
+            if initial_model_path:
+                cmd += f" -i {initial_model_path}"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,
@@ -271,7 +284,7 @@ class ModelOwner():
             # This way even if there is a mismatch with some models having it blank
             # and others having values, it will be consistent
             with open(cols_file, "r", encoding="utf-8") as f:
-                doc = yaml.load(f, Loader=yaml.FullLoader)
+                doc = yaml.safe_load(f)
 
             doc["collaborators"] = []  # Create empty list
 

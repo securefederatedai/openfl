@@ -777,3 +777,36 @@ class Plan:
             return None
         obj = serializer_plugin.restore_object(filename)
         return obj
+
+    def save_model_to_state_file(self, tensor_dict, round_number, output_path):
+        """Save model weights to a protobuf state file.
+
+        This method serializes the model weights into a protobuf format and saves
+        them to a file. The serialization is done using the tensor pipe to ensure
+        proper compression and formatting.
+
+        Args:
+            tensor_dict (dict): Dictionary containing model weights and their
+                corresponding tensors.
+            round_number (int): The current federation round number.
+            output_path (str): Path where the serialized model state will be
+                saved.
+
+        Raises:
+            Exception: If there is an error during model proto creation or saving
+                to file.
+        """
+        from openfl.protocols import utils  # Import here to avoid circular imports
+
+        # Get tensor pipe to properly serialize the weights
+        tensor_pipe = self.get_tensor_pipe()
+
+        # Create and save the protobuf message
+        try:
+            model_proto = utils.construct_model_proto(
+                tensor_dict=tensor_dict, round_number=round_number, tensor_pipe=tensor_pipe
+            )
+            utils.dump_proto(model_proto=model_proto, fpath=output_path)
+        except Exception as e:
+            self.logger.error(f"Failed to create or save model proto: {e}")
+            raise
