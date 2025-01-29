@@ -31,7 +31,7 @@ class FederatedRuntime(Runtime):
         tls (bool): A flag indicating if TLS should be used for
             connections. Defaults to False.
         director (Optional[Dict[str, Any]]): Dictionary containing director info.
-        _runtime_dir_client (RuntimeDirectorClient): The Runtimedirector client.
+        _runtime_dir_client (RuntimeDirectorClient): The Runtime director client.
         notebook_path (Optional[str]) : Path to the Jupyter notebook
         experiment_submitted (bool): Whether the experiment has been submitted.
         generated_workspace_path (Path): Path to generated workspace
