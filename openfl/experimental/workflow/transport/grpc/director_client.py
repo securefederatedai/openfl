@@ -18,8 +18,8 @@ from .grpc_channel_options import channel_options
 logger = logging.getLogger(__name__)
 
 
-class DirectorClient:
-    """Director client class for envoys.
+class EnvoyDirectorClient:
+    """Envoy director client class for envoys.
 
     This class communicates with the director to manage the envoys
     participation in the federation.
