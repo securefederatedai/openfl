@@ -14,8 +14,13 @@ with catch_warnings():
         import tensorflow  # NOQA
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
-
-if util.find_spec("keras") is not None:
+print("util.find_spec(tensorflow) ", util.find_spec("tensorflow") )
+print("util.find_spec(jax) ", util.find_spec("jax") )
+if util.find_spec("jax") is not None:
+    from openfl.federated.task.fl_model import FederatedModel  # NOQA
+    from openfl.federated.task.runner_jax import JAXTaskRunner  # NOQA
+elif util.find_spec("keras") is not None:
+    print("why")
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA
 if util.find_spec("torch") is not None:
@@ -24,7 +29,3 @@ if util.find_spec("torch") is not None:
 if util.find_spec("xgboost") is not None:
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_xgb import XGBoostTaskRunner  # NOQA
-print(util.find_spec("jax") )
-if util.find_spec("jax") is not None:
-    from openfl.federated.task.fl_model import FederatedModel  # NOQA
-    from openfl.federated.task.runner_jax import JAXTaskRunner  # NOQA

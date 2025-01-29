@@ -7,7 +7,11 @@ Base classes for developing a keras.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
-
+import os
+# print(os.environ["KERAS_BACKEND"])
+os.environ["KERAS_BACKEND"] = "jax"
+print("os.environKERAS_BACKEND]")
+print(os.environ["KERAS_BACKEND"])
 import copy
 from warnings import catch_warnings, simplefilter
 
@@ -203,7 +207,7 @@ class JAXTaskRunner(TaskRunner):
                     f"Param_metrics = {metrics}"
                 )
 
-        history = self.model.fit(batch_generator, verbose=2, **kwargs)
+        history = self.model.fit(batch_generator)
         results = []
         for metric in metrics:
             value = np.mean([history.history[metric]])
@@ -233,7 +237,7 @@ class JAXTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs["metrics"]
 
-        self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+        self.model.evaluate(self.data_loader.get_valid_loader(batch_size))
         results = self.model.get_metrics_result()
 
         # TODO if there are new metrics in the flplan that were not included in
@@ -310,7 +314,7 @@ class JAXTaskRunner(TaskRunner):
             weights_dict (dict): The weight dictionary.
         """
         weights_dict = {}
-        weight_names = KerasTaskRunner._get_weights_names(obj)
+        weight_names = JAXTaskRunner._get_weights_names(obj)
         if isinstance(obj, keras.optimizers.Optimizer):
             weights_dict = {
                 weight_names[i] + suffix: weight.numpy()
@@ -334,7 +338,7 @@ class JAXTaskRunner(TaskRunner):
                 the weights.
             weights_dict (dict): The weight dictionary.
         """
-        weight_names = KerasTaskRunner._get_weights_names(obj)
+        weight_names = JAXTaskRunner._get_weights_names(obj)
         weight_values = [weights_dict[name] for name in weight_names]
         obj.set_weights(weight_values)
 

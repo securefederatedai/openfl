@@ -10,8 +10,14 @@ from importlib import util
 from openfl.federated.data import DataLoader  # NOQA
 from openfl.federated.plan import Plan  # NOQA
 from openfl.federated.task import TaskRunner  # NOQA
-
-if util.find_spec("keras") is not None:
+print("util.find_spec(jax) ", util.find_spec("jax") )
+print("util.find_spec(JAX) ", util.find_spec("JAX") )
+if util.find_spec("jax") is not None:
+    from openfl.federated.data import FederatedDataSet  # NOQA
+    from openfl.federated.data import KerasDataLoader
+    from openfl.federated.task import FederatedModel  # NOQA
+    from openfl.federated.task import JAXTaskRunner
+elif util.find_spec("keras") is not None:
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import KerasDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
