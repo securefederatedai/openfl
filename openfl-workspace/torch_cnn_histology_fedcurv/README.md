@@ -13,7 +13,7 @@ and in the `plan.yaml` file in which the training task is explicitly defined wit
 The following instructions can be used to run the federation:
 ```
 # Copy the workspace template, create collaborators and aggregator
-fx workspace create --template keras/histology_fedcurv --prefix fedcurv
+fx workspace create --template torch/histology_fedcurv --prefix fedcurv
 cd fedcurv fx workspace certify                                                      
 fx aggregator generate-cert-request                                                           
 fx aggregator certify --silent                                                   
