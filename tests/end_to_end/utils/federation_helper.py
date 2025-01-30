@@ -461,6 +461,9 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     # Determine the test type based on the markers
     test_env = request.config.test_env
 
+    # Validate the model name and create the workspace name
+    if not request.config.model_name.replace("/", "_").upper() in constants.ModelName._member_names_:
+        raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path
     home_dir = Path().home()
