@@ -4,6 +4,7 @@
 
 """Plan module."""
 
+from functools import partial
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
@@ -43,7 +44,7 @@ class Plan:
         server_ (AggregatorGRPCServer): gRPC server object.
         client_ (AggregatorGRPCClient): gRPC client object.
         pipe_ (CompressionPipeline): Compression pipeline object.
-        straggler_policy_ (StragglerHandlingPolicy): Straggler handling policy.
+        straggler_policy_ (StragglerPolicy): Straggler handling policy.
         hash_ (str): Hash of the instance.
         name_ (str): Name of the instance.
         serializer_ (SerializerPlugin): Serializer plugin.
@@ -410,11 +411,14 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
-        template = "openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling"
+        template = "openfl.component.aggregator.straggler_handling.CutoffTimePolicy"
         defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
 
         if self.straggler_policy_ is None:
-            self.straggler_policy_ = Plan.build(**defaults)
+            # Prepare a partial function for the straggler policy
+            self.straggler_policy_ = partial(
+                Plan.import_(defaults["template"]), **defaults["settings"]
+            )
 
         return self.straggler_policy_
 
