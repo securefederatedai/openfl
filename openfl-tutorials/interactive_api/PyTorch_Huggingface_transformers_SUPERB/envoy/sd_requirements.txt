@@ -1,4 +1,0 @@
-datasets==1.14
-librosa
-pynvml
-numpy==1.22.0

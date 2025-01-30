@@ -1,17 +1,33 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Aggregator module."""
+
 import sys
 from logging import getLogger
 from pathlib import Path
 
-from click import Path as ClickPath
-from click import confirm, echo, group, option, pass_context, style
+from click import (
+    Path as ClickPath,
+)
+from click import (
+    confirm,
+    echo,
+    group,
+    option,
+    pass_context,
+    style,
+)
 
 from openfl.cryptography.ca import sign_certificate
-from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
+from openfl.cryptography.io import (
+    get_csr_hash,
+    read_crt,
+    read_csr,
+    read_key,
+    write_crt,
+    write_key,
+)
 from openfl.cryptography.participant import generate_csr
 from openfl.federated import Plan
 from openfl.interface.cli_helper import CERT_DIR
@@ -25,7 +41,12 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def aggregator(context):
-    """Manage Federated Learning Aggregator."""
+    """
+    Manage Federated Learning Aggregator.
+
+    Args:
+        context (click.Context): The context passed from the CLI.
+    """
     context.obj["group"] = "aggregator"
 
 
@@ -47,16 +68,18 @@ def aggregator(context):
     type=ClickPath(exists=True),
 )
 @option(
-    "-s",
-    "--secure",
+    "--task_group",
     required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
+    help="Selected task-group for assignment",
 )
-def start_(plan, authorized_cols, secure):
-    """Start the aggregator service."""
+def start_(plan, authorized_cols, task_group):
+    """Start the aggregator service.
 
+    Args:
+        plan (str): Path to plan config file
+        authorized_cols (str): Path to authorized collaborators file
+        task_group (str): Selected task-group for assignement - defaults to 'learning'
+    """
     if is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -64,14 +87,23 @@ def start_(plan, authorized_cols, secure):
         echo("Authorized collaborator list file path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    plan = Plan.parse(
+    # Parse plan and override mode if specified
+    parsed_plan = Plan.parse(
         plan_config_path=Path(plan).absolute(),
         cols_config_path=Path(authorized_cols).absolute(),
     )
 
+    # Set task_group in aggregator and assigner settings if provided
+    if task_group:
+        if "settings" not in parsed_plan.config["aggregator"]:
+            parsed_plan.config["aggregator"]["settings"] = {}
+        parsed_plan.config["aggregator"]["settings"]["task_group"] = task_group
+        parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
+        logger.info(f"Setting aggregator to assign: {task_group} task_group")
+
     logger.info("🧿 Starting the Aggregator Service.")
 
-    plan.get_server().serve()
+    parsed_plan.get_server().serve()
 
 
 @aggregator.command(name="generate-cert-request")
@@ -79,10 +111,15 @@ def start_(plan, authorized_cols, secure):
     "--fqdn",
     required=False,
     type=click_types.FQDN,
-    help=f"The fully qualified domain name of" f" aggregator node [{getfqdn_env()}]",
+    help=f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
     default=getfqdn_env(),
 )
 def _generate_cert_request(fqdn):
+    """Create aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+    """
     generate_cert_request(fqdn)
 
 
@@ -98,8 +135,8 @@ def generate_cert_request(fqdn):
 
     echo(
         f"Creating AGGREGATOR certificate key pair with following settings: "
-        f'CN={style(common_name, fg="red")},'
-        f' SAN={style(subject_alternative_name, fg="red")}'
+        f"CN={style(common_name, fg='red')},"
+        f" SAN={style(subject_alternative_name, fg='red')}"
     )
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
@@ -119,7 +156,14 @@ def generate_cert_request(fqdn):
 
 # TODO: function not used
 def find_certificate_name(file_name):
-    """Search the CRT for the actual aggregator name."""
+    """Search the CRT for the actual aggregator name.
+
+    Args:
+        file_name (str): The name of the file to search.
+
+    Returns:
+        str: The name of the aggregator found in the CRT.
+    """
     # This loop looks for the collaborator name in the key
     with open(file_name, "r", encoding="utf-8") as f:
         for line in f:
@@ -139,11 +183,17 @@ def find_certificate_name(file_name):
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 def _certify(fqdn, silent):
+    """Sign/certify the aggregator certificate key pair."""
     certify(fqdn, silent)
 
 
 def certify(fqdn, silent):
-    """Sign/certify the aggregator certificate key pair."""
+    """Sign/certify the aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+        silent (bool): Flag to enable silent mode.
+    """
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -195,17 +245,14 @@ def certify(fqdn, silent):
     crt_path_absolute_path = Path(CERT_DIR / f"{cert_name}.crt").absolute()
 
     if silent:
-
         echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
         echo(" Signing AGGREGATOR certificate")
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
-
         echo("Make sure the two hashes above are the same.")
         if confirm("Do you want to sign this certificate?"):
-
             echo(" Signing AGGREGATOR certificate")
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_agg_cert, crt_path_absolute_path)

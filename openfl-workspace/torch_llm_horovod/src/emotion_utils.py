@@ -6,25 +6,9 @@
 from logging import getLogger
 
 from datasets import Dataset, load_dataset
-from torch.utils.tensorboard import SummaryWriter
 from transformers import AutoTokenizer, DataCollatorWithPadding
 
 logger = getLogger(__name__)
-
-writer = None
-
-
-def get_writer():
-    """Create global writer object."""
-    global writer
-    if not writer:
-        writer = SummaryWriter("./logs/llm", flush_secs=5)
-
-
-def write_metric(node_name, task_name, metric_name, metric, round_number):
-    """Write metric callback."""
-    get_writer()
-    writer.add_scalar(f"{node_name}/{task_name}/{metric_name}", metric, round_number)
 
 
 def get_emotion_dataset(tokenizer):

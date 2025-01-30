@@ -9,6 +9,7 @@ aggregator :
     best_state_path : save/best.pbuf
     last_state_path : save/last.pbuf
     rounds_to_train : 10
+    persistent_db_path: tensor.db
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

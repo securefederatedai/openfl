@@ -1,0 +1,13 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
+Chandler:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 0
+      n_collaborators: 2
+      test_dataset: private_attributes.test_dataset
+      train_dataset: private_attributes.train_dataset
+    template: private_attributes.chandler_attrs

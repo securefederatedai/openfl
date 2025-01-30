@@ -3,11 +3,11 @@
 
 
 """Module with auxiliary CLI helper functions."""
+
 import os
 import re
-import shutil
 from itertools import islice
-from os import environ, stat
+from os import environ
 from pathlib import Path
 from sys import argv
 
@@ -24,26 +24,15 @@ CERT_DIR = Path("cert").absolute()
 
 
 def pretty(o):
-    """Pretty-print the dictionary given."""
+    """Pretty-print the dictionary given.
+
+    Args:
+        o (dict): The dictionary to be printed.
+    """
     m = max(map(len, o.keys()))
 
     for k, v in o.items():
         echo(style(f"{k:<{m}} : ", fg="blue") + style(f"{v}", fg="cyan"))
-
-
-def tree(path):
-    """Print current directory file tree."""
-    echo(f"+ {path}")
-
-    for path in sorted(path.rglob("*")):
-
-        depth = len(path.relative_to(path).parts)
-        space = "    " * depth
-
-        if path.is_file():
-            echo(f"{space}f {path.name}")
-        else:
-            echo(f"{space}d {path.name}")
 
 
 def print_tree(
@@ -52,7 +41,15 @@ def print_tree(
     limit_to_directories: bool = False,
     length_limit: int = 1000,
 ):
-    """Given a directory Path object print a visual tree structure."""
+    """Given a directory Path object print a visual tree structure.
+
+    Args:
+        dir_path (Path): The directory path.
+        level (int, optional): The level of the directory. Defaults to -1.
+        limit_to_directories (bool, optional): Limit to directories. Defaults
+            to False.
+        length_limit (int, optional): The length limit. Defaults to 1000.
+    """
     space = "    "
     branch = "│   "
     tee = "├── "
@@ -92,90 +89,15 @@ def print_tree(
     echo(f"\n{directories} directories" + (f", {files} files" if files else ""))
 
 
-def copytree(
-    src,
-    dst,
-    symlinks=False,
-    ignore=None,
-    ignore_dangling_symlinks=False,
-    dirs_exist_ok=False,
-):
-    """From Python 3.8 'shutil' which include 'dirs_exist_ok' option."""
-
-    with os.scandir(src) as itr:
-        entries = list(itr)
-
-    copy_function = shutil.copy2
-
-    def _copytree():
-
-        if ignore is not None:
-            ignored_names = ignore(os.fspath(src), [x.name for x in entries])
-        else:
-            ignored_names = set()
-
-        os.makedirs(dst, exist_ok=dirs_exist_ok)
-        errors = []
-        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
-
-        for srcentry in entries:
-            if srcentry.name in ignored_names:
-                continue
-            srcname = os.path.join(src, srcentry.name)
-            dstname = os.path.join(dst, srcentry.name)
-            srcobj = srcentry if use_srcentry else srcname
-            try:
-                is_symlink = srcentry.is_symlink()
-                if is_symlink and os.name == "nt":
-                    lstat = srcentry.stat(follow_symlinks=False)
-                    if lstat.st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT:
-                        is_symlink = False
-                if is_symlink:
-                    linkto = os.readlink(srcname)
-                    if symlinks:
-                        os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj, dstname, follow_symlinks=not symlinks)
-                    else:
-                        if not os.path.exists(linkto) and ignore_dangling_symlinks:
-                            continue
-                        if srcentry.is_dir():
-                            copytree(
-                                srcobj,
-                                dstname,
-                                symlinks,
-                                ignore,
-                                dirs_exist_ok=dirs_exist_ok,
-                            )
-                        else:
-                            copy_function(srcobj, dstname)
-                elif srcentry.is_dir():
-                    copytree(
-                        srcobj,
-                        dstname,
-                        symlinks,
-                        ignore,
-                        dirs_exist_ok=dirs_exist_ok,
-                    )
-                else:
-                    copy_function(srcobj, dstname)
-            except OSError as why:
-                errors.append((srcname, dstname, str(why)))
-            except Exception as err:
-                errors.extend(err.args[0])
-        try:
-            shutil.copystat(src, dst)
-        except OSError as why:
-            if getattr(why, "winerror", None) is None:
-                errors.append((src, dst, str(why)))
-        if errors:
-            raise Exception(errors)
-        return dst
-
-    return _copytree()
-
-
 def get_workspace_parameter(name):
-    """Get a parameter from the workspace config file (.workspace)."""
+    """Get a parameter from the workspace config file (.workspace).
+
+    Args:
+        name (str): The name of the parameter.
+
+    Returns:
+        str: The value of the parameter.
+    """
     # Update the .workspace file to show the current workspace plan
     workspace_file = ".workspace"
 
@@ -192,7 +114,16 @@ def get_workspace_parameter(name):
 
 
 def check_varenv(env: str = "", args: dict = None):
-    """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
+    """Update "args" (dictionary) with <env: env_value> if env has a defined
+    value in the host.
+
+    Args:
+        env (str, optional): The environment variable. Defaults to ''.
+        args (dict, optional): The dictionary to be updated. Defaults to None.
+
+    Returns:
+        args (dict): The updated dictionary.
+    """
     if args is None:
         args = {}
     env_val = environ.get(env)
@@ -203,7 +134,14 @@ def check_varenv(env: str = "", args: dict = None):
 
 
 def get_fx_path(curr_path=""):
-    """Return the absolute path to fx binary."""
+    """Return the absolute path to fx binary.
+
+    Args:
+        curr_path (str, optional): The current path. Defaults to ''.
+
+    Returns:
+        str: The absolute path to fx binary.
+    """
 
     match = re.search("lib", curr_path)
     idx = match.end()
@@ -215,7 +153,12 @@ def get_fx_path(curr_path=""):
 
 
 def remove_line_from_file(pkg, filename):
-    """Remove line that contains `pkg` from the `filename` file."""
+    """Remove line that contains `pkg` from the `filename` file.
+
+    Args:
+        pkg (str): The package to be removed.
+        filename (str): The name of the file.
+    """
     with open(filename, "r+", encoding="utf-8") as f:
         d = f.readlines()
         f.seek(0)
@@ -226,7 +169,13 @@ def remove_line_from_file(pkg, filename):
 
 
 def replace_line_in_file(line, line_num_to_replace, filename):
-    """Replace line at `line_num_to_replace` with `line`."""
+    """Replace line at `line_num_to_replace` with `line`.
+
+    Args:
+        line (str): The new line.
+        line_num_to_replace (int): The line number to be replaced.
+        filename (str): The name of the file.
+    """
     with open(filename, "r+", encoding="utf-8") as f:
         d = f.readlines()
         f.seek(0)

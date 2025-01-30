@@ -1,0 +1,7 @@
+imagen @ git+https://github.com/pyviz-topics/imagen.git@master
+matplotlib
+param==1.13.0
+tensorboard
+torch==2.3.1
+torchvision==0.18.1
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability

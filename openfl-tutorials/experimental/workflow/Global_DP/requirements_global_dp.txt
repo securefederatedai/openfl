@@ -1,0 +1,9 @@
+cloudpickle
+matplotlib==3.6.0
+numpy==1.23.3
+opacus==1.5.1
+pillow==10.3.0
+pyyaml==6.0
+torch==2.2.0
+torchaudio==2.2.0
+torchvision==0.17.0

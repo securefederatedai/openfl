@@ -7,7 +7,7 @@
 :orphan:
 
 =================
-Python Native API
+Python Native API (Deprecated)
 =================
 
 TODO

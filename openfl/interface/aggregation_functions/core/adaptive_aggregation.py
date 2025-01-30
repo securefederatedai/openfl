@@ -24,11 +24,11 @@ class AdaptiveAggregation(AggregationFunction):
         optimizer: Optimizer,
         agg_func: AggregationFunction,
     ) -> None:
-        """Initialize.
+        """Initialize the AdaptiveAggregation class.
 
         Args:
-            optimizer: One of numpy optimizer class instance.
-            agg_func: Aggregate function for aggregating
+            optimizer (Optimizer): One of numpy optimizer class instance.
+            agg_func (AggregationFunction): Aggregate function for aggregating
                 parameters that are not inside the optimizer.
         """
         super().__init__()
@@ -39,7 +39,15 @@ class AdaptiveAggregation(AggregationFunction):
     def _make_gradient(
         base_model_nparray: np.ndarray, local_tensors: List[LocalTensor]
     ) -> np.ndarray:
-        """Make gradient."""
+        """Make gradient.
+
+        Args:
+            base_model_nparray (np.ndarray): The base model tensor.
+            local_tensors (List[LocalTensor]): List of local tensors.
+
+        Returns:
+            np.ndarray: The gradient tensor.
+        """
         return sum(
             [
                 local_tensor.weight * (base_model_nparray - local_tensor.tensor)
@@ -51,19 +59,25 @@ class AdaptiveAggregation(AggregationFunction):
         """Aggregate tensors.
 
         Args:
-            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            local_tensors (list[openfl.utilities.LocalTensor]): List of local
+                tensors to aggregate.
             db_iterator: An iterator over history of all tensors. Columns:
                 - 'tensor_name': name of the tensor.
-                    Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
-                - 'fl_round': 0-based number of round corresponding to this tensor.
+                    Examples for `torch.nn.Module`s: 'conv1.weight','fc2.bias'.
+                - 'fl_round': 0-based number of round corresponding to this
+                    tensor.
                 - 'tags': tuple of tensor tags. Tags that can appear:
                     - 'model' indicates that the tensor is a model parameter.
-                    - 'trained' indicates that tensor is a part of a training result.
-                        These tensors are passed to the aggregator node after local learning.
-                    - 'aggregated' indicates that tensor is a result of aggregation.
-                        These tensors are sent to collaborators for the next round.
-                    - 'delta' indicates that value is a difference between rounds
-                        for a specific tensor.
+                    - 'trained' indicates that tensor is a part of a training
+                        result.
+                        These tensors are passed to the aggregator node after
+                        local learning.
+                    - 'aggregated' indicates that tensor is a result of
+                        aggregation.
+                        These tensors are sent to collaborators for the next
+                        round.
+                    - 'delta' indicates that value is a difference between
+                        rounds for a specific tensor.
                     also one of the tags is a collaborator name
                     if it corresponds to a result of a local task.
 

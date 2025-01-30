@@ -26,12 +26,10 @@ class MNISTShardDescriptor(ShardDescriptor):
         self.X_test = x_test[self.rank - 1::self.worldsize]
         self.y_test = y_test[self.rank - 1::self.worldsize]
 
-
         # Calculating data and target shapes
         sample, _ = self[0]
         self._sample_shape = [str(dim) for dim in sample.shape]
         self._target_shape = ['0']
-
 
     def __getitem__(self, index):
         """Return a item by the index."""

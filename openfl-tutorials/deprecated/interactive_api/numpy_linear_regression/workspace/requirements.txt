@@ -1,0 +1,7 @@
+jupyterlab
+matplotlib
+mistune>=2.0.3 # not directly required, pinned by Snyk to avoid a vulnerability
+numpy
+openfl==1.2.1
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability

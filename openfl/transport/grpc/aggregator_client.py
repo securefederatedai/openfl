@@ -17,10 +17,26 @@ from openfl.utilities import check_equal
 
 
 class ConstantBackoff:
-    """Constant Backoff policy."""
+    """Constant Backoff policy.
+
+    This class implements a backoff policy that waits for a constant amount of
+    time between retries.
+
+    Attributes:
+        reconnect_interval (int): The interval between connection attempts.
+        logger (Logger): The logger to use for reporting connection attempts.
+        uri (str): The URI to connect to.
+    """
 
     def __init__(self, reconnect_interval, logger, uri):
-        """Initialize Constant Backoff."""
+        """Initialize Constant Backoff.
+
+        Args:
+            reconnect_interval (int): The interval between connection attempts.
+            logger (Logger): The logger to use for reporting connection
+                attempts.
+            uri (str): The URI to connect to.
+        """
         self.reconnect_interval = reconnect_interval
         self.logger = logger
         self.uri = uri
@@ -34,24 +50,50 @@ class ConstantBackoff:
 class RetryOnRpcErrorClientInterceptor(
     grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor
 ):
-    """Retry gRPC connection on failure."""
+    """Retry gRPC connection on failure.
+
+    This class implements a gRPC client interceptor that retries failed RPC
+    calls.
+
+    Attributes:
+        sleeping_policy (ConstantBackoff): The backoff policy to use between
+            retries.
+        status_for_retry (Tuple[grpc.StatusCode]): The gRPC status codes that
+            should trigger a retry.
+    """
 
     def __init__(
         self,
         sleeping_policy,
         status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
     ):
-        """Initialize function for gRPC retry."""
+        """Initialize function for gRPC retry.
+
+        Args:
+            sleeping_policy (ConstantBackoff): The backoff policy to use
+                between retries.
+            status_for_retry (Tuple[grpc.StatusCode], optional): The gRPC
+                status codes that should trigger a retry.
+        """
         self.sleeping_policy = sleeping_policy
         self.status_for_retry = status_for_retry
 
     def _intercept_call(self, continuation, client_call_details, request_or_iterator):
-        """Intercept the call to the gRPC server."""
+        """Intercept the call to the gRPC server.
+
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the
+                call.
+            request_or_iterator (object): The request message for the RPC call.
+
+        Returns:
+            response (grpc.Call): The result of the RPC call.
+        """
         while True:
             response = continuation(client_call_details, request_or_iterator)
 
             if isinstance(response, grpc.RpcError):
-
                 # If status code is not in retryable status codes
                 self.sleeping_policy.logger.info("Response code: %s", response.code())
                 if self.status_for_retry and response.code() not in self.status_for_retry:
@@ -62,11 +104,32 @@ class RetryOnRpcErrorClientInterceptor(
                 return response
 
     def intercept_unary_unary(self, continuation, client_call_details, request):
-        """Wrap intercept call for unary->unary RPC."""
+        """Wrap intercept call for unary->unary RPC.
+
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the
+                call.
+            request (object): The request message for the RPC call.
+
+        Returns:
+            grpc.Call: The result of the RPC call.
+        """
         return self._intercept_call(continuation, client_call_details, request)
 
     def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
-        """Wrap intercept call for stream->unary RPC."""
+        """
+        Wrap intercept call for stream->unary RPC.
+
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the
+                call.
+            request_iterator (iterator): The request messages for the RPC call.
+
+        Returns:
+            grpc.Call: The result of the RPC call.
+        """
         return self._intercept_call(continuation, client_call_details, request_iterator)
 
 
@@ -85,55 +148,98 @@ def _resend_data_on_reconnection(func):
         while True:
             try:
                 response = func(self, *args, **kwargs)
+                break
             except grpc.RpcError as e:
-                if e.code() == grpc.StatusCode.UNKNOWN:
-                    self.logger.info(
-                        f"Attempting to resend data request to aggregator at {self.uri}"
-                    )
-                elif e.code() == grpc.StatusCode.UNAUTHENTICATED:
-                    raise
-                continue
-            break
+                self.logger.info(
+                    f"Failed to send data request to aggregator {self.uri}, error code {e.code()}"
+                )
+                if self.refetch_server_cert_callback is not None:
+                    self.logger.info("Refetching server certificate")
+                    self.root_certificate = self.refetch_server_cert_callback()
+                self.sleeping_policy.sleep()
         return response
 
     return wrapper
 
 
 class AggregatorGRPCClient:
-    """Client to the aggregator over gRPC-TLS."""
+    """Client to the aggregator over gRPC-TLS.
+
+    This class implements a gRPC client for communicating with an aggregator
+    over a secure (TLS) connection.
+
+    Attributes:
+        uri (str): The URI of the aggregator.
+        use_tls (bool): Whether to use TLS for the connection.
+        require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
+            Ignored if `use_tls=False`.
+        root_certificate (str): The path to the root certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        certificate (str): The path to the client's certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        private_key (str): The path to the client's private key for the TLS connection, ignored if
+            `use_tls=False`.
+        aggregator_uuid (str): The UUID of the aggregator.
+        federation_uuid (str): The UUID of the federation.
+        single_col_cert_common_name (str): The common name on the
+            collaborator's certificate.
+    """
 
     def __init__(
         self,
         agg_addr,
         agg_port,
-        disable_client_auth,
         root_certificate,
         certificate,
         private_key,
-        tls=True,
+        use_tls=True,
+        require_client_auth=True,
         aggregator_uuid=None,
         federation_uuid=None,
         single_col_cert_common_name=None,
+        refetch_server_cert_callback=None,
         **kwargs,
     ):
-        """Initialize."""
+        """
+        Initialize.
+
+        Args:
+            agg_addr (str): The address of the aggregator.
+            agg_port (int): The port of the aggregator.
+            use_tls (bool): Whether to use TLS for the connection.
+            require_client_auth (bool): Whether to enable client-side
+                authentication, i.e. mTLS. Ignored if `use_tls=False`.
+            root_certificate (str): The path to the root certificate for the
+                TLS connection.
+            certificate (str): The path to the client's certificate for the
+                TLS connection.
+            private_key (str): The path to the client's private key for the
+                TLS connection.
+            aggregator_uuid (str,optional): The UUID of the aggregator.
+            federation_uuid (str, optional): The UUID of the federation.
+            single_col_cert_common_name (str, optional): The common name on
+                the collaborator's certificate.
+            **kwargs: Additional keyword arguments.
+        """
         self.uri = f"{agg_addr}:{agg_port}"
-        self.tls = tls
-        self.disable_client_auth = disable_client_auth
+        self.use_tls = use_tls
+        self.require_client_auth = require_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-
+        self.sleeping_policy = ConstantBackoff(
+            int(kwargs.get("client_reconnect_interval", 1)), getLogger(__name__), self.uri
+        )
         self.logger = getLogger(__name__)
 
-        if not self.tls:
-            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
+        if not self.use_tls:
+            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
                 self.root_certificate,
-                self.disable_client_auth,
+                self.require_client_auth,
                 self.certificate,
                 self.private_key,
             )
@@ -142,34 +248,19 @@ class AggregatorGRPCClient:
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.single_col_cert_common_name = single_col_cert_common_name
-
-        # Adding an interceptor for RPC Errors
-        self.interceptors = (
-            RetryOnRpcErrorClientInterceptor(
-                sleeping_policy=ConstantBackoff(
-                    logger=self.logger,
-                    reconnect_interval=int(kwargs.get("client_reconnect_interval", 1)),
-                    uri=self.uri,
-                ),
-                status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
-            ),
-        )
-        self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors)
-        )
+        self.refetch_server_cert_callback = refetch_server_cert_callback
+        self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
     def create_insecure_channel(self, uri):
-        """
-        Set an insecure gRPC channel (i.e. no TLS) if desired.
+        """Set an insecure gRPC channel (i.e. no TLS) if desired.
 
         Warns user that this is not recommended.
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri (str): The uniform resource identifier for the insecure channel
 
         Returns:
-            An insecure gRPC channel object
-
+            grpc.Channel: An insecure gRPC channel object
         """
         return grpc.insecure_channel(uri, options=channel_options)
 
@@ -177,7 +268,7 @@ class AggregatorGRPCClient:
         self,
         uri,
         root_certificate,
-        disable_client_auth,
+        require_client_auth,
         certificate,
         private_key,
     ):
@@ -185,21 +276,23 @@ class AggregatorGRPCClient:
         Set an secure gRPC channel (i.e. TLS).
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
-            root_certificate: The Certificate Authority filename
-            disable_client_auth (boolean): True disabled client-side
-             authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
-             (signed by the certificate authority)
+            uri (str): The uniform resource identifier for the secure channel.
+            root_certificate (str): The Certificate Authority filename.
+            require_client_auth (bool): True enables client-side
+                authentication.
+            certificate (str): The client certificate filename from the
+                collaborator (signed by the certificate authority).
+            private_key (str): The private key filename for the client
+                certificate.
 
         Returns:
-            An insecure gRPC channel object
+            grpc.Channel: A secure gRPC channel object
         """
         with open(root_certificate, "rb") as f:
             root_certificate_b = f.read()
 
-        if disable_client_auth:
-            self.logger.warn("Client-side authentication is disabled.")
+        if not require_client_auth:
+            self.logger.warning("Client-side authentication is disabled.")
             private_key_b = None
             certificate_b = None
         else:
@@ -217,6 +310,11 @@ class AggregatorGRPCClient:
         return grpc.secure_channel(uri, credentials, options=channel_options)
 
     def _set_header(self, collaborator_name):
+        """Set the header for gRPC messages.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+        """
         self.header = aggregator_pb2.MessageHeader(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,
@@ -225,7 +323,12 @@ class AggregatorGRPCClient:
         )
 
     def validate_response(self, reply, collaborator_name):
-        """Validate the aggregator response."""
+        """Validate the aggregator response.
+
+        Args:
+            reply (aggregator_pb2.MessageReply): The reply from the aggregator.
+            collaborator_name (str): The name of the collaborator.
+        """
         # check that the message was intended to go to this collaborator
         check_equal(reply.header.receiver, collaborator_name, self.logger)
         check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
@@ -247,30 +350,38 @@ class AggregatorGRPCClient:
 
     def reconnect(self):
         """Create a new channel with the gRPC server."""
-        # channel.close() is idempotent. Call again here in case it wasn't issued previously
+        # channel.close() is idempotent. Call again here in case it wasn't
+        # issued previously
         self.disconnect()
 
-        if not self.tls:
+        if not self.use_tls:
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
                 self.root_certificate,
-                self.disable_client_auth,
+                self.require_client_auth,
                 self.certificate,
                 self.private_key,
             )
 
         self.logger.debug("Connecting to gRPC at %s", self.uri)
 
-        self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors)
-        )
+        self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
-    @_atomic_connection
     @_resend_data_on_reconnection
+    @_atomic_connection
     def get_tasks(self, collaborator_name):
-        """Get tasks from the aggregator."""
+        """Get tasks from the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+
+        Returns:
+            Tuple[List[str], int, int, bool]: A tuple containing a list of
+                tasks, the round number, the sleep time, and a boolean
+                indicating whether to quit.
+        """
         self._set_header(collaborator_name)
         request = aggregator_pb2.GetTasksRequest(header=self.header)
         response = self.stub.GetTasks(request)
@@ -283,8 +394,8 @@ class AggregatorGRPCClient:
             response.quit,
         )
 
-    @_atomic_connection
     @_resend_data_on_reconnection
+    @_atomic_connection
     def get_aggregated_tensor(
         self,
         collaborator_name,
@@ -294,7 +405,20 @@ class AggregatorGRPCClient:
         tags,
         require_lossless,
     ):
-        """Get aggregated tensor from the aggregator."""
+        """
+        Get aggregated tensor from the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+            tensor_name (str): The name of the tensor.
+            round_number (int): The round number.
+            report (str): The report.
+            tags (List[str]): The tags.
+            require_lossless (bool): Whether lossless compression is required.
+
+        Returns:
+            aggregator_pb2.TensorProto: The aggregated tensor.
+        """
         self._set_header(collaborator_name)
 
         request = aggregator_pb2.GetAggregatedTensorRequest(
@@ -311,8 +435,8 @@ class AggregatorGRPCClient:
 
         return response.tensor
 
-    @_atomic_connection
     @_resend_data_on_reconnection
+    @_atomic_connection
     def send_local_task_results(
         self,
         collaborator_name,
@@ -321,7 +445,17 @@ class AggregatorGRPCClient:
         data_size,
         named_tensors,
     ):
-        """Send task results to the aggregator."""
+        """
+        Send task results to the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+            round_number (int): The round number.
+            task_name (str): The name of the task.
+            data_size (int): The size of the data.
+            named_tensors (List[aggregator_pb2.NamedTensorProto]): The list of
+                named tensors.
+        """
         self._set_header(collaborator_name)
         request = aggregator_pb2.TaskResults(
             header=self.header,
@@ -340,7 +474,15 @@ class AggregatorGRPCClient:
         self.validate_response(response, collaborator_name)
 
     def _get_trained_model(self, experiment_name, model_type):
-        """Get trained model RPC."""
+        """Get trained model RPC.
+
+        Args:
+            experiment_name (str): The name of the experiment.
+            model_type (str): The type of the model.
+
+        Returns:
+            Dict[str, numpy.ndarray]: The trained model.
+        """
         get_model_request = self.stub.GetTrainedModelRequest(
             experiment_name=experiment_name,
             model_type=model_type,

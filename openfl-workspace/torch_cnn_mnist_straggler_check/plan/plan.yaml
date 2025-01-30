@@ -9,8 +9,6 @@ aggregator :
     best_state_path     : save/torch_cnn_mnist_best.pbuf
     last_state_path     : save/torch_cnn_mnist_last.pbuf
     rounds_to_train     : 6
-    log_metric_callback :
-      template : src.mnist_utils.write_metric
 
 
 collaborator :
@@ -45,7 +43,7 @@ compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
 
 straggler_handling_policy :
-  template : openfl.component.straggler_handling_functions.PercentageBasedStragglerHandling
+  template : openfl.component.aggregator.straggler_handling.PercentagePolicy
   settings : 
     percent_collaborators_needed : 0.5
     minimum_reporting : 1

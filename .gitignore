@@ -15,3 +15,8 @@ venv/*
 .eggs
 eggs/*
 *.pyi
+.metaflow/*
+results/*
+**MNIST/
+**cert/
+.history/

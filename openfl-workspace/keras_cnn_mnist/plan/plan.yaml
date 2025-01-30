@@ -5,9 +5,9 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path : save/keras_cnn_mnist_init.pbuf
-    best_state_path : save/keras_cnn_mnist_best.pbuf
-    last_state_path : save/keras_cnn_mnist_last.pbuf
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/last.pbuf
     rounds_to_train : 10
 
 collaborator :
@@ -19,7 +19,7 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.tfmnist_inmemory.TensorFlowMNISTInMemory
+  template : src.dataloader.KerasMNISTInMemory
   settings :
     collaborator_count : 2
     data_group_name    : mnist
@@ -27,7 +27,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.keras_cnn.KerasCNN
+  template : src.taskrunner.KerasCNN
 
 network :
   defaults : plan/defaults/network.yaml
@@ -40,3 +40,7 @@ tasks :
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
+  # To use different Compression Pipeline, uncomment the following lines
+  # template : openfl.pipelines.KCPipeline
+  # settings :
+  #   n_clusters : 6

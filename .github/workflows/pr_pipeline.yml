@@ -1,0 +1,93 @@
+name: OpenFL PR Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  bandit_code_scan:
+    name: Bandit Code Scan
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    uses: ./.github/workflows/bandit.yml
+
+  check_code_format:
+    name: Check code format
+    uses: ./.github/workflows/lint.yml
+
+  docker_bench_security:
+    name: Docker Bench for Security
+    uses: ./.github/workflows/docker-bench-security.yml
+
+  double_workspace_export:
+    name: Double workspace export
+    uses: ./.github/workflows/double_ws_export.yml
+
+  fr_301_watermark_nb_run:
+    name: Federated Runtime 301 MNIST Watermarking
+    uses: ./.github/workflows/federated_runtime.yml
+
+  gandlf_taskrunner:
+    name: GaNDLF TaskRunner
+    uses: ./.github/workflows/gandlf.yml
+
+  hadolint_security_scan:
+    name: Hadolint Security Scan
+    uses: ./.github/workflows/hadolint.yml
+
+  private_key_infrastructure:
+    name: Private Key Infrastructure
+    uses: ./.github/workflows/pki.yml
+
+  pytest_coverage:
+    name: Pytest and code coverage
+    uses: ./.github/workflows/pytest_coverage.yml
+
+  straggler_handling:
+    name: Straggler Handling Test
+    uses: ./.github/workflows/straggler-handling.yml
+
+  task_runner:
+    name: TaskRunner
+    uses: ./.github/workflows/taskrunner.yml
+
+  taskrunner_eden_compression:
+    name: TaskRunner (Eden Compression)
+    uses: ./.github/workflows/taskrunner_eden_pipeline.yml
+
+  tr_docker_gramine_direct:
+    name: TaskRunner (docker/gramine-direct)
+    uses: ./.github/workflows/tr_docker_gramine_direct.yml
+
+  tr_docker_native:
+    name: TaskRunner (docker/native)
+    uses: ./.github/workflows/tr_docker_native.yml
+
+  trivy_scan:
+    name: Trivy Scan
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    uses: ./.github/workflows/trivy.yml
+
+  wf_functional_e2e:
+    name: Workflow Functional E2E
+    uses: ./.github/workflows/wf_functional_e2e.yml
+
+  workflow_interface_101_mnist:
+    name: Workflow Interface 101 MNIST Notebook
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+
+  workflow_interface_tests:
+    name: Workflow Interface Tests
+    uses: ./.github/workflows/experimental_workflow_tests.yml

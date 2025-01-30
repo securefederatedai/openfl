@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 from openfl.interface.interactive_api.experiment import TaskInterface
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.layers import soft_dice_loss, soft_dice_coef
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.layers import soft_dice_loss, soft_dice_coef  # noqa: E501
 
 
 task_interface = TaskInterface()
@@ -58,8 +58,8 @@ def validate(unet_model, val_loader, device):
         for data, target in val_loader:
             samples = target.shape[0]
             total_samples += samples
-            data, target = torch.tensor(data).to(device), \
-                           torch.tensor(target).to(device, dtype=torch.int64)
+            data = torch.tensor(data).to(device)
+            target = torch.tensor(target).to(device, dtype=torch.int64)
             output = unet_model(data)
             val = soft_dice_coef(output, target)
             val_score += val.sum().cpu().numpy()

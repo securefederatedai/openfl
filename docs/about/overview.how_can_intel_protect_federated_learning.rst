@@ -56,7 +56,7 @@ This manifest file is used to automatically create the enclave on an
 SGX-compatible CPU. For example, once Graphene is installed and the
 manifest file is specified, the command
 
-.. code-block:: console
+.. code-block:: shell
 
   $ SGX=1 ./pal_loader httpd
 

@@ -4,8 +4,8 @@
 name: GaNDLF TaskRunner
 
 on:
-  pull_request:
-    branches: [ develop ]
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,8 +16,9 @@ env:
 
 jobs:
   build:
-
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v3
@@ -29,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install typer==0.11.1
-        pip install torch==2.1.0+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+        pip install torch==2.3.1+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
         pip install .
     - name: Install GaNDLF
       run: |
@@ -38,7 +39,9 @@ jobs:
         git fetch --tags
         echo "Checkout the latest GaNDLF tag"
         latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
-        git checkout $latestTag
+        # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required
+        # in torch to work with a later version.
+        git checkout 0.1.1
     - name: GaNDLF Task Runner Test
       run: |
         cd gandlf

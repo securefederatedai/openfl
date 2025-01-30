@@ -4,25 +4,20 @@
 .. _running_the_task_runner:
 
 ================
-Task Runner API
+TaskRunner API
 ================
 
-Let's take a deeper dive into the Task Runner API. If you haven't already, we suggest checking out the :ref:`quick_start` for a primer on doing a simple experiment on a single node.
-
-The steps to transition from a local experiment to a distributed federation can be understood best with the following diagram.
+This is a deep dive into the TaskRunner API. To gain familiarity with this API, we recommend going through the `quickstart <../../tutorials/taskrunner.html>`_ guide. Note that the quickstart guide is focused on simulating an experiment locally. The design choices of this API are best understood when transitioning from a local experiment to a distributed federation, which is how real-world federated learning experiments are conducted.
 
 .. figure:: ../../images/openfl_flow.png
 
-.. centered:: Overview of a Task Runner experiment distributed across multiple nodes
-:
+The Task Runner API uses short-lived components in a federation, which are terminated once the experiment finishes. These components are:
 
-The Task Runner API uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
-
-- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregates them to create the new global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
+- The :code:`Collaborator` uses a local dataset to train a global model and the :code:`Aggregator` receives model updates from :code:`Collaborator` s and aggregates them to create the new global model.
+- The :code:`Aggregator` is framework-agnostic, while the :code:`Collaborator` can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
 
 
-For this workflow, you modify the federation workspace to your requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
+For this workflow, one needs modify the federation workspace to their requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
 
 .. _plan_settings:
@@ -42,18 +37,19 @@ Configurable Settings
 ^^^^^^^^^^^^^^^^^^^^^
 
 - :class:`Aggregator <openfl.component.Aggregator>`
-    `openfl.component.Aggregator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
+    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
     Defines the settings for the aggregator which is the model-owner in the experiment. While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator node and passed to collaborator nodes during initialization. The settings for aggregator include:
 
  - :code:`init_state_path`: (str:path) Defines the weight protobuf file path where the experiment's initial weights will be loaded from. These weights will be generated with the `fx plan initialize` command.
  - :code:`best_state_path`: (str:path) Defines the weight protobuf file path that will be saved to for the highest accuracy model during the experiment.
  - :code:`last_state_path`: (str:path)  Defines the weight protobuf file path that will be saved to during the last round completed in each experiment.
  - :code:`rounds_to_train`: (int) Specifies the number of rounds in a federation. A federated learning round is defined as one complete iteration when the collaborators train the model and send the updated model weights back to the aggregator to form a new global model. Within a round, collaborators can train the model for multiple iterations called epochs.
- - :code:`write_logs`: (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.      
-
+ - :code:`write_logs`: (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.     
+ - :code:`persist_checkpoint`: (boolean) Specifies whether to enable the storage of a persistent checkpoint in non-volatile storage for recovery purposes. When enabled, the aggregator will restore its state to what it was prior to the restart, ensuring continuity after a restart. 
+ - :code:`persistent_db_path`: (str:path) Defines the persisted database path. 
 
 - :class:`Collaborator <openfl.component.Collaborator>`
-    `openfl.component.Collaborator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
+    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     Defines the settings for the collaborator which is the data owner in the experiment. The settings for collaborator include:
 
  - :code:`delta_updates`: (boolean) Determines whether the difference in model weights between the current and previous round will be sent (True), or if whole checkpoints will be sent (False). Setting to delta_updates to True leads to higher sparsity in model weights sent across, which may improve compression ratios.
@@ -61,7 +57,7 @@ Configurable Settings
 
 
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
-    `openfl.federated.data.loader.DataLoader <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/data/loader.py>`_
+    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
     Defines the data loader class that provides access to local dataset. It implements a train loader and a validation loader that takes in the train dataset and the validation dataset respectively. The settings for the dataloader include:
 
  - :code:`collaborator_count`: (int) The number of collaborators participating in the federation
@@ -70,12 +66,12 @@ Configurable Settings
 
 
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
-    `openfl.federated.task.runner.TaskRunner <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_
+    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
     Defines the model, training/validation functions, and how to extract and set the tensors from model weights and optimizer dictionary. Depending on different AI frameworks like PyTorch and Tensorflow, users can select pre-defined task runner methods.
 
 
 - :class:`Assigner <openfl.component.Assigner>`
-    `openfl.component.Assigner <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
+    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
     Defines the task that are sent to the collaborators from the aggregator. There are three default tasks that could be given to each Collaborator:
  
  - :code:`aggregated_model_validation`: (str) Perform validation on aggregated global model sent by the aggregator.
@@ -106,13 +102,13 @@ Each task subsection contains the following:
 - ``kwargs``: kwargs passed to the ``function``.
 
 .. note::
-    See an `example <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
 
 
 .. _running_the_federation_manual:
 
 
-.. _interactive_api:
+.. _interactive_api (Deprecated):
 
 
 
@@ -121,9 +117,9 @@ Bare Metal Approach
 
 .. note::
 
-    Ensure you have installed the |productName| package on every node (aggregator and collaborators) in the federation.
+    Ensure you have installed the OpenFL package on every node (aggregator and collaborators) in the federation.
 
-    See :ref:`install_package` for details.
+    See :ref:`installation` for details.
 
 
 
@@ -147,9 +143,9 @@ Bare Metal Approach
 STEP 1: Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.8 (>=3.6, <3.11) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.10 (>=3.10, <3.13) virtual environment and confirm OpenFL is available.
 
-	.. code-block:: console
+	.. code-block:: shell
 
 		$ fx
 
@@ -158,7 +154,7 @@ STEP 1: Create a Workspace
 
 	Set the environment variables to use the :code:`keras_cnn_mnist` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ export WORKSPACE_TEMPLATE=keras_cnn_mnist
         $ export WORKSPACE_PATH=${HOME}/my_federation
@@ -173,14 +169,14 @@ STEP 1: Create a Workspace
 
   See the complete list of available templates.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace create --prefix ${WORKSPACE_PATH}
 
 
 4.  Create a workspace directory for the new federation project.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
 
@@ -191,13 +187,13 @@ STEP 1: Create a Workspace
 
 5.  Change to the workspace directory.
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ cd ${WORKSPACE_PATH}
 
 6.  Install the workspace requirements:
 
-    .. code-block:: console
+    .. code-block:: shell
 
         $ pip install -r requirements.txt
 
@@ -211,7 +207,7 @@ STEP 1: Create a Workspace
         The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.
 
 
-    .. code-block:: console
+    .. code-block:: shell
 
 		$ fx plan initialize
 
@@ -222,19 +218,19 @@ STEP 1: Create a Workspace
 
 	- OPTION 1: override the auto populated FQDN value with the :code:`-a` flag.
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 
 	- OPTION 2: override the apparent FQDN of the system by setting an FQDN environment variable.
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ export FQDN=x.x.x.x
 
 		and initializing the FL plan
 
-		.. code-block:: console
+		.. code-block:: shell
 
 			$ fx plan initialize
 
@@ -275,7 +271,7 @@ Setting Up the Certificate Authority
 
 1. Change to the path of your workspace:
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ cd WORKSPACE_PATH
 
@@ -283,13 +279,13 @@ Setting Up the Certificate Authority
 
  All certificates will be signed by the aggregator node. Follow the instructions and enter the information as prompted. The command will create a simple database file to keep track of all issued certificates.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace certify
 
 3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator generate-cert-request --fqdn AFQDN
 
@@ -297,38 +293,38 @@ Setting Up the Certificate Authority
 
        On Linux\*\, you can discover the FQDN with this command:
 
-           .. code-block:: console
+           .. code-block:: shell
 
               $ hostname --all-fqdns | awk '{print $1}'
 
    .. note::
 
-      You can override the apparent FQDN of the system by setting an FQDN environment variable before creating the certificate.
+      You can override the apparent FQDN by setting it explicitly via the :code:`--fqdn` parameter.
 
-        .. code-block:: console
+        .. code-block:: shell
 
-            $ fx aggregator generate-cert-request export FQDN=x.x.x.x
+            $ fx aggregator generate-cert-request --fqdn AFQDN
 
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address.
 
-        .. code-block:: console
+        .. code-block:: shell
 
             $ fx aggregator generate-cert-request
 
 4. Run the aggregator certificate signing command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator certify --fqdn AFQDN
 
 
    .. note::
 
-      You can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before signing the certificate.
+      You can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=AFQDN`) before signing the certificate.
 
-        .. code-block:: console
+        .. code-block:: shell
 
-           $ fx aggregator certify export FQDN=x.x.x.x
+           $ fx aggregator certify --fqdn AFQDN
 
 5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
 
@@ -351,7 +347,7 @@ Exporting the Workspace
 
 1. Export the workspace so that it can be imported to the collaborator nodes.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace export
 
@@ -370,7 +366,7 @@ Importing the Workspace
 
 2. Import the workspace archive.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx workspace import --archive WORKSPACE.zip
 
@@ -380,7 +376,7 @@ Importing the Workspace
 
  Replace :code:`COL_LABEL` with the label you assigned to the collaborator. This label does not have to be the FQDN; it can be any unique alphanumeric label.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator create -n {COL_LABEL} -d {DATA_PATH:optional}
        $ fx collaborator generate-cert-request -n {COL_LABEL}
@@ -403,7 +399,7 @@ Importing the Workspace
 
 4. On the aggregator node (i.e., the certificate authority in this example), sign the Collaborator CSR Package from the collaborator nodes.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
 
@@ -419,7 +415,7 @@ Importing the Workspace
 
 5. On the collaborator node, import the signed certificate and certificate chain into your workspace.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
 
@@ -435,7 +431,7 @@ STEP 3: Start the Federation
 
 1. Start the Aggregator.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx aggregator start
 
@@ -449,7 +445,7 @@ STEP 3: Start the Federation
 
 2. Run the Collaborator.
 
-    .. code-block:: console
+    .. code-block:: shell
 
        $ fx collaborator start -n {COLLABORATOR_LABEL}
 
@@ -481,7 +477,7 @@ Post Experiment
 Experiment owners may access the final model in its native format.
 Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
 
-.. code-block:: console
+.. code-block:: shell
 
     $ fx model save -i model_protobuf_path.pth -o save_model_path
 
@@ -499,72 +495,129 @@ In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded w
 
 .. _running_the_federation_docker:
 
+Docker Container Approach
+-------------------------
 
-Running inside Docker
----------------------
+Participants can run experiments within a container either for simulation or to deploy real-world experiments within Trusted Execution Environments (TEEs).
 
-There are two ways you can run |productName| with Docker\*\.
+Base Image
+^^^^^^^^^^
 
-- `Option 1: Deploy a Federation in a Docker Container`_
-- `Option 2: Deploy Your Workspace in a Docker Container`_
+To develop or simulate experiments within a container, OpenFL base image is required.
 
+.. code-block:: shell
 
-.. _running_the_federation_docker_base_image:
+   # Pull latest stable base image
+   $ docker pull ghcr.io/securefederatedai/openfl:latest
 
-Option 1: Deploy a Federation in a Docker Container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   # Or, build a base image from the latest source code
+   $ docker build . -t openfl -f Dockerfile.base \
+       --build-arg OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@develop
 
-.. note::
-    You have to built an |productName| image. See :ref:`install_docker` for details.
+Verify:
 
+.. code-block:: shell
 
-1. Run the |productName| image.
+   user@vm:~/openfl$ docker run -it --rm ghcr.io/securefederatedai/openfl:latest bash
+   user@7b40624c207a:/$ fx
+    OpenFL - Open Federated Learning
 
-    .. code-block:: console
+    BASH COMPLETE ACTIVATION
 
-       $ docker run -it --network host openfl
+    Run in terminal:
+        _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+        source ~/.fx-autocomplete.sh
+    If ~/.fx-autocomplete.sh already exists:
+        source ~/.fx-autocomplete.sh
 
+    CORRECT USAGE
 
-You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
+    fx [options] [command] [subcommand] [args]
 
+Building a workspace image
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _running_the_federation_docker_workspace:
+OpenFL supports `Gramine-based <https://gramine.readthedocs.io/en/stable/>`_ TEEs that run within SGX.
 
-Option 2: Deploy Your Workspace in a Docker Container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To build a TEE-ready workspace image, run the following command from an existing workspace directory. Ensure PKI setup and plan confirmations are done before this step.
 
-.. note::
-    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace`_ for details.
+.. code-block:: shell
+   user@vm:~/example_workspace$ fx workspace dockerize --save
 
+This command builds the base image and a TEE-ready workspace image. 
 
-1. Build an image with the workspace you created.
+Refer to ``fx workspace dockerize --help`` for more details.
 
-    .. code-block:: console
+A signed Docker image named ``example_workspace.tar`` will be saved in the workspace. This image (along with respective PKI certificates that are not included in the image) can be shared across participating entities.
 
-       $ fx workspace dockerize
+Running without a TEE
+~~~~~~~~~~~~~~~~~~~~~
 
+Using the native ``fx`` command within the image will run the experiment without TEEs.
 
-    By default, the image is saved as **WORKSPACE_NAME_image.tar** in the workspace directory.
+.. code-block:: shell
 
-2. The image can be distributed and run on other nodes without any environment preparation.
+   # Aggregator
+   docker run --rm \
+     --network host \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "fx aggregator start ..."
 
-    .. parsed-literal::
+   # Collaborator(s)
+   docker run --rm \
+     --network host \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "fx collaborator start ..."
 
-        docker run -it --rm \\
-            --network host \\
-            -v user_data_folder:/home/user/workspace/data \\
-            ${WORKSPACE_IMAGE_NAME} \\
-            bash
+Running within a TEE
+~~~~~~~~~~~~~~~~~~~~
 
+To run ``fx`` within a TEE, mount the SGX device and AESMD volumes. In addition, prefix the ``fx`` command with the ``gramine-sgx`` directive.
 
-    .. note::
+.. code-block:: shell
 
-        The FL plan should be initialized with the FQDN of the node where the aggregator container will be running.
+   # Aggregator
+   docker run --rm \
+     --network host \
+     --device=/dev/sgx_enclave \
+     -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "gramine-sgx fx aggregator start ..."
 
-3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`../../developer_guide/utilities/pki` for details.
+   # Collaborator(s)
+   docker run --rm \
+     --network host \
+     --device=/dev/sgx_enclave \
+     -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "gramine-sgx fx collaborator start ..."
 
-4. `STEP 3: Start the Federation`_.
+Running OpenFL Container in Production
+======================================
 
-.. toctree
-..    overview.how_can_intel_protect_federated_learning
-..    overview.what_is_intel_federated_learning
+For running `TaskRunner API <https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#running-the-task-runner>`_ in a production environment with enhanced security, use the following parameters to limit CPU, memory, and process IDs, and to prevent privilege escalation:
+
+**Example Command**:
+
+.. code-block:: shell
+
+   docker run --rm --name <Aggregator/Collaborator> --network openfl \
+     -v $WORKING_DIRECTORY:/workdir-openfl \
+     --cpus="0.1" \
+     --memory="512m" \
+     --pids-limit 100 \
+     --security-opt no-new-privileges \
+     openfl:latest
+
+**Parameters**:
+
+.. code-block:: shell
+
+   --cpus="0.1": Limits the container to 10% of a single CPU core.
+   --memory="512m": Limits the container to 512MB of memory.
+   --pids-limit 100: Limits the number of processes to 100.
+   --security-opt no-new-privileges: Prevents the container from gaining additional privileges.
+
+These settings help ensure that your containerized application runs securely and efficiently in a production environment.
+
+**Note**: The numbers suggested here are examples/minimal suggestions and need to be adjusted according to the environment and the type of experiments you are aiming to run.

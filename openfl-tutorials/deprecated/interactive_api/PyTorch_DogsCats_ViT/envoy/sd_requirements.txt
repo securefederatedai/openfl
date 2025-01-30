@@ -1,0 +1,4 @@
+kaggle
+numpy
+pillow
+pynvml

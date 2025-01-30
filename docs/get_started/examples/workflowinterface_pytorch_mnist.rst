@@ -17,19 +17,19 @@ This tutorial introduces the API to get up and running with your first horizonta
 
 - Aims for syntatic consistency with the Netflix MetaFlow project. Infrastructure reuse where possible.
 
-See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/Workflow_Interface_101_MNIST.ipynb>`_.
+See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/101_MNIST.ipynb>`_.
 
 **What is it?**
-The workflow interface is a new way of composing federated learning experiments with |productName|. 
+The workflow interface is a new way of composing federated learning experiments with OpenFL. 
 It was borne through conversations with researchers and existing users who had novel use cases that didn't quite fit the standard horizontal federated learning paradigm.
 
 **Getting Started**
 First we start by installing the necessary dependencies for the workflow interface:
 
-.. code-block:: console
+.. code-block:: shell
 
-    $ pip install git+https://github.com/securefederatedai/openfl.git
-    $ pip install -r requirements_workflow_interface.txt
+    $ pip install git+https://github.com/intel/openfl.git
+    $ pip install -r workflow_interface_requirements.txt
     $ pip install torch
     $ pip install torchvision
 
@@ -127,9 +127,9 @@ Next we import the FLSpec, LocalRuntime, and placement decorators.
 
     from copy import deepcopy
 
-    from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
-    from openfl.experimental.runtime import LocalRuntime
-    from openfl.experimental.placement import aggregator, collaborator
+    from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
+    from openfl.experimental.workflow.runtime import LocalRuntime
+    from openfl.experimental.workflow.placement import aggregator, collaborator
 
 
     def FedAvg(models, weights=None):
@@ -144,7 +144,7 @@ Next we import the FLSpec, LocalRuntime, and placement decorators.
         return new_model
 
 Now we come to the flow definition. 
-The |productName| Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with `start` 
+The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with `start` 
 and concludes with the `end` task. The aggregator begins with an optionally passed in model and optimizer. 
 The aggregator begins the flow with the `start` task, 
 where the list of collaborators is extracted from the runtime (`self.collaborators = self.runtime.collaborators`) 
@@ -376,7 +376,7 @@ Now let's look at its log output (stdout) and any error logs (stderr)
 **Congratulations!**
 Now that you've completed your first workflow interface quickstart notebook, 
 
-see some of the more advanced things you can do in our other `tutorials <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental>`_, including:
+see some of the more advanced things you can do in our other `tutorials <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow>`_, including:
 
 - Using the LocalRuntime Ray Backend for dedicated GPU access
 - Vertical Federated Learning

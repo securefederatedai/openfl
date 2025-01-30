@@ -3,6 +3,7 @@
 
 
 """Pytorch Framework Adapter plugin."""
+
 from copy import deepcopy
 
 import numpy as np
@@ -22,11 +23,16 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):
-        """
-        Extract tensor dict from a model and an optimizer.
+        """Extract tensor dict from a model and an optimizer.
+
+        Args:
+            model (object): The model object.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
 
         Returns:
-        dict {weight name: numpy ndarray}
+            dict: A dictionary with weight name as key and numpy ndarray as
+                value.
         """
         state = to_cpu_numpy(model.state_dict())
 
@@ -43,6 +49,16 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         Given a dict {weight name: numpy ndarray} sets weights to
         the model and optimizer objects inplace.
+
+        Args:
+            model (object): The model object.
+            tensor_dict (dict): The tensor dictionary.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
+            device (str, optional): The device to be used. Defaults to 'cpu'.
+
+        Returns:
+            None
         """
         new_state = {}
         # Grabbing keys from model's state_dict helps to confirm we have
@@ -66,10 +82,12 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     """Set the optimizer state.
 
     Args:
-        optimizer:
-        device:
-        derived_opt_state_dict:
+        optimizer (object): The optimizer object.
+        device (str): The device to be used.
+        derived_opt_state_dict (dict): The derived optimizer state dictionary.
 
+    Returns:
+        None
     """
     temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict, device)
 
@@ -88,7 +106,10 @@ def _get_optimizer_state(optimizer):
     """Return the optimizer state.
 
     Args:
-        optimizer
+        optimizer (object): The optimizer object.
+
+    Returns:
+        derived_opt_state_dict (dict): The optimizer state dictionary.
     """
     opt_state_dict = deepcopy(optimizer.state_dict())
 
@@ -114,8 +135,10 @@ def _derive_opt_state_dict(opt_state_dict):
     expand_derived_opt_state_dict.
 
     Args:
-        opt_state_dict: The optimizer state dictionary
+        opt_state_dict (dict): The optimizer state dictionary.
 
+    Returns:
+        derived_opt_state_dict (dict): The derived optimizer state dictionary.
     """
     derived_opt_state_dict = {}
 
@@ -187,10 +210,11 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     prefix, "__opt_state_0_0_", certain to be present.
 
     Args:
-        derived_opt_state_dict: Optimizer state dictionary
+        derived_opt_state_dict (dict): The derived optimizer state dictionary.
+        device (str): The device to be used.
 
     Returns:
-        dict: Optimizer state dictionary
+        opt_state_dict (dict): The expanded optimizer state dictionary.
     """
     state_subkeys_and_tags = []
     for key in derived_opt_state_dict:
@@ -235,8 +259,10 @@ def to_cpu_numpy(state):
     """Send data to CPU as Numpy array.
 
     Args:
-        state
+        state (dict): The state dictionary.
 
+    Returns:
+        state (dict): The state dictionary with all values as numpy arrays.
     """
     # deep copy so as to decouple from active model
     state = deepcopy(state)
@@ -245,7 +271,7 @@ def to_cpu_numpy(state):
         # When restoring, we currently assume all values are tensors.
         if not pt.is_tensor(v):
             raise ValueError(
-                "We do not currently support non-tensors " "coming from model.state_dict()"
+                "We do not currently support non-tensors coming from model.state_dict()"
             )
         # get as a numpy array, making sure is on cpu
         state[k] = v.cpu().numpy()

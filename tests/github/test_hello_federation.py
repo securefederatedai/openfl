@@ -3,17 +3,17 @@
 
 import os
 import time
-import socket
 import argparse
 from pathlib import Path
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator, is_path_name_allowed
 from openfl.utilities.utils import getfqdn_env
 
-if __name__ == '__main__':
+
+def main():
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
@@ -33,6 +33,12 @@ if __name__ == '__main__':
     origin_dir = Path.cwd().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
+
+    # Check if the path name is allowed before creating the workspace
+    if not is_path_name_allowed(fed_workspace):
+        print(f"The path name {fed_workspace} is not allowed")
+        return
+
     archive_name = f'{fed_workspace}.zip'
     fqdn = getfqdn_env()
     template = args.template
@@ -69,8 +75,12 @@ if __name__ == '__main__':
     # Convert model to native format
     if save_model:
         check_call(
-            ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
+            ['fx', 'model', 'save', '-i', f'./save/last.pbuf', '-o', save_model],
             cwd=workspace_root)
 
     os.chdir(origin_dir)
     rmtree(workspace_root)
+
+
+if __name__ == '__main__':
+    main()

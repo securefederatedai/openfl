@@ -26,7 +26,24 @@ CLIENT_ID_DEFAULT = "__default__"
 
 
 class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
-    """Director transport class."""
+    """
+    Director transport class.
+
+    This class implements a gRPC server for the Director, allowing it to
+    communicate with collaborators.
+
+    Attributes:
+        director (Director): The director that this server is serving.
+        listen_uri (str): The URI that the server is serving on.
+        tls (bool): Whether to use TLS for the connection.
+        root_certificate (Path): The path to the root certificate for the TLS
+            connection.
+        private_key (Path): The path to the server's private key for the TLS
+            connection.
+        certificate (Path): The path to the server's certificate for the TLS
+            connection.
+        server (grpc.Server): The gRPC server.
+    """
 
     def __init__(
         self,
@@ -42,7 +59,32 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         envoy_health_check_period: int = 0,
         **kwargs,
     ) -> None:
-        """Initialize a director object."""
+        """
+        Initialize a director object.
+
+        Args:
+            director_cls (Type[Director]): The class of the director.
+            tls (bool, optional): Whether to use TLS for the connection.
+                Defaults to True.
+            root_certificate (Optional[Union[Path, str]], optional): The path
+                to the root certificate for the TLS connection. Defaults to
+                None.
+            private_key (Optional[Union[Path, str]], optional): The path to
+                the server's private key for the TLS connection. Defaults to
+                None.
+            certificate (Optional[Union[Path, str]], optional): The path to
+                the server's certificate for the TLS connection. Defaults to
+                None.
+            review_plan_callback (Union[None, Callable], optional): The
+                callback for reviewing the plan. Defaults to None.
+            listen_host (str, optional): The host to listen on. Defaults to
+                '[::]'.
+            listen_port (int, optional): The port to listen on. Defaults to
+                50051.
+            envoy_health_check_period (int, optional): The period for health
+                checks. Defaults to 0.
+            **kwargs: Additional keyword arguments.
+        """
         # TODO: add working directory
         super().__init__()
 
@@ -65,7 +107,16 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         )
 
     def _fill_certs(self, root_certificate, private_key, certificate):
-        """Fill certificates."""
+        """Fill certificates.
+
+        Args:
+            root_certificate (Union[Path, str]): The path to the root
+                certificate for the TLS connection.
+            private_key (Union[Path, str]): The path to the server's private
+                key for the TLS connection.
+            certificate (Union[Path, str]): The path to the server's
+                certificate for the TLS connection.
+        """
         if self.tls:
             if not (root_certificate and private_key and certificate):
                 raise Exception("No certificates provided")
@@ -74,11 +125,16 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             self.certificate = Path(certificate).absolute()
 
     def get_caller(self, context):
-        """
-        Get caller name from context.
+        """Get caller name from context.
 
-            if tls == True: get caller name from auth_context
-            if tls == False: get caller name from context header 'client_id'
+        if tls == True: get caller name from auth_context
+        if tls == False: get caller name from context header 'client_id'
+
+        Args:
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            str: The name of the caller.
         """
         if self.tls:
             return context.auth_context()["x509_common_name"][0].decode("utf-8")
@@ -93,6 +149,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         loop.run_until_complete(self._run_server())
 
     async def _run_server(self):
+        """Run the gRPC server."""
         self.server = aio.server(options=channel_options)
         director_pb2_grpc.add_DirectorServicer_to_server(self, self.server)
 
@@ -116,7 +173,18 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         await self.server.wait_for_termination()
 
     async def UpdateShardInfo(self, request, context):  # NOQA:N802
-        """Receive acknowledge shard info."""
+        """
+        Receive acknowledge shard info.
+
+        Args:
+            request (director_pb2.UpdateShardInfoRequest): The request from
+                the shard.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            reply (director_pb2.UpdateShardInfoResponse): The response to the
+                request.
+        """
         logger.info("Updating shard info: %s", request.shard_info)
         dict_shard_info = MessageToDict(request.shard_info, preserving_proto_field_name=True)
         is_accepted = self.director.acknowledge_shard(dict_shard_info)
@@ -125,7 +193,16 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return reply
 
     async def SetNewExperiment(self, stream, context):  # NOQA:N802
-        """Request to set new experiment."""
+        """Request to set new experiment.
+
+        Args:
+            stream (grpc.aio._MultiThreadedRendezvous): The stream of
+                experiment data.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.SetNewExperimentResponse: The response to the request.
+        """
         # TODO: add streaming reader
         data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, "wb") as data_file:
@@ -153,7 +230,18 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
     async def GetExperimentStatus(self, request, context):  # NOQA: N802
-        """Get experiment status and update if experiment was approved."""
+        """
+        Get experiment status and update if experiment was approved.
+
+        Args:
+            request (director_pb2.GetExperimentStatusRequest): The request
+                from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.GetExperimentStatusResponse: The response to the
+                request.
+        """
         logger.debug("GetExperimentStatus request received")
         caller = self.get_caller(context)
         experiment_status = await self.director.get_experiment_status(
@@ -163,7 +251,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return director_pb2.GetExperimentStatusResponse(experiment_status=experiment_status)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
-        """RPC for retrieving trained models."""
+        """
+        RPC for retrieving trained models.
+
+        Args:
+            request (director_pb2.GetTrainedModelRequest): The request from
+                the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.TrainedModelResponse: The response to the request.
+        """
         logger.debug("Received request for trained model...")
 
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
@@ -192,7 +290,16 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return director_pb2.TrainedModelResponse(model_proto=model_proto)
 
     async def GetExperimentData(self, request, context):  # NOQA:N802
-        """Receive experiment data."""
+        """Receive experiment data.
+
+        Args:
+            request (director_pb2.GetExperimentDataRequest): The request from
+                the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Yields:
+            director_pb2.ExperimentData: The experiment data.
+        """
         # TODO: add size filling
         # TODO: add experiment name field
         # TODO: rename npbytes to data
@@ -206,7 +313,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 yield director_pb2.ExperimentData(size=len(data), npbytes=data)
 
     async def WaitExperiment(self, request, context):  # NOQA:N802
-        """Request for wait an experiment."""
+        """
+        Request for wait an experiment.
+
+        Args:
+            request (director_pb2.WaitExperimentRequest): The request from the
+                collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.WaitExperimentResponse: The response to the request.
+        """
         logger.debug(
             "Request WaitExperiment received from envoy %s",
             request.collaborator_name,
@@ -221,7 +338,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
-        """Request the info about target and sample shapes in the dataset."""
+        """
+        Request the info about target and sample shapes in the dataset.
+
+        Args:
+            request (director_pb2.GetDatasetInfoRequest): The request from the
+                collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.GetDatasetInfoResponse: The response to the request.
+        """
         logger.debug("Received request for dataset info...")
 
         sample_shape, target_shape = self.director.get_dataset_info()
@@ -232,7 +359,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return resp
 
     async def GetMetricStream(self, request, context):  # NOQA:N802
-        """Request to stream metrics from the aggregator to frontend."""
+        """
+        Request to stream metrics from the aggregator to frontend.
+
+        Args:
+            request (director_pb2.GetMetricStreamRequest): The request from
+                the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Yields:
+            director_pb2.GetMetricStreamResponse: The metrics.
+        """
         logger.info("Getting metrics for %s...", request.experiment_name)
 
         caller = self.get_caller(context)
@@ -245,7 +382,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             yield director_pb2.GetMetricStreamResponse(**metric_dict)
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
-        """Remove experiment data RPC."""
+        """Remove experiment data RPC.
+
+        Args:
+            request (director_pb2.RemoveExperimentRequest): The request from
+                the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            response (director_pb2.RemoveExperimentResponse): The response to
+                the request.
+        """
         response = director_pb2.RemoveExperimentResponse(acknowledgement=False)
         caller = self.get_caller(context)
         self.director.remove_experiment_data(
@@ -257,7 +404,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return response
 
     async def SetExperimentFailed(self, request, context):  # NOQA:N802
-        """Set the experiment failed."""
+        """Set the experiment failed.
+
+        Args:
+            request (director_pb2.SetExperimentFailedRequest): The request
+                from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            response (director_pb2.SetExperimentFailedResponse): The response
+                to the request.
+        """
         response = director_pb2.SetExperimentFailedResponse()
         if self.get_caller(context) != CLIENT_ID_DEFAULT:
             return response
@@ -274,7 +431,18 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return response
 
     async def UpdateEnvoyStatus(self, request, context):  # NOQA:N802
-        """Accept health check from envoy."""
+        """
+        Accept health check from envoy.
+
+        Args:
+            request (director_pb2.UpdateEnvoyStatusRequest): The request from
+                the envoy.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            resp (director_pb2.UpdateEnvoyStatusResponse): The response to the
+                request.
+        """
         logger.debug("Updating envoy status: %s", request)
         cuda_devices_info = [
             MessageToDict(message, preserving_proto_field_name=True)
@@ -296,7 +464,16 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             return resp
 
     async def GetEnvoys(self, request, context):  # NOQA:N802
-        """Get a status information about envoys."""
+        """Get a status information about envoys.
+
+        Args:
+            request (director_pb2.GetEnvoysRequest): The request from the
+                collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.GetEnvoysResponse: The response to the request.
+        """
         envoy_infos = self.director.get_envoys()
         envoy_statuses = []
         for envoy_info in envoy_infos:
@@ -317,14 +494,34 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
 
     async def GetExperimentsList(self, request, context):  # NOQA:N802
-        """Get list of experiments description."""
+        """Get list of experiments description.
+
+        Args:
+            request (director_pb2.GetExperimentsListRequest): The request from
+                the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.GetExperimentsListResponse: The response to the
+                request.
+        """
         caller = self.get_caller(context)
         experiments = self.director.get_experiments_list(caller)
         experiment_list = [director_pb2.ExperimentListItem(**exp) for exp in experiments]
         return director_pb2.GetExperimentsListResponse(experiments=experiment_list)
 
     async def GetExperimentDescription(self, request, context):  # NOQA:N802
-        """Get an experiment description."""
+        """Get an experiment description.
+
+        Args:
+            request (director_pb2.GetExperimentDescriptionRequest): The
+                request from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            director_pb2.GetExperimentDescriptionResponse: The response to the
+                request.
+        """
         caller = self.get_caller(context)
         experiment = self.director.get_experiment_description(caller, request.name)
         models_statuses = [

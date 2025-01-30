@@ -1,0 +1,6 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
+Seattle:
+  private_attributes: private_attributes.seattle_attrs

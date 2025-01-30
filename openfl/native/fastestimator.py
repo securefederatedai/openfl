@@ -3,6 +3,7 @@
 
 
 """FederatedFastEstimator module."""
+
 import os
 from logging import getLogger
 from pathlib import Path
@@ -20,24 +21,36 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:
-    """A wrapper for fastestimator.estimator that allows running in federated mode."""
+    """A wrapper for fastestimator.estimator that allows running in federated
+    mode.
+
+    Attributes:
+        estimator: The FastEstimator to be used.
+        logger: A logger to record events.
+        rounds: The number of rounds to train.
+    """
 
     def __init__(self, estimator, override_config: dict = None, **kwargs):
-        """Initialize."""
+        """Initializes a new instance of the FederatedFastEstimator class.
+
+        Args:
+            estimator: The FastEstimator to be used.
+            override_config (dict, optional): A dictionary to override the
+                default configuration. Defaults to None.
+            **kwargs: Additional keyword arguments.
+        """
         self.estimator = estimator
         self.logger = getLogger(__name__)
         fx.init(**kwargs)
         if override_config:
             fx.update_plan(override_config)
 
-    def fit(self):
-        """Run the estimator."""
-
+    def fit(self):  # noqa: C901
+        """Runs the estimator in federated mode."""
         file = Path(__file__).resolve()
         # interface root, containing command modules
         root = file.parent.resolve()
         work = Path.cwd().resolve()
-
         path.append(str(root))
         path.insert(0, str(work))
 
@@ -69,7 +82,7 @@ class FederatedFastEstimator:
             tensor_dict=tensor_dict, round_number=0, tensor_pipe=tensor_pipe
         )
 
-        self.logger.info(f"Creating Initial Weights File" f"    🠆 {init_state_path}")
+        self.logger.info(f"Creating Initial Weights File    🠆 {init_state_path}")
 
         utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
@@ -137,7 +150,6 @@ class FederatedFastEstimator:
         model = None
         for round_num in range(self.rounds):
             for col in plan.authorized_cols:
-
                 collaborator = collaborators[col]
 
                 if round_num != 0:
@@ -168,7 +180,19 @@ class FederatedFastEstimator:
 
 
 def split_data(train, eva, test, rank, collaborator_count):
-    """Split data into N parts, where N is the collaborator count."""
+    """Split data into N parts, where N is the collaborator count.
+
+    Args:
+        train : The training data.
+        eva : The evaluation data.
+        test : The testing data.
+        rank (int): The rank of the current collaborator.
+        collaborator_count (int): The total number of collaborators.
+
+    Returns:
+        tuple: The training, evaluation, and testing data for the current
+            collaborator.
+    """
     if collaborator_count == 1:
         return train, eva, test
 

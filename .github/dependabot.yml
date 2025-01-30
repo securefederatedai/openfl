@@ -5,3 +5,16 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 3
+  # Don't update these directories.
+  - package-ecosystem: pip
+    directory: /tests
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "*"
+  - package-ecosystem: pip
+    directory: /openfl-workspace
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "*"

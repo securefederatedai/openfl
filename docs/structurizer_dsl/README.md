@@ -5,7 +5,7 @@ https://github.com/structurizr/dsl/blob/master/docs/language-reference.md# <br>
 Article: 
 https://dev.to/simonbrown/getting-started-with-the-structurizr-cli-10c2 <br>
 Git:
-https://github.com/structurizr/cli/blob/master/docs/export.md <br>
+https://github.com/structurizr/cli/blob/master/README.md<br>
 
 2. Using Structurizer CLI with Docker: <br>
 https://github.com/aidmax/structurizr-cli-docker <br>

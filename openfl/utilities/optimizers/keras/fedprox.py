@@ -3,82 +3,90 @@
 
 
 """FedProx Keras optimizer module."""
+
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.python.ops import standard_ops
 
 
 @keras.utils.register_keras_serializable()
 class FedProxOptimizer(keras.optimizers.Optimizer):
-    """FedProx optimizer.
+    """FedProx optimizer (Keras3 based API).
+
+    Implements the FedProx algorithm as a Keras optimizer. FedProx is a
+    federated learning optimization algorithm designed to handle non-IID data.
+    It introduces a proximal term to the federated averaging algorithm to
+    reduce the impact of devices with outlying updates.
 
     Paper: https://arxiv.org/pdf/1812.06127.pdf
+
+    Attributes:
+        learning_rate (float): The learning rate for the optimizer.
+        mu (float): The proximal term coefficient.
     """
 
-    def __init__(self, learning_rate=0.01, mu=0.01, name="FedProxOptimizer", **kwargs):
-        """Initialize."""
-        super().__init__(name=name, **kwargs)
-
-        self._set_hyper("learning_rate", learning_rate)
-        self._set_hyper("mu", mu)
-
-        self._lr_t = None
-        self._mu_t = None
-
-    def _prepare(self, var_list):
-        self._lr_t = tf.convert_to_tensor(self._get_hyper("learning_rate"), name="lr")
-        self._mu_t = tf.convert_to_tensor(self._get_hyper("mu"), name="mu")
-
-    def _create_slots(self, var_list):
-        for v in var_list:
-            self.add_slot(v, "vstar")
-
-    def _resource_apply_dense(self, grad, var):
-        lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
-        mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
-        vstar = self.get_slot(var, "vstar")
-
-        var_update = var.assign_sub(lr_t * (grad + mu_t * (var - vstar)))
-
-        return tf.group(
-            *[
-                var_update,
-            ]
+    def __init__(
+        self,
+        learning_rate=0.01,
+        mu=0.0,
+        name="FedProxOptimizer",
+        **kwargs,
+    ):
+        super().__init__(
+            learning_rate=learning_rate,
+            name=name,
+            **kwargs,
         )
+        self.mu = mu
 
-    def _apply_sparse_shared(self, grad, var, indices, scatter_add):
-        lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
-        mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
-        vstar = self.get_slot(var, "vstar")
-        v_diff = vstar.assign(mu_t * (var - vstar), use_locking=self._use_locking)
+    def build(self, variables):
+        """Initialize optimizer variables.
 
-        with tf.control_dependencies([v_diff]):
-            scaled_grad = scatter_add(vstar, indices, grad)
-        var_update = var.assign_sub(lr_t * scaled_grad)
+        Args:
+            variables (list): List of model variables to build FedProx variables on.
+        """
+        if self.built:
+            return
+        super().build(variables)
+        self.vstars = []
+        for variable in variables:
+            self.vstars.append(
+                self.add_variable_from_reference(reference_variable=variable, name="vstar")
+            )
 
-        return tf.group(
-            *[
-                var_update,
-            ]
-        )
+    def update_step(self, gradient, variable, learning_rate):
+        """Update step given gradient and the associated model variable.
+            In the update_step method, variable is updated using the
+            gradient and the proximal term (mu). The proximal term helps
+            to regularize the update by considering the difference between
+            the current value of variable and its initial value (vstar),
+            which was stored during the build method.
+        Args:
+            gradient (tf.Tensor): The gradient tensor for the variable.
+            variable (tf.Variable): The model variable to be updated.
+            learning_rate (float): The learning rate for the update step.
+        """
+        lr_t = tf.cast(learning_rate, variable.dtype)
+        mu_t = tf.cast(self.mu, variable.dtype)
+        gradient_t = tf.cast(gradient, variable.dtype)
+        # Get the corresponding vstar for the current variable
+        vstar = self.vstars[self._get_variable_index(variable)]
 
-    def _resource_apply_sparse(self, grad, var):
-        return self._apply_sparse_shared(grad.values, var, grad.indices, standard_ops.scatter_add)
+        # Update the variable using the gradient and the proximal term
+        self.assign_sub(variable, lr_t * (gradient_t + mu_t * (variable - vstar)))
 
     def get_config(self):
         """Return the config of the optimizer.
-
         An optimizer config is a Python dictionary (serializable)
         containing the configuration of an optimizer.
         The same optimizer can be reinstantiated later
         (without any saved state) from this configuration.
-
         Returns:
-            Python dictionary.
+            dict: The optimizer configuration.
         """
-        base_config = super().get_config()
-        return {
-            **base_config,
-            "lr": self._serialize_hyperparameter("learning_rate"),
-            "mu": self._serialize_hyperparameter("mu"),
-        }
+        config = super().get_config()
+        config.update(
+            {
+                "mu": self.mu,
+            }
+        )
+        return config

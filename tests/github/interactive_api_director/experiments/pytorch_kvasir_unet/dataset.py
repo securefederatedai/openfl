@@ -3,7 +3,7 @@ import PIL
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as tsf
 
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.data_loader import read_data
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.data_loader import read_data  # noqa: E501
 from openfl.interface.interactive_api.experiment import DataInterface
 
 
@@ -107,4 +107,3 @@ class FedDataset(DataInterface):
         Information for aggregation
         """
         return len(self.valid_set)
-

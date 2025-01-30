@@ -3,6 +3,7 @@
 
 
 """Tutorial module."""
+
 from logging import getLogger
 from os import environ, sep
 from subprocess import check_call  # nosec
@@ -19,7 +20,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def tutorial(context):
-    """Manage Jupyter notebooks."""
+    """Manage Jupyter notebooks.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj["group"] = "tutorial"
 
 
@@ -38,8 +43,20 @@ def tutorial(context):
     type=IntRange(1, 65535),
     help="The port the Jupyter Lab server will listen on",
 )
-def start(ip, port):
-    """Start the Jupyter Lab from the tutorials directory."""
+@option(
+    "-no-browser/--browser",
+    "--no-browser/--browser",
+    default=False,
+    help="If True, the server will not use the default web browser",
+)
+def start(ip, port, no_browser):
+    """Start the Jupyter Lab from the tutorials directory.
+
+    Args:
+        ip (str): IP address the Jupyter Lab that should start.
+        port (int): The port the Jupyter Lab server will listen on.
+        no_browser (bool): If True, the server will not open the default web browser.
+    """
 
     if "VIRTUAL_ENV" in environ:
         venv = environ["VIRTUAL_ENV"].split(sep)[-1]
@@ -62,5 +79,6 @@ def start(ip, port):
         jupyter_command += ["--ip", f"{ip}"]
     if port is not None:
         jupyter_command += ["--port", f"{port}"]
-
+    if no_browser:
+        jupyter_command += ["--no-browser"]
     check_call(jupyter_command)

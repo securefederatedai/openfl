@@ -119,24 +119,20 @@ def create_signed_cert_for_collaborator(col, data_path):
     os.remove(f'col_{col}_to_agg_cert_request.zip')
 
 
-def start_aggregator_container(workspace_image_name, aggregator_required_files):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
-        '-e \"CONTAINER_TYPE=aggregator\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+def is_path_name_allowed(path):
+    """
+    Check if given path name is allowed.
+    Allow alphanumeric characters, hyphens and underscores.
+    Also, / in case of a nested directory.
 
+    Args:
+        path (str): The path name to check.
+    Returns:
+        bool: True if the path name is allowed, False otherwise.
+    """
+    special_characters = "!@#$%^&*()+?=,<>"
 
-def start_collaborator_container(workspace_image_name, col_name):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd()}/cert_col_{col_name}.tar:/certs.tar '
-        '-e \"CONTAINER_TYPE=collaborator\" '
-        f'-e \"COL={col_name}\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+    if any(c in special_characters for c in path):
+        return False
+    else:
+        return True
