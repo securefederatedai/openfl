@@ -22,7 +22,7 @@ class StragglerPolicy(ABC):
     def start_policy(self, **kwargs) -> None:
         """
         Start straggler handling policy for collaborator for a particular round.
-        NOTE: Refer CutoffTimePolicy for reference.
+        NOTE: Refer CutoffTimePolicy class for reference.
 
         Args:
             **kwargs
@@ -39,7 +39,7 @@ class StragglerPolicy(ABC):
         self, num_collaborators_done: int, num_all_collaborators: int, **kwargs
     ) -> bool:
         """
-        Determines whether it is time to end the round early.
+        Determines whether the round should end early when straggler policy conditions are met.
 
         Args:
             num_collaborators_done: int
