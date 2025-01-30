@@ -7,3 +7,7 @@ settings :
         - aggregated_model_validation
         - train
         - locally_tuned_model_validation
+    - name       : evaluation
+      percentage : 0
+      tasks      :
+        - aggregated_model_validation
