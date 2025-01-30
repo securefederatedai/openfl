@@ -465,7 +465,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     # Set the workspace path
     home_dir = Path().home()
     local_bind_path = os.path.join(
-        home_dir, request.config.results_dir, request.config.model_name.replcae("/", "_")
+        home_dir, request.config.results_dir, request.config.model_name.replace("/", "_")
     )
     num_rounds = request.config.num_rounds
 
