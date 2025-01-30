@@ -10,7 +10,7 @@ from threading import Lock
 from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
-from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
+from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -73,7 +73,7 @@ class Aggregator:
         last_state_path,
         assigner,
         use_delta_updates=True,
-        straggler_handling_policy=None,
+        straggler_handling_policy: StragglerPolicy = CutoffTimePolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
@@ -100,7 +100,6 @@ class Aggregator:
                 weight.
             assigner: Assigner object.
             straggler_handling_policy (optional): Straggler handling policy.
-                Defaults to CutoffTimeBasedStragglerHandling.
             rounds_to_train (int, optional): Number of rounds to train.
                 Defaults to 256.
             single_col_cert_common_name (str, optional): Common name for single
@@ -127,9 +126,7 @@ class Aggregator:
         # FIXME: "" instead of None is for protobuf compatibility.
         self.single_col_cert_common_name = single_col_cert_common_name or ""
 
-        self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
-        )
+        self.straggler_handling_policy = straggler_handling_policy()
 
         self.rounds_to_train = rounds_to_train
         if self.task_group == "evaluation":
