@@ -12,12 +12,9 @@ import keras
 
 from openfl.federated import KerasTaskRunner
 
-class CustomModel(keras.Model):
+class CNNModel(keras.Model):
 
     def train_step(self, data):
-        print("#"*50)
-        print("train_step")
-        print("#"*50)
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         if len(data) == 3:
@@ -56,9 +53,6 @@ class CustomModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        print("#"*50)
-        print("test_step")
-        print("#"*50)
         # Unpack the data
         x, y = data
         # Compute predictions
@@ -74,21 +68,6 @@ class CustomModel(keras.Model):
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
-
-
-
-# # Construct an instance of CustomModel
-# inputs = keras.Input(shape=(32,))
-# outputs = keras.layers.Dense(1)(inputs)
-# model = CustomModel(inputs, outputs)
-
-# # We don't pass a loss or metrics here.
-# model.compile(optimizer="adam")
-
-# # Just use `fit` as usual -- you can use callbacks, etc.
-# x = np.random.random((1000, 32))
-# y = np.random.random((1000, 1))
-# model.fit(x, y, epochs=5)
 
 
 class KerasCNN(KerasTaskRunner):
@@ -149,24 +128,7 @@ class KerasCNN(KerasTaskRunner):
 
         outputs = keras.layers.Dense(num_classes, activation='softmax')(outputs)
 
-        model = CustomModel(inputs, outputs)
-
-        # model.add(Conv2D(conv1_channels_out,
-        #                  kernel_size=conv_kernel_size,
-        #                  strides=conv_strides,
-        #                  activation='relu',
-        #                  input_shape=input_shape))
-
-        # model.add(Conv2D(conv2_channels_out,
-        #                  kernel_size=conv_kernel_size,
-        #                  strides=conv_strides,
-        #                  activation='relu'))
-
-        # model.add(Flatten())
-
-        # model.add(Dense(final_dense_inputsize, activation='relu'))
-
-        # model.add(Dense(num_classes, activation='softmax'))
+        model = CNNModel(inputs, outputs)
 
         model.compile(loss="categorical_crossentropy",
                       optimizer="adam",
