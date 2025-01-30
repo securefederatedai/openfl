@@ -22,7 +22,7 @@ def main():
         for entry in iterator:
             if entry.name not in ['__init__.py', 'workspace', 'default']:
                 workspace_choice.append(entry.name)
-    parser.add_argument('--template', default='keras_cnn_mnist', choices=workspace_choice)
+    parser.add_argument('--template', default='keras/mnist', choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one123dragons')
     parser.add_argument('--col2', default='beta34unicorns')

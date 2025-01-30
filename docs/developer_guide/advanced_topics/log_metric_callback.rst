@@ -83,7 +83,7 @@ For logging through Tensorboard, enable the parameter :code:`write_logs : true` 
     settings :
         write_logs : true
 
-Follow the steps below to write your custom callback function instead. As an example, a full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch_cnn_mnist** workspace.
+Follow the steps below to write your custom callback function instead. As an example, a full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch/mnist** workspace.
 
 1. Define the callback function, like how you defined in Python API, in the **src** directory in your workspace.
 
@@ -95,9 +95,9 @@ Follow the steps below to write your custom callback function instead. As an exa
     defaults : plan/defaults/aggregator.yaml
     template : openfl.component.Aggregator
     settings :
-      init_state_path     : save/torch_cnn_mnist_init.pbuf
-      best_state_path     : save/torch_cnn_mnist_best.pbuf
-      last_state_path     : save/torch_cnn_mnist_last.pbuf
+      init_state_path     : save/torch/mnist_init.pbuf
+      best_state_path     : save/torch/mnist_best.pbuf
+      last_state_path     : save/torch/mnist_last.pbuf
       rounds_to_train     : 10
       write_logs          : true
       log_metric_callback :

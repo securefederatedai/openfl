@@ -21,7 +21,7 @@ def exec(command, directory):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--template', default='keras_cnn_mnist')
+    parser.add_argument('--template', default='keras/mnist')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one')
     parser.add_argument('--col2', default='two')
