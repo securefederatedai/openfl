@@ -1,4 +1,5 @@
-{{ fullname | escape | underline}}
+{% set truncated_fullname = fullname.split('.')[-1] %}
+Module - {{ truncated_fullname | escape | underline}}
 
 .. automodule:: {{ fullname }}
   

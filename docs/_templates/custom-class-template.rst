@@ -1,4 +1,6 @@
-{{ fullname | escape | underline}}
+{% set truncated_fullname = fullname.split('.')[-1] %}
+Class - {{ truncated_fullname | escape | underline}} 
+
 
 .. currentmodule:: {{ module }}
 
