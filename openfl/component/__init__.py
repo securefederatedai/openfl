@@ -1,6 +1,7 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""OpenFL Component Module."""
 
 from openfl.component.aggregator.aggregator import Aggregator
 from openfl.component.assigner.assigner import Assigner

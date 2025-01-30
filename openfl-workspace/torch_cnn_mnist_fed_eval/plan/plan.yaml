@@ -32,10 +32,12 @@ network :
   defaults : plan/defaults/network.yaml
 
 assigner :
-  defaults : plan/defaults/federated-evaluation/assigner.yaml
-  
+  defaults : plan/defaults/assigner.yaml
+  settings :
+    selected_task_group : evaluation
+
 tasks :
-  defaults : plan/defaults/federated-evaluation/tasks_torch.yaml
+  defaults : plan/defaults/tasks_torch.yaml
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
