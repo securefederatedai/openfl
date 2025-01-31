@@ -11,19 +11,25 @@ from pathlib import Path
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils.generate_report import convert_to_json
 
-# Initialize the XML parser
-parser = etree.XMLParser(recover=True, encoding="utf-8")
-
 result_path = os.path.join(Path().home(), "results")
-result_xml = os.path.join(result_path, "results.xml")
-if not os.path.exists(result_xml):
-    print(f"Results XML file not found at {result_xml}. Exiting...")
-    exit(1)
 
-tree = defused_parse(result_xml, parser=parser)
+def initialize_xml_parser():
+    """
+    Initialize the XML parser and parse the results XML file.
+    Returns:
+        testsuites: the root element of the parsed XML tree
+    """
+    parser = etree.XMLParser(recover=True, encoding="utf-8")
+    result_xml = os.path.join(result_path, "results.xml")
+    if not os.path.exists(result_xml):
+        print(f"Results XML file not found at {result_xml}. Exiting...")
+        exit(1)
 
-# Get the root element
-testsuites = tree.getroot()
+    tree = defused_parse(result_xml, parser=parser)
+
+    # Get the root element
+    testsuites = tree.getroot()
+    return testsuites
 
 
 def get_aggregated_accuracy(agg_log_file):
@@ -79,6 +85,8 @@ def get_testcase_result():
     """
     database_list = []
     status = None
+    # Initialize the XML parser
+    testsuites = initialize_xml_parser()
     # Iterate over each testsuite in testsuites
     for testsuite in testsuites:
         # Populate testcase details in a dictionary

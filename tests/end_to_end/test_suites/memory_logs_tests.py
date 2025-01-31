@@ -68,11 +68,6 @@ def _log_memory_usage(request, fed_obj):
     # Verify the aggregator memory logs
     aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fed_obj.workspace_path)
 
-    if request.config.test_env == "task_runner_dockerized_ws":
-        ssh.copy_file_from_docker(
-            "aggregator", f"/workspace/logs/aggregator_memory_usage.json", aggregator_memory_usage_file
-        )
-
     assert os.path.exists(
         aggregator_memory_usage_file
     ), "Aggregator memory usage file is not available"

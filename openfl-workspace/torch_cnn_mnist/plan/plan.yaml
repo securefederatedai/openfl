@@ -10,16 +10,8 @@ aggregator:
     rounds_to_train: 2
     write_logs: false
   template: openfl.component.aggregator.Aggregator
-assigner:
-  settings:
-    task_groups:
-    - name: learning
-      percentage: 1.0
-      tasks:
-      - aggregated_model_validation
-      - train
-      - locally_tuned_model_validation
-  template: openfl.component.RandomGroupedAssigner
+assigner :
+  defaults : plan/defaults/assigner.yaml
 collaborator:
   settings:
     db_store_rounds: 1

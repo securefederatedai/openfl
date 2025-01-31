@@ -4,6 +4,11 @@
 
 """Assigner module."""
 
+import logging
+from functools import wraps
+
+logger = logging.getLogger(__name__)
+
 
 class Assigner:
     r"""
@@ -35,18 +40,27 @@ class Assigner:
         \* - ``tasks`` argument is taken from ``tasks`` section of FL plan YAML file.
     """
 
-    def __init__(self, tasks, authorized_cols, rounds_to_train, **kwargs):
+    def __init__(
+        self,
+        tasks,
+        authorized_cols,
+        rounds_to_train,
+        selected_task_group: str = None,
+        **kwargs,
+    ):
         """Initializes the Assigner.
 
         Args:
             tasks (list of object): List of tasks to assign.
             authorized_cols (list of str): Collaborators.
             rounds_to_train (int): Number of training rounds.
+            selected_task_group (str, optional): Selected task_group.
             **kwargs: Additional keyword arguments.
         """
         self.tasks = tasks
         self.authorized_cols = authorized_cols
         self.rounds = rounds_to_train
+        self.selected_task_group = selected_task_group
         self.all_tasks_in_groups = []
 
         self.task_group_collaborators = {}
@@ -93,3 +107,50 @@ class Assigner:
         if "aggregation_type" not in self.tasks[task_name]:
             return None
         return self.tasks[task_name]["aggregation_type"]
+
+    @classmethod
+    def with_selected_task_group(cls, func):
+        """Decorator to filter task groups based on selected_task_group.
+
+        This decorator should be applied to define_task_assignments() method
+        in Assigner subclasses to handle task_group filtering.
+        """
+
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Check if selection of task_group is applicable
+            if hasattr(self, "selected_task_group") and self.selected_task_group is not None:
+                # Verify task_groups exists before attempting filtering
+                if not hasattr(self, "task_groups"):
+                    logger.warning(
+                        "Task group specified for selection but no task_groups found. "
+                        "Skipping filtering. This might be intentional for custom assigners."
+                    )
+                    return func(self, *args, **kwargs)
+
+                assert self.task_groups, "No task_groups defined in assigner."
+
+                # Perform the filtering
+                selected_task_groups = [
+                    group for group in self.task_groups if group["name"] == self.selected_task_group
+                ]
+
+                assert len(selected_task_groups) == 1, (
+                    f"Only one task group with name {self.selected_task_group} should exist"
+                )
+
+                # Since we have filtered to one of the task_groups, we need to ensure that
+                # the selected_task_group percentage compute allocation is defaulted to 1.0
+                current_percentage = selected_task_groups[0]["percentage"]
+                logger.info(
+                    f"`percentage` for task_group {self.selected_task_group} is "
+                    f"{current_percentage}, setting it to 1.0"
+                )
+                selected_task_groups[0]["percentage"] = 1.0
+
+                self.task_groups = selected_task_groups
+
+            # Call the original method
+            return func(self, *args, **kwargs)
+
+        return wrapper

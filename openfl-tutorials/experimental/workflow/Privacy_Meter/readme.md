@@ -29,11 +29,32 @@ To measure the success of the attack (privacy loss), we generate the ROC of the 
 ## Examples
 Here, we give a few commands and the results for each of them. 
 
+## Running the cifar10_PM script
+The script requires a dedicated allocation of atleast 18GB of RAM to run without issues.
 
+1) Create a Python virtual environment for better isolation
+```shell
+python -m venv venv
+source venv/bin/activate
+```
+2) Install OpenFL from the latest sources
+```shell
+git clone https://github.com/securefederatedai/openfl.git && cd openfl
+pip install -e .
+```
+3) Install the requirements for Privacy Meter Workflow API
+```shell
+cd openfl-tutorials/experimental/workflow/
+pip install -r workflow_interface_requirements.txt
+cd Privacy_Meter/
+pip install -r requirements_privacy_meter.txt
+```
 ### Auditing the privacy loss based on the model loss, logits, and gradient norm (the 10th layer of the representation), where the model is trained using SGD.
-
-**Command:**
-> `python cifar10_PM.py --audit_dataset_ratio 0.2 --test_dataset_ratio 0.4 --train_dataset_ratio 0.4 --signals loss logits gradient_norm --fpr_tolerance 0.1 0.2 0.3 --log_dir test_sgd --comm_round 30 --optimizer_type SGD --is_feature True --layer_number 10`
+4) Start the training script with SGB optimizer <br/>
+Note that the number of training rounds can be adjusted via the `--comm_round` parameter:
+```shell
+python cifar10_PM.py --audit_dataset_ratio 0.2 --test_dataset_ratio 0.4 --train_dataset_ratio 0.4 --signals loss logits gradient_norm --fpr_tolerance 0.1 0.2 0.3 --log_dir test_sgd --comm_round 30 --optimizer_type SGD --is_feature True --layer_number 10
+```
 
 **Results:**
 The performance of the target model is as follows:
@@ -60,9 +81,13 @@ Portland:
 
 
 ### Auditing the privacy loss based on the model loss, logits, and gradient norm (the 10th layer of the representation), where the model is trained using Adam.
-**Command:**
-> `python cifar10_PM.py --audit_dataset_ratio 0.2 --test_dataset_ratio 0.4 --train_dataset_ratio 0.4 --signals loss logits gradient_norm --fpr_tolerance 0.1 0.2 0.3 --log_dir test_adam --comm_round 30 --optimizer_type Adam --is_feature True --layer_number 10`
+4) Start the training script with Adam optimizer <br/>
+Note that the number of training rounds can be adjusted via the `--comm_round` parameter:
+```shell
+python cifar10_PM.py --audit_dataset_ratio 0.2 --test_dataset_ratio 0.4 --train_dataset_ratio 0.4 --signals loss logits gradient_norm --fpr_tolerance 0.1 0.2 0.3 --log_dir test_adam --comm_round 30 --optimizer_type Adam --is_feature True --layer_number 10
+```
 
+**Results:**
 The performance of the target model is as follows:
 ```
 Average aggregated model validation values = 0.6075416505336761

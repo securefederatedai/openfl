@@ -1,0 +1,181 @@
+---
+# Task Runner E2E Evaluation tests for dockerized approach
+
+name: Task_Runner_FedEval_DWS_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: "Number of rounds to train"
+        required: false
+        default: "5"
+        type: string
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+      job_to_run:
+        description: "Job to run (tls, non_tls, no_client_auth, all)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - tls
+          - non_tls
+          - no_client_auth
+          - all
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+env:
+  NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  JOB_TO_RUN: ${{ inputs.job_to_run || 'all' }}
+
+jobs:
+  input_selection:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Input value selection
+    runs-on: ubuntu-22.04
+    outputs:
+      selected_jobs: ${{ env.JOB_TO_RUN }}
+    steps:
+      - name: Job to select input values
+        id: input_selection
+        run: |
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}"
+
+  test_with_tls_dockerized_ws:
+    name: tr_tls_dockerized_ws
+    needs: input_selection
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    if: needs.input_selection.outputs.selected_jobs == 'tls' || needs.input_selection.outputs.selected_jobs == 'all'
+    strategy:
+      matrix:
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests with TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_tls_dockerized_ws"
+
+  test_with_non_tls_dockerized_ws:
+    name: tr_non_tls_dockerized_ws
+    needs: input_selection
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    if: needs.input_selection.outputs.selected_jobs == 'non_tls' || needs.input_selection.outputs.selected_jobs == 'all'
+    strategy:
+      matrix:
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_non_tls_dockerized_ws"
+
+  test_with_no_client_auth_dockerized_ws:
+    name: tr_no_client_auth_dockerized_ws
+    needs: input_selection
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    if: needs.input_selection.outputs.selected_jobs == 'no_client_auth' || needs.input_selection.outputs.selected_jobs == 'all'
+    strategy:
+      matrix:
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_no_client_auth_dockerized_ws"
