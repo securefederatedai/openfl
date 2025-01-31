@@ -58,10 +58,8 @@ This method can be used to run federated learning experiments in an isolated env
 
 * Pull the latest image:
 
-	> **Note:** OpenFL image hosted on `docker.io` has not been updated since the 1.5 release due to a change in namespace. We are working on this issue. In the meantime, use the instructions below to build an image from source.
-
 	```bash
-	docker pull ghcr.io/securefederatedai/openfl/openfl:latest
+	docker pull ghcr.io/securefederatedai/openfl:latest
 	```
    
 * Build from source:
