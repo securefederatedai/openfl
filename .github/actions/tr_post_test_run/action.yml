@@ -27,16 +27,10 @@ runs:
         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
       shell: bash
 
-    - name: Sanitize MODEL_NAME
-        id: sanitize_model_name
-        run: |
-          MODEL_NAME_SANITIZED=$(echo "${{ env.MODEL_NAME }}" | sed 's/\//_/g')
-          echo "MODEL_NAME_SANITIZED=$MODEL_NAME_SANITIZED" >> "$GITHUB_OUTPUT"
-
     - name: Upload Artifacts
       id: upload_artifacts
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: ${{ inputs.test_type }}_${{ steps.sanitize_model_name.outputs.MODEL_NAME_SANITIZED }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
         path: result.tar
