@@ -50,6 +50,7 @@ Module - {{ truncated_fullname | escape | underline}}
 
    .. autosummary::
       :toctree:
+      :template: custom-exception-template.rst
    {% for item in exceptions %}
       {{ item }}
    {%- endfor %}
