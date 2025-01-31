@@ -95,9 +95,9 @@ Follow the steps below to write your custom callback function instead. As an exa
     defaults : plan/defaults/aggregator.yaml
     template : openfl.component.Aggregator
     settings :
-      init_state_path     : save/torch/mnist_init.pbuf
-      best_state_path     : save/torch/mnist_best.pbuf
-      last_state_path     : save/torch/mnist_last.pbuf
+      init_state_path     : save/torch_cnn_mnist_init.pbuf
+      best_state_path     : save/torch_cnn_mnist_best.pbuf
+      last_state_path     : save/torch_cnn_mnist_last.pbuf
       rounds_to_train     : 10
       write_logs          : true
       log_metric_callback :
