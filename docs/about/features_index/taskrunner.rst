@@ -495,72 +495,129 @@ In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded w
 
 .. _running_the_federation_docker:
 
+Docker Container Approach
+-------------------------
 
-Running inside Docker
----------------------
+Participants can run experiments within a container either for simulation or to deploy real-world experiments within Trusted Execution Environments (TEEs).
 
-There are two ways you can run OpenFL with Docker\*\.
+Base Image
+^^^^^^^^^^
 
-- `Option 1: Deploy a Federation in a Docker Container`_
-- `Option 2: Deploy Your Workspace in a Docker Container`_
+To develop or simulate experiments within a container, OpenFL base image is required.
 
+.. code-block:: shell
 
-.. _running_the_federation_docker_base_image:
+   # Pull latest stable base image
+   $ docker pull ghcr.io/securefederatedai/openfl:latest
 
-Option 1: Deploy a Federation in a Docker Container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   # Or, build a base image from the latest source code
+   $ docker build . -t openfl -f Dockerfile.base \
+       --build-arg OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@develop
 
-.. note::
-    You have to built an OpenFL image. See :ref:`installation` for details.
+Verify:
 
+.. code-block:: shell
 
-1. Run the OpenFL image.
+   user@vm:~/openfl$ docker run -it --rm ghcr.io/securefederatedai/openfl:latest bash
+   user@7b40624c207a:/$ fx
+    OpenFL - Open Federated Learning
 
-    .. code-block:: shell
+    BASH COMPLETE ACTIVATION
 
-       $ docker run -it --network host openfl
+    Run in terminal:
+        _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+        source ~/.fx-autocomplete.sh
+    If ~/.fx-autocomplete.sh already exists:
+        source ~/.fx-autocomplete.sh
 
+    CORRECT USAGE
 
-You can now experiment with OpenFL in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
+    fx [options] [command] [subcommand] [args]
 
+Building a workspace image
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _running_the_federation_docker_workspace:
+OpenFL supports `Gramine-based <https://gramine.readthedocs.io/en/stable/>`_ TEEs that run within SGX.
 
-Option 2: Deploy Your Workspace in a Docker Container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To build a TEE-ready workspace image, run the following command from an existing workspace directory. Ensure PKI setup and plan confirmations are done before this step.
 
-.. note::
-    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace`_ for details.
+.. code-block:: shell
+   user@vm:~/example_workspace$ fx workspace dockerize --save
 
+This command builds the base image and a TEE-ready workspace image. 
 
-1. Build an image with the workspace you created.
+Refer to ``fx workspace dockerize --help`` for more details.
 
-    .. code-block:: shell
+A signed Docker image named ``example_workspace.tar`` will be saved in the workspace. This image (along with respective PKI certificates that are not included in the image) can be shared across participating entities.
 
-       $ fx workspace dockerize
+Running without a TEE
+~~~~~~~~~~~~~~~~~~~~~
 
+Using the native ``fx`` command within the image will run the experiment without TEEs.
 
-    By default, the image is saved as **WORKSPACE_NAME_image.tar** in the workspace directory.
+.. code-block:: shell
 
-2. The image can be distributed and run on other nodes without any environment preparation.
+   # Aggregator
+   docker run --rm \
+     --network host \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "fx aggregator start ..."
 
-    .. parsed-literal::
+   # Collaborator(s)
+   docker run --rm \
+     --network host \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "fx collaborator start ..."
 
-        docker run -it --rm \\
-            --network host \\
-            -v user_data_folder:/home/user/workspace/data \\
-            ${WORKSPACE_IMAGE_NAME} \\
-            bash
+Running within a TEE
+~~~~~~~~~~~~~~~~~~~~
 
+To run ``fx`` within a TEE, mount the SGX device and AESMD volumes. In addition, prefix the ``fx`` command with the ``gramine-sgx`` directive.
 
-    .. note::
+.. code-block:: shell
 
-        The FL plan should be initialized with the FQDN of the node where the aggregator container will be running.
+   # Aggregator
+   docker run --rm \
+     --network host \
+     --device=/dev/sgx_enclave \
+     -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "gramine-sgx fx aggregator start ..."
 
-3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`../../developer_guide/utilities/pki` for details.
+   # Collaborator(s)
+   docker run --rm \
+     --network host \
+     --device=/dev/sgx_enclave \
+     -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
+     --mount type=bind,source=./certs.tar,target=/certs.tar \
+     example_workspace bash -c "gramine-sgx fx collaborator start ..."
 
-4. `STEP 3: Start the Federation`_.
+Running OpenFL Container in Production
+======================================
 
-.. toctree
-..    overview.how_can_intel_protect_federated_learning
-..    overview.what_is_intel_federated_learning
+For running `TaskRunner API <https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#running-the-task-runner>`_ in a production environment with enhanced security, use the following parameters to limit CPU, memory, and process IDs, and to prevent privilege escalation:
+
+**Example Command**:
+
+.. code-block:: shell
+
+   docker run --rm --name <Aggregator/Collaborator> --network openfl \
+     -v $WORKING_DIRECTORY:/workdir-openfl \
+     --cpus="0.1" \
+     --memory="512m" \
+     --pids-limit 100 \
+     --security-opt no-new-privileges \
+     openfl:latest
+
+**Parameters**:
+
+.. code-block:: shell
+
+   --cpus="0.1": Limits the container to 10% of a single CPU core.
+   --memory="512m": Limits the container to 512MB of memory.
+   --pids-limit 100: Limits the number of processes to 100.
+   --security-opt no-new-privileges: Prevents the container from gaining additional privileges.
+
+These settings help ensure that your containerized application runs securely and efficiently in a production environment.
+
+**Note**: The numbers suggested here are examples/minimal suggestions and need to be adjusted according to the environment and the type of experiments you are aiming to run.
