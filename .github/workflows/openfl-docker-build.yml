@@ -44,4 +44,4 @@ jobs:
         file: openfl-docker/Dockerfile.base
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}/openfl:${{ github.event.inputs.version || 'latest' }}
+          ghcr.io/${{ github.repository }}:${{ github.event.inputs.version || 'latest' }}

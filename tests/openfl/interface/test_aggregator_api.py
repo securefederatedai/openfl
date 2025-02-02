@@ -27,6 +27,11 @@ def test_aggregator_start(mock_parse):
             'settings': {
                 'task_group': 'learning'
             }
+        },
+        'assigner': {
+            'settings': {
+                'selected_task_group': 'learning'
+            }
         }
     }
     mock_parse.return_value = mock_plan
@@ -53,6 +58,11 @@ def test_aggregator_start_illegal_plan(mock_parse, mock_is_directory_traversal):
         'aggregator': {
             'settings': {
                 'task_group': 'learning'
+            }
+        },
+        'assigner': {
+            'settings': {
+                'selected_task_group': 'learning'
             }
         }
     }
@@ -82,6 +92,11 @@ def test_aggregator_start_illegal_cols(mock_parse, mock_is_directory_traversal):
         'aggregator': {
             'settings': {
                 'task_group': 'learning'
+            }
+        },
+        'assigner': {
+            'settings': {
+                'selected_task_group': 'learning'
             }
         }
     }
