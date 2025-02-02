@@ -13,8 +13,32 @@ import keras
 from openfl.federated import KerasTaskRunner
 
 class CNNModel(keras.Model):
+    """
+    Custom Keras Model for a Convolutional Neural Network (CNN) with custom training and testing steps.
+    This model showcase how to define a custom training and testing step for a Keras model with Tensorflow.
+    Methods
+    -------
+    train_step(data)
+        Performs a single training step, including forward pass, loss computation, gradient calculation, 
+        and weight updates. Also updates the metrics.
+    test_step(data)
+        Performs a single testing step, including forward pass, loss computation, and metric updates.
+    """
 
     def train_step(self, data):
+        """
+        Perform a single training step.
+        Args:
+            data (tuple): A tuple containing the input data and labels. If the tuple has three elements,
+                          it should be (x, y, sample_weight). Otherwise, it should be (x, y).
+        Returns:
+            dict: A dictionary mapping metric names to their current values. This includes the loss and
+                  any other metrics configured in `compile()`.
+        Notes:
+            - The loss function and metrics are configured in the `compile()` method.
+            - The optimizer is used to apply the computed gradients to the model's trainable variables.
+        """
+
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         if len(data) == 3:
@@ -53,6 +77,14 @@ class CNNModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
+        """
+        Perform a single test step.
+        Args:
+            data (tuple): A tuple containing the input data (x) and the true labels (y).
+        Returns:
+            dict: A dictionary mapping metric names to their current values. This includes the loss and other metrics tracked in self.metrics.
+        """
+
         # Unpack the data
         x, y = data
         # Compute predictions
@@ -70,7 +102,7 @@ class CNNModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
 
-class KerasCNN(KerasTaskRunner):
+class CNNTaskruner(KerasTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, **kwargs):
@@ -108,7 +140,7 @@ class KerasCNN(KerasTaskRunner):
             num_classes (int): The number of classes of the dataset
 
         Returns:
-            keras.models.Sequential: The model defined in Keras
+            models: The model defined in Keras
 
         """
         inputs = keras.Input(shape=input_shape)
