@@ -32,4 +32,4 @@ jobs:
         pip install .
     - name: Task Runner API
       run: |
-          python -m tests.github.test_hello_federation --template torch_cnn_mnist --fed_workspace aggregator --col1 collaborator1 --col2 collaborator2  --rounds-to-train 3 --save-model output_model
+          python -m tests.github.test_hello_federation --template torch/mnist --fed_workspace aggregator --col1 collaborator1 --col2 collaborator2  --rounds-to-train 3 --save-model output_model
