@@ -1,5 +1,5 @@
 ## Instantiating a Workspace from Torch Template
-To instantiate a workspace from the torch_cnn_mnist template, you can use the fx workspace create command. This allows you to quickly set up a new workspace based on a predefined configuration and template.
+To instantiate a workspace from the torch/mnist template, you can use the fx workspace create command. This allows you to quickly set up a new workspace based on a predefined configuration and template.
 
 1. Ensure the necessary dependencies are installed.
 ```
@@ -13,7 +13,7 @@ pip install openfl
 
 ```
 cd ~/openfl-quickstart
-fx workspace create --template torch_cnn_mnist --prefix fl_workspace
+fx workspace create --template torch/mnist --prefix fl_workspace
 cd ~/openfl-quickstart/fl_workspace
 ```
 

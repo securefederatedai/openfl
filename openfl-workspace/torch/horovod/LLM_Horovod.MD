@@ -9,7 +9,7 @@ Before running the Horovod example, ensure that the following prerequisites are 
 ## Setting up Horovod Dependencies
 To set up the Horovod dependencies, follow these steps:
 
-1. Run the `setup_env.sh` script located in `openfl-workspace/torch_llm_horovod/setup_env.sh` within your virtual environment (venv).
+1. Run the `setup_env.sh` script located in `openfl-workspace/torch/llm_horovod/setup_env.sh` within your virtual environment (venv).
 2. Create aggregator and collaborator workspaces. See [Running the experiment](#running-the-experiment)
 3. Ensure that the collaborator workspace is present in each node with the same file structure.
 4. Make sure the dataset is available in each node.
@@ -28,13 +28,13 @@ Set the following environmental variables for Horovod:
 ## Customizing Data and Models
 To use your own data and models, follow these steps:
 
-1. Copy the `openfl/openfl-workspace/torch_llm_horovod` directory to `openfl/openfl-workspace/name_of_your_template`.
+1. Copy the `openfl/openfl-workspace/torch/llm_horovod` directory to `openfl/openfl-workspace/name_of_your_template`.
 2. In the `src/InHorovodrun` file, make the following changes:
    - Replace `EmotionDataLoader` with your own dataloader.
    - Replace `LLMTrainer` with your own training/validation scripts.
 
 ## Running the Experiment
-To run the experiment, follow the instructions provided in the [OpenFL documentation](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach) using either the `torch_llm_horovod` template or your own template.
+To run the experiment, follow the instructions provided in the [OpenFL documentation](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach) using either the `torch/llm_horovod` template or your own template.
 
 That's it! You're now ready to use the Horovod example with your own data and models. Enjoy!
 

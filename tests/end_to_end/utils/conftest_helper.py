@@ -17,7 +17,7 @@ def parse_arguments():
             - results_dir (str, optional): Directory to store the results
             - num_collaborators (int, default=2): Number of collaborators
             - num_rounds (int, default=5): Number of rounds to train
-            - model_name (str, default="torch_cnn_mnist"): Model name
+            - model_name (str, default="torch/mnist"): Model name
             - disable_client_auth (bool): Disable client authentication
             - disable_tls (bool): Disable TLS for communication
             - log_memory_usage (bool): Enable Memory leak logs
