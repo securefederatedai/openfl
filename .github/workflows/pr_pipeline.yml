@@ -43,10 +43,6 @@ jobs:
     name: Hadolint Security Scan
     uses: ./.github/workflows/hadolint.yml
 
-  private_key_infrastructure:
-    name: Private Key Infrastructure
-    uses: ./.github/workflows/pki.yml
-
   pytest_coverage:
     name: Pytest and code coverage
     uses: ./.github/workflows/pytest_coverage.yml

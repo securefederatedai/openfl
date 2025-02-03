@@ -29,7 +29,7 @@ The following are the straggler handling algorithms supported in OpenFL:
 Demonstration of adding the straggler handling interface
 =========================================================
 
-The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentagePolicy``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffTimePolicy** function instead:
+The example template, **torch/mnist_straggler_check***, uses the ``PercentagePolicy``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffTimePolicy** function instead:
 
     .. code-block:: yaml
     

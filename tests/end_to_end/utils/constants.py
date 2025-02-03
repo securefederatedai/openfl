@@ -10,15 +10,15 @@ class ModelName(Enum):
     """
     # IMP - The model name must be same (and in uppercase) as the model value.
     # This is used to identify the model in the tests.
-    TORCH_CNN_MNIST = "torch_cnn_mnist"
-    KERAS_CNN_MNIST = "keras_cnn_mnist"
-    TORCH_CNN_HISTOLOGY = "torch_cnn_histology"
+    TORCH_MNIST = "torch/mnist"
+    KERAS_MNIST = "keras/mnist"
+    TORCH_HISTOLOGY = "torch/histology"
     XGB_HIGGS = "xgb_higgs"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
-DEFAULT_MODEL_NAME = "torch_cnn_mnist"
+DEFAULT_MODEL_NAME = "torch/mnist"
 SUCCESS_MARKER = "✔️ OK"
 
 # Docker specific constants
