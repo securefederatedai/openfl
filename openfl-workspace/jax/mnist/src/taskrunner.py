@@ -15,15 +15,11 @@ import keras
 from openfl.federated import KerasTaskRunner
 
 class CNNModel(keras.Model):
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.loss_tracker = keras.metrics.Mean(name="loss")
-    #     self.mae_metric = keras.metrics.Accuracy(name="accuracy")
-    #     self.loss_fn = keras.losses.CategoricalCrossentropy()
-        # self.optimizer = keras.optimizers.Adam()
-        # model.compile(loss="categorical_crossentropy",
-        #               optimizer="adam",
-        #               metrics=["accuracy"])
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
+        self.loss_fn = keras.losses.MeanSquaredError()
 
     def compute_loss_and_updates(
         self,
@@ -99,20 +95,12 @@ class CNNModel(keras.Model):
         )
         return logs, state
 
-    # @property
-    # def metrics(self):
-    #     # We list our `Metric` objects here so that `reset_states()` can be
-    #     # called automatically at the start of each epoch
-    #     # or at the start of `evaluate()`.
-    #     return [self.loss_tracker, self.mae_metric]
-
-
-
-
-    # # Just use `fit` as usual -- you can use callbacks, etc.
-    # x = np.random.random((1000, 32))
-    # y = np.random.random((1000, 1))
-    # model.fit(x, y, epochs=5)
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        return [self.loss_tracker, self.mae_metric]
 
     def test_step(self, state, data):
         # Unpack the data.
