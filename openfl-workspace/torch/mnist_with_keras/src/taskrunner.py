@@ -1,22 +1,49 @@
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
-import os
-
-# This guide can only be run with the torch backend.
-os.environ["KERAS_BACKEND"] = "torch"
-
-print("inside taskrunner.py")
-print(os.environ["KERAS_BACKEND"])
 import torch
 import keras
 
 from openfl.federated import KerasTaskRunner
 
 class CNNModel(keras.Model):
-
+    """
+    A custom Keras model for a Convolutional Neural Network (CNN) that overrides
+    the `train_step` and `test_step` methods to integrate with PyTorch's gradient
+    computation and optimization.
+    Methods
+    -------
+    train_step(data)
+        Performs a single training step, including forward pass, loss computation,
+        backward pass, and weight updates.
+    test_step(data)
+        Performs a single evaluation step, including forward pass, loss computation,
+        and metric updates.
+    """
+    
     def train_step(self, data):
+        """
+        Perform a single training step using torch.
+
+        Args:
+            data (tuple): A tuple containing the input data and labels. If the tuple has three elements, 
+                          the third element is considered as sample weights.
+
+        Returns:
+            dict: A dictionary mapping metric names to their current values, including the loss.
+
+        The method performs the following steps:
+        1. Unpacks the input data.
+        2. Clears the gradients from the previous training step.
+        3. Performs a forward pass to compute the predictions.
+        4. Computes the loss based on the predictions and true labels.
+        5. Computes the gradients by performing a backward pass on the loss.
+        6. Updates the model weights using the computed gradients.
+        7. Updates the metrics, including the loss.
+        8. Returns the current values of the metrics.
+        """
+
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
         if len(data) == 3:
@@ -60,6 +87,14 @@ class CNNModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
+        """
+        Perform a single test step using torch.
+        Args:
+            data (tuple): A tuple containing the input data (x) and the true labels (y).
+        Returns:
+            dict: A dictionary mapping metric names to their current values, including the loss.
+        """
+
         # Unpack the data
         x, y = data
         # Compute predictions

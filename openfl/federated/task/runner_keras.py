@@ -21,7 +21,6 @@ import os
 
 with catch_warnings():
     simplefilter(action="ignore")
-    print("os.environ[KERAS_BACKEND] inside runner", os.environ["KERAS_BACKEND"])
     import keras
 
 
