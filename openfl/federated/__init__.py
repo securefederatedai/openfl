@@ -34,7 +34,6 @@ if util.find_spec("xgboost") is not None:
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import XGBoostTaskRunner
 
-
 __all__ = [
     "Plan",
     "TaskRunner",
