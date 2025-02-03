@@ -25,8 +25,8 @@ on:
         type: choice
         options:
           - all
-          - torch_cnn_mnist
-          - keras_cnn_mnist
+          - torch/mnist
+          - keras/mnist
       python_version:
         description: "Python version"
         required: false
@@ -85,21 +85,21 @@ jobs:
         id: input_selection
         run: |
           # ---------------------------------------------------------------
-          # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
+          # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
           # Thus these models are excluded from the matrix for now.
           # Default combination if no input is provided (i.e. 'all' is selected).
-          # * TLS - models [torch_cnn_mnist, keras_cnn_mnist] and python versions [3.10, 3.11, 3.12]
-          # * Non-TLS - models [torch_cnn_mnist] and python version [3.10]
-          # * No client auth - models [keras_cnn_mnist] and python version [3.10]
-          # * Memory logs - models [torch_cnn_mnist] and python version [3.10]
+          # * TLS - models [torch/mnist, keras/mnist] and python versions [3.10, 3.11, 3.12]
+          # * Non-TLS - models [torch/mnist] and python version [3.10]
+          # * No client auth - models [keras/mnist] and python version [3.10]
+          # * Memory logs - models [torch/mnist] and python version [3.10]
           # ---------------------------------------------------------------
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
           if [ "${{ env.MODEL_NAME }}" == "all" ]; then
-            echo "models_for_tls=[\"torch_cnn_mnist\", \"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
-            echo "models_for_non_tls=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
-            echo "models_for_no_client_auth=[\"keras_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
-            echo "models_for_memory_logs=[\"torch_cnn_mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_tls=[\"torch/mnist\", \"keras/mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_non_tls=[\"torch/mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_no_client_auth=[\"keras/mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_memory_logs=[\"torch/mnist\"]" >> "$GITHUB_OUTPUT"
           else
             echo "models_for_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_non_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
