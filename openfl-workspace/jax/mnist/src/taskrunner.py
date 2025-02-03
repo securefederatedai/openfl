@@ -10,12 +10,6 @@ import keras
 from openfl.federated import KerasTaskRunner
 
 class CNNModel(keras.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.loss_tracker = keras.metrics.Mean(name="loss")
-        self.mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
-        self.loss_fn = keras.losses.MeanSquaredError()
-
     def compute_loss_and_updates(
         self,
         trainable_variables,
@@ -30,7 +24,7 @@ class CNNModel(keras.Model):
             x,
             training=training,
         )
-        loss = self.loss_fn(y, y_pred)
+        loss = self.compute_loss(x, y, y_pred)
         return loss, (y_pred, non_trainable_variables)
 
     def train_step(self, state, data):
@@ -63,23 +57,20 @@ class CNNModel(keras.Model):
         )
 
         # Update metrics.
-        loss_tracker_vars = metrics_variables[: len(self.loss_tracker.variables)]
-        mae_metric_vars = metrics_variables[len(self.loss_tracker.variables) :]
-
-        loss_tracker_vars = self.loss_tracker.stateless_update_state(
-            loss_tracker_vars, loss
-        )
-        mae_metric_vars = self.mae_metric.stateless_update_state(
-            mae_metric_vars, y, y_pred
-        )
-
+        new_metrics_vars = []
         logs = {}
-        logs[self.loss_tracker.name] = self.loss_tracker.stateless_result(
-            loss_tracker_vars
-        )
-        logs[self.mae_metric.name] = self.mae_metric.stateless_result(mae_metric_vars)
-
-        new_metrics_vars = loss_tracker_vars + mae_metric_vars
+        for metric in self.metrics:
+            this_metric_vars = metrics_variables[
+                len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
+            ]
+            if metric.name == "loss":
+                this_metric_vars = metric.stateless_update_state(this_metric_vars, loss)
+            else:
+                this_metric_vars = metric.stateless_update_state(
+                    this_metric_vars, y, y_pred
+                )
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
+            new_metrics_vars += this_metric_vars
 
         # Return metric logs and updated state variables.
         state = (
@@ -89,13 +80,6 @@ class CNNModel(keras.Model):
             new_metrics_vars,
         )
         return logs, state
-
-    @property
-    def metrics(self):
-        # We list our `Metric` objects here so that `reset_states()` can be
-        # called automatically at the start of each epoch
-        # or at the start of `evaluate()`.
-        return [self.loss_tracker, self.mae_metric]
 
     def test_step(self, state, data):
         # Unpack the data.
@@ -117,6 +101,7 @@ class CNNModel(keras.Model):
 
         # Update metrics.
         new_metrics_vars = []
+        logs = {}
         for metric in self.metrics:
             this_metric_vars = metrics_variables[
                 len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
@@ -127,7 +112,7 @@ class CNNModel(keras.Model):
                 this_metric_vars = metric.stateless_update_state(
                     this_metric_vars, y, y_pred
                 )
-            logs = metric.stateless_result(this_metric_vars)
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
 
         # Return metric logs and updated state variables.
@@ -199,6 +184,8 @@ class JAXCNN(KerasTaskRunner):
 
         model = CNNModel(inputs, outputs)
 
-        model.compile(optimizer="adam")
+        model.compile(loss="categorical_crossentropy",
+                      optimizer="adam",
+                      metrics=["accuracy"])
 
         return model
