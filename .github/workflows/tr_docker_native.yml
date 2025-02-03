@@ -27,7 +27,7 @@ jobs:
 
     - name: Create workspace image
       run: |
-        fx workspace create --prefix example_workspace --template keras_cnn_mnist
+        fx workspace create --prefix example_workspace --template keras/mnist
         cd example_workspace
         fx plan initialize -a localhost
         fx workspace dockerize --save --revision https://github.com/${GITHUB_REPOSITORY}.git@${{ github.event.pull_request.head.sha }}
