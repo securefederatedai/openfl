@@ -1,12 +1,7 @@
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
-import os
-# print(os.environ["KERAS_BACKEND"])
-os.environ["KERAS_BACKEND"] = "jax"
-print("os.environKERAS_BACKEND] inside taskrunner")
-print(os.environ["KERAS_BACKEND"])
 
 import jax
 import keras
@@ -195,7 +190,7 @@ class JAXCNN(KerasTaskRunner):
                          kernel_size=conv_kernel_size,
                          strides=conv_strides,
                          activation='relu')(outputs)
-    
+
         outputs = keras.layers.Flatten()(outputs)
 
         outputs = keras.layers.Dense(final_dense_inputsize, activation='relu')(outputs)
@@ -203,8 +198,6 @@ class JAXCNN(KerasTaskRunner):
         outputs = keras.layers.Dense(num_classes, activation='softmax')(outputs)
 
         model = CNNModel(inputs, outputs)
-
-        print("model created")
 
         model.compile(optimizer="adam")
 
