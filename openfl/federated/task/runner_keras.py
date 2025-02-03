@@ -7,6 +7,7 @@ Base classes for developing a keras.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
+
 import copy
 from warnings import catch_warnings, simplefilter
 
