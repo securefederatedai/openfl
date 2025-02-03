@@ -12,14 +12,14 @@ import jax
 import keras
 
 
-from openfl.federated import JAXTaskRunner
+from openfl.federated import KerasTaskRunner
 
 class CNNModel(keras.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.loss_tracker = keras.metrics.Mean(name="loss")
-        self.mae_metric = keras.metrics.Accuracy(name="accuracy")
-        self.loss_fn = keras.losses.CategoricalCrossentropy()
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.loss_tracker = keras.metrics.Mean(name="loss")
+    #     self.mae_metric = keras.metrics.Accuracy(name="accuracy")
+    #     self.loss_fn = keras.losses.CategoricalCrossentropy()
         # self.optimizer = keras.optimizers.Adam()
         # model.compile(loss="categorical_crossentropy",
         #               optimizer="adam",
@@ -155,7 +155,7 @@ class CNNModel(keras.Model):
         )
         return logs, state
 
-class JAXCNN(JAXTaskRunner):
+class JAXCNN(KerasTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, **kwargs):
