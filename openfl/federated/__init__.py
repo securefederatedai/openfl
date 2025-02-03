@@ -10,8 +10,20 @@ from importlib import util
 from openfl.federated.data import DataLoader  # NOQA
 from openfl.federated.plan import Plan  # NOQA
 from openfl.federated.task import TaskRunner  # NOQA
-
+print("inside init")
+print("util.find_spec(torch)", util.find_spec("torch"))
+print("util.find_spec(keras)", util.find_spec("keras"))
+print("util.find_spec(jax)", util.find_spec("jax"))
 if util.find_spec("keras") is not None:
+    if util.find_spec("torch") is not None:
+        # This guide can only be run with the torch backend.
+        os.environ["KERAS_BACKEND"] = "torch"
+    elif util.find_spec("tensorflow") is not None:
+        # This guide can only be run with the torch backend.
+        os.environ["KERAS_BACKEND"] = "tensorflow"
+    elif util.find_spec("jax") is not None:
+        # This guide can only be run with the torch backend.
+        os.environ["KERAS_BACKEND"] = "jax"
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import KerasDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
@@ -28,6 +40,7 @@ if util.find_spec("xgboost") is not None:
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import XGBoostTaskRunner
 
+print(os.environ["KERAS_BACKEND"])
 __all__ = [
     "Plan",
     "TaskRunner",

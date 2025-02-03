@@ -17,8 +17,11 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
+import os
+
 with catch_warnings():
     simplefilter(action="ignore")
+    print("os.environ[KERAS_BACKEND] inside runner", os.environ["KERAS_BACKEND"])
     import keras
 
 
