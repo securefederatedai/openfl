@@ -7,6 +7,8 @@ import os
 # This guide can only be run with the torch backend.
 os.environ["KERAS_BACKEND"] = "torch"
 
+print("inside taskrunner.py")
+print(os.environ["KERAS_BACKEND"])
 import torch
 import keras
 

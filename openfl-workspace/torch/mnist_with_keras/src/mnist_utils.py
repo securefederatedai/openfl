@@ -6,7 +6,7 @@
 from logging import getLogger
 
 import numpy as np
-from tensorflow.python.keras.utils.data_utils import get_file
+import keras
 
 logger = getLogger(__name__)
 
@@ -38,18 +38,7 @@ def _load_raw_datashards(shard_num, collaborator_count):
     Returns:
         2 tuples: (image, label) of the training, validation dataset
     """
-    origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
-    path = get_file('mnist.npz',
-                    origin=origin_folder + 'mnist.npz',
-                    file_hash='731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1')
-
-    with np.load(path) as f:
-        # get all of mnist
-        X_train_tot = f['x_train']
-        y_train_tot = f['y_train']
-
-        X_valid_tot = f['x_test']
-        y_valid_tot = f['y_test']
+    (X_train_tot, y_train_tot), (X_valid_tot, y_valid_tot) = keras.datasets.mnist.load_data()
 
     # create the shards
     shard_num = int(shard_num)

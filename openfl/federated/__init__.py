@@ -24,6 +24,7 @@ if util.find_spec("keras") is not None:
     elif util.find_spec("jax") is not None:
         # This guide can only be run with the torch backend.
         os.environ["KERAS_BACKEND"] = "jax"
+    print(os.environ["KERAS_BACKEND"])
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import KerasDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
@@ -40,7 +41,7 @@ if util.find_spec("xgboost") is not None:
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import XGBoostTaskRunner
 
-print(os.environ["KERAS_BACKEND"])
+
 __all__ = [
     "Plan",
     "TaskRunner",
