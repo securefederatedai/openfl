@@ -422,7 +422,7 @@ class Plan:
 
         return self.straggler_policy_
 
-    # legacy api (TaskRunner subclassing)
+    # TaskRunner API
     def get_data_loader(self, collaborator_name):
         """Get data loader for a specific collaborator.
 
@@ -443,20 +443,6 @@ class Plan:
             self.loader_ = Plan.build(**defaults)
 
         return self.loader_
-
-    # Python interactive api
-    def initialize_data_loader(self, data_loader, shard_descriptor):
-        """Initialize data loader.
-
-        Args:
-            data_loader (DataLoader): Data loader to initialize.
-            shard_descriptor (ShardDescriptor): Descriptor of the data shard.
-
-        Returns:
-            DataLoader: Initialized data loader.
-        """
-        data_loader.shard_descriptor = shard_descriptor
-        return data_loader
 
     # legacy api (TaskRunner subclassing)
     def get_task_runner(self, data_loader):
@@ -483,49 +469,6 @@ class Plan:
 
         return self.runner_
 
-    # Python interactive api
-    def get_core_task_runner(self, data_loader=None, model_provider=None, task_keeper=None):
-        """Get core task runner.
-
-        Args:
-            data_loader (DataLoader, optional): Data loader for the tasks.
-                Defaults to None.
-            model_provider (ModelProvider, optional): Provider for the model.
-                Defaults to None.
-            task_keeper (TaskKeeper, optional): Keeper for the tasks. Defaults
-                to None.
-
-        Returns:
-            CoreTaskRunner: Core task runner for the tasks.
-        """
-        defaults = self.config.get(
-            "task_runner",
-            {
-                TEMPLATE: "openfl.federated.task.task_runner.CoreTaskRunner",
-                SETTINGS: {},
-            },
-        )
-
-        # We are importing a CoreTaskRunner instance!!!
-        if self.runner_ is None:
-            self.runner_ = Plan.build(**defaults)
-
-        self.runner_.set_data_loader(data_loader)
-
-        self.runner_.set_model_provider(model_provider)
-        self.runner_.set_task_provider(task_keeper)
-
-        framework_adapter = Plan.build(
-            self.config["task_runner"]["required_plugin_components"]["framework_adapters"],
-            {},
-        )
-
-        # This step initializes tensorkeys
-        # Which have no sens if task provider is not set up
-        self.runner_.set_framework_adapter(framework_adapter)
-
-        return self.runner_
-
     def get_collaborator(
         self,
         collaborator_name,
@@ -534,7 +477,6 @@ class Plan:
         certificate=None,
         task_runner=None,
         client=None,
-        shard_descriptor=None,
     ):
         """Get collaborator.
 
@@ -554,8 +496,6 @@ class Plan:
                 collaborator. Defaults to None.
             client (Client, optional): Client for the collaborator. Defaults
                 to None.
-            shard_descriptor (ShardDescriptor, optional): Descriptor of the
-                data shard. Defaults to None.
 
         Returns:
             self.collaborator_ (Collaborator): The collaborator instance.
@@ -574,24 +514,9 @@ class Plan:
         if task_runner is not None:
             defaults[SETTINGS]["task_runner"] = task_runner
         else:
-            # Here we support new interactive api as well as old task_runner subclassing interface
-            # If Task Runner class is placed incide openfl `task-runner` subpackage it is
-            # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
-            # a part of the old interface and we follow legacy initialization procedure.
-            if "openfl.federated.task.task_runner" in self.config["task_runner"]["template"]:
-                # Interactive API
-                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
-                defaults[SETTINGS]["task_runner"] = self.get_core_task_runner(
-                    data_loader=data_loader,
-                    model_provider=model_provider,
-                    task_keeper=task_keeper,
-                )
-            else:
-                # TaskRunner subclassing API
-                data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
+            # TaskRunner subclassing API
+            data_loader = self.get_data_loader(collaborator_name)
+            defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
 
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
@@ -702,85 +627,6 @@ class Plan:
             self.server_ = AggregatorGRPCServer(**server_args)
 
         return self.server_
-
-    def interactive_api_get_server(
-        self, *, tensor_dict, root_certificate, certificate, private_key, tls
-    ):
-        """Get gRPC server of the aggregator instance for interactive API.
-
-        Args:
-            tensor_dict (dict): Dictionary of tensors.
-            root_certificate (str): Root certificate for the server.
-            certificate (str): Certificate for the server.
-            private_key (str): Private key for the server.
-            tls (bool): Whether to use Transport Layer Security.
-
-        Returns:
-            AggregatorGRPCServer: gRPC server of the aggregator instance.
-        """
-        server_args = self.config["network"][SETTINGS]
-
-        # patch certificates
-        server_args["root_certificate"] = root_certificate
-        server_args["certificate"] = certificate
-        server_args["private_key"] = private_key
-        server_args["use_tls"] = tls
-
-        server_args["aggregator"] = self.get_aggregator(tensor_dict)
-
-        if self.server_ is None:
-            self.server_ = AggregatorGRPCServer(**server_args)
-
-        return self.server_
-
-    def deserialize_interface_objects(self):
-        """Deserialize objects for TaskRunner.
-
-        Returns:
-            tuple: Tuple containing the deserialized objects.
-        """
-        api_layer = self.config["api_layer"]
-        filenames = [
-            "model_interface_file",
-            "tasks_interface_file",
-            "dataloader_interface_file",
-        ]
-        return (self.restore_object(api_layer["settings"][filename]) for filename in filenames)
-
-    def get_serializer_plugin(self, **kwargs):
-        """Get serializer plugin.
-
-        This plugin is used for serialization of interfaces in new interactive
-        API.
-
-        Args:
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            SerializerPlugin: Serializer plugin.
-        """
-        if self.serializer_ is None:
-            if "api_layer" not in self.config:  # legacy API
-                return None
-            required_plugin_components = self.config["api_layer"]["required_plugin_components"]
-            serializer_plugin = required_plugin_components["serializer_plugin"]
-            self.serializer_ = Plan.build(serializer_plugin, kwargs)
-        return self.serializer_
-
-    def restore_object(self, filename):
-        """Deserialize an object.
-
-        Args:
-            filename (str): Name of the file.
-
-        Returns:
-            object: Deserialized object.
-        """
-        serializer_plugin = self.get_serializer_plugin()
-        if serializer_plugin is None:
-            return None
-        obj = serializer_plugin.restore_object(filename)
-        return obj
 
     def save_model_to_state_file(self, tensor_dict, round_number, output_path):
         """Save model weights to a protobuf state file.
