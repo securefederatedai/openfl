@@ -19,7 +19,7 @@ class CNNModel(keras.Model):
     Methods
     -------
     train_step(data)
-        Performs a single training step, including forward pass, loss computation, gradient calculation, 
+        Performs a single training step, including forward pass, loss computation, gradient calculation,
         and weight updates. Also updates the metrics.
     test_step(data)
         Performs a single testing step, including forward pass, loss computation, and metric updates.
