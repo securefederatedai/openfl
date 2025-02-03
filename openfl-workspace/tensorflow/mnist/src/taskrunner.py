@@ -4,7 +4,6 @@
 """You may copy this file as the starting point of your own model."""
 import os
 
-# This guide can only be run with the TF backend.
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import tensorflow as tf
