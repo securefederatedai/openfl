@@ -17,7 +17,6 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
-import os
 
 with catch_warnings():
     simplefilter(action="ignore")

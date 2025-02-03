@@ -21,13 +21,13 @@ class CNNModel(keras.Model):
         Performs a single evaluation step, including forward pass, loss computation,
         and metric updates.
     """
-    
+
     def train_step(self, data):
         """
         Perform a single training step using torch.
 
         Args:
-            data (tuple): A tuple containing the input data and labels. If the tuple has three elements, 
+            data (tuple): A tuple containing the input data and labels. If the tuple has three elements,
                           the third element is considered as sample weights.
 
         Returns:
