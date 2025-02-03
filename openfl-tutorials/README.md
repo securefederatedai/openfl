@@ -2,7 +2,7 @@
 
 These tutorials cover a range of frameworks, models, and datasets to help you get started with OpenFL. This directory provides notebooks for the [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html), one of two ways to run Federated Learning experiments in OpenFL. 
 
-> ![Note]
+> [!NOTE]
 > If you are looking for an enterprise-ready API with support for Trusted Execution Environments (TEEs), refer to the [TaskRunner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html), and the corresponding [quickstart](https://openfl.readthedocs.io/en/latest/tutorials/taskrunner.html) guide.
 
 ## Getting Started
