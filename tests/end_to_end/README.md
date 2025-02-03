@@ -49,16 +49,16 @@ Below parameters are available for modification:
 4. --disable_tls               - to disable TLS communication (by default it is enabled)
 5. --disable_client_auth       - to disable the client authentication (by default it is enabled)
 
-For example, to run Task runner (bare metal approach) with - torch_cnn_mnist model, 3 collaborators, 5 rounds and non-TLS scenario:
+For example, to run Task runner (bare metal approach) with - torch/mnist model, 3 collaborators, 5 rounds and non-TLS scenario:
 
 ```sh
-python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_basic --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --disable_tls
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_basic --num_rounds 5 --num_collaborators 3 --model_name torch/mnist --disable_tls
 ```
 
-And, to run Task runner (via dockerized workspace) with keras_cnn_mnist, 2 collaborators, 3 rounds:
+And, to run Task runner (via dockerized workspace) with keras/mnist, 2 collaborators, 3 rounds:
 
 ```sh
-python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_dockerized_ws --num_rounds 3 --num_collaborators 2 --model_name keras_cnn_mnist
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m task_runner_dockerized_ws --num_rounds 3 --num_collaborators 2 --model_name keras/mnist
 ```
 
 ### Fixture and marker mapping:
