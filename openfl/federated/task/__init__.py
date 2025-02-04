@@ -3,19 +3,18 @@
 
 
 """Task package."""
-
+import os
 from importlib import util
-from warnings import catch_warnings, simplefilter
-
-with catch_warnings():
-    simplefilter(action="ignore", category=FutureWarning)
-    if util.find_spec("tensorflow") is not None:
-        # ignore deprecation warnings in command-line interface
-        import tensorflow  # NOQA
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
 
 if util.find_spec("keras") is not None:
+    if util.find_spec("torch") is not None:
+        os.environ["KERAS_BACKEND"] = "torch"
+    elif util.find_spec("jax") is not None:
+        os.environ["KERAS_BACKEND"] = "jax"
+    elif util.find_spec("tensorflow") is not None:
+        os.environ["KERAS_BACKEND"] = "tensorflow"
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA
 if util.find_spec("torch") is not None:

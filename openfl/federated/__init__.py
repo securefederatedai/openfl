@@ -12,12 +12,6 @@ from openfl.federated.plan import Plan  # NOQA
 from openfl.federated.task import TaskRunner  # NOQA
 
 if util.find_spec("keras") is not None:
-    if util.find_spec("torch") is not None:
-        os.environ["KERAS_BACKEND"] = "torch"
-    elif util.find_spec("tensorflow") is not None:
-        os.environ["KERAS_BACKEND"] = "tensorflow"
-    elif util.find_spec("jax") is not None:
-        os.environ["KERAS_BACKEND"] = "jax"
     from openfl.federated.data import FederatedDataSet  # NOQA
     from openfl.federated.data import KerasDataLoader
     from openfl.federated.task import FederatedModel  # NOQA

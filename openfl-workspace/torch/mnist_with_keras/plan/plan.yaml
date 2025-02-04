@@ -40,7 +40,3 @@ tasks :
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
-  # To use different Compression Pipeline, uncomment the following lines
-  # template : openfl.pipelines.KCPipeline
-  # settings :
-  #   n_clusters : 6
