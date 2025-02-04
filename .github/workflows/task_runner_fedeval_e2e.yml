@@ -30,6 +30,9 @@ env:
 jobs:
   test_with_tls:
     name: tr_tls
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -73,6 +76,9 @@ jobs:
 
   test_with_non_tls:
     name: tr_non_tls
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -116,6 +122,9 @@ jobs:
 
   test_with_no_client_auth:
     name: tr_no_client_auth
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
