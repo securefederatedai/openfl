@@ -93,11 +93,10 @@ def start_(plan, authorized_cols, task_group):
         cols_config_path=Path(authorized_cols).absolute(),
     )
 
-    # Set task_group in aggregator and assigner settings if provided
+    # Set task_group in assigner settings if provided
     if task_group:
-        if "settings" not in parsed_plan.config["aggregator"]:
-            parsed_plan.config["aggregator"]["settings"] = {}
-        parsed_plan.config["aggregator"]["settings"]["task_group"] = task_group
+        if "settings" not in parsed_plan.config["assigner"]:
+            parsed_plan.config["assigner"]["settings"] = {}
         parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
         logger.info(f"Setting aggregator to assign: {task_group} task_group")
 
