@@ -5,6 +5,7 @@
 """Collaborator module."""
 
 import logging
+import gc
 from enum import Enum
 from time import sleep
 from typing import List, Optional, Tuple
@@ -189,6 +190,8 @@ class Collaborator:
             for task in tasks:
                 metrics = self.do_task(task, round_num)
                 logs.update(metrics)
+                metrics = None
+                del metrics
 
             # Round end
             self.tensor_db.clean_up(self.db_store_rounds)
@@ -320,14 +323,14 @@ class Collaborator:
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
             logger.debug("Using TaskRunner subclassing API")
-
+        gc.disable()
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
-
+        gc.enable()
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
         self.tensor_db.cache_tensor(local_output_tensor_dict)

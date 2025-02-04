@@ -235,6 +235,8 @@ def deconstruct_model_proto(model_proto, compression_pipeline):
         tensor_dict[key] = compression_pipeline.backward(
             data=bytes_dict[key], transformer_metadata=metadata_dict[key]
         )
+    del bytes_dict
+    del metadata_dict
     return tensor_dict, round_number
 
 
@@ -288,9 +290,9 @@ def dump_proto(model_proto, fpath):
         model_proto: The protobuf of the model.
         fpath: The file path to dump the protobuf.
     """
-    s = model_proto.SerializeToString()
     with open(fpath, "wb") as f:
-        f.write(s)
+        f.write(model_proto.SerializeToString())
+    log_memory_usage("dump_proto")
 
 
 def datastream_to_proto(proto, stream, logger=None):
@@ -312,8 +314,10 @@ def datastream_to_proto(proto, stream, logger=None):
         proto.ParseFromString(npbytes)
         if logger is not None:
             logger.debug("datastream_to_proto parsed a %s.", type(proto))
+        del npbytes
         return proto
     else:
+        del npbytes
         raise RuntimeError(f"Received empty stream message of type {type(proto)}")
 
 
