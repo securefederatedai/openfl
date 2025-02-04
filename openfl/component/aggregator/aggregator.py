@@ -84,7 +84,6 @@ class Aggregator:
         callbacks: Optional[List] = None,
         persist_checkpoint=True,
         persistent_db_path=None,
-        task_group: str = "learning",
     ):
         """Initializes the Aggregator.
 
@@ -110,9 +109,7 @@ class Aggregator:
                 Defaults to 1.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
             callbacks: List of callbacks to be used during the experiment.
-            task_group (str, optional): Selected task_group for assignment.
         """
-        self.task_group = task_group
         self.round_number = 0
         self.next_model_round_number = 0
 
@@ -129,11 +126,10 @@ class Aggregator:
         self.straggler_handling_policy = straggler_handling_policy()
 
         self.rounds_to_train = rounds_to_train
-        if self.task_group == "evaluation":
+        self.assigner = assigner
+        if self.assigner.is_task_group_evaluation():
             self.rounds_to_train = 1
-            logger.info(
-                f"task_group is {self.task_group}, setting rounds_to_train = {self.rounds_to_train}"
-            )
+            logger.info(f"For evaluation tasks setting rounds_to_train = {self.rounds_to_train}")
 
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
@@ -142,11 +138,7 @@ class Aggregator:
         self.authorized_cols = authorized_cols
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
-        # # override the assigner selected_task_group
-        # # FIXME check the case of CustomAssigner as base class Assigner is redefined
-        # # and doesn't have selected_task_group as attribute
-        # assigner.selected_task_group = task_group
-        self.assigner = assigner
+
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
@@ -308,8 +300,8 @@ class Aggregator:
         )
 
         # Check selected task_group before updating round number
-        if self.task_group == "evaluation":
-            logger.info(f"Skipping round_number check for {self.task_group} task_group")
+        if self.assigner.is_task_group_evaluation():
+            logger.info("Skipping round_number check for evaluation run")
         elif round_number > self.round_number:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
