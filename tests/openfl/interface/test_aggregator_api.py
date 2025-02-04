@@ -23,11 +23,6 @@ def test_aggregator_start(mock_parse):
     mock_plan.get = {'task_group': 'learning'}.get
     # Add the config attribute with proper nesting
     mock_plan.config = {
-        'aggregator': {
-            'settings': {
-                'task_group': 'learning'
-            }
-        },
         'assigner': {
             'settings': {
                 'selected_task_group': 'learning'
@@ -55,11 +50,6 @@ def test_aggregator_start_illegal_plan(mock_parse, mock_is_directory_traversal):
     mock_plan.get = {'task_group': 'learning'}.get
     # Add the config attribute with proper nesting
     mock_plan.config = {
-        'aggregator': {
-            'settings': {
-                'task_group': 'learning'
-            }
-        },
         'assigner': {
             'settings': {
                 'selected_task_group': 'learning'
@@ -89,11 +79,6 @@ def test_aggregator_start_illegal_cols(mock_parse, mock_is_directory_traversal):
     mock_plan.get = {'task_group': 'learning'}.get
     # Add the config attribute with proper nesting
     mock_plan.config = {
-        'aggregator': {
-            'settings': {
-                'task_group': 'learning'
-            }
-        },
         'assigner': {
             'settings': {
                 'selected_task_group': 'learning'
