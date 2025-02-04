@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -114,7 +114,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -155,7 +155,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 

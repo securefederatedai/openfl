@@ -52,4 +52,4 @@ jobs:
           pip install .
       - name: Test TaskRunner API
         run: |
-          python -m tests.github.test_hello_federation --template keras_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+          python -m tests.github.test_hello_federation --template keras/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model

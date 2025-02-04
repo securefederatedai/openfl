@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from openfl.transport.grpc import AggregatorGRPCClient, AggregatorGRPCServer, DirectorGRPCServer
+from openfl.transport.grpc import AggregatorGRPCClient, AggregatorGRPCServer

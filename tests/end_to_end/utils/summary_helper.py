@@ -140,7 +140,7 @@ def print_task_runner_score():
 
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
-    model_name = os.getenv("MODEL_NAME")
+    model_name = os.getenv("MODEL_NAME").replace("/", "_")
     summary_file = _get_summary_file()
 
     # Validate the model name and create the workspace name

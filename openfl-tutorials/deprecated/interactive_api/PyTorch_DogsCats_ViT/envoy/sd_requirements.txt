@@ -1,4 +1,0 @@
-kaggle
-numpy
-pillow
-pynvml

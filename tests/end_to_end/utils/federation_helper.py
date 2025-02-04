@@ -462,13 +462,13 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     test_env = request.config.test_env
 
     # Validate the model name and create the workspace name
-    if not request.config.model_name.upper() in constants.ModelName._member_names_:
+    if not request.config.model_name.replace("/", "_").upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path
     home_dir = Path().home()
     local_bind_path = os.path.join(
-        home_dir, request.config.results_dir, request.config.model_name
+        home_dir, request.config.results_dir, request.config.model_name.replace("/", "_")
     )
     num_rounds = request.config.num_rounds
 

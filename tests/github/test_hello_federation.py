@@ -17,11 +17,14 @@ def main():
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
-    with os.scandir('openfl-workspace') as iterator:
-        for entry in iterator:
-            if entry.name not in ['__init__.py', 'workspace', 'default']:
-                workspace_choice.append(entry.name)
-    parser.add_argument('--template', default='keras_cnn_mnist', choices=workspace_choice)
+    excluded_dirs = ['workspace', 'default', "experimental"]
+    for root, _, files in os.walk('openfl-workspace'):
+        if any(file.endswith(".workspace") for file in files):
+            dir_path = os.path.relpath(root, 'openfl-workspace')
+            dir_path = dir_path.replace(os.sep, '/')
+            if dir_path and not any(dir_path.startswith(prefix) for prefix in excluded_dirs):
+                workspace_choice.append(dir_path)
+    parser.add_argument('--template', default='keras/mnist', choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one123dragons')
     parser.add_argument('--col2', default='beta34unicorns')
