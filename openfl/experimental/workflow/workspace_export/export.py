@@ -207,9 +207,9 @@ class WorkspaceExport:
 
         return None, None
 
-    def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:  # noqa: C901
-        """Provided name of the class returns expected arguments and it's
-        values in form of dictionary.
+    def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:
+        """Provided name of the class returns expected arguments and its
+        values in the form of a dictionary.
 
         Args:
             class_name (str): Name of the class
@@ -223,39 +223,43 @@ class WorkspaceExport:
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                     if node.func.id == class_name:
                         # We found an instantiation of the class
-                        for arg in node.args:
-                            # Iterate through positional arguments
-                            if isinstance(arg, ast.Name):
-                                # Use the variable name as the argument value
-                                instantiation_args["args"][arg.id] = arg.id
-                            elif isinstance(arg, ast.Constant):
-                                instantiation_args["args"][arg.s] = ast.unparse(arg)
-                            else:
-                                instantiation_args["args"][arg.arg] = ast.unparse(arg).strip()
-
-                        for kwarg in node.keywords:
-                            # Iterate through keyword arguments
-                            value = ast.unparse(kwarg.value).strip()
-
-                            # If paranthese or brackets around the value is
-                            # found and it's not tuple or list remove
-                            # paranthese or brackets
-                            if value.startswith("(") and "," not in value:
-                                value = value.lstrip("(").rstrip(")")
-                            if value.startswith("[") and "," not in value:
-                                value = value.lstrip("[").rstrip("]")
-                            try:
-                                # Evaluate the value to convert it from a
-                                # string representation into its corresponding
-                                # python object.
-                                value = ast.literal_eval(value)
-                            except ValueError:
-                                # ValueError is ignored because we want the
-                                # value as a string
-                                pass
-                            instantiation_args["kwargs"][kwarg.arg] = value
+                        instantiation_args["args"] = self._extract_positional_args(node.args)
+                        instantiation_args["kwargs"] = self._extract_keyword_args(node.keywords)
 
         return instantiation_args
+
+    def _extract_positional_args(self, args) -> Dict[str, Any]:
+        """Extract positional arguments from the AST nodes."""
+        positional_args = {}
+        for arg in args:
+            if isinstance(arg, ast.Name):
+                positional_args[arg.id] = arg.id
+            elif isinstance(arg, ast.Constant):
+                positional_args[arg.s] = ast.unparse(arg)
+            else:
+                positional_args[arg.arg] = ast.unparse(arg).strip()
+        return positional_args
+
+    def _extract_keyword_args(self, keywords) -> Dict[str, Any]:
+        """Extract keyword arguments from the AST nodes."""
+        keyword_args = {}
+        for kwarg in keywords:
+            value = ast.unparse(kwarg.value).strip()
+            value = self._clean_value(value)
+            try:
+                value = ast.literal_eval(value)
+            except ValueError:
+                pass
+            keyword_args[kwarg.arg] = value
+        return keyword_args
+
+    def _clean_value(self, value: str) -> str:
+        """Clean the value by removing unnecessary parentheses or brackets."""
+        if value.startswith("(") and "," not in value:
+            value = value.lstrip("(").rstrip(")")
+        if value.startswith("[") and "," not in value:
+            value = value.lstrip("[").rstrip("]")
+        return value
 
     def __import_exported_script(self) -> None:
         """
@@ -416,40 +420,51 @@ class WorkspaceExport:
 
         self.__write_yaml(plan, data)
 
-    def generate_data_yaml(self) -> None:  # noqa: C901
+    def generate_data_yaml(self) -> None:
         """Generates data.yaml."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
 
-        # If flow classname is not yet found
+        self._find_flow_class_name_if_needed()
+        # Import flow class
+        federated_flow_class = getattr(self.exported_script_module, self.flow_class_name)
+
+        flow_name, runtime = self._find_runtime_instance(federated_flow_class)
+        data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
+        data = self._read_or_initialize_yaml(data_yaml)
+        runtime_name = "runtime_local"
+        runtime_created = self._process_aggregator(runtime, data, flow_name, runtime_name)
+        self._process_collaborators(runtime, data, flow_name, runtime_created, runtime_name)
+        self.__write_yaml(data_yaml, data)
+
+    def _find_flow_class_name_if_needed(self):
+        """Find the flow class name if not already found."""
         if not hasattr(self, "flow_class_name"):
             flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
             _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
 
-        # Import flow class
-        federated_flow_class = getattr(self.exported_script_module, self.flow_class_name)
-        # Find federated_flow._runtime and federated_flow._runtime.collaborators
+    def _find_runtime_instance(self, federated_flow_class):
+        """Find the runtime instance."""
         for t in self.available_modules_in_exported_script:
-            tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
-                flow_name = tempstring
                 if not hasattr(t, "_runtime"):
                     raise AttributeError("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
                     raise AttributeError("LocalRuntime instance does not have collaborators")
-                break
+                return runtime
+        raise AttributeError("Runtime instance not found")
 
-        data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
+    def _read_or_initialize_yaml(self, data_yaml):
+        """Read or initialize the YAML data."""
         data = self.__read_yaml(data_yaml)
-        if data is None:
-            data = {}
+        return data if data is not None else {}
 
-        # Find aggregator details
+    def _process_aggregator(self, runtime, data, flow_name, runtime_name):
+        """Process the aggregator details."""
         aggregator = runtime._aggregator
-        runtime_name = "runtime_local"
         runtime_created = False
         private_attrs_callable = aggregator.private_attributes_callable
         aggregator_private_attributes = aggregator.private_attributes
@@ -461,7 +476,6 @@ class WorkspaceExport:
                     "template": f"src.{self.script_name}.{private_attrs_callable.__name__}",
                 }
             }
-            # Find arguments expected by Aggregator
             arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")[
                 "kwargs"
             ]
@@ -484,10 +498,11 @@ class WorkspaceExport:
             data["aggregator"] = {
                 "private_attributes": f"src.{self.script_name}.aggregator_private_attributes"
             }
+        return runtime_created
 
-        # Get runtime collaborators
+    def _process_collaborators(self, runtime, data, flow_name, runtime_created, runtime_name):
+        """Process the collaborators."""
         collaborators = runtime._LocalRuntime__collaborators
-        # Find arguments expected by Collaborator
         arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
             "kwargs"
         ]
@@ -500,7 +515,6 @@ class WorkspaceExport:
             if callable_func:
                 if collab_name not in data:
                     data[collab_name] = {"callable_func": {"settings": {}, "template": None}}
-                # Find collaborator private_attributes callable details
                 kw_args = runtime.get_collaborator_kwargs(collab_name)
                 for key, value in kw_args.items():
                     if key == "private_attributes_callable":
@@ -529,5 +543,3 @@ class WorkspaceExport:
                 data[collab_name] = {
                     "private_attributes": f"src.{self.script_name}.{collab_name}_private_attributes"
                 }
-
-        self.__write_yaml(data_yaml, data)
