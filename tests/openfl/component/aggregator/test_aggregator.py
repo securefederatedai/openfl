@@ -48,15 +48,12 @@ def agg(mocker, model, assigner):
         'some_uuid',
         'federation_uuid',
         ['col1', 'col2'],
-
         'init_state_path',
         'best_state_path',
         'last_state_path',
-
         assigner,
-    )
+        )
     return agg
-
 
 @pytest.mark.parametrize(
     'cert_common_name,collaborator_common_name,authorized_cols,single_cccn,expected_is_valid', [

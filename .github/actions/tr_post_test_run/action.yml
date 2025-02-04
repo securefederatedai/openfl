@@ -25,6 +25,9 @@ runs:
       if: ${{ always() }}
       run: |
         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
+        # Model name might contain forward slashes, convert them to underscore. 
+        tmp=${{ env.MODEL_NAME }}
+        echo "MODEL_NAME_MODIFIED=${tmp/\//_}" >> $GITHUB_ENV
       shell: bash
 
     - name: Upload Artifacts
@@ -32,5 +35,5 @@ runs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME_MODIFIED }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
         path: result.tar
