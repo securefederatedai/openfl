@@ -21,11 +21,6 @@ class MNISTInMemory(KerasDataLoader):
         """
         super().__init__(batch_size, **kwargs)
 
-        # TODO: We should be downloading the dataset shard into a directory
-        # TODO: There needs to be a method to ask how many collaborators and
-        #  what index/rank is this collaborator.
-        # Then we have a way to automatically shard based on rank and size of
-        # collaborator list.
         try:
             int(data_path)
         except:
