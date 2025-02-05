@@ -156,20 +156,20 @@ class DAGnode(DAGNode):
         # these attributes are populated by _postprocess
         self.is_inside_foreach = False
 
-    def _parse(self, func_ast):  # noqa: C901
+    def _parse(self, func_ast):
         self.num_args = len(func_ast.args.args)
         tail = func_ast.body[-1]
 
-        # end doesn't need a transition
+        # End doesn't need a transition
         if self.name == "end":
-            # TYPE is end
             self.type = "end"
+            return
 
-        # ensure that the tail an expression
+        # Ensure that the tail is an expression
         if not isinstance(tail, ast.Expr):
             return
 
-        # determine the type of self.next transition
+        # Determine the type of self.next transition
         try:
             if not self._expr_str(tail.value.func) == "self.next":
                 return
@@ -180,41 +180,52 @@ class DAGnode(DAGNode):
             self.out_funcs = [e.attr for e in tail.value.args]
 
             keywords = {k.arg: getattr(k.value, "s", None) for k in tail.value.keywords}
-            # Second condition in the folliwing line added,
-            # To add the support for up to 2 keyword arguments in Flowgraph
-            if len(keywords) == 1 or len(keywords) == 2:
-                if "foreach" in keywords:
-                    # TYPE is foreach
-                    self.type = "foreach"
-                    if len(self.out_funcs) == 1:
-                        self.foreach_param = keywords["foreach"]
-                        self.invalid_tail_next = False
-                elif "num_parallel" in keywords:
-                    self.type = "foreach"
-                    self.parallel_foreach = True
-                    if len(self.out_funcs) == 1:
-                        self.num_parallel = keywords["num_parallel"]
-                        self.invalid_tail_next = False
-                # Following else parse is also added,
-                # If there are no keyword arguments it is a linear flow
-                else:
-                    self.type = "linear"
-            elif len(keywords) == 0:
-                if len(self.out_funcs) > 1:
-                    # TYPE is split
-                    self.type = "split"
-                    self.invalid_tail_next = False
-                elif len(self.out_funcs) == 1:
-                    # TYPE is linear
-                    if self.name == "start":
-                        self.type = "start"
-                    elif self.num_args > 1:
-                        self.type = "join"
-                    else:
-                        self.type = "linear"
-                    self.invalid_tail_next = False
+
+            # Determine the type based on keywords and out_funcs
+            self._determine_type(keywords)
         except AttributeError:
             return
+
+    def _determine_type(self, keywords):
+        """Determine the type of the function based on keywords and out_funcs."""
+        if len(keywords) in {1, 2}:
+            if "foreach" in keywords:
+                self._set_foreach_type(keywords["foreach"])
+            elif "num_parallel" in keywords:
+                self._set_parallel_foreach_type(keywords["num_parallel"])
+            else:
+                self.type = "linear"
+        elif len(keywords) == 0:
+            self._set_type_based_on_out_funcs()
+
+    def _set_foreach_type(self, foreach_param):
+        """Set the type to 'foreach'."""
+        self.type = "foreach"
+        if len(self.out_funcs) == 1:
+            self.foreach_param = foreach_param
+            self.invalid_tail_next = False
+
+    def _set_parallel_foreach_type(self, num_parallel):
+        """Set the type to 'parallel foreach'."""
+        self.type = "foreach"
+        self.parallel_foreach = True
+        if len(self.out_funcs) == 1:
+            self.num_parallel = num_parallel
+            self.invalid_tail_next = False
+
+    def _set_type_based_on_out_funcs(self):
+        """Set the type based on the number of out_funcs."""
+        if len(self.out_funcs) > 1:
+            self.type = "split"
+            self.invalid_tail_next = False
+        elif len(self.out_funcs) == 1:
+            if self.name == "start":
+                self.type = "start"
+            elif self.num_args > 1:
+                self.type = "join"
+            else:
+                self.type = "linear"
+            self.invalid_tail_next = False
 
 
 class StepVisitor(StepVisitor):
@@ -317,7 +328,7 @@ class TaskDataStore(TaskDataStore):
 
     @only_if_not_done
     @require_mode("w")
-    def save_artifacts(self, artifacts_iter, force_v4=False, len_hint=0):  # noqa: C901
+    def save_artifacts(self, artifacts_iter, force_v4=False, len_hint=0):
         """Saves Metaflow Artifacts (Python objects) to the datastore and
         stores any relevant metadata needed to retrieve them.
 
@@ -331,49 +342,40 @@ class TaskDataStore(TaskDataStore):
             artifacts_iter (Iterator[(string, object)]): Iterator over the
                 human-readable name of the object to save and the object
                 itself.
-        force_v4 (Union[bool, Dict[string -> boolean]], optional): Indicates
-            whether the artifact should be pickled using the v4 version of
-            pickle. If a single boolean, applies to all artifacts. If a
-            dictionary, applies to the object named only. Defaults to False if
-            not present or not specified.
-        len_hint (int, optional): Estimated number of items in artifacts_iter.
-            Defaults to 0.
+            force_v4 (Union[bool, Dict[string -> boolean]], optional): Indicates
+                whether the artifact should be pickled using the v4 version of
+                pickle. If a single boolean, applies to all artifacts. If a
+                dictionary, applies to the object named only. Defaults to False if
+                not present or not specified.
+            len_hint (int, optional): Estimated number of items in artifacts_iter.
+                Defaults to 0.
         """
         artifact_names = []
+
+        def pickle_object(name, obj, do_v4):
+            if do_v4:
+                return _pickle_with_protocol(name, obj, 4, "gzip+pickle-v4")
+            else:
+                try:
+                    return _pickle_with_protocol(name, obj, 2, "gzip+pickle-v2")
+                except (SystemError, OverflowError):
+                    return _pickle_with_protocol(name, obj, 4, "gzip+pickle-v4")
+
+        def _pickle_with_protocol(name, obj, protocol, encode_type):
+            if encode_type not in self._encodings:
+                raise DataException(
+                    f"Artifact {name} requires a serialization encoding that "
+                    "requires Python 3.4 or newer."
+                )
+            try:
+                return pickle.dumps(obj, protocol=protocol), encode_type
+            except TypeError:
+                raise UnpicklableArtifactException(name)
 
         def pickle_iter():
             for name, obj in artifacts_iter:
                 do_v4 = force_v4 if isinstance(force_v4, bool) else force_v4.get(name, False)
-                if do_v4:
-                    encode_type = "gzip+pickle-v4"
-                    if encode_type not in self._encodings:
-                        raise DataException(
-                            f"Artifact {name} requires a serialization encoding that "
-                            + "requires Python 3.4 or newer."
-                        )
-                    try:
-                        blob = pickle.dumps(obj, protocol=4)
-                    except TypeError:
-                        raise UnpicklableArtifactException(name)
-                else:
-                    try:
-                        blob = pickle.dumps(obj, protocol=2)
-                        encode_type = "gzip+pickle-v2"
-                    except (SystemError, OverflowError):
-                        encode_type = "gzip+pickle-v4"
-                        if encode_type not in self._encodings:
-                            raise DataException(
-                                f"Artifact {name} is very large (over 2GB). "
-                                + "You need to use Python 3.4 or newer if you want to "
-                                + "serialize large objects."
-                            )
-                        try:
-                            blob = pickle.dumps(obj, protocol=4)
-                        except TypeError:
-                            raise UnpicklableArtifactException(name)
-                    except TypeError:
-                        raise UnpicklableArtifactException(name)
-
+                blob, encode_type = pickle_object(name, obj, do_v4)
                 self._info[name] = {
                     "size": len(blob),
                     "type": str(type(obj)),
