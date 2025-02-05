@@ -48,7 +48,7 @@ def get_best_accuracy(database_file):
 
     db_helper = DBHelper(database_file)
     round_number, best_score = db_helper.read_key_value_store()
-    print(f"Round number: {round_number}, Best score: {best_score}")
+    print(f"Round number: {int(round_number)}, Best accuracy: {best_score}")
     return best_accuracy
 
 
