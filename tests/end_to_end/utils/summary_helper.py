@@ -3,7 +3,7 @@
 
 import argparse
 from defusedxml.ElementTree import parse as defused_parse
-import defusedxml.ElementTree as etree
+from lxml import etree
 import os
 import re
 from pathlib import Path
@@ -48,7 +48,7 @@ def get_best_accuracy(database_file):
 
     db_helper = DBHelper(database_file)
     round_number, best_score = db_helper.read_key_value_store()
-    print(f"Round number: {int(round_number)}, Best accuracy: {best_score}")
+    print(f"Best accuracy: {best_score} is in round_number {round_number} ")
     return best_accuracy
 
 
@@ -171,7 +171,7 @@ def print_task_runner_score():
         return
 
     # Assumption - result directory is present in the home directory
-    agg_log_file = os.path.join(
+    tensor_db_file = os.path.join(
         result_path,
         model_name,
         "aggregator",
@@ -179,7 +179,7 @@ def print_task_runner_score():
         "local_state",
         "tensor.db",
     )
-    agg_accuracy = get_best_accuracy(agg_log_file)
+    best_score = get_best_accuracy(tensor_db_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
@@ -195,7 +195,7 @@ def print_task_runner_score():
         )
         for item in result:
             print(
-                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |",
+                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {best_score} |",
                 file=fh,
             )
 
