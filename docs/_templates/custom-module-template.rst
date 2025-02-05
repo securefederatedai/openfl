@@ -1,4 +1,8 @@
-{{ fullname | escape | underline}}
+{% set truncated_fullname = fullname.split('.')[-1] %}
+{% if truncated_fullname | length < 4 %}
+   {% set truncated_fullname = truncated_fullname.ljust(4) %}
+{% endif %}
+Module - {{ truncated_fullname | escape | underline}}
 
 .. automodule:: {{ fullname }}
   
@@ -20,6 +24,7 @@
 
    .. autosummary::
       :toctree:
+      :template: custom-function-template.rst
    {% for item in functions %}
       {{ item }}
    {%- endfor %}
@@ -45,6 +50,7 @@
 
    .. autosummary::
       :toctree:
+      :template: custom-exception-template.rst
    {% for item in exceptions %}
       {{ item }}
    {%- endfor %}
