@@ -10,7 +10,7 @@ from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr_dws,
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
-from tests.end_to_end.utils.summary_helper import get_best_accuracy
+from tests.end_to_end.utils.summary_helper import get_best_agg_score
 
 log = logging.getLogger(__name__)
 
@@ -35,8 +35,8 @@ def test_federation_via_native(request, fx_federation_tr):
     ), "Federation completion failed"
 
     tensor_db_file_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "local_state", "tensor.db")
-    model_accuracy = get_best_accuracy(tensor_db_file_path)
-    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
+    best_agg_score = get_best_agg_score(tensor_db_file_path)
+    log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
 
 
 @pytest.mark.task_runner_dockerized_ws
@@ -61,5 +61,5 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     ), "Federation completion failed"
 
     tensor_db_file_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "local_state", "tensor.db")
-    model_accuracy = get_best_accuracy(tensor_db_file_path)
-    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
+    best_agg_score = get_best_agg_score(tensor_db_file_path)
+    log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")

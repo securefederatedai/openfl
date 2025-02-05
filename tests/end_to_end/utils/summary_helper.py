@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils.generate_report import convert_to_json
 from tests.end_to_end.utils.db_helper import DBHelper
 
 result_path = os.path.join(Path().home(), "results")
@@ -33,49 +32,23 @@ def initialize_xml_parser():
     return testsuites
 
 
-def get_best_accuracy(database_file):
+def get_best_agg_score(database_file):
     """
-    Get the best accuracy from the database
+    Get the best_score from the database
     Args:
         database_file: the database file
     Returns:
-        best_accuracy: the best accuracy
+        best_agg_score: the best score
     """
-    best_accuracy = "Not Found"
+    best_agg_score = "Not Found"
     if not os.path.exists(database_file):
-        print(f"Database file {database_file} not found. Cannot get best accuracy")
-        return best_accuracy
+        print(f"Database file {database_file} not found. Cannot get best aggregated score")
+        return best_agg_score
 
-    db_helper = DBHelper(database_file)
-    round_number, best_score = db_helper.read_key_value_store()
-    print(f"Best accuracy: {best_score} is in round_number {round_number} ")
-    return best_accuracy
-
-
-def get_aggregated_accuracy(agg_log_file):
-    """
-    Get the aggregated accuracy from aggregator logs
-    Args:
-        agg_log_file: the aggregator log file
-    Returns:
-        agg_accuracy: the aggregated accuracy
-    """
-    agg_accuracy = "Not Found"
-    if not os.path.exists(agg_log_file):
-        print(
-            f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy"
-        )
-        return agg_accuracy
-
-    agg_accuracy_dict = convert_to_json(agg_log_file)
-
-    if not agg_accuracy_dict:
-        print(f"Aggregator log file {agg_log_file} is empty. Cannot get aggregated accuracy, returning 'Not Found'")
-    else:
-        agg_accuracy = agg_accuracy_dict[-1].get(
-            "aggregator/aggregated_model_validation/accuracy", "Not Found"
-        )
-    return agg_accuracy
+    db_obj = DBHelper(database_file)
+    round_number, best_score = db_obj.read_key_value_store()
+    print(f"Best aggregated score: {best_score} is in round_number {round_number} ")
+    return best_agg_score
 
 
 def get_test_status(result):
@@ -179,7 +152,7 @@ def print_task_runner_score():
         "local_state",
         "tensor.db",
     )
-    best_score = get_best_accuracy(tensor_db_file)
+    best_score = get_best_agg_score(tensor_db_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
