@@ -46,8 +46,8 @@ def get_best_agg_score(database_file):
         return best_agg_score
 
     db_obj = DBHelper(database_file)
-    round_number, best_score = db_obj.read_key_value_store()
-    print(f"Best aggregated score: {best_score} is in round_number {round_number} ")
+    round_number, best_agg_score = db_obj.read_key_value_store()
+    print(f"Best aggregated score: {best_agg_score} is in round_number {round_number} ")
     return best_agg_score
 
 
