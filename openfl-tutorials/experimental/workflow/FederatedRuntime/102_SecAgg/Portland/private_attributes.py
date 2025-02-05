@@ -35,19 +35,19 @@ mnist_test = torchvision.datasets.MNIST(
 )
 
 # shard the dataset according to collaborator index
-delhi_col_idx = 1
+portland_col_idx = 1
 n_collaborators = 2
 batch_size = 32
 
 train = deepcopy(mnist_train)
 test = deepcopy(mnist_test)
 
-train.data = mnist_train.data[delhi_col_idx::n_collaborators]
-train.targets = mnist_train.targets[delhi_col_idx::n_collaborators]
-test.data = mnist_test.data[delhi_col_idx::n_collaborators]
-test.targets = mnist_test.targets[delhi_col_idx::n_collaborators]
+train.data = mnist_train.data[portland_col_idx::n_collaborators]
+train.targets = mnist_train.targets[portland_col_idx::n_collaborators]
+test.data = mnist_test.data[portland_col_idx::n_collaborators]
+test.targets = mnist_test.targets[portland_col_idx::n_collaborators]
 
-delhi_attrs = {
+portland_attrs = {
     "train_loader": torch.utils.data.DataLoader(
         train,
         batch_size=batch_size,
