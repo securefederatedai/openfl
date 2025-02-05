@@ -3,13 +3,14 @@
 
 import argparse
 from defusedxml.ElementTree import parse as defused_parse
-from lxml import etree
+import defusedxml.ElementTree as etree
 import os
 import re
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils.generate_report import convert_to_json
+from tests.end_to_end.utils.db_helper import DBHelper
 
 result_path = os.path.join(Path().home(), "results")
 
@@ -30,6 +31,25 @@ def initialize_xml_parser():
     # Get the root element
     testsuites = tree.getroot()
     return testsuites
+
+
+def get_best_accuracy(database_file):
+    """
+    Get the best accuracy from the database
+    Args:
+        database_file: the database file
+    Returns:
+        best_accuracy: the best accuracy
+    """
+    best_accuracy = "Not Found"
+    if not os.path.exists(database_file):
+        print(f"Database file {database_file} not found. Cannot get best accuracy")
+        return best_accuracy
+
+    db_helper = DBHelper(database_file)
+    round_number, best_score = db_helper.read_key_value_store()
+    print(f"Round number: {round_number}, Best score: {best_score}")
+    return best_accuracy
 
 
 def get_aggregated_accuracy(agg_log_file):
@@ -156,10 +176,10 @@ def print_task_runner_score():
         model_name,
         "aggregator",
         "workspace",
-        "logs",
-        "aggregator_metrics.txt",
+        "local_state",
+        "tensor.db",
     )
-    agg_accuracy = get_aggregated_accuracy(agg_log_file)
+    agg_accuracy = get_best_accuracy(agg_log_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand

@@ -11,7 +11,7 @@ from tests.end_to_end.utils.tr_common_fixtures import (
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 from tests.end_to_end.utils.tr_workspace import create_tr_workspace, create_tr_dws_workspace
-from tests.end_to_end.utils.summary_helper import get_aggregated_accuracy
+from tests.end_to_end.utils.summary_helper import get_best_accuracy
 
 log = logging.getLogger(__name__)
 
@@ -37,9 +37,9 @@ def test_eval_federation_via_native(request, fx_federation_tr):
 
     # Set the best model path in request. It is used during plan initialization for evaluation step
     request.config.best_model_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "save", "best.pbuf")
-    metric_file_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
-    model_accuracy = get_aggregated_accuracy(metric_file_path)
-    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
+    tensor_db_file_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "local_state", "tensor.db")
+    best_model_accuracy = get_best_accuracy(tensor_db_file_path)
+    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {best_model_accuracy}")
     # Create new workspace with evaluation scope
     new_fed_obj = create_tr_workspace(request, eval_scope=True)
 
@@ -52,12 +52,12 @@ def test_eval_federation_via_native(request, fx_federation_tr):
         num_rounds=1,
     ), "Federation completion failed"
 
-    new_metric_file_path = os.path.join(new_fed_obj.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
-    model_accuracy_eval = get_aggregated_accuracy(new_metric_file_path)
-    log.info(f"Model accuracy during evaluation only on prev trained model is : {model_accuracy_eval})")
+    tensor_db_file_path = os.path.join(new_fed_obj.aggregator.workspace_path, "local_state", "tensor.db")
+    best_model_accuracy_eval = get_best_accuracy(tensor_db_file_path)
+    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {best_model_accuracy}")
 
     # verify that the model accuracy is similar to the previous model accuracy max of 1% difference
-    assert abs(model_accuracy - model_accuracy_eval) <= 0.01, "Model accuracy is not similar to the previous model accuracy"
+    assert abs(best_model_accuracy - best_model_accuracy_eval) <= 0.01, "Model accuracy is not similar to the previous model accuracy"
 
 
 @pytest.mark.task_runner_dockerized_ws
@@ -83,9 +83,10 @@ def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws)
 
     # Set the best model path in request. It is used during plan initialization for evaluation step
     request.config.best_model_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "save", "best.pbuf")
-    metric_file_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
-    model_accuracy = get_aggregated_accuracy(metric_file_path)
-    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
+
+    tensor_db_file_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "local_state", "tensor.db")
+    best_model_accuracy = get_best_accuracy(tensor_db_file_path)
+    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {best_model_accuracy}")
 
     # Create new workspace with evaluation scope
     new_fed_obj = create_tr_dws_workspace(request, eval_scope=True)
@@ -99,9 +100,9 @@ def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws)
         num_rounds=1,
     ), "Federation completion failed"
 
-    new_metric_file_path = os.path.join(new_fed_obj.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
-    model_accuracy_eval = get_aggregated_accuracy(new_metric_file_path)
-    log.info(f"Model accuracy during evaluation only on prev trained model is : {model_accuracy_eval})")
+    tensor_db_file_path = os.path.join(new_fed_obj.aggregator.workspace_path, "local_state", "tensor.db")
+    best_model_accuracy_eval = get_best_accuracy(tensor_db_file_path)
+    log.info(f"Model accuracy post {request.config.num_rounds} rounds: {best_model_accuracy}")
 
     # verify that the model accuracy is similar to the previous model accuracy max of 1% difference
-    assert abs(model_accuracy - model_accuracy_eval) <= 0.01, "Model accuracy is not similar to the previous model accuracy"
+    assert abs(best_model_accuracy - best_model_accuracy_eval) <= 0.01, "Model accuracy is not similar to the previous model accuracy"
