@@ -15,8 +15,6 @@
    cli_helper
    cli
    collaborator
-   director
-   envoy
    experimental
    model
    pki
