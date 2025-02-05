@@ -337,7 +337,7 @@ class Plan:
         private_key=None,
         certificate=None,
         client=None,
-        tls=False,
+        tls=True,
         envoy_config=None,
     ) -> "Collaborator":
         """Get collaborator.
