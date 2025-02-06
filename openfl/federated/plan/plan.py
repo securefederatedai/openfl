@@ -99,12 +99,12 @@ class Plan:
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def parse(  # noqa: C901
+    def parse(
         plan_config_path: Path,
         cols_config_path: Path = None,
         data_config_path: Path = None,
-        gandlf_config_path=None,
-        resolve=True,
+        gandlf_config_path: Path = None,
+        resolve: bool = True,
     ):
         """
         Parse the Federated Learning plan.
@@ -130,66 +130,18 @@ class Plan:
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
-            # ensure 'settings' appears in each top-level section
-            for section in plan.config.keys():
-                if plan.config[section].get(SETTINGS) is None:
-                    plan.config[section][SETTINGS] = {}
-
-            # walk the top level keys and load 'defaults' in sorted order
-            for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].pop(DEFAULTS, None)
-
-                if defaults is not None:
-                    defaults = WORKSPACE / "workspace" / defaults
-
-                    plan.files.append(defaults)
-
-                    if resolve:
-                        Plan.logger.info(
-                            f"Loading DEFAULTS for section [red]{section}[/] "
-                            f"from file [red]{defaults}[/].",
-                            extra={"markup": True},
-                        )
-
-                    defaults = Plan.load(Path(defaults))
-
-                    if SETTINGS in defaults:
-                        # override defaults with section settings
-                        defaults[SETTINGS].update(plan.config[section][SETTINGS])
-                        plan.config[section][SETTINGS] = defaults[SETTINGS]
-
-                    defaults.update(plan.config[section])
-
-                    plan.config[section] = defaults
+            Plan._ensure_settings_in_sections(plan)
+            Plan._load_defaults(plan, resolve)
 
             if gandlf_config_path is not None:
-                Plan.logger.info(
-                    f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
-                    extra={"markup": True},
-                )
-
-                gandlf_config = Plan.load(Path(gandlf_config_path))
-                # check for some defaults
-                gandlf_config["output_dir"] = gandlf_config.get("output_dir", ".")
-                plan.config["task_runner"]["settings"]["gandlf_config"] = gandlf_config
+                Plan._import_gandlf_config(plan, gandlf_config_path)
 
             plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
-            # TODO: Does this need to be a YAML file? Probably want to use key
-            #  value as the plan hash
-            plan.cols_data_paths = {}
-            if data_config_path is not None:
-                data_config = open(data_config_path, "r")
-                for line in data_config:
-                    line = line.rstrip()
-                    if len(line) > 0:
-                        if line[0] != "#":
-                            collab, data_path = line.split(",", maxsplit=1)
-                            plan.cols_data_paths[collab] = data_path
+            Plan._load_collaborator_data_paths(plan, data_config_path)
 
             if resolve:
                 plan.resolve()
-
                 Plan.logger.info(
                     f"Parsing Federated Learning Plan : [green]SUCCESS[/] : "
                     f"[blue]{plan_config_path}[/].",
@@ -205,6 +157,65 @@ class Plan:
                 extra={"markup": True},
             )
             raise
+
+    @staticmethod
+    def _ensure_settings_in_sections(plan):
+        """Ensure 'settings' appears in each top-level section."""
+        for section in plan.config.keys():
+            if plan.config[section].get(SETTINGS) is None:
+                plan.config[section][SETTINGS] = {}
+
+    @staticmethod
+    def _load_defaults(plan, resolve):
+        """Load 'defaults' in sorted order for each top-level section."""
+        for section in sorted(plan.config.keys()):
+            defaults = plan.config[section].pop(DEFAULTS, None)
+
+            if defaults is not None:
+                defaults = WORKSPACE / "workspace" / defaults
+                plan.files.append(defaults)
+
+                if resolve:
+                    Plan.logger.info(
+                        f"Loading DEFAULTS for section [red]{section}[/] "
+                        f"from file [red]{defaults}[/].",
+                        extra={"markup": True},
+                    )
+
+                defaults = Plan.load(Path(defaults))
+
+                if SETTINGS in defaults:
+                    # override defaults with section settings
+                    defaults[SETTINGS].update(plan.config[section][SETTINGS])
+                    plan.config[section][SETTINGS] = defaults[SETTINGS]
+
+                defaults.update(plan.config[section])
+                plan.config[section] = defaults
+
+    @staticmethod
+    def _import_gandlf_config(plan, gandlf_config_path):
+        """Import GaNDLF Config into the plan."""
+        Plan.logger.info(
+            f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
+            extra={"markup": True},
+        )
+
+        gandlf_config = Plan.load(Path(gandlf_config_path))
+        # check for some defaults
+        gandlf_config["output_dir"] = gandlf_config.get("output_dir", ".")
+        plan.config["task_runner"]["settings"]["gandlf_config"] = gandlf_config
+
+    @staticmethod
+    def _load_collaborator_data_paths(plan, data_config_path):
+        """Load collaborator data paths from the data configuration file."""
+        plan.cols_data_paths = {}
+        if data_config_path is not None:
+            with open(data_config_path, "r") as data_config:
+                for line in data_config:
+                    line = line.rstrip()
+                    if len(line) > 0 and line[0] != "#":
+                        collab, data_path = line.split(",", maxsplit=1)
+                        plan.cols_data_paths[collab] = data_path
 
     @staticmethod
     def build(template, settings, **override):
