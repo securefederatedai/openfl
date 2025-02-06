@@ -91,3 +91,13 @@ class DirectorStartException(Exception):
 class DataSetupException(Exception):
     """Exception for data setup for given model"""
     pass
+
+
+class ParticipantStartException(Exception):
+    """Exception for participant start"""
+    pass
+
+
+class ParticipantStopException(Exception):
+    """Exception for participant stop"""
+    pass

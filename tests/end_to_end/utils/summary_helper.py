@@ -135,6 +135,7 @@ def print_task_runner_score():
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME").replace("/", "_")
     summary_file = _get_summary_file()
+    test_specific_result_path = os.getenv("RESULTS_DIR_INC_TEST_MODEL_NAME")
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -143,10 +144,15 @@ def print_task_runner_score():
         )
         return
 
+    if not os.path.exists(test_specific_result_path):
+        print(
+            f"Test specific result path {test_specific_result_path} not found. Skipping writing to GitHub step summary"
+        )
+        return
+
     # Assumption - result directory is present in the home directory
     tensor_db_file = os.path.join(
-        result_path,
-        model_name,
+        test_specific_result_path,
         "aggregator",
         "workspace",
         "local_state",

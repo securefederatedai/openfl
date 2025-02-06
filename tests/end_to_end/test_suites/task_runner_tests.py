@@ -24,18 +24,16 @@ def test_federation_via_native(request, fx_federation_tr):
         fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
     # Start the federation
-    results = fed_helper.run_federation(fx_federation_tr)
+    assert fed_helper.run_federation(fx_federation_tr)
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
         fx_federation_tr,
-        results,
         test_env=request.config.test_env,
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
-    tensor_db_file_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "local_state", "tensor.db")
-    best_agg_score = get_best_agg_score(tensor_db_file_path)
+    best_agg_score = get_best_agg_score(fx_federation_tr.aggregator.tensor_db_path)
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
 
 
@@ -48,18 +46,14 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
         fx_federation_tr_dws (Fixture): Pytest fixture for dockerized workspace
     """
     # Start the federation
-    results = fed_helper.run_federation_for_dws(
-        fx_federation_tr_dws, use_tls=request.config.use_tls
-    )
+    assert fed_helper.run_federation_for_dws(fx_federation_tr_dws, request.config.use_tls)
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
         fx_federation_tr_dws,
-        results,
         test_env=request.config.test_env,
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
-    tensor_db_file_path = os.path.join(fx_federation_tr_dws.aggregator.workspace_path, "local_state", "tensor.db")
-    best_agg_score = get_best_agg_score(tensor_db_file_path)
+    best_agg_score = get_best_agg_score(fx_federation_tr_dws.aggregator.tensor_db_path)
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")

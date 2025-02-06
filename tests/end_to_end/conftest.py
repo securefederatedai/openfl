@@ -48,6 +48,10 @@ def pytest_configure(config):
     config.log_memory_usage = args.log_memory_usage
     config.results_dir = config.getini("results_dir")
 
+    # Do not place this condition above, otherwise --help will not work
+    if not config.model_name:
+        raise pytest.UsageError("--model_name argument is required")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_logging(pytestconfig):
@@ -199,19 +203,24 @@ def pytest_sessionfinish(session, exitstatus):
     dh.remove_docker_network(["openfl"])
 
 
-def pytest_configure(config):
+def pytest_runtest_setup(item):
     """
-    Configure the pytest plugin.
+    Hook to set up the test environment before each test runs.
     Args:
-        config: pytest config object
+        item: pytest test item
     """
-    # Declare some global variables
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    config.model_name = args.model_name
-    config.num_collaborators = args.num_collaborators
-    config.num_rounds = args.num_rounds
-    config.require_client_auth = not args.disable_client_auth
-    config.use_tls = not args.disable_tls
-    config.log_memory_usage = args.log_memory_usage
-    config.results_dir = config.getini("results_dir")
+    if item.name in ["test_federation_via_native_with_restarts", "test_federation_via_dws_with_restarts"]:
+        # Verify if the test exists
+        if not any(test.name == item.name for test in item.session.items):
+            raise ValueError(f"Test '{item.name}' does not exist in the collected tests.")
+
+        # If num_rounds is explicitly set by the user, use that value
+        # Otherwise, set the default value to 50
+        if "num_rounds" not in item.config.option.__dict__ or item.config.option.num_rounds is None:
+            # As we intend to perform multiple restarts in this test, we need to run for more rounds
+            item.config.num_rounds = 50
+            # Setting the value in env variable is important for GitHub summary report
+            github_env = os.getenv('GITHUB_ENV')
+            if github_env and os.path.exists(github_env):
+                with open(github_env, 'a') as env_file:
+                    env_file.write(f"NUM_ROUNDS={str(item.config.num_rounds)}\n")
