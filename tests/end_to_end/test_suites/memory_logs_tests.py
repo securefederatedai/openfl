@@ -85,7 +85,7 @@ def _log_memory_usage(request, fed_obj):
     # check memory usage entries for each collaborator
     for collaborator in fed_obj.collaborators:
         collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
-            fed_obj.workspace_path, "logs", f"{collaborator.name}_memory_usage.json"
+            fed_obj.workspace_path, collaborator.name
         )
         assert os.path.exists(
             collaborator_memory_usage_file
