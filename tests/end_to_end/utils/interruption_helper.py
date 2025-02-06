@@ -23,7 +23,7 @@ def restart_participants(participants: list) -> bool:
     log.info(f"Participants are: {participants}")
 
     executor = concurrent.futures.ThreadPoolExecutor()
-    
+
     # Stop the participants in parallel
     # Assumption - based on whether container ID is present or not, we will decide on native or docker environment
     results = [
@@ -68,7 +68,7 @@ def stop_start_native_participant(participant, action):
     """
     if action not in ["stop", "start"]:
         raise ex.ParticipantStopException(f"Invalid action {action}")
-    
+
     if action == "stop":
         cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
         pids = []

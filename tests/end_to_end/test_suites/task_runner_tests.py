@@ -3,7 +3,6 @@
 
 import pytest
 import logging
-import os
 
 from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,

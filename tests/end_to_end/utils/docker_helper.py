@@ -195,7 +195,7 @@ def stop_start_docker_participant(participant, action):
     Args:
         participant: Participant object
         action (str): Action to perform (stop/start)
-    """    
+    """
     if action not in ["stop", "start"]:
         raise ex.DockerException(f"Invalid action {action}")
 
