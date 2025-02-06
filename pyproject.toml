@@ -1,3 +1,11 @@
+[tool.bandit]
+# Exclude specific directories or files from the scan
+# exclude = ["tests/", "docs/"]
+
+# Set the severity and confidence levels
+severity = "HIGH"
+confidence = "HIGH"
+
 [tool.ruff]
 line-length = 100
 
