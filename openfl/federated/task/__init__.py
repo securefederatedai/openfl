@@ -4,7 +4,6 @@
 
 """Task package."""
 
-import os
 from importlib import util
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
