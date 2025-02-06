@@ -69,7 +69,7 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpo
     return artifacts_iter, cls_attrs
 
 
-def filter_attributes(ctx, f, **kwargs):  # noqa: C901
+def filter_attributes(ctx, f, **kwargs):
     """Filters out attributes from the next task in the flow based on inclusion
     or exclusion.
 
@@ -84,26 +84,72 @@ def filter_attributes(ctx, f, **kwargs):  # noqa: C901
             attribute in 'include' or 'exclude' is not found in the context's
             attributes.
     """
-
     _, cls_attrs = generate_artifacts(ctx=ctx)
+
+    # Validate input arguments
+    _validate_include_exclude(kwargs, cls_attrs)
+
+    # Process the 'include' or 'exclude' lists
+    if "include" in kwargs:
+        _process_inclusion(ctx, cls_attrs, kwargs["include"], f)
+    elif "exclude" in kwargs:
+        _process_exclusion(ctx, cls_attrs, kwargs["exclude"], f)
+
+
+def _validate_include_exclude(kwargs, cls_attrs):
+    """Validates that 'include' and 'exclude' are not both present, and that
+    attributes in 'include' or 'exclude' exist in the context.
+
+    Args:
+        kwargs (dict): The keyword arguments passed to filter_attributes.
+        cls_attrs (list): The list of all attributes in the context.
+
+    Raises:
+        RuntimeError: If both 'include' and 'exclude' are present, or if any
+            attribute in 'include' or 'exclude' does not exist in the context.
+    """
     if "include" in kwargs and "exclude" in kwargs:
         raise RuntimeError("'include' and 'exclude' should not both be present")
-    elif "include" in kwargs:
+
+    if "include" in kwargs:
         assert isinstance(kwargs["include"], list)
-        for in_attr in kwargs["include"]:
-            if in_attr not in cls_attrs:
-                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
-        for attr in cls_attrs:
-            if attr not in kwargs["include"]:
-                delattr(ctx, attr)
-    elif "exclude" in kwargs:
+        for attr in kwargs["include"]:
+            if attr not in cls_attrs:
+                raise RuntimeError(f"Argument '{attr}' not found in flow task")
+
+    if "exclude" in kwargs:
         assert isinstance(kwargs["exclude"], list)
-        for in_attr in kwargs["exclude"]:
-            if in_attr not in cls_attrs:
-                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
-        for attr in cls_attrs:
-            if attr in kwargs["exclude"] and hasattr(ctx, attr):
-                delattr(ctx, attr)
+        for attr in kwargs["exclude"]:
+            if attr not in cls_attrs:
+                raise RuntimeError(f"Argument '{attr}' not found in flow task")
+
+
+def _process_inclusion(ctx, cls_attrs, include_list, f):
+    """Handles the inclusion logic: removes attributes not in the 'include' list.
+
+    Args:
+        ctx (any): The context to filter attributes from.
+        cls_attrs (list): The list of all attributes in the class.
+        include_list (list): The list of attributes to keep.
+        f (function): The task function to be processed.
+    """
+    for attr in cls_attrs:
+        if attr not in include_list:
+            delattr(ctx, attr)
+
+
+def _process_exclusion(ctx, cls_attrs, exclude_list, f):
+    """Handles the exclusion logic: removes attributes in the 'exclude' list.
+
+    Args:
+        ctx (any): The context to filter attributes from.
+        cls_attrs (list): The list of all attributes in the class.
+        exclude_list (list): The list of attributes to exclude.
+        f (function): The task function to be processed.
+    """
+    for attr in cls_attrs:
+        if attr in exclude_list and hasattr(ctx, attr):
+            delattr(ctx, attr)
 
 
 def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
