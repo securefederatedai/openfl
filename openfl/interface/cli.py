@@ -10,9 +10,9 @@ import sys
 import time
 import warnings
 from importlib import import_module
+from sys import argv, path
 from logging import basicConfig
 from pathlib import Path
-from sys import argv, path
 
 from click import (
     Group,
