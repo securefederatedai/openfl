@@ -4,6 +4,7 @@
 This file contains callbacks that help setup for secure aggregation for
 both, the aggregator and collaborator.
 """
+import json
 import logging
 import struct
 import time
@@ -11,6 +12,7 @@ import time
 import numpy as np
 
 from openfl.callbacks.callback import Callback
+from openfl.protocols import utils
 from openfl.utilities import TensorKey
 from openfl.utilities.secagg import (
     calculate_shared_mask,
@@ -34,7 +36,7 @@ class CollaboratorSecAgg(Callback):
 
     Required params include:
     - col_name: Name of the collaborator using the callback.
-    - aggregator_secagg: Client for aggregator secure aggregation setup.
+    - client: Client for aggregator secure aggregation setup.
 
     It also requires the tensor-db client to be set.
     """
@@ -43,7 +45,7 @@ class CollaboratorSecAgg(Callback):
         Used to perform secure aggregation setup before experiment begins.
         """
         self.name = self.params["col_name"]
-        self.aggregator_secagg = self.params["aggregator_secagg"]
+        self.client = self.params["client"]
         logger.info(
             "Secure aggregation is enabled, starting setup..."
         )
@@ -86,7 +88,7 @@ class CollaboratorSecAgg(Callback):
             "public_key": [public_key1, public_key2],
         }
 
-        self.aggregator_secagg.send_to_participant(self.name, global_results)
+        self._send_to_aggregator(global_results, "generate_keys")
         # Update callback params as the results for this step are reused at a
         # later stage.
         self.params.update(local_result)
@@ -107,11 +109,15 @@ class CollaboratorSecAgg(Callback):
                 where the keys are the participant indices and the values are
                 the public keys.
         """
-        public_keys = self.aggregator_secagg.fetch_from_participant("public_keys")
-        for index in public_keys:
-            if public_keys[index][0] == self.params["public_key"][0]:
-                self.index = int(index)
-                break
+        public_keys = {}
+        public_keys_tensor = self._fetch_from_collaborator("public_keys")
+        for tensor in public_keys_tensor:
+            # Creating a dictionary of the received public keys.
+            public_keys[tensor[0]] = [tensor[1], tensor[2]]
+            # Finding the index of the current collaborator by matching the
+            # first public key.
+            if tensor[1] == self.params["public_key"][0]:
+                self.index = tensor[0]
 
         return public_keys
 
@@ -167,7 +173,7 @@ class CollaboratorSecAgg(Callback):
                 key_shares[collab_index]    # key share from source to dest
             )
             global_results["ciphertext"].append(
-                [self.index, collab_index, ciphertext]
+                (self.index, collab_index, ciphertext)
             )
             local_result["ciphertext_verification"][collab_index] = [
                 ciphertext, mac, nonce
@@ -176,7 +182,7 @@ class CollaboratorSecAgg(Callback):
                 [self.index, collab_index, agreed_key]
             )
 
-        self.aggregator_secagg.send_to_participant(self.name, global_results)
+        self._send_to_aggregator(global_results, "generate_ciphertexts")
         # Update callback params as the results for this step are reused at a
         # later stage.
         self.params.update(local_result)
@@ -203,13 +209,13 @@ class CollaboratorSecAgg(Callback):
             "SecAgg: fetching addressed ciphertexts from the aggregator"
         )
 
-        ciphertexts = self.aggregator_secagg.fetch_from_participant("ciphertexts")
+        ciphertexts = self._fetch_from_collaborator("ciphertexts")
         private_keys = self.params["private_key"]
         ciphertext_verification = self.params["ciphertext_verification"]
 
         global_results = {
-            "seed_share": {},
-            "key_share": {}
+            "seed_share": [],
+            "key_share": []
         }
 
         for cipher in ciphertexts:
@@ -225,10 +231,14 @@ class CollaboratorSecAgg(Callback):
                     ciphertext_verification[source_index][1],
                     ciphertext_verification[source_index][2],
                 )
-                global_results["seed_share"][source_index] = [self.index, seed_share]
-                global_results["key_share"][source_index] = [self.index, key_share]
+                global_results["seed_share"].append(
+                    (source_index, self.index, seed_share)
+                )
+                global_results["key_share"].append(
+                    (source_index, self.index, key_share)
+                )
 
-        self.aggregator_secagg.send_to_participant(self.name, global_results)
+        self._send_to_aggregator(global_results, "decrypt_ciphertexts")
 
         logger.debug(
             "SecAgg: decrypted ciphertexts shared with the aggregator"
@@ -274,6 +284,53 @@ class CollaboratorSecAgg(Callback):
             "SecAgg: setup completed, saved required tensors to db."
         )
 
+    # TODO: Testing with client.
+    def _send_to_aggregator(self, tensor_dict: dict, stage: str):
+        """
+        Sends the provided tensor dictionary to the aggregator after compressing it.
+
+        Args:
+            tensor_dict (dict): A dictionary where keys are tensor names and values are numpy arrays.
+            stage (str): The current stage of the secure aggregation process.
+        """
+        named_tensors = []
+        # Covert python dict to tensor dict.
+        for key, nparray in tensor_dict.items():
+            tensor_key = TensorKey(key, self.name, -1, False, (self.name, "secagg", ))
+            named_tensor = utils.construct_named_tensor(
+                tensor_key, str.encode(json.dumps(nparray)), {}, lossless=True
+            )
+            named_tensors.append(named_tensor)
+
+        self.client.send_local_task_results(
+            self.name,
+            -1,
+            f"secagg_{stage}",
+            -1,
+            named_tensors
+        )
+
+    # TODO: Testing with client.
+    def _fetch_from_collaborator(self, key_name):
+        """
+        Fetches the aggregated tensor data from a collaborator.
+
+        Args:
+            key_name (str): The name of the key to fetch the tensor for.
+
+        Returns:
+            bytes: The aggregated tensor data in bytes.
+        """
+        tensor = self.client.get_aggregated_tensor(
+            self.name,
+            key_name,
+            -1,
+            False,
+            ("secagg", ),
+            True
+        )
+        return tensor.data_bytes
+
 
 class AggregatorSecAgg(Callback):
     """
@@ -281,8 +338,10 @@ class AggregatorSecAgg(Callback):
     for secure aggregation on the aggregator.
 
     Required params include:
-    - col_name: Name of the collaborator using the callback.
-    - aggregator_secagg: Client for aggregator secure aggregation setup.
+    - collaborators: list of collaborator names participating in the
+        federation.
+    - aggregator_uuid: Unique identifier for the aggregator used for storing
+        data in tensor db.
 
     It also requires the tensor-db client to be set.
     """
@@ -300,23 +359,24 @@ class AggregatorSecAgg(Callback):
         # Initialize results dictionary and collaborator list.
         self._results = {}
         self.collaborator_list = self.params["collaborators"]
+        self.aggregator_uuid = self.params["aggregator_uuid"]
 
         # Wait for all collaborators to send their public key.
         self._wait_for_all_collaborators("public_key", timeout=120)
         # Sort the received public keys.
-        self._sort_public_keys()
+        self._aggregate_public_keys()
 
         # Wait for all collaborators to send their ciphertexts.
         self._wait_for_all_collaborators("ciphertext", timeout=120)
         # Sort the received ciphertexts.
-        self._sort_ciphertexts()
+        self._aggregate_ciphertexts()
 
         # Wait for all collaborators to send their seed shares.
         self._wait_for_all_collaborators("seed_share", timeout=120)
         # Wait for all collaborators to send their key shares.
         self._wait_for_all_collaborators("key_share", timeout=120)
         # Sort the received secret shares (seed shares and key shares).
-        self._sort_secret_shares()
+        self._aggregate_secret_shares()
 
         # Reconstruct the private seeds and private keys from the secret
         # shares.
@@ -335,75 +395,115 @@ class AggregatorSecAgg(Callback):
             timeout (int): The maximum time to wait for the data (in seconds).
         """
         start_time = time.time()
+        # Wait till data is
         while True:
             time.sleep(5)
-            if key_name not in self._results:
-                continue
             all_received = True
             for collaborator in self.collaborator_list:
-                if collaborator not in self._results[key_name]:
+                nparray = self.tensor_db.get_tensor_from_cache(
+                    TensorKey(key_name, collaborator, -1, False, (collaborator, "secagg", ))
+                )
+                if not nparray:
                     all_received = False
             # Break out of loop if all collaborators have sent data.
             if all_received:
                 break
             # Timeout
             if (time.time() - start_time) > timeout:
-                break
+                logger.warning(
+                    "Secagg: Timed out waiting for data from all collaborators"
+                )
+
         logger.debug(
             "SecAgg: received %s from all collaborators", key_name
         )
 
-    def _sort_public_keys(self):
+    def _aggregate_public_keys(self):
         """
         Sorts the public keys received from collaborators and updates the
         results.
         """
+        aggregated_tensor = []
         self._results["public_keys"] = {}
         self._results["index"] = {}
         index = 1
-        for col_name in self._results.get("public_key", {}):
+        for collaborator in self.collaborator_list:
+            # Fetching public key for each collaborator from tensor db.
+            nparray = self.tensor_db.get_tensor_from_cache(
+                TensorKey("public_key", collaborator, -1, False, (collaborator, "secagg", ))
+            )
+            aggregated_tensor.append(
+                [index, nparray[0], nparray[1]]
+            )
+            # Creating a map for local use.
             self._results["public_keys"][index] = self._results.get(
                 "public_key", {}
-            )[col_name]
-            self._results["index"][col_name] = index
+            )[collaborator]
+            self._results["index"][collaborator] = index
             index += 1
+        # Storing the aggregated result in tensor db which is fetched by the
+        # collaborators in subsequent steps.
+        self.tensor_db.cache_tensor({
+            TensorKey(
+                "public_keys", self.aggregator_uuid, -1, False, ("secagg", )
+            ): aggregated_tensor
+        })
 
-        self._results.pop("public_key", None)
-
-    def _sort_ciphertexts(self):
+    def _aggregate_ciphertexts(self):
         """
         Sorts the ciphertexts received from collaborators and updates the
         results.
         """
+        aggregated_tensor = []
         self._results["ciphertexts"] = []
-        for _, ciphertext in self._results.get("ciphertext", {}).items():
-            for c in ciphertext:
-                self._results["ciphertexts"].append(c)
 
-        self._results.pop("ciphertext", None)
+        for collaborator in self.collaborator_list:
+            # Fetching ciphertext for each collaborator from tensor db.
+            nparray = self.tensor_db.get_tensor_from_cache(
+                TensorKey("ciphertext", collaborator, -1, False, (collaborator, "secagg", ))
+            )
+            for ciphertext in nparray:
+                aggregated_tensor.append(ciphertext)
+                # Creating a map for local use.
+                self._results["ciphertexts"].append(ciphertext)
+        # Storing the aggregated result in tensor db which is fetched by the
+        # collaborators in subsequent steps.
+        self.tensor_db.cache_tensor({
+            TensorKey(
+                "ciphertexts", self.aggregator_uuid, -1, False, ("secagg", )
+            ): aggregated_tensor
+        })
 
-    def _sort_secret_shares(self):
+    def _aggregate_secret_shares(self):
         """
         Sorts the secret shares (seed shares and key shares) received from
         collaborators and updates the results.
         """
         self._results["seed_shares"] = {}
-        for _, share_dict in self._results.get("seed_share", {}).items():
-            for share_index, share in share_dict.items():
+        self._results["key_shares"] = {}
+
+        for collaborator in self.collaborator_list:
+            # Seed shares
+            # Fetching seed shares for each collaborator from tensor db.
+            nparray = self.tensor_db.get_tensor_from_cache(
+                TensorKey("seed_share", collaborator, -1, False, (collaborator, "secagg", ))
+            )
+            for share in nparray:
+                # Creating a map for local use.
                 if share[0] not in self._results["seed_shares"]:
                     self._results["seed_shares"][share[0]] = {}
-                self._results["seed_shares"][share[0]][share_index] = share[1]
+                self._results["seed_shares"][share[0]][share[1]] = share[2]
 
-        self._results.pop("seed_share", None)
-
-        self._results["key_shares"] = {}
-        for _, share_dict in self._results.get("key_share", {}).items():
-            for share_index, share in share_dict.items():
+            # Key shares
+            # Fetching key shares for each collaborator from tensor db.
+            nparray = self.tensor_db.get_tensor_from_cache(
+                TensorKey("key_share", collaborator, -1, False, (collaborator, "secagg", ))
+            )
+            for share in nparray:
+                # Creating a map for local use.
                 if share[0] not in self._results["key_shares"]:
                     self._results["key_shares"][share[0]] = {}
-                self._results["key_shares"][share[0]][share_index] = share[1]
-
-        self._results.pop("key_share", None)
+                self._results["key_shares"][share[0]][share[1]] = share[2]
 
     def _reconstruct_secrets(self):
         """
@@ -487,39 +587,3 @@ class AggregatorSecAgg(Callback):
         logger.info(
             "SecAgg: setup completed, saved required tensors to db."
         )
-
-    # TODO: Replace with actual server/client usage.
-    def send_to_participant(self, col_name, data):
-        """
-        Sends data to a participant.
-
-        Args:
-            col_name (str): The name of the collaborator to send data to.
-            data (dict): The data to send to the collaborator.
-        """
-        for key, value in data.items():
-            if key not in self._results:
-                self._results[key] = {}
-            self._results[key][col_name] = value
-
-    # TODO: Replace with actual server/client usage.
-    def fetch_from_participant(self, key_name):
-        """
-        Fetches data from a participant.
-
-        Args:
-            key_name (str): The name of the key to fetch data for.
-
-        Returns:
-            dict: The data fetched from the participant.
-        """
-        start_time = time.time()
-        while True:
-            time.sleep(5)
-            if key_name in self._results:
-                break
-            # Timeout
-            if (time.time() - start_time) > 120:
-                break
-
-        return self._results.get(key_name, {})
