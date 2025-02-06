@@ -163,6 +163,7 @@ class Plan:
                     f"[blue]{plan_config_path}[/].",
                     extra={"markup": True},
                 )
+                Plan.dump(plan_config_path, plan.config)
                 Plan.logger.info(dump(plan.config))
 
             return plan
@@ -336,7 +337,7 @@ class Plan:
         private_key=None,
         certificate=None,
         client=None,
-        tls=False,
+        tls=True,
         envoy_config=None,
     ) -> "Collaborator":
         """Get collaborator.
@@ -404,7 +405,7 @@ class Plan:
         root_certificate=None,
         private_key=None,
         certificate=None,
-        tls=False,
+        tls=True,
     ) -> AggregatorGRPCClient:
         """Get gRPC client for the specified collaborator.
 
@@ -423,8 +424,8 @@ class Plan:
         Returns:
             AggregatorGRPCClient: gRPC client for the specified collaborator.
         """
-        common_name = collaborator_name
-        if not root_certificate or not private_key or not certificate:
+        if tls and not (root_certificate and private_key and certificate):
+            common_name = collaborator_name
             root_certificate = "cert/cert_chain.crt"
             certificate = f"cert/client/col_{common_name}.crt"
             private_key = f"cert/client/col_{common_name}.key"
@@ -436,7 +437,6 @@ class Plan:
         client_args["root_certificate"] = root_certificate
         client_args["certificate"] = certificate
         client_args["private_key"] = private_key
-        client_args["tls"] = tls
 
         client_args["aggregator_uuid"] = aggregator_uuid
         client_args["federation_uuid"] = federation_uuid
@@ -451,7 +451,7 @@ class Plan:
         root_certificate=None,
         private_key=None,
         certificate=None,
-        tls=False,
+        tls=True,
         director_config=None,
         **kwargs,
     ) -> AggregatorGRPCServer:
@@ -472,9 +472,8 @@ class Plan:
         Returns:
             AggregatorGRPCServer: gRPC server of the aggregator instance.
         """
-        common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
-
-        if not root_certificate or not private_key or not certificate:
+        if tls and not (root_certificate and private_key and certificate):
+            common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
             root_certificate = "cert/cert_chain.crt"
             certificate = f"cert/server/agg_{common_name}.crt"
             private_key = f"cert/server/agg_{common_name}.key"

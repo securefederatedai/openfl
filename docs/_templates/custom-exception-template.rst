@@ -2,7 +2,7 @@
 {% if truncated_fullname | length < 4 %}
    {% set truncated_fullname = truncated_fullname.ljust(4) %}
 {% endif %}
-Exceptions - {{ truncated_fullname | escape | underline}}
+Exception - {{ truncated_fullname | escape | underline}}
  
  
 .. currentmodule:: {{ module }}
