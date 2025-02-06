@@ -35,7 +35,6 @@ class TestFlowInclude(FLSpec):
             f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for Include Attributes "
             + f"{bcolors.ENDC}"
         )
-        self.collaborators = self.runtime.collaborators
 
         self.exclude_agg_to_agg = 10
         self.include_agg_to_agg = 100
@@ -208,9 +207,8 @@ if __name__ == "__main__":
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     flflow = TestFlowInclude(checkpoint=True)
-    flflow.runtime = local_runtime
     for i in range(5):
         print(f"Starting round {i}...")
-        flflow.run()
+        local_runtime.run(flflow)
 
     print(f"{bcolors.OKBLUE}End of Testing FederatedFlow {bcolors.ENDC}")

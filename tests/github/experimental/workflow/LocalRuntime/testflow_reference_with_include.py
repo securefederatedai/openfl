@@ -60,7 +60,7 @@ class TestFlowReferenceWithInclude(FLSpec):
             f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating references "
             + f"{bcolors.ENDC}"
         )
-        self.next(self.test_create_agg_attr, include=["agg_agg_attr_dict"])
+        self.next(self.test_create_agg_attr, include=["collaborators", "agg_agg_attr_dict"])
 
     @aggregator
     def test_create_agg_attr(self):
@@ -75,11 +75,10 @@ class TestFlowReferenceWithInclude(FLSpec):
         self.agg_attr_optimizer = optim.SGD(
             self.agg_attr_model.parameters(), lr=1e-3, momentum=1e-2
         )
-        self.collaborators = self.runtime.collaborators
         self.next(
             self.test_create_collab_attr,
             foreach="collaborators",
-            include=["collaborators", "agg_attr_list"],
+            include=["agg_attr_list", "collaborators"],
         )
 
     @collaborator
@@ -266,8 +265,7 @@ if __name__ == "__main__":
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReferenceWithInclude(checkpoint=True)
-    testflow.runtime = local_runtime
 
     for i in range(5):
         print(f"Starting round {i}...")
-        testflow.run()
+        local_runtime.run(testflow)

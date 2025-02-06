@@ -40,7 +40,6 @@ class TestFlowInternalLoop(FLSpec):
             + f" of Training Rounds: {self.training_rounds}{bcolors.ENDC}"
         )
         self.model = np.zeros((10, 10, 10))  # Test model
-        self.collaborators = self.runtime.collaborators
         self.next(self.agg_model_mean, foreach="collaborators")
 
     @collaborator
@@ -242,8 +241,7 @@ if __name__ == "__main__":
     top_model_accuracy = 0
 
     flflow = TestFlowInternalLoop(model, optimizer, 5, checkpoint=True)
-    flflow.runtime = local_runtime
-    flflow.run()
+    local_runtime.run(flflow)
 
     # Flow Test Begins
     expected_flow_steps = [

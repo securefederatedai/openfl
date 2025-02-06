@@ -81,7 +81,6 @@ class TestFlowReference(FLSpec):
         self.agg_attr_optimizer = optim.SGD(
             self.agg_attr_model.parameters(), lr=1e-3, momentum=1e-2
         )
-        self.collaborators = self.runtime.collaborators
 
         # get aggregator attributes
         agg_attr_list = filter_attrs(inspect.getmembers(self))
@@ -367,8 +366,7 @@ if __name__ == "__main__":
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReference(checkpoint=True)
-    testflow.runtime = local_runtime
 
     for i in range(2):
         print(f"Starting round {i}...")
-        testflow.run()
+        local_runtime.run(testflow)

@@ -21,6 +21,7 @@ from openfl.experimental.workflow.interface.participants import Aggregator, Coll
 from openfl.experimental.workflow.runtime.runtime import Runtime
 from openfl.experimental.workflow.utilities import (
     ResourcesNotAvailableError,
+    SerializationError,
     aggregator_to_collaborator,
     check_resource_allocation,
     checkpoint,
@@ -634,6 +635,46 @@ class LocalRuntime(Runtime):
                 not_at_transition_point = False
 
             f_name = f.__name__
+
+    def run(self, flspec_obj: Type[FLSpec]):
+        """Runs the flow using the LocalRuntime.
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object. Contains
+                information about task sequence, flow attributes.
+        """
+        # Initialize aggregator private attributes
+        self.initialize_aggregator()
+        # Initialize collaborator private attributes
+        self.initialize_collaborators()
+        flspec_obj._setup_initial_state(self.__repr__(), self.backend, self.collaborators)
+
+        try:
+            # Execute all Participant (Aggregator & Collaborator) tasks and
+            # retrieve the final attributes
+            # start step is the first task & invoked on aggregator through
+            # runtime.execute_task
+            final_attributes = self.execute_task(
+                flspec_obj,
+                flspec_obj.start,
+            )
+        except Exception as e:
+            if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
+                msg = (
+                    "\nA serialization error was encountered that could not"
+                    "\nbe handled by the ray backend."
+                    "\nTry rerunning the flow without ray as follows:\n"
+                    "\nLocalRuntime(...,backend='single_process')\n"
+                    "\n or for more information about the original error,"
+                    "\nPlease see the official Ray documentation"
+                    "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/\
+                    objects/serialization.html"
+                )
+                raise SerializationError(str(e) + msg)
+            else:
+                raise e
+        for name, attr in final_attributes:
+            setattr(flspec_obj, name, attr)
 
     def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.

@@ -37,7 +37,6 @@ class TestFlowPrivateAttributes(FLSpec):
             f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for accessibility of private "
             + f"attributes  {bcolors.ENDC}"
         )
-        self.collaborators = self.runtime.collaborators
 
         validate_collab_private_attr(self, "test_loader", "start")
 
@@ -245,9 +244,8 @@ if __name__ == "__main__":
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     flflow = TestFlowPrivateAttributes(checkpoint=True)
-    flflow.runtime = local_runtime
     for i in range(5):
         print(f"Starting round {i}...")
-        flflow.run()
+        local_runtime.run(flflow)
 
     print(f"{bcolors.OKBLUE}End of Testing FederatedFlow {bcolors.ENDC}")

@@ -75,7 +75,6 @@ class TestFlowReferenceWithExclude(FLSpec):
         self.agg_attr_optimizer = optim.SGD(
             self.agg_attr_model.parameters(), lr=1e-3, momentum=1e-2
         )
-        self.collaborators = self.runtime.collaborators
 
         self.next(
             self.test_create_collab_attr,
@@ -269,8 +268,7 @@ if __name__ == "__main__":
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReferenceWithExclude(checkpoint=True)
-    testflow.runtime = local_runtime
 
     for i in range(5):
         print(f"Starting round {i}...")
-        testflow.run()
+        local_runtime.run(testflow)

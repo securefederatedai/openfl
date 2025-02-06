@@ -51,6 +51,7 @@ class FLSpec:
         """
         self._foreach_methods = []
         self._checkpoint = checkpoint
+        self._runtime = None
 
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
@@ -101,29 +102,6 @@ class FLSpec:
             raise ValueError("checkpoint must be a boolean value.")
         self._checkpoint = value
 
-    @property
-    def runtime(self) -> Type[Union[LocalRuntime, FederatedRuntime]]:
-        """Returns flow runtime.
-
-        Returns:
-            Type[Runtime]: The runtime of the flow.
-        """
-        return self._runtime
-
-    @runtime.setter
-    def runtime(self, runtime: Type[Runtime]) -> None:
-        """Sets flow runtime.
-
-        Args:
-            runtime (Type[Runtime]): The runtime to be set.
-
-        Raises:
-            TypeError: If the provided runtime is not a valid OpenFL Runtime.
-        """
-        if str(runtime) not in ["LocalRuntime", "FederatedRuntime"]:
-            raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
-        self._runtime = runtime
-
     def run(self) -> None:
         """Starts the execution of the flow."""
         # Submit flow to Runtime
@@ -164,20 +142,18 @@ class FLSpec:
         for name, attr in final_attributes:
             setattr(self, name, attr)
 
-    def _setup_initial_state(self) -> None:
+    def _setup_initial_state(self, runtime, runtime_backend, runtime_collaborators) -> None:
         """
         Sets up the flow's initial state, initializing private attributes for
         collaborators and aggregators.
         """
-        self._metaflow_interface = MetaflowInterface(self.__class__, self.runtime.backend)
+        self._runtime = runtime
+        self.collaborators = runtime_collaborators
+        self._metaflow_interface = MetaflowInterface(self.__class__, runtime_backend)
         self._run_id = self._metaflow_interface.create_run()
-        # Initialize aggregator private attributes
-        self.runtime.initialize_aggregator()
         self._foreach_methods = []
         FLSpec._reset_clones()
-        FLSpec._create_clones(self, self.runtime.collaborators)
-        # Initialize collaborator private attributes
-        self.runtime.initialize_collaborators()
+        FLSpec._create_clones(self, runtime_collaborators)
         if self._checkpoint:
             print(f"Created flow {self.__class__.__name__}")
 

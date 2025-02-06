@@ -109,7 +109,6 @@ class TestFlowDatastoreAndCli(FLSpec):
         print(
             "Testing FederatedFlow - Starting Test for Dataflow and CLI Functionality"
         )
-        self.collaborators = self.runtime.collaborators
         self.private = 10
         self.next(
             self.aggregated_model_validation,
@@ -332,7 +331,7 @@ if __name__ == "__main__":
     optimizer = None
     flflow = TestFlowDatastoreAndCli(model, optimizer, num_rounds, checkpoint=True)
     flflow.runtime = local_runtime
-    flflow.run()
+    local_runtime.run(flflow)
 
     expected_flow_steps = [
         "start",

@@ -44,7 +44,6 @@ class TestFlowSubsetCollaborators(FLSpec):
             f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for "
             + f"validating Subset of collaborators  {bcolors.ENDC}"
         )
-        self.collaborators = self.runtime.collaborators
 
         # select subset of collaborators
         self.subset_collabrators = self.collaborators[: random.choice(self.random_ints)]
@@ -135,8 +134,7 @@ if __name__ == "__main__":
         testflow_subset_collaborators = TestFlowSubsetCollaborators(
             checkpoint=True, random_ints=random_ints
         )
-        testflow_subset_collaborators.runtime = local_runtime
-        testflow_subset_collaborators.run()
+        local_runtime.run(testflow_subset_collaborators)
 
         subset_collaborators = testflow_subset_collaborators.subset_collabrators
         collaborators_ran = testflow_subset_collaborators.collaborators_ran
