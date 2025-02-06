@@ -39,7 +39,7 @@ jobs:
       matrix:
         # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
         # Thus these models are excluded from the matrix for now.
-        model_name: ["torch.mnist", "keras/mnist"]
+        model_name: ["torch/mnist", "keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
