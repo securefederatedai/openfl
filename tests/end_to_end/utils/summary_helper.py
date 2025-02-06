@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils.generate_report import convert_to_json
+from tests.end_to_end.utils.db_helper import DBHelper
 
 result_path = os.path.join(Path().home(), "results")
 
@@ -32,30 +32,23 @@ def initialize_xml_parser():
     return testsuites
 
 
-def get_aggregated_accuracy(agg_log_file):
+def get_best_agg_score(database_file):
     """
-    Get the aggregated accuracy from aggregator logs
+    Get the best_score from the database
     Args:
-        agg_log_file: the aggregator log file
+        database_file: the database file
     Returns:
-        agg_accuracy: the aggregated accuracy
+        best_agg_score: the best score
     """
-    agg_accuracy = "Not Found"
-    if not os.path.exists(agg_log_file):
-        print(
-            f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy"
-        )
-        return agg_accuracy
+    best_agg_score = "Not Found"
+    if not os.path.exists(database_file):
+        print(f"Database file {database_file} not found. Cannot get best aggregated score")
+        return best_agg_score
 
-    agg_accuracy_dict = convert_to_json(agg_log_file)
-
-    if not agg_accuracy_dict:
-        print(f"Aggregator log file {agg_log_file} is empty. Cannot get aggregated accuracy, returning 'Not Found'")
-    else:
-        agg_accuracy = agg_accuracy_dict[-1].get(
-            "aggregator/aggregated_model_validation/accuracy", "Not Found"
-        )
-    return agg_accuracy
+    db_obj = DBHelper(database_file)
+    round_number, best_agg_score = db_obj.read_key_value_store()
+    print(f"Best aggregated score: {best_agg_score} is in round_number {round_number} ")
+    return best_agg_score
 
 
 def get_test_status(result):
@@ -151,15 +144,15 @@ def print_task_runner_score():
         return
 
     # Assumption - result directory is present in the home directory
-    agg_log_file = os.path.join(
+    tensor_db_file = os.path.join(
         result_path,
         model_name,
         "aggregator",
         "workspace",
-        "logs",
-        "aggregator_metrics.txt",
+        "local_state",
+        "tensor.db",
     )
-    agg_accuracy = get_aggregated_accuracy(agg_log_file)
+    best_score = get_best_agg_score(tensor_db_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
@@ -175,7 +168,7 @@ def print_task_runner_score():
         )
         for item in result:
             print(
-                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |",
+                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {best_score} |",
                 file=fh,
             )
 

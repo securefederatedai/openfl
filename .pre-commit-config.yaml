@@ -32,5 +32,5 @@ repos:
     rev: 1.7.4
     hooks:
       - id: bandit
-        args: ["-c", "pre_commit.toml"]
+        args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
