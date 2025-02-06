@@ -81,9 +81,10 @@ class Aggregator:
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[List] = [],
         persist_checkpoint=True,
         persistent_db_path=None,
+        secure_aggregation=False,
     ):
         """Initializes the Aggregator.
 
@@ -199,13 +200,20 @@ class Aggregator:
             self._load_initial_tensors()  # keys are TensorKeys
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
+        self._secure_aggregation_enabled = secure_aggregation
 
         # Callbacks
+        if self._secure_aggregation_enabled:
+            callbacks.append(callbacks_module.AggregatorSecAgg())
+
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
             origin="aggregator",
+            collaborators=self.authorized_cols,
+            aggregator_uuid=self.uuid,
         )
 
         # TODO: Aggregator has no concrete notion of round_begin.

@@ -35,7 +35,7 @@ class CollaboratorSecAgg(Callback):
     for scure aggregation on the collaborators.
 
     Required params include:
-    - col_name: Name of the collaborator using the callback.
+    - origin: Name of the collaborator using the callback.
     - client: Client for aggregator secure aggregation setup.
 
     It also requires the tensor-db client to be set.
@@ -44,7 +44,7 @@ class CollaboratorSecAgg(Callback):
         """
         Used to perform secure aggregation setup before experiment begins.
         """
-        self.name = self.params["col_name"]
+        self.name = self.params["origin"]
         self.client = self.params["client"]
         logger.info(
             "Secure aggregation is enabled, starting setup..."

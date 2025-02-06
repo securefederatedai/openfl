@@ -85,7 +85,8 @@ class Collaborator:
         db_store_rounds=1,
         log_memory_usage=False,
         write_logs=False,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[List] = [],
+        secure_aggregation=False,
     ):
         """Initialize the Collaborator object.
 
@@ -147,13 +148,19 @@ class Collaborator:
             )
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+        self._secure_aggregation_enabled = secure_aggregation
 
         # Callbacks
+        if self._secure_aggregation_enabled:
+            callbacks.append(callbacks_module.CollaboratorSecAgg())
+
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
             origin=self.collaborator_name,
+            client=self.client
         )
 
     def set_available_devices(self, cuda: Tuple[str] = ()):

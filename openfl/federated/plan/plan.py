@@ -389,6 +389,9 @@ class Plan:
         defaults[SETTINGS]["assigner"] = self.get_assigner()
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
+        defaults[SETTINGS]["secure_aggregation"] = self.config.get(
+            "secure_aggregation", False
+        )
 
         # TODO: Load callbacks from plan.
 
@@ -531,6 +534,10 @@ class Plan:
                 private_key,
                 certificate,
             )
+
+        defaults[SETTINGS]["secure_aggregation"] = self.config.get(
+            "secure_aggregation", False
+        )
 
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
