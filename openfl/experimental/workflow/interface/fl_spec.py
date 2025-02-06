@@ -11,7 +11,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, List, Type, Union
 
 if TYPE_CHECKING:
-    from openfl.experimental.workflow.runtime import FederatedRuntime, LocalRuntime, Runtime
+    pass
 
 from openfl.experimental.workflow.utilities import (
     MetaflowInterface,
