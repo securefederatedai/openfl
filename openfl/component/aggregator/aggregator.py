@@ -726,9 +726,24 @@ class Aggregator:
         Returns:
             None
         """
-        # Save task and its metadata for recovery
-        serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
+        # Check if secure aggregation is enabled.
+        if self._secure_aggregation_enabled:
+            secagg_setup = False
+            for named_tensor in named_tensors:
+                # Check if the tensor belongs top one from secure aggregation
+                # setup stages.
+                if "secagg" in tuple(named_tensor.tags):
+                    # Process and save tensor to local tensor db.
+                    self._process_named_tensor(named_tensor, collaborator_name)
+                    secagg_setup = True
+            # Task results processing is not required if the tensors belong to
+            # secure aggregation setup stage.
+            if secagg_setup:
+                return
+
         if self.persistent_db:
+            # Save task and its metadata for recovery
+            serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
             self.persistent_db.save_task_results(
                 collaborator_name, round_number, task_name, data_size, serialized_tensors
             )
