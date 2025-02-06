@@ -10,6 +10,7 @@ aggregator:
     rounds_to_train: 2
     write_logs: false
   template: openfl.component.aggregator.Aggregator
+  defaults : plan/defaults/aggregator.yaml
 assigner :
   defaults : plan/defaults/assigner.yaml
 collaborator:
