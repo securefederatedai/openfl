@@ -99,7 +99,7 @@ def start_docker_container_with_federation_run(
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
         }
-        log.info(f"Volumes for {participant.name}: {volumes}")
+        log.debug(f"Volumes for {participant.name}: {volumes}")
 
         environment = {
             "WORKSPACE_PATH": docker_participant_path,
@@ -112,7 +112,7 @@ def start_docker_container_with_federation_run(
                 environment[key] = val
 
         log.debug(f"Environment variables for {participant.name}: {environment}")
-        
+
         # Prepare the commands to run based on the participant
         log_file = f"{docker_participant_path}/{participant.name}.log"
 
@@ -199,19 +199,16 @@ def stop_start_docker_participant(participant, action):
     if action not in ["stop", "start"]:
         raise ex.DockerException(f"Invalid action {action}")
 
-    log.info(f"Performing action {action} on docker participant {participant.name}")
-
     client = get_docker_client()
 
     # List containers with the participant name
     containers = client.containers.list(all=True, filters={"name": participant.name})
-    log.info(f"Containers are {containers}")
     container_names = []
 
     for container in containers:
         # Restart the participant
         container.stop() if action == "stop" else container.start()
-        log.info(f"Action {action} successful on participant {container.name}")
+        log.debug(f"Docker {action} successful for {container.name}")
         container_names.append(container.name)
 
     return True

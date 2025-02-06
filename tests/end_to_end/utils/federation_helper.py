@@ -350,7 +350,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
     # Result will contain a list of boolean values for all the participants.
     # True - successful completion, False - failed/incomplete
     results = [f.result() for f in futures]
-    log.info(f"Results from all the participants: {results}")
+    log.debug(f"Results from all the participants: {results}")
 
     # If any of the participant failed, return False, else return True
     return all(results)

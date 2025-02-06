@@ -36,6 +36,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 
     # Restart aggregator
     assert int_helper.restart_participants([fx_federation_tr.aggregator])
+    log.info("Aggregator restarted successfully")
 
     time.sleep(20)
     round_post_agg_restart = fed_helper.get_current_round(fx_federation_tr.aggregator.tensor_db_path)
@@ -43,6 +44,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 
     # Restart collaborators
     assert int_helper.restart_participants(fx_federation_tr.collaborators)
+    log.info("Collaborators restarted successfully")
 
     time.sleep(20)
     round_post_collab_restart = fed_helper.get_current_round(fx_federation_tr.aggregator.tensor_db_path)
@@ -50,12 +52,13 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 
     # Restart all participants
     assert int_helper.restart_participants(fx_federation_tr.collaborators+[fx_federation_tr.aggregator])
+    log.info("All participants restarted successfully")
 
     time.sleep(20)
     round_post_all_restart = fed_helper.get_current_round(fx_federation_tr.aggregator.tensor_db_path)
     assert round_post_all_restart >= round_post_collab_restart, "Current round is not updated after all participants restart"
 
-    log.info("All restarts are successful with current round updated")
+    log.info("Current round number is increasing after every restart as expected.")
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -67,7 +70,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
     model_accuracy = get_best_agg_score(fx_federation_tr.aggregator.tensor_db_path)
     log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
 
-    log.info(f"Successfully tested federation experiment with aggregator restart")
+    log.info(f"Successfully tested federation experiment with multiple restart scenarios")
 
 
 @pytest.mark.task_runner_dockerized_ws
@@ -88,6 +91,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
 
     # Restart aggregator
     assert int_helper.restart_participants([fx_federation_tr_dws.aggregator])
+    log.info("Aggregator restarted successfully")
 
     time.sleep(20)
     round_post_agg_restart = fed_helper.get_current_round(fx_federation_tr_dws.aggregator.tensor_db_path)
@@ -95,6 +99,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
 
     # Restart collaborators
     assert int_helper.restart_participants(fx_federation_tr_dws.collaborators)
+    log.info("Collaborators restarted successfully")
 
     time.sleep(20)
     round_post_collab_restart = fed_helper.get_current_round(fx_federation_tr_dws.aggregator.tensor_db_path)
@@ -102,12 +107,13 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
 
     # Restart all participants
     assert int_helper.restart_participants(fx_federation_tr_dws.collaborators+[fx_federation_tr_dws.aggregator])
+    log.info("All participants restarted successfully")
 
     time.sleep(20)
     round_post_all_restart = fed_helper.get_current_round(fx_federation_tr_dws.aggregator.tensor_db_path)
     assert round_post_all_restart >= round_post_collab_restart, "Current round is not updated after all participants restart"
 
-    log.info("All restarts are successful with current round updated")
+    log.info("Current round number is increasing after every restart as expected.")
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -119,5 +125,4 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     model_accuracy = get_best_agg_score(fx_federation_tr_dws.aggregator.tensor_db_path)
     log.info(f"Model accuracy post {request.config.num_rounds} rounds: {model_accuracy}")
 
-    log.info(f"Successfully tested federation experiment with aggregator restart")
-
+    log.info(f"Successfully tested federation experiment with multiple restart scenarios")

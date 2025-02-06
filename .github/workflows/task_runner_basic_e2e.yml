@@ -298,8 +298,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
-        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
+        model_name: ["torch/mnist", "keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -339,8 +339,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_non_tls) }}
-        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_non_tls) }}
+        model_name: ["torch/mnist", "keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -380,8 +380,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_no_client_auth) }}
-        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_no_client_auth) }}
+        model_name: ["torch/mnist", "keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
