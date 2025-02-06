@@ -48,10 +48,6 @@ def pytest_configure(config):
     config.log_memory_usage = args.log_memory_usage
     config.results_dir = config.getini("results_dir")
 
-    # Do not place this condition above, otherwise --help will not work
-    if not config.model_name:
-        raise pytest.UsageError("--model_name argument is required")
-
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_logging(pytestconfig):
