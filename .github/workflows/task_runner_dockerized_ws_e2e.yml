@@ -16,6 +16,17 @@ on:
         required: false
         default: "2"
         type: string
+      jobs_to_run:
+        description: "Jobs to run"
+        type: choice
+        default: "all"
+        options:
+          - all
+          - test_with_tls
+          - test_with_non_tls
+          - test_with_no_client_auth
+          - test_memory_logs
+        required: false
 
 permissions:
   contents: read
@@ -24,10 +35,24 @@ permissions:
 env:
   NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
 
 jobs:
+  input_selection:
+    name: Input value selection
+    runs-on: ubuntu-22.04
+    outputs:
+      selected_jobs: ${{ steps.input_selection.outputs.jobs_to_run }}
+    steps:
+      - name: Job to select input values
+        id: input_selection
+        run: |
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
+
   test_with_tls_dockerized_ws:
     name: tr_tls_dockerized_ws
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -69,6 +94,8 @@ jobs:
 
   test_with_non_tls_dockerized_ws:
     name: tr_non_tls_dockerized_ws
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_non_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -110,6 +137,8 @@ jobs:
 
   test_with_no_client_auth_dockerized_ws:
     name: tr_no_client_auth_dockerized_ws
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -151,6 +180,8 @@ jobs:
 
   test_memory_logs_dockerized_ws:
     name: tr_tls_memory_logs_dockerized_ws
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
