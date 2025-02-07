@@ -168,6 +168,10 @@ STEP 1: Create a Workspace
 
        $ export KERAS_BACKEND="jax"
 
+.. note::
+
+    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command.
+
   See the complete list of available templates.
 
     .. code-block:: shell
