@@ -7,5 +7,9 @@ base_dir=$(dirname $(dirname $0))
 SKIP=bandit pre-commit run --all-files
 
 ruff check --config "${base_dir}/pyproject.toml" openfl/
+exitcode=$?
 
 ruff format --check --config "${base_dir}/pyproject.toml" openfl/
+exitcode=$(($exitcode + $?))
+
+exit $exitcode
