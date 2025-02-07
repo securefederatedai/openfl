@@ -47,6 +47,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosectionlabel',
     'sphinx_substitution_extensions',
+    'sphinx_click.ext',
 ]
 
 pygments_style = None
