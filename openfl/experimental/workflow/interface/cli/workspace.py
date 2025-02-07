@@ -30,7 +30,7 @@ from openfl.experimental.workflow.interface.cli.cli_helper import (
     print_tree,
 )
 from openfl.experimental.workflow.interface.cli.plan import freeze_plan
-from openfl.experimental.workflow.workspace_export import WorkspaceExport
+from openfl.experimental.workflow.notebooktools import NotebookTools
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import rmtree
 from openfl.utilities.workspace import dump_requirements_file
@@ -138,7 +138,7 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
                 + "save your Jupyter Notebook workspace."
             )
 
-        WorkspaceExport.export(
+        NotebookTools.export(
             notebook_path=notebook,
             output_workspace=template_output_dir,
         )

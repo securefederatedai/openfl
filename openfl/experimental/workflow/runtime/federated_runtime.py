@@ -16,9 +16,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import dill
 from tabulate import tabulate
 
+from openfl.experimental.workflow.notebooktools import NotebookTools
 from openfl.experimental.workflow.runtime.runtime import Runtime
 from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
-from openfl.experimental.workflow.workspace_export import WorkspaceExport
 
 logger = logging.getLogger(__name__)
 
@@ -140,13 +140,13 @@ class FederatedRuntime(Runtime):
 
     def prepare_workspace_archive(self) -> Tuple[Path, str]:
         """
-        Prepare workspace archive using WorkspaceExport.
+        Prepare workspace archive using NotebookTools.
 
         Returns:
             Tuple[Path, str]: A tuple containing the path of the created
         archive and the experiment name.
         """
-        archive_path, exp_name = WorkspaceExport.export_federated(
+        archive_path, exp_name = NotebookTools.export_federated(
             notebook_path=self.notebook_path,
             output_workspace="./generated_workspace",
             director_fqdn=self.director["director_node_fqdn"],
