@@ -3,6 +3,8 @@
 CLI Reference: ``fx``
 =====================
 
+The ``fx`` CLI is how majority of OpenFL capabilities are made available to users. This includes commands for creating and managing workspaces, plans, models, and more.
+
 .. click:: openfl.interface.cli:cli
     :prog: fx
     :nested: full
