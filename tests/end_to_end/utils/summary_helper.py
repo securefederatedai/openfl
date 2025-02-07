@@ -147,7 +147,8 @@ def print_task_runner_score():
         "local_state",
         "tensor.db",
     )
-    best_score = fed_helper.get_best_agg_score(tensor_db_file)
+    # If the federation run fails in between, tensor.db file won't be present
+    best_score = fed_helper.get_best_agg_score(tensor_db_file) if os.path.exists(tensor_db_file) else "Not Found"
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
