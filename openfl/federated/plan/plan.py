@@ -320,12 +320,7 @@ class Plan:
         """Get the plan task assigner."""
         aggregation_functions_by_task = None
         assigner_function = None
-        try:
-            aggregation_functions_by_task = self.restore_object("aggregation_function_obj.pkl")
-            assigner_function = self.restore_object("task_assigner_obj.pkl")
-        except Exception as exc:
-            self.logger.error(f"Failed to load aggregation and assigner functions: {exc}")
-            self.logger.info("Using Task Runner API workflow")
+
         if assigner_function:
             self.assigner_ = Assigner(
                 assigner_function=assigner_function,
