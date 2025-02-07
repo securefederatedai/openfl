@@ -116,7 +116,11 @@ def start_docker_container_with_federation_run(
         log_file = f"{docker_participant_path}/{participant.name}.log"
 
         if participant.name == "aggregator":
-            command = ["bash", "-c", f"touch {log_file} && {constants.AGG_START_CMD} > {log_file} 2>&1"]
+            start_agg = constants.AGG_START_CMD
+            # Handle Fed Eval case
+            if participant.eval_scope:
+                start_agg += " --task_group evaluation"
+            command = ["bash", "-c", f"touch {log_file} && {start_agg} > {log_file} 2>&1"]
         else:
             start_collaborator = f"touch {log_file} && {constants.COL_START_CMD.format(participant.name)} > {log_file} 2>&1"
             if use_tls:

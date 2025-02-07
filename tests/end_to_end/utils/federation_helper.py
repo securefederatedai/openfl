@@ -240,13 +240,12 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True, with_docker=False):
+def run_federation(fed_obj, install_dependencies=True):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
         install_dependencies (bool): Install dependencies on collaborators (default is True)
-        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
         bool: True if successful, else False
     """
