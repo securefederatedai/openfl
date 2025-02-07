@@ -141,6 +141,7 @@ def print_task_runner_score():
     # Assumption - result directory is present in the home directory
     tensor_db_file = os.path.join(
         test_specific_result_path,
+        model_name,
         "aggregator",
         "workspace",
         "local_state",
