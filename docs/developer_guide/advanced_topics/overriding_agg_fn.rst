@@ -8,7 +8,6 @@ Override Aggregation Function
 *****************************
 
 With the aggregator-based workflow, you can use custom aggregation functions for each task via command line interface.
-Please note that AdaptiveAggregation examples are yet to get updated with task-runners api. 
 
 
 Command Line Interface
