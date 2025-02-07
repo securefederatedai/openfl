@@ -9,15 +9,15 @@ Subpackages
 .. toctree::
     :maxdepth: 1
 
-    openfl.component
-    openfl.callbacks
-    openfl.cryptography
-    openfl.experimental
-    openfl.databases
-    openfl.federated
-    openfl.interface
-    openfl.pipelines
-    openfl.plugins
-    openfl.protocols
-    openfl.transport
-    openfl.utilities
+    reference/openfl.component
+    reference/openfl.callbacks
+    reference/openfl.cryptography
+    reference/openfl.experimental
+    reference/openfl.databases
+    reference/openfl.federated
+    reference/openfl.interface
+    reference/openfl.pipelines
+    reference/openfl.plugins
+    reference/openfl.protocols
+    reference/openfl.transport
+    reference/openfl.utilities
