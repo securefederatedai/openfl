@@ -55,8 +55,7 @@ We recommend setting up a local dev environment. Clone your forked repo to your 
 ```shell
 git clone https://github.com/YOUR_GITHUB_USERNAME/openfl.git
 cd openfl
-pip install -U pip setuptools wheel
-pip install .
+pip install -e .
 pip install -r linters-requirements.txt
 ```
 
@@ -64,12 +63,18 @@ pip install -r linters-requirements.txt
 
 OpenFL uses [ruff](https://github.com/astral-sh/ruff) to lint/format code and [precommit](https://pre-commit.com/) checks.
 
-Run the following command at the **root** directory of the repo to format your code.
+Run the following command at the **root** directory of the repo to show lint errors.
+
+```
+sh scripts/lint.sh
+```
+
+To autoformat the code, run the following command:
 
 ```
 sh scripts/format.sh
 ```
-You may need to resolve errors that could not be resolved by autoformatting. To only show lint errors, run `sh scripts/lint.sh` at the **root** directory of the repo.
+You may need to resolve errors that could not be resolved by autoformatting.
 
 ### Docstrings
 Since docstrings cannot be verified programmatically, if you do write/edit a docstring, make sure to check them manually. OpenFL docstrings should follow the conventions below:
@@ -98,3 +103,8 @@ sphinx-build -b html -D nb_execution_mode=off docs docs/_build/html -j auto
 ```
 
 The `-j auto` option controls build parallelism. You may replace `auto` with a number to specify the number of jobs to run in parallel.
+
+Serve the documentation locally:
+```bash
+python -m http.server --directory docs/_build/html
+```
