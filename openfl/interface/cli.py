@@ -172,20 +172,17 @@ def get_version():
 
 
 @group(cls=CLI, invoke_without_command=True)
-@option("-l", "--log-level", default="info", help="Logging verbosity level.")
-@option("--no-warnings", is_flag=True, help="Disable third-party warnings.")
-@option("-v", "--version", is_flag=True, help="Show version")
+@option("-l", "--log-level", default="info", help="Logging level.", show_default=True)
+@option(
+    "--no-warnings",
+    is_flag=True,
+    help="Flag to disable third-party warnings.",
+    show_default=True,
+)
+@option("-v", "--version", is_flag=True, help="Display OpenFL version.")
 @pass_context
 def cli(context, log_level, no_warnings, version):
-    """
-    Command-line Interface.
-
-    Args:
-        context (click.core.Context): Click context.
-        log_level (str): Logging verbosity level.
-        no_warnings (bool): Flag to disable third-party warnings.
-        version (bool): Flag to show version.
-    """
+    """Command-Line Interface."""
     if version:
         echo(f"OpenFL version: {get_version()}")
         context.exit()
