@@ -147,7 +147,7 @@ def print_task_runner_score():
         "local_state",
         "tensor.db",
     )
-    _, best_score = fed_helper.get_best_agg_score(tensor_db_file)
+    best_score = fed_helper.get_best_agg_score(tensor_db_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
