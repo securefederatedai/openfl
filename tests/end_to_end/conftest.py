@@ -197,26 +197,3 @@ def pytest_sessionfinish(session, exitstatus):
     dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
     # Cleanup docker network created for openfl, if any.
     dh.remove_docker_network(["openfl"])
-
-
-def pytest_runtest_setup(item):
-    """
-    Hook to set up the test environment before each test runs.
-    Args:
-        item: pytest test item
-    """
-    if item.name in ["test_federation_via_native_with_restarts", "test_federation_via_dws_with_restarts"]:
-        # Verify if the test exists
-        if not any(test.name == item.name for test in item.session.items):
-            raise ValueError(f"Test '{item.name}' does not exist in the collected tests.")
-
-        # If num_rounds is explicitly set by the user, use that value
-        # Otherwise, set the default value to 50
-        if "num_rounds" not in item.config.option.__dict__ or item.config.option.num_rounds is None:
-            # As we intend to perform multiple restarts in this test, we need to run for more rounds
-            item.config.num_rounds = 50
-            # Setting the value in env variable is important for GitHub summary report
-            github_env = os.getenv('GITHUB_ENV')
-            if github_env and os.path.exists(github_env):
-                with open(github_env, 'a') as env_file:
-                    env_file.write(f"NUM_ROUNDS={str(item.config.num_rounds)}\n")

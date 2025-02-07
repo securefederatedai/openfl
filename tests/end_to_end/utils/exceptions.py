@@ -101,3 +101,13 @@ class ParticipantStartException(Exception):
 class ParticipantStopException(Exception):
     """Exception for participant stop"""
     pass
+
+
+class ParticipantRestartException(Exception):
+    """Exception for participant restart"""
+    pass
+
+
+class TensorDBException(Exception):
+    """Exception for tensor database"""
+    pass

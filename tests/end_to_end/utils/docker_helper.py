@@ -3,7 +3,6 @@
 
 import logging
 import docker
-import os
 from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
@@ -82,7 +81,7 @@ def start_docker_container_with_federation_run(
         security_opt: Security options for the container
         mount_mapping: Mapping of local path to docker path. Format ["local_path:docker_path"]
     Returns:
-        bool: True if successful, else False
+        container: Docker container object
     """
     try:
         client = get_docker_client()
@@ -143,13 +142,11 @@ def start_docker_container_with_federation_run(
             command=command
         )
         log.info(f"Container for {participant.name} started with ID: {container.id}")
-        participant.container_id = container.id
-        participant.res_file = os.path.join(participant.workspace_path, f"{participant.name}.log")
 
     except Exception as e:
         raise ex.DockerException(f"Error starting docker container: {e}")
 
-    return True
+    return container
 
 
 @lru_cache(maxsize=50)

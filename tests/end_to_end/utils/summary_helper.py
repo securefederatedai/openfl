@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils.db_helper import DBHelper
+from tests.end_to_end.utils import federation_helper as fed_helper
 
 result_path = os.path.join(Path().home(), "results")
 
@@ -30,25 +30,6 @@ def initialize_xml_parser():
     # Get the root element
     testsuites = tree.getroot()
     return testsuites
-
-
-def get_best_agg_score(database_file):
-    """
-    Get the best_score from the database
-    Args:
-        database_file: the database file
-    Returns:
-        best_agg_score: the best score
-    """
-    best_agg_score = "Not Found"
-    if not os.path.exists(database_file):
-        print(f"Database file {database_file} not found. Cannot get best aggregated score")
-        return best_agg_score
-
-    db_obj = DBHelper(database_file)
-    round_number, best_agg_score = db_obj.read_key_value_store()
-    print(f"Best aggregated score: {best_agg_score} is in round_number {round_number} ")
-    return best_agg_score
 
 
 def get_test_status(result):
@@ -135,7 +116,6 @@ def print_task_runner_score():
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME").replace("/", "_")
     summary_file = _get_summary_file()
-    test_specific_result_path = os.getenv("RESULTS_DIR_INC_TEST_MODEL_NAME")
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -144,10 +124,18 @@ def print_task_runner_score():
         )
         return
 
-    if not os.path.exists(test_specific_result_path):
-        print(
-            f"Test specific result path {test_specific_result_path} not found. Skipping writing to GitHub step summary"
-        )
+    # List all directories inside result_path
+    directories = [d for d in os.listdir(result_path) if os.path.isdir(os.path.join(result_path, d))]
+
+    # Find the directory that starts with 'test_'
+    test_specific_result_path = None
+    for directory in directories:
+        if directory.startswith('test_'):
+            test_specific_result_path = os.path.join(result_path, directory)
+            break
+
+    if not test_specific_result_path:
+        print("No directory starting with 'test_' found in the result path.")
         return
 
     # Assumption - result directory is present in the home directory
@@ -158,7 +146,7 @@ def print_task_runner_score():
         "local_state",
         "tensor.db",
     )
-    best_score = get_best_agg_score(tensor_db_file)
+    _, best_score = fed_helper.get_best_agg_score(tensor_db_file)
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
@@ -261,6 +249,7 @@ if __name__ == "__main__":
     # Fetch input arguments
     args = fetch_args()
     func_name = args.func_name
+
     if func_name in ["print_task_runner_score", "print_local_runtime_score"]:
         print_task_runner_score()
     elif func_name == "print_federated_runtime_score":

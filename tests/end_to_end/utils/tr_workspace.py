@@ -81,8 +81,8 @@ def create_tr_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id,  # None in case of non-docker environment
-        eval_scope=eval_scope
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id,  # None in case of native environment
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -188,8 +188,8 @@ def create_tr_dws_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id, # None in case of non-docker environment
-        eval_scope=eval_scope
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id, # None in case of native environment
     )
 
     futures = [

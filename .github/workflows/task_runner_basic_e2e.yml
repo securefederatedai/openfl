@@ -6,6 +6,10 @@ name: Task_Runner_E2E  # Please do not modify the name as it is used in the comp
 on:
   schedule:
     - cron: "0 0 * * *" # Run every day at midnight
+  push:
+    branches: 
+      - develop
+      - v1.7.x
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -44,8 +48,8 @@ on:
         options:
           - all
           - test_with_tls
-          - test_with_non_tls
-          - test_with_no_client_auth
+          - test_without_tls
+          - test_without_client_auth
           - test_memory_logs
         required: false
 
@@ -65,7 +69,8 @@ jobs:
   input_selection:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -159,12 +164,12 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls"
+          test_type: "With_TLS"
 
-  test_with_non_tls:
+  test_without_tls:
     name: Without TLS
     needs: input_selection
-    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_non_tls'
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -202,12 +207,12 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls"
+          test_type: "Without_TLS"
 
-  test_with_no_client_auth:
-    name: Without client auth
+  test_without_client_auth:
+    name: Without Client Auth
     needs: input_selection
-    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_no_client_auth'
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -245,10 +250,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: 'tr_no_client_auth'
+          test_type: 'Without_Client_Auth'
 
   test_memory_logs:
-    name: With memory logs
+    name: With Memory Logs
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
@@ -289,4 +294,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls_memory_logs"
+          test_type: "With_Memory_Logs"

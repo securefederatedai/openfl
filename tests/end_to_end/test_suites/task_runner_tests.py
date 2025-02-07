@@ -9,7 +9,6 @@ from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr_dws,
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
-from tests.end_to_end.utils.summary_helper import get_best_agg_score
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def test_federation_via_native(request, fx_federation_tr):
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
-    best_agg_score = get_best_agg_score(fx_federation_tr.aggregator.tensor_db_path)
+    best_agg_score = fed_helper.get_best_agg_score(fx_federation_tr.aggregator.tensor_db_file)
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
 
 
@@ -54,5 +53,5 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
 
-    best_agg_score = get_best_agg_score(fx_federation_tr_dws.aggregator.tensor_db_path)
+    best_agg_score = fed_helper.get_best_agg_score(fx_federation_tr_dws.aggregator.tensor_db_file)
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")

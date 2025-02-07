@@ -115,13 +115,11 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, res_file, restart=False):
+    def start(self, res_file):
         """
         Start the collaborator
         Args:
             res_file (str): Result file to track the logs
-            restart (bool): Flag to indicate whether scenario contains restart of collaborator. Default is False.
-                This is required to check if same res file can be used for multiple runs.
         Returns:
             str: Path to the log file
         """
@@ -135,7 +133,6 @@ class Collaborator():
                 workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                reuse_bg_file=restart,
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."

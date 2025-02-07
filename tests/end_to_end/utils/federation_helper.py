@@ -13,11 +13,11 @@ from pathlib import Path
 import shutil
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
-from tests.end_to_end.utils.db_helper import DBHelper
 
 log = logging.getLogger(__name__)
 home_dir = Path().home()
@@ -281,24 +281,19 @@ def run_federation_for_dws(fed_obj, use_tls):
     Returns:
         bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
-
-    try:
-        results = [
-            executor.submit(
-                dh.start_docker_container_with_federation_run,
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            container = dh.start_docker_container_with_federation_run(
                 participant=participant,
                 image=constants.DFLT_DOCKERIZE_IMAGE_NAME,
                 use_tls=use_tls,
             )
-            for participant in [fed_obj.aggregator] + fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to start docker containers for one or more participants"
-            )
-    except Exception as e:
-        raise e
+        except Exception as e:
+            log.error(f"Failed to start docker container for {participant.name}: {e}")
+            raise e
+
+        participant.container_id = container.id
+        participant.res_file = os.path.join(participant.workspace_path, f"{participant.name}.log")
 
     return True
 
@@ -408,6 +403,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     Setup the federation environment and validate the configurations
     Args:
         request (object): Request object
+        eval_scope (bool): If True, sets up the evaluation scope for a single round
     Returns:
         tuple: Model name, workspace path, local bind path, aggregator domain name
     """
@@ -426,12 +422,6 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         home_dir, request.config.results_dir, request.node.name, request.config.model_name.replace("/", "_")
     )
 
-    # Below step is to set the environment variable for the test case specific results directory
-    github_env = os.getenv('GITHUB_ENV')
-    if github_env and os.path.exists(github_env):
-        with open(github_env, 'a') as env_file:
-            env_file.write(f"RESULTS_DIR_INC_TEST_MODEL_NAME={local_bind_path}\n")
-
     num_rounds = request.config.num_rounds
 
     if eval_scope:
@@ -440,6 +430,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
     workspace_path = local_bind_path
+
     # if path exists delete it
     if os.path.exists(workspace_path):
         shutil.rmtree(workspace_path)
@@ -528,7 +519,6 @@ def run_command(
     print_output=False,
     with_docker=False,
     return_error=False,
-    reuse_bg_file=False,
 ):
     """
     Run the command
@@ -541,7 +531,6 @@ def run_command(
         print_output (bool): Print the output
         with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
         return_error (bool): Return error message
-        reuse_bg_file (bool): Reuse the background file (required in case of restart scenarios)
     Returns:
         tuple: Return code, output and error
     """
@@ -571,8 +560,7 @@ def run_command(
         log.info(f"Running command: {command}")
 
     if run_in_background and not with_docker:
-        open_mode = "a" if reuse_bg_file else "w"
-        bg_file = open(bg_file, open_mode, buffering=1) # open file in append mode, so that restarting scenarios can be handled
+        bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
             command,
             work_dir=workspace_path,
@@ -967,19 +955,46 @@ def verify_federated_runtime_experiment_completion(participant_res_files):
     return True
 
 
-def get_current_round(database_file):
+def get_current_round(database_file: str) -> int:
     """
-    Get the current round from the database file
+    Get the current round number from the database file
     Args:
         database_file (str): Database file
     Returns:
-        int: Current round
+        int: Current round number
     """
-    current_round = "Not Found"
-    if not os.path.exists(database_file):
-        log.error(f"Database file {database_file} not found. Cannot get current round")
-    else:
-        db_helper_obj = DBHelper(database_file)
-        current_round, _ = db_helper_obj.read_key_value_store()
-        log.info(f"Current round: {current_round}")
-    return current_round
+    return int(db_helper.get_key_value_from_db("round_number", database_file))
+
+
+def get_best_agg_score(database_file: str) -> float:
+    """
+    Get the best aggregated score from the database file
+    Args:
+        database_file (str): Database file
+    Returns:
+        float: Best aggregated score
+    """
+    return db_helper.get_key_value_from_db("best_score", database_file)
+
+
+def validate_round_increment(inp_round, database_file, timeout=300, sleep_interval=5):
+    """
+    Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
+    and retrying with some wait time for input timeout.
+    Args:
+        inp_round (int): The initial round number to compare against.
+        database_file (str): The path to the database file.
+        timeout (int): The maximum time to wait in seconds.
+            Default is 300 seconds as some of the models take more time to complete the round.
+        sleep_interval (int): The wait time between retries in seconds. Default is 5 seconds.
+    Returns:
+        round number(int) if current round number has increased, else False.
+    """
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        current_round = get_current_round(database_file)
+        if current_round > inp_round:
+            return current_round
+        print(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        time.sleep(sleep_interval)
+    return False

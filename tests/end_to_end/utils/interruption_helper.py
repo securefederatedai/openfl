@@ -14,48 +14,54 @@ import tests.end_to_end.utils.exceptions as ex
 log = logging.getLogger(__name__)
 
 
-def restart_participants(participants: list) -> bool:
+def restart_participants(participants, action="restart") -> bool:
     """
     Restart the participant (collaborator or aggregator) in the federation.
     Args:
         participants: List of participant objects
+        action: Action to perform (stop/start/restart). Default is restart.
     """
-    log.info(f"Participants are: {participants}")
+    if action not in ["stop", "start", "restart"]:
+        raise ex.ParticipantRestartException(f"Invalid action {action}")
 
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    # Stop the participants in parallel
-    # Assumption - based on whether container ID is present or not, we will decide on native or docker environment
-    results = [
-        executor.submit(
-            stop_start_native_participant if participant.container_id is None else docker_helper.stop_start_docker_participant,
-            participant,
-            action="stop"
-        )
-        for participant in participants
-    ]
-    if not all([f.result() for f in results]):
-        raise ex.ParticipantStopException(
-            "Failed to stop one or more participants"
-        )
+    # ASSUMPTION - if container ID is present, it's docker environment else native
 
-    # Wait for 10 seconds
-    time.sleep(10)
-    log.info("Waited for 10 seconds")
+    if action in ["restart", "stop"]:
+        # Stop the participants in parallel
+        results = [
+            executor.submit(
+                stop_start_native_participant if participant.container_id is None else docker_helper.stop_start_docker_participant,
+                participant,
+                action="stop"
+            )
+            for participant in participants
+        ]
+        if not all([f.result() for f in results]):
+            raise ex.ParticipantStopException(
+                "Failed to stop one or more participants"
+            )
 
-    # Start the participants in parallel
-    results = [
-        executor.submit(
-            stop_start_native_participant if participant.container_id is None else docker_helper.stop_start_docker_participant,
-            participant,
-            action="start"
-        )
-        for participant in participants
-    ]
-    if not all([f.result() for f in results]):
-        raise ex.ParticipantStartException(
-            "Failed to start one or more participants"
-        )
+    if action == "restart":
+        # Wait for 10 seconds
+        time.sleep(10)
+        log.info("Waited for 10 seconds")
+
+    if action in ["restart", "start"]:
+        # Start the participants in parallel
+        results = [
+            executor.submit(
+                stop_start_native_participant if participant.container_id is None else docker_helper.stop_start_docker_participant,
+                participant,
+                action="start"
+            )
+            for participant in participants
+        ]
+        if not all([f.result() for f in results]):
+            raise ex.ParticipantStartException(
+                "Failed to start one or more participants"
+            )
     return True
 
 
@@ -89,7 +95,7 @@ def stop_start_native_participant(participant, action):
 
     else:
         try:
-            participant.start(res_file=participant.res_file, restart=True)
+            participant.start(res_file=participant.res_file)
         except Exception as e:
             raise ex.ParticipantStartException(f"Error starting participant: {e}")
 

@@ -20,7 +20,7 @@ class Aggregator():
     2. Starting the aggregator
     """
 
-    def __init__(self, agg_domain_name, workspace_path, container_id=None, eval_scope=False):
+    def __init__(self, agg_domain_name, workspace_path, eval_scope=False, container_id=None):
         """
         Initialize the Aggregator class
         Args:
@@ -32,10 +32,10 @@ class Aggregator():
         self.name = "aggregator"
         self.agg_domain_name = agg_domain_name
         self.workspace_path = workspace_path
-        self.container_id = container_id
         self.eval_scope = eval_scope
+        self.container_id = container_id
+        self.tensor_db_file = os.path.join(self.workspace_path, "local_state", "tensor.db")
         self.res_file = None # Result file to track the logs
-        self.tensor_db_path = os.path.join(self.workspace_path, "local_state", "tensor.db")
 
     def generate_sign_request(self):
         """
@@ -55,13 +55,11 @@ class Aggregator():
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
-    def start(self, res_file, restart=False):
+    def start(self, res_file):
         """
         Start the aggregator
         Args:
             res_file (str): Result file to track the logs
-            restart (bool): Flag to indicate whether scenario contains restart of aggregator. Default is False.
-                This is required to check if same res file can be used for multiple runs.
         Returns:
             str: Path to the log file
         """
@@ -78,7 +76,6 @@ class Aggregator():
                 workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                reuse_bg_file=restart,
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
