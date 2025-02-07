@@ -10,6 +10,7 @@ sphinx_substitution_extensions
 sphinxcontrib-mermaid
 sphinx-remove-toctrees
 sphinx-design
+sphinx-click
 sphinxext-rediraffe
 myst-nb>=1.0.0
 
