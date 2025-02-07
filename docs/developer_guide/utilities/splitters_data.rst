@@ -13,21 +13,8 @@ OpenFL allows you to specify custom data splits **for simulation runs on a singl
 You may apply data splitters differently depending on the OpenFL workflow that you follow. 
 
 
-OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data (Deprecated)
-===========================================================================================
-
-Predefined OpenFL data splitters functions are as follows:
-
-- ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
-- ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
-- ``openfl.interface.aggregation_functions.LogNormalNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
-- ``openfl.interface.aggregation_functions.DirichletNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
-
-Alternatively, you can create an `implementation <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
-
-
-OPTION 2: Use Dataset Splitters in your Shard Descriptor
-========================================================
+Use Dataset Splitters in your Shard Descriptor
+===================================================
 
 Apply one of previously mentioned splitting function on your data to perform a simulation. 
 
