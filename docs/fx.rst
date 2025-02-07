@@ -11,6 +11,18 @@ The ``fx`` CLI is how majority of OpenFL capabilities are made available to user
 
 ==============================
 
+.. click:: openfl.interface.workspace:workspace
+     :prog: fx workspace
+     :nested: full
+
+==============================
+
+.. click:: openfl.interface.plan:plan
+     :prog: fx plan
+     :nested: full
+
+==============================
+
 .. click:: openfl.interface.aggregator:aggregator
     :prog: fx aggregator
     :nested: full
@@ -19,12 +31,6 @@ The ``fx`` CLI is how majority of OpenFL capabilities are made available to user
 
 .. click:: openfl.interface.collaborator:collaborator
      :prog: fx collaborator
-     :nested: full
-
-==============================
-
-.. click:: openfl.interface.experimental:experimental
-     :prog: fx experimental
      :nested: full
 
 ==============================
@@ -41,14 +47,8 @@ The ``fx`` CLI is how majority of OpenFL capabilities are made available to user
 
 ==============================
 
-.. click:: openfl.interface.plan:plan
-     :prog: fx plan
-     :nested: full
-
-==============================
-
-.. click:: openfl.interface.workspace:workspace
-     :prog: fx workspace
+.. click:: openfl.interface.experimental:experimental
+     :prog: fx experimental
      :nested: full
 
 ==============================
