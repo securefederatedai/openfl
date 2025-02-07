@@ -5,13 +5,6 @@
 """Task package."""
 
 from importlib import util
-from warnings import catch_warnings, simplefilter
-
-with catch_warnings():
-    simplefilter(action="ignore", category=FutureWarning)
-    if util.find_spec("tensorflow") is not None:
-        # ignore deprecation warnings in command-line interface
-        import tensorflow  # NOQA
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
 

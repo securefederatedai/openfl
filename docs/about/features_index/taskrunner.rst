@@ -162,6 +162,15 @@ STEP 1: Create a Workspace
  - :code:`tf_cnn_histology`: a workspace with a simple `TensorFlow <http://tensorflow.org>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
  - :code:`keras/histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
  - :code:`torch/mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras/jax/mnist`: a workspace with a simple `Keras <http://keras.io/>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation with jax as backend. You can export the environment variable KERAS_BACKEND to configure your backend. Available backend options are: "jax", "tensorflow", "torch". Example:
+
+     .. code-block:: shell
+
+       $ export KERAS_BACKEND="jax"
+
+.. note::
+
+    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command.
 
   See the complete list of available templates.
 
