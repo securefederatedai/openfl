@@ -72,9 +72,11 @@ def get_key_value_from_db(key, database_file, max_retries=10, sleep_interval=5):
             val = db_obj.read_key_value_store().get(key)
             if val:
                 return val
+            print("Value not found in the database. Retrying in 5 seconds...")
+        else:
+            print("Database file not found. Retrying in 5 seconds...")
 
-        print(f"Either database file or the value for {key} is missing. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
         retries += 1
 
-    raise ex.TensorDBException(f"Database file {database_file} not found after {max_retries} retries. Cannot get key values")
+    raise ex.TensorDBException(f"Failed to get value for key {key} from the database after {max_retries} retries.")
