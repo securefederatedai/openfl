@@ -90,7 +90,7 @@ class PersistentTensorDB:
         task_name: str,
         data_size: int,
         named_tensors,
-    ):
+    ) -> int:
         """
         Saves task results to the task_results table.
 
@@ -109,13 +109,16 @@ class PersistentTensorDB:
         (collaborator_name, round_number, task_name, data_size, named_tensors)
         VALUES (?, ?, ?, ?, ?);
         """
+        new_id = 0
         with self.lock:
             cursor = self.conn.cursor()
             cursor.execute(
                 insert_query,
                 (collaborator_name, round_number, task_name, data_size, serialized_blob),
             )
+            new_id = cursor.lastrowid
             self.conn.commit()
+        return new_id
 
     def get_task_result_by_id(self, task_result_id: int):
         """
