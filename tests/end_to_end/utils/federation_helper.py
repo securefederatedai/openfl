@@ -976,24 +976,30 @@ def get_best_agg_score(database_file: str) -> float:
     return db_helper.get_key_value_from_db("best_score", database_file)
 
 
-def validate_round_increment(inp_round, database_file, timeout=300, sleep_interval=5):
+def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
     """
     Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
     and retrying with some wait time for input timeout.
     Args:
         inp_round (int): The initial round number to compare against.
         database_file (str): The path to the database file.
+        total_rounds (int): The total number of rounds expected.
         timeout (int): The maximum time to wait in seconds.
             Default is 300 seconds as some of the models take more time to complete the round.
         sleep_interval (int): The wait time between retries in seconds. Default is 5 seconds.
     Returns:
         round number(int) if current round number has increased, else False.
     """
+    if inp_round == total_rounds:
+        log.info("Federation is already at the last round.")
+        return inp_round
+
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_round = get_current_round(database_file)
+
         if current_round > inp_round:
             return current_round
-        print(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
     return False

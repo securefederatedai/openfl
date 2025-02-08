@@ -31,7 +31,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
     assert fed_helper.run_federation(fx_federation_tr)
 
     db_file = fx_federation_tr.aggregator.tensor_db_file
-    _perform_restart_validate_rounds(fed_obj=fx_federation_tr, db_file=db_file)
+    _perform_restart_validate_rounds(fed_obj=fx_federation_tr, db_file=db_file, total_rounds=request.config.num_rounds)
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -62,7 +62,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     fed_helper.run_federation_for_dws(fx_federation_tr_dws, request.config.use_tls)
 
     db_file = fx_federation_tr_dws.aggregator.tensor_db_file
-    _perform_restart_validate_rounds(fed_obj=fx_federation_tr_dws, db_file=db_file)
+    _perform_restart_validate_rounds(fed_obj=fx_federation_tr_dws, db_file=db_file, total_rounds=request.config.num_rounds)
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -81,12 +81,13 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     )
 
 
-def _perform_restart_validate_rounds(fed_obj, db_file):
+def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     """
     Internal function to perform restart and validate rounds.
     Args:
         fed_obj (Fixture): Pytest fixture for federation
         db_file (str): Path to the database file
+        total_rounds (int): Total number of rounds
     """
 
     init_round = fed_helper.get_current_round(db_file)
@@ -116,7 +117,8 @@ def _perform_restart_validate_rounds(fed_obj, db_file):
     log.info("All participants restarted successfully")
 
     assert fed_helper.validate_round_increment(
-        round_post_collab_restart, db_file
+        round_post_collab_restart, db_file,
+        total_rounds,
     ), f"Expected current round to be ahead of {round_post_collab_restart} after all participants restart"
 
     log.info("Current round number is increasing after every restart as expected.")
