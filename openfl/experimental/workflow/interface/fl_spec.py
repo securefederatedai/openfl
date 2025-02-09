@@ -54,20 +54,15 @@ class FLSpec:
         self._runtime = None
 
     @classmethod
-    def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
-        """Creates clones for instance for each collaborator in names.
+    def reset_and_create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
+        """Resets and creates clones for instance for each collaborator in names.
 
         Args:
             instance (Type[FLSpec]): The instance to be cloned.
             names (List[str]): The list of names for the clones.
         """
-        cls._clones = {name: deepcopy(instance) for name in names}
-
-    @classmethod
-    def _reset_clones(cls) -> None:
-        """Resets the clones of the class."""
-
         cls._clones = []
+        cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
     def save_initial_state(cls, instance: Type[FLSpec]) -> None:
@@ -142,18 +137,21 @@ class FLSpec:
         for name, attr in final_attributes:
             setattr(self, name, attr)
 
-    def _setup_initial_state(self, runtime, runtime_backend, runtime_collaborators) -> None:
+    def _setup_initial_state(self, runtime_info) -> None:
         """
-        Sets up the flow's initial state, initializing private attributes for
-        collaborators and aggregators.
+        Sets up the flow's initial state
+
+        Args:
+            runtime_info (dict): Information about the runtime
         """
-        self._runtime = runtime
-        self.collaborators = runtime_collaborators
-        self._metaflow_interface = MetaflowInterface(self.__class__, runtime_backend)
+        self._runtime = runtime_info["runtime"]
+        self.collaborators = runtime_info["collaborators"]
+        self._metaflow_interface = MetaflowInterface(
+            self.__class__, runtime_info["runtime_backend"]
+        )
         self._run_id = self._metaflow_interface.create_run()
         self._foreach_methods = []
-        FLSpec._reset_clones()
-        FLSpec._create_clones(self, runtime_collaborators)
+        FLSpec.reset_and_create_clones(self, self.collaborators)
         if self._checkpoint:
             print(f"Created flow {self.__class__.__name__}")
 

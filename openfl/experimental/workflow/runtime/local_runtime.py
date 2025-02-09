@@ -647,8 +647,13 @@ class LocalRuntime(Runtime):
         self.initialize_aggregator()
         # Initialize collaborator private attributes
         self.initialize_collaborators()
-        flspec_obj._setup_initial_state(self.__repr__(), self.backend, self.collaborators)
-
+        # Set initial state of the flow
+        runtime_info = {
+            "runtime": self.__class__.__name__,
+            "runtime_backend": self.backend,
+            "collaborators": self.collaborators,
+        }
+        flspec_obj._setup_initial_state(runtime_info)
         try:
             # Execute all Participant (Aggregator & Collaborator) tasks and
             # retrieve the final attributes

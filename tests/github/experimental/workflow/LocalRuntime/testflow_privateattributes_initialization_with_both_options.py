@@ -154,21 +154,17 @@ def validate_collab_private_attr(self, private_attr, step_name):
             + f"accessible {bcolors.ENDC}"
         )
 
-    # for idx, collab in enumerate(self.collaborators):
-    #     # Collaborator private attributes should not be accessible
-    #     if (
-    #         type(self.collaborators[idx]) is not str
-    #         or hasattr(self.runtime, "_collaborators")
-    #         or hasattr(self.runtime, "__collaborators")
-    #     ):
-    #         # Error - we are able to access collaborator attributes
-    #         TestFlowPrivateAttributes.error_list.append(
-    #             step_name + "_collaborator_attributes_found"
-    #         )
-    #         print(
-    #             f"{bcolors.FAIL} ... Attribute test failed in {step_name} - collaborator {collab} "
-    #             + f"private attributes accessible {bcolors.ENDC}"
-    #         )
+    for idx, collab in enumerate(self.collaborators):
+        # Collaborator private attributes should not be accessible
+        if type(self.collaborators[idx]) is not str:
+            # Error - we are able to access collaborator attributes
+            TestFlowPrivateAttributes.error_list.append(
+                step_name + "_collaborator_attributes_found"
+            )
+            print(
+                f"{bcolors.FAIL} ... Attribute test failed in {step_name} - collaborator {collab} "
+                + f"private attributes accessible {bcolors.ENDC}"
+            )
 
 
 def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
@@ -180,16 +176,6 @@ def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
         print(
             f"{bcolors.FAIL} ... Attribute test failed in {step_name} - Collab "
             + f"private attributes not accessible {bcolors.ENDC}"
-        )
-
-    if hasattr(self.runtime, "_aggregator"):
-        # Error - we are able to access aggregator attributes
-        TestFlowPrivateAttributes.error_list.append(
-            step_name + "_aggregator_attributes_found"
-        )
-        print(
-            f"{bcolors.FAIL} ... Attribute test failed in {step_name} - Aggregator"
-            + f" private attributes accessible {bcolors.ENDC}"
         )
 
 

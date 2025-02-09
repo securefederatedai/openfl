@@ -201,8 +201,7 @@ class Aggregator:
         # Start function will be the first step if any flow
         f_name = "start"
         # Creating a clones from the flow object
-        FLSpec._reset_clones()
-        FLSpec._create_clones(self.flow, self.flow.runtime.collaborators)
+        FLSpec.reset_and_create_clones(self.flow, self.flow.runtime.collaborators)
 
         logger.info(f"Starting round {self.current_round}...")
         while True:
