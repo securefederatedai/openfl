@@ -27,7 +27,7 @@ runs:
         tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results
         # Model name might contain forward slashes, convert them to underscore. 
         tmp=${{ env.MODEL_NAME }}
-        echo "MODEL_NAME_MODIFIED=${tmp/\//_}" >> $GITHUB_ENV
+        echo "MODEL_NAME_MODIFIED=${tmp//\//_}" >> $GITHUB_ENV
       shell: bash
 
     - name: Upload Artifacts

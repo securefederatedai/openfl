@@ -64,7 +64,7 @@ class ModelOwner():
                 output,
                 return_code,
                 error,
-                error_msg, f"Created the workspace {self.workspace_name} for the {self.model_name} model",
+                error_msg, f"Created the workspace for {self.model_name}",
                 raise_exception=True
             )
 
