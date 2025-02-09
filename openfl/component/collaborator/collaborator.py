@@ -10,6 +10,7 @@ from time import sleep
 from typing import List, Optional, Tuple
 
 import openfl.callbacks as callbacks_module
+from openfl.component import constants
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
@@ -78,11 +79,11 @@ class Collaborator:
         client,
         task_runner,
         task_config,
-        opt_treatment="RESET",
-        device_assignment_policy="CPU_ONLY",
-        delta_updates=False,
+        opt_treatment=constants.OPT_TREATMENT,
+        device_assignment_policy=constants.DEVICE_ASSIGNMENT_POLICY,
+        delta_updates=constants.DELTA_UPDATES,
         compression_pipeline=None,
-        db_store_rounds=1,
+        db_store_rounds=constants.DB_STORE_ROUNDS,
         log_memory_usage=False,
         write_logs=False,
         callbacks: Optional[List] = None,
@@ -97,23 +98,19 @@ class Collaborator:
             task_runner (object): The task runner object.
             task_config (dict): The task configuration.
             opt_treatment (str, optional): The optimizer state treatment.
-                Defaults to 'RESET'.
+                Defaults to constants.OPT_TREATMENT.
             device_assignment_policy (str, optional): The device assignment
-                policy. Defaults to 'CPU_ONLY'.
+                policy. Defaults to constants.DEVICE_ASSIGNMENT_POLICY.
             delta_updates (bool, optional): If True, only model delta gets
                 sent. If False, whole model gets sent to collaborator.
-                Defaults to False.
+                Defaults to constants.DELTA_UPDATES.
             compression_pipeline (object, optional): The compression pipeline.
                 Defaults to None.
             db_store_rounds (int, optional): The number of rounds to store in
-                the database. Defaults to 1.
+                the database. Defaults to constants.DB_STORE_ROUNDS.
             callbacks (list, optional): List of callbacks. Defaults to None.
         """
-        self.single_col_cert_common_name = None
-
-        if self.single_col_cert_common_name is None:
-            self.single_col_cert_common_name = ""  # for protobuf compatibility
-        # we would really want this as an object
+        self.single_col_cert_common_name = constants.CERT_COMMON_NAME  # for protobuf compatibility
 
         self.collaborator_name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
