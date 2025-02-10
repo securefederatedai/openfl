@@ -197,21 +197,3 @@ def pytest_sessionfinish(session, exitstatus):
     dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
     # Cleanup docker network created for openfl, if any.
     dh.remove_docker_network(["openfl"])
-
-
-def pytest_configure(config):
-    """
-    Configure the pytest plugin.
-    Args:
-        config: pytest config object
-    """
-    # Declare some global variables
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    config.model_name = args.model_name
-    config.num_collaborators = args.num_collaborators
-    config.num_rounds = args.num_rounds
-    config.require_client_auth = not args.disable_client_auth
-    config.use_tls = not args.disable_tls
-    config.log_memory_usage = args.log_memory_usage
-    config.results_dir = config.getini("results_dir")
