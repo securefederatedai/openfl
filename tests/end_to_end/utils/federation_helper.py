@@ -13,6 +13,7 @@ from pathlib import Path
 import shutil
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.ssh_helper as ssh
@@ -239,15 +240,14 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True, with_docker=False):
+def run_federation(fed_obj, install_dependencies=True):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
         install_dependencies (bool): Install dependencies on collaborators (default is True)
-        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
     Returns:
-        list: List of response files for all the participants
+        bool: True if successful, else False
     """
     executor = concurrent.futures.ThreadPoolExecutor()
     if install_dependencies:
@@ -260,7 +260,6 @@ def run_federation(fed_obj, install_dependencies=True, with_docker=False):
             constants.AGG_COL_RESULT_FILE.format(
                 fed_obj.workspace_path, participant.name
             ),
-            with_docker=with_docker,
         )
         for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
@@ -268,8 +267,8 @@ def run_federation(fed_obj, install_dependencies=True, with_docker=False):
     # Result will contain response files for all the participants.
     results = [f.result() for f in futures]
     if not all(results):
-        raise Exception("Failed to start one or more participants")
-    return results
+        raise ex.ParticipantStartException("Failed to start one or more participants")
+    return True
 
 
 def run_federation_for_dws(fed_obj, use_tls):
@@ -279,48 +278,23 @@ def run_federation_for_dws(fed_obj, use_tls):
         fed_obj (object): Federation fixture object
         use_tls (bool): Use TLS or not (default is True)
     Returns:
-        list: List of response files for all the participants
+        bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
-
-    try:
-        results = [
-            executor.submit(
-                run_command,
-                command=f"tar -xf /workspace/cert_{participant.name}.tar",
-                workspace_path="",
-                error_msg=f"Failed to extract certificates for {participant.name}",
-                container_id=participant.container_id,
-                with_docker=True,
-            )
-            for participant in [fed_obj.aggregator] + fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to extract certificates for one or more participants"
-            )
-    except Exception as e:
-        raise e
-
-    if use_tls:
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
         try:
-            results = [
-                executor.submit(
-                    collaborator.import_pki,
-                    zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
-                    with_docker=True,
-                )
-                for collaborator in fed_obj.collaborators
-            ]
-            if not all([f.result() for f in results]):
-                raise Exception(
-                    "Failed to import and certify the CSR for one or more collaborators"
-                )
+            container = dh.start_docker_container_with_federation_run(
+                participant=participant,
+                image=constants.DFLT_DOCKERIZE_IMAGE_NAME,
+                use_tls=use_tls,
+            )
         except Exception as e:
+            log.error(f"Failed to start docker container for {participant.name}: {e}")
             raise e
 
-    # Start federation run for all the participants
-    return run_federation(fed_obj, with_docker=True)
+        participant.container_id = container.id
+        participant.res_file = os.path.join(participant.workspace_path, f"{participant.name}.log")
+
+    return True
 
 
 def install_dependencies_on_collaborators(fed_obj):
@@ -344,12 +318,11 @@ def install_dependencies_on_collaborators(fed_obj):
         raise Exception("Failed to install dependencies on one or more collaborators")
 
 
-def verify_federation_run_completion(fed_obj, results, test_env, num_rounds):
+def verify_federation_run_completion(fed_obj, test_env, num_rounds):
     """
     Verify the completion of the process for all the participants
     Args:
         fed_obj (object): Federation fixture object
-        results (list): List of results
         test_env (str): Test environment
         num_rounds (int): Number of rounds
     Returns:
@@ -364,50 +337,34 @@ def verify_federation_run_completion(fed_obj, results, test_env, num_rounds):
             _verify_completion_for_participant,
             participant,
             num_rounds,
-            results[i],
-            test_env,
-            local_bind_path=fed_obj.local_bind_path,
         )
-        for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
+        for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
 
     # Result will contain a list of boolean values for all the participants.
     # True - successful completion, False - failed/incomplete
     results = [f.result() for f in futures]
-    log.info(f"Results from all the participants: {results}")
+    log.debug(f"Results from all the participants: {results}")
 
     # If any of the participant failed, return False, else return True
     return all(results)
 
 
 def _verify_completion_for_participant(
-    participant, num_rounds, result_file, test_env, time_for_each_round=100, local_bind_path=None
+    participant, num_rounds, time_for_each_round=100
 ):
     """
     Verify the completion of the process for the participant
     Args:
         participant (object): Participant object
         num_rounds (int): Number of rounds
-        result_file (str): Result file
         time_for_each_round (int): Time for each round
-        local_bind_path (str, Optional): Local bind path. Applicable in case of docker environment
     Returns:
         bool: True if successful, else False
     """
     time.sleep(20)  # Wait for some time before checking the log file
     # Set timeout based on the number of rounds and time for each round
     timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
-
-    # In case of docker environment, get the logs from local path which is mounted to the container
-    if test_env == "task_runner_dockerized_ws":
-        result_file = constants.AGG_COL_RESULT_FILE.format(
-            local_bind_path, participant.name
-        )
-        ssh.copy_file_from_docker(
-            participant.name, f"/workspace/{participant.name}.log", result_file
-        )
-
-    log.info(f"Result file is: {result_file}")
 
     # Do not open file here as it will be opened in the loop below
     # Also it takes time for the federation run to start and write the logs
@@ -417,7 +374,7 @@ def _verify_completion_for_participant(
     while (
         constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
     ):
-        with open(result_file, "r") as file:
+        with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
         content = list(filter(str.rstrip, lines))[-1:]
 
@@ -427,14 +384,6 @@ def _verify_completion_for_participant(
             break
         log.info(f"Process is yet to complete for {participant.name}")
         time.sleep(45)
-
-        # Copy the log file from docker container to local machine everytime to get the latest logs
-        if test_env == "task_runner_dockerized_ws":
-            ssh.copy_file_from_docker(
-                participant.name,
-                f"/workspace/{participant.name}.log",
-                constants.AGG_COL_RESULT_FILE.format(local_bind_path, participant.name),
-            )
 
     if constants.SUCCESS_MARKER not in content:
         log.error(
@@ -453,6 +402,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     Setup the federation environment and validate the configurations
     Args:
         request (object): Request object
+        eval_scope (bool): If True, sets up the evaluation scope for a single round
     Returns:
         tuple: Model name, workspace path, local bind path, aggregator domain name
     """
@@ -465,11 +415,12 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     if not request.config.model_name.replace("/", "_").upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
-    # Set the workspace path
+    # Set the workspace path specific to the model and the test case
     home_dir = Path().home()
     local_bind_path = os.path.join(
-        home_dir, request.config.results_dir, request.config.model_name.replace("/", "_")
+        home_dir, request.config.results_dir, request.node.name, request.config.model_name.replace("/", "_")
     )
+
     num_rounds = request.config.num_rounds
 
     if eval_scope:
@@ -478,6 +429,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
     workspace_path = local_bind_path
+
     # if path exists delete it
     if os.path.exists(workspace_path):
         shutil.rmtree(workspace_path)
@@ -607,7 +559,7 @@ def run_command(
         log.info(f"Running command: {command}")
 
     if run_in_background and not with_docker:
-        bg_file = open(bg_file, "w", buffering=1)
+        bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
             command,
             work_dir=workspace_path,
@@ -820,33 +772,6 @@ def write_memory_usage_to_file(memory_usage_dict, output_file):
         raise e
 
 
-def start_docker_containers_for_dws(
-    participants, workspace_path, local_bind_path, image_name
-):
-    """
-    Start docker containers for the participants
-    Args:
-        participants (list): List of participant objects (collaborators and aggregator)
-        workspace_path (str): Workspace path
-        local_bind_path (str): Local bind path
-        image_name (str): Docker image name
-    """
-    for participant in participants:
-        try:
-            # In case of dockerized workspace, the workspace gets created inside folder with image name
-            container = dh.start_docker_container(
-                container_name=participant.name,
-                workspace_path=workspace_path,
-                local_bind_path=local_bind_path,
-                image=image_name,
-            )
-            participant.container_id = container.id
-        except Exception as e:
-            raise ex.DockerException(
-                f"Failed to start {participant.name} docker environment: {e}"
-            )
-
-
 def start_director(workspace_path, dir_res_file):
     """
     Start the director.
@@ -1027,3 +952,54 @@ def verify_federated_runtime_experiment_completion(participant_res_files):
             log.error(f"Process failed for {name}")
             return False
     return True
+
+
+def get_current_round(database_file: str) -> int:
+    """
+    Get the current round number from the database file
+    Args:
+        database_file (str): Database file
+    Returns:
+        int: Current round number
+    """
+    return int(db_helper.get_key_value_from_db("round_number", database_file))
+
+
+def get_best_agg_score(database_file: str) -> float:
+    """
+    Get the best aggregated score from the database file
+    Args:
+        database_file (str): Database file
+    Returns:
+        float: Best aggregated score
+    """
+    return db_helper.get_key_value_from_db("best_score", database_file)
+
+
+def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
+    """
+    Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
+    and retrying with some wait time for input timeout.
+    Args:
+        inp_round (int): The initial round number to compare against.
+        database_file (str): The path to the database file.
+        total_rounds (int): The total number of rounds expected.
+        timeout (int): The maximum time to wait in seconds.
+            Default is 300 seconds as some of the models take more time to complete the round.
+        sleep_interval (int): The wait time between retries in seconds. Default is 5 seconds.
+    Returns:
+        round number(int) if current round number has increased, else False.
+    """
+    if inp_round == total_rounds:
+        log.info("Federation is already at the last round.")
+        return inp_round
+
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        current_round = get_current_round(database_file)
+
+        if current_round > inp_round:
+            return current_round
+        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        time.sleep(sleep_interval)
+    return False
