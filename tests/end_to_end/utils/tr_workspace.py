@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_details = collections.namedtuple(
     "federation_details",
-    "model_owner, aggregator, collaborators, workspace_path, local_bind_path",
+    "model_owner, aggregator, collaborators, workspace_path, local_bind_path, model_name",
 )
 
 
@@ -55,7 +55,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
-    param_config=request.config
+    param_config = request.config
 
     initial_model_path = None
     if eval_scope:
@@ -81,8 +81,8 @@ def create_tr_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id,  # None in case of non-docker environment
-        eval_scope=eval_scope
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id,  # None in case of native environment
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -120,6 +120,7 @@ def create_tr_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
+        model_name=model_name,
     )
 
 
@@ -173,7 +174,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
     # Command 'fx workspace dockerize --save ..' will use the workspace name for image name
     # which is 'workspace' in this case.
     model_owner.dockerize_workspace()
-    image_name = "workspace"
+    image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS
     # Register the collaborators in case of non-TLS
@@ -188,8 +189,8 @@ def create_tr_dws_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
-        container_id=model_owner.container_id, # None in case of non-docker environment
-        eval_scope=eval_scope
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id, # None in case of native environment
     )
 
     futures = [
@@ -234,13 +235,6 @@ def create_tr_dws_workspace(request, eval_scope=False):
     # to the other machine(s) so that docker load can load the image.
     model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
 
-    fh.start_docker_containers_for_dws(
-        participants=[aggregator] + collaborators,
-        workspace_path=workspace_path,
-        local_bind_path=local_bind_path,
-        image_name=image_name,
-    )
-
     # Return the federation fixture
     return federation_details(
         model_owner=model_owner,
@@ -248,4 +242,5 @@ def create_tr_dws_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
+        model_name=model_name,
     )

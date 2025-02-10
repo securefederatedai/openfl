@@ -4,6 +4,7 @@
 import logging
 import os
 
+import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 
@@ -19,7 +20,7 @@ class Aggregator():
     2. Starting the aggregator
     """
 
-    def __init__(self, agg_domain_name=None, workspace_path=None, container_id=None, eval_scope=False):
+    def __init__(self, agg_domain_name, workspace_path, eval_scope=False, container_id=None):
         """
         Initialize the Aggregator class
         Args:
@@ -31,8 +32,10 @@ class Aggregator():
         self.name = "aggregator"
         self.agg_domain_name = agg_domain_name
         self.workspace_path = workspace_path
-        self.container_id = container_id
         self.eval_scope = eval_scope
+        self.container_id = container_id
+        self.tensor_db_file = os.path.join(self.workspace_path, "local_state", "tensor.db")
+        self.res_file = None # Result file to track the logs
 
     def generate_sign_request(self):
         """
@@ -52,34 +55,32 @@ class Aggregator():
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
-    def start(self, res_file, with_docker=False):
+    def start(self, res_file):
         """
         Start the aggregator
         Args:
             res_file (str): Result file to track the logs
-            with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.name}")
-            res_file = res_file if not with_docker else os.path.basename(res_file)
             error_msg = "Failed to start the aggregator"
-            command = "fx aggregator start"
+            command = constants.AGG_START_CMD
             if self.eval_scope:
                 command = f"{command} --task_group evaluation"
             fh.run_command(
                 command=command,
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path if not with_docker else "",
+                workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                with_docker=with_docker
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
             )
+            self.res_file = res_file
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e

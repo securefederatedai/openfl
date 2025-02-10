@@ -14,6 +14,8 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     TORCH_HISTOLOGY = "torch/histology"
     XGB_HIGGS = "xgb_higgs"
+    KERAS_TORCH_MNIST = "keras/torch/mnist"
+    KERAS_JAX_MNIST = "keras/jax/mnist"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
@@ -43,3 +45,9 @@ AGG_WORKSPACE_ZIP_NAME = "workspace.zip"
 # Memory logs related
 AGG_MEM_USAGE_JSON = "{}/aggregator/workspace/logs/aggregator_memory_usage.json"  # example - /tmp/my_federation/aggregator/workspace/logs/aggregator_memory_usage.json
 COL_MEM_USAGE_JSON = "{0}/{1}/workspace/logs/{1}_memory_usage.json"  # example - /tmp/my_federation/collaborator1/workspace/logs/collaborator1_memory_usage.json
+
+AGG_START_CMD = "fx aggregator start"
+COL_START_CMD = "fx collaborator start -n {}"
+
+COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
+DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
