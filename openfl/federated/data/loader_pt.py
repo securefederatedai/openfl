@@ -4,12 +4,15 @@
 
 """PyTorchDataLoader module."""
 
+import sys
 from math import ceil
 
 import numpy as np
+import typing_extensions
 
 from openfl.federated.data.loader import DataLoader
 
+sys.modules["pip._vendor.typing_extensions"] = typing_extensions
 
 class PyTorchDataLoader(DataLoader):
     """A class used to represent a Federation Data Loader for PyTorch models.
