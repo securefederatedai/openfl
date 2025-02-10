@@ -15,9 +15,7 @@ from typing import Any, Callable, Dict, List, Tuple
 import dill
 
 from openfl.experimental.workflow.interface import FLSpec
-from openfl.experimental.workflow.runtime import FederatedRuntime
 from openfl.experimental.workflow.utilities import aggregator_to_collaborator, checkpoint
-from openfl.experimental.workflow.utilities.metaflow_utils import MetaflowInterface
 
 logger = getLogger(__name__)
 
@@ -125,13 +123,13 @@ class Aggregator:
 
         self.flow = flow
         self.checkpoint = checkpoint
-        self.flow._foreach_methods = []
-        logger.info("MetaflowInterface creation.")
-        self.flow._metaflow_interface = MetaflowInterface(self.flow.__class__, "single_process")
-        self.flow._run_id = self.flow._metaflow_interface.create_run()
-        self.flow.runtime = FederatedRuntime()
+        self.runtime = {
+            "runtime": "FederatedRuntime",
+            "runtime_backend": "single_process",
+            "collaborators": self.authorized_cols,
+        }
+        self.flow._setup_initial_state(self.runtime)
         self.name = "aggregator"
-        self.flow.runtime.collaborators = self.authorized_cols
 
         self.__private_attrs_callable = private_attributes_callable
         self.__private_attrs = private_attributes
@@ -200,9 +198,6 @@ class Aggregator:
         """
         # Start function will be the first step if any flow
         f_name = "start"
-        # Creating a clones from the flow object
-        FLSpec.reset_and_create_clones(self.flow, self.flow.runtime.collaborators)
-
         logger.info(f"Starting round {self.current_round}...")
         while True:
             next_step = self.do_task(f_name)

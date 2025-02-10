@@ -11,11 +11,12 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import dill
 from tabulate import tabulate
 
+from openfl.experimental.workflow.interface.fl_spec import FLSpec
 from openfl.experimental.workflow.runtime.runtime import Runtime
 from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
 from openfl.experimental.workflow.workspace_export import WorkspaceExport
@@ -138,6 +139,24 @@ class FederatedRuntime(Runtime):
             certificate=self.certificate,
         )
 
+    def run(self, flspec: Type[FLSpec]) -> None:
+        """Executes the flow using FederatedRuntime."""
+        try:
+            # Prepare workspace and submit it for the FederatedRuntime
+            archive_path, exp_name = self.prepare_workspace_archive()
+            self.submit_experiment(archive_path, exp_name)
+            # Stream the experiment's stdout if the checkpoint is enabled
+            if flspec._checkpoint:
+                self.stream_experiment_stdout(exp_name)
+            # Retrieve the flspec object to update the experiment state
+            updated_flspec = self.get_flow_state()
+            # Update state of self
+            flspec._update_from_flspec_obj(updated_flspec)
+        except Exception as e:
+            raise Exception(
+                f"FederatedRuntime: Experiment {exp_name} failed to run due to error: {e}"
+            )
+
     def prepare_workspace_archive(self) -> Tuple[Path, str]:
         """
         Prepare workspace archive using WorkspaceExport.
@@ -187,13 +206,16 @@ class FederatedRuntime(Runtime):
             flow_object: The deserialized flow object.
         """
         status, flspec_obj = self._dir_client.get_flow_state()
-
-        # Append generated workspace path to sys.path
-        # to allow unpickling of flspec_obj
-        sys.path.append(str(self.generated_workspace_path))
-        flow_object = dill.loads(flspec_obj)
-
-        return status, flow_object
+        if status:
+            print("Experiment ran successfully")
+            # Append generated workspace path to sys.path
+            # to allow unpickling of flspec_obj
+            sys.path.append(str(self.generated_workspace_path))
+            flow_object = dill.loads(flspec_obj)
+            return flow_object
+        else:
+            print("Experiment could not run")
+            return None
 
     def get_envoys(self) -> List[str]:
         """
