@@ -8,6 +8,7 @@ operations.
 """
 
 from typing import Union
+import random
 
 import numpy as np
 from Crypto.Cipher import AES
@@ -18,8 +19,8 @@ def create_ciphertext(
     secret_key: bytes,
     source_id: int,
     destination_id: int,
-    seed_share: bytes,
-    key_share: bytes,
+    seed_share: str,
+    key_share: str,
     nonce: bytes = b"nonce",
 ) -> tuple[bytes, bytes, bytes]:
     """
@@ -52,7 +53,10 @@ def create_ciphertext(
     source_id_bytes = source_id.to_bytes(4, byteorder="big")
     destination_id_bytes = destination_id.to_bytes(4, byteorder="big")
     # Generate the byte string to be encrypted.
-    data = source_id_bytes + b" " + destination_id_bytes + b" " + seed_share + b" " + key_share
+    data = (
+        source_id_bytes + b" " + destination_id_bytes + b" " +
+        str.encode(seed_share) + b" " + str.encode(key_share)
+    )
     # AES cipher requires the secret key to be of a certain length.
     # We use 64 bytes as it is the maximum length available.
     padded_secret_key = pad(secret_key, 64)
@@ -125,22 +129,28 @@ def pseudo_random_generator(seed: Union[int, float, bytes]) -> np.ndarray:
     Returns:
         np.ndarray: array with pseudo-randomly generated numbers.
     """
-    if isinstance(seed, bytes):
-        # If the seed is a byte string, generate a pseduo-random number using
-        # it as seed and use that as seed for the numpy pseudo random
-        # generator.
-        import random
+    # Seed random generator.
+    random.seed(seed)
 
-        random.seed(seed)
-        seed = random.random()
-
-    # Seed numpy random generator.
-    np.random.seed(seed)
-
-    return np.random.random()
+    return random.random()
 
 
 def calculate_shared_mask(agreed_keys: list):
+    """
+    Calculate the shared mask based on a list of agreed keys.
+
+    Args:
+        agreed_keys (list): A list of tuples where each tuple contains three
+            elements:
+            - source_index (int): The index of the source.
+            - dest_index (int): The index of the destination.
+            - agreed_key (Any): The agreed key used for generating the mask.
+
+    Returns:
+        float: The total shared mask calculated by adding or subtracting the
+            pseudo-random values generated from the agreed keys based on the
+            comparison of source and destination indices.
+    """
     total_mask = 0.0
     for key in agreed_keys:
         source_index = key[0]
