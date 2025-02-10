@@ -1016,7 +1016,7 @@ def set_keras_backend(model_name):
     Args:
         model_name (str): Model name
     Returns:
-        dict: Dictionary containing the environment variables
+        list: List of environment variables
     """
     if "keras" not in model_name:
         return None
@@ -1028,7 +1028,5 @@ def set_keras_backend(model_name):
         raise ValueError(f"Invalid model name format: {model_name}")
 
     os.environ["KERAS_BACKEND"] = backend
-    env_keyval_list = {
-        "KERAS_BACKEND": backend,
-    }
-    return env_keyval_list
+
+    return [f"KERAS_BACKEND={backend}"]
