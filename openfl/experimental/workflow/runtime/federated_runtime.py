@@ -149,6 +149,8 @@ class FederatedRuntime(Runtime):
         archive_path, exp_name = WorkspaceExport.export_federated(
             notebook_path=self.notebook_path,
             output_workspace="./generated_workspace",
+            director_fqdn=self.director["director_node_fqdn"],
+            tls=self.tls,
         )
         return archive_path, exp_name
 
