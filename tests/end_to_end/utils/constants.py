@@ -14,6 +14,8 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     TORCH_HISTOLOGY = "torch/histology"
     XGB_HIGGS = "xgb_higgs"
+    KERAS_TORCH_MNIST = "keras/torch/mnist"
+    KERAS_JAX_MNIST = "keras/jax/mnist"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5

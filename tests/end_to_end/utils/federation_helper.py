@@ -253,6 +253,10 @@ def run_federation(fed_obj, install_dependencies=True):
     if install_dependencies:
         install_dependencies_on_collaborators(fed_obj)
 
+    # Set the backend (KERAS_BACKEND) for Keras as an environment variable
+    if "keras" in fed_obj.model_name:
+        _ = set_keras_backend(fed_obj.model_name)
+
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
     futures = [
         executor.submit(
@@ -286,6 +290,7 @@ def run_federation_for_dws(fed_obj, use_tls):
                 participant=participant,
                 image=constants.DFLT_DOCKERIZE_IMAGE_NAME,
                 use_tls=use_tls,
+                env_keyval_list=set_keras_backend(fed_obj.model_name) if "keras" in fed_obj.model_name else None,
             )
         except Exception as e:
             log.error(f"Failed to start docker container for {participant.name}: {e}")
@@ -1003,3 +1008,26 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
     return False
+
+
+def set_keras_backend(model_name):
+    """
+    Function to set the KERAS_BACKEND environment variable based on the model name.
+    Args:
+        model_name (str): Model name
+    Returns:
+        list: List of environment variables
+    """
+    if "keras" not in model_name:
+        return None
+
+    parts = model_name.split("/")
+    # TODO - modify the logic if the model name changes to have more than 3 parts
+    if len(parts) == 3:
+        backend = parts[1]
+    else:
+        return None
+
+    os.environ["KERAS_BACKEND"] = backend
+
+    return [f"KERAS_BACKEND={backend}"]
