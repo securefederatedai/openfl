@@ -54,15 +54,15 @@ def _log_memory_usage(request, fed_obj):
     """
     # Start the federation
     if request.config.test_env == "task_runner_basic":
-        results = fed_helper.run_federation(fed_obj)
+        assert fed_helper.run_federation(fed_obj)
     else:
-        results = fed_helper.run_federation_for_dws(
+        assert fed_helper.run_federation_for_dws(
             fed_obj, use_tls=request.config.use_tls
         )
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
-        fed_obj, results, test_env=request.config.test_env, num_rounds=request.config.num_rounds
+        fed_obj, test_env=request.config.test_env, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
@@ -87,10 +87,6 @@ def _log_memory_usage(request, fed_obj):
         collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
             fed_obj.workspace_path, collaborator.name
         )
-        if request.config.test_env == "task_runner_dockerized_ws":
-            ssh.copy_file_from_docker(
-                collaborator.name, f"/workspace/logs/{collaborator.name}_memory_usage.json", collaborator_memory_usage_file
-            )
         assert os.path.exists(
             collaborator_memory_usage_file
         ), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"

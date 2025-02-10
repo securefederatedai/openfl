@@ -4,7 +4,7 @@
 import os
 import logging
 
-import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 
@@ -36,6 +36,7 @@ class Collaborator():
         self.data_directory_path = data_directory_path
         self.workspace_path = workspace_path
         self.container_id = container_id
+        self.res_file = None # Result file to track the logs
 
     def generate_sign_request(self):
         """
@@ -114,31 +115,29 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, res_file, with_docker=False):
+    def start(self, res_file):
         """
         Start the collaborator
         Args:
             res_file (str): Result file to track the logs
-            with_docker (bool): Flag to run the collaborator inside a docker container
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
-            res_file = res_file if not with_docker else os.path.basename(res_file)
             error_msg = f"Failed to start {self.collaborator_name}"
             fh.run_command(
-                f"fx collaborator start -n {self.collaborator_name}",
+                constants.COL_START_CMD.format(self.collaborator_name),
                 error_msg=error_msg,
                 container_id=self.container_id,
-                workspace_path=self.workspace_path if not with_docker else "",
+                workspace_path=self.workspace_path,
                 run_in_background=True,
                 bg_file=res_file,
-                with_docker=with_docker
             )
             log.info(
                 f"Started {self.name} and tracking the logs in {res_file}."
             )
+            self.res_file = res_file
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
@@ -163,26 +162,6 @@ class Collaborator():
             log.error(f"{error_msg}: {e}")
             raise e
         return True
-
-    def setup_col_docker_env(self, workspace_path, local_bind_path):
-        """
-        Setup the collaborator docker environment
-        Args:
-            workspace_path (str): Workspace path
-            local_bind_path (str): Local bind path
-        """
-        try:
-            container = dh.start_docker_container(
-                container_name=self.collaborator_name,
-                workspace_path=workspace_path,
-                local_bind_path=local_bind_path,
-            )
-            self.container_id = container.id
-
-            log.info(f"Setup of {self.collaborator_name} docker environment is complete")
-        except Exception as e:
-            log.error(f"Failed to setup {self.collaborator_name} docker environment: {e}")
-            raise e
 
     def import_workspace(self):
         """
