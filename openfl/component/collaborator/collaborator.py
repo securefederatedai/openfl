@@ -148,12 +148,12 @@ class Collaborator:
             )
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
-        self._secure_aggregation_enabled = secure_aggregation
 
-        # Callbacks
+        self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
             callbacks.append(callbacks_module.CollaboratorSecAgg())
 
+        # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
@@ -175,6 +175,16 @@ class Collaborator:
     def run(self):
         """Run the collaborator."""
         # Experiment begin
+
+        # FIXME: Not working when added to callbacks on line 157.
+        callback = callbacks_module.CollaboratorSecAgg()
+        callback.set_params({
+            "origin": self.collaborator_name,
+            "client": self.client,
+        })
+        callback.set_tensor_db(self.tensor_db)
+        callback.on_experiment_begin()
+
         self.callbacks.on_experiment_begin()
 
         while True:
@@ -334,6 +344,32 @@ class Collaborator:
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
+        # If secure aggregation is enabled, add masks to the dict to be shared
+        # with the aggregator.
+        if self._secure_aggregation_enabled:
+            import numpy as np
+
+            # Fetch private mask from tensor db.
+            private_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey(
+                    "private_mask", self.collaborator_name, -1, False, ("secagg", )
+                )
+            )[0]
+            # Fetch shared mask from tensor db.
+            shared_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey(
+                    "shared_mask", self.collaborator_name, -1, False, ("secagg", )
+                )
+            )[0]
+            for tensor_key in global_output_tensor_dict:
+                _, _, _, _, tags = tensor_key
+                if "metric" in tags:
+                    shared_mask = np.add(
+                        private_mask, global_output_tensor_dict[tensor_key]
+                    )
+                    global_output_tensor_dict[tensor_key] = np.add(
+                        shared_mask, shared_mask
+                    )
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
