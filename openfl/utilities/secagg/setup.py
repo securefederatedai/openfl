@@ -68,30 +68,39 @@ class Setup:
 
     def aggregate_tensor(self, tensor_name):
         """
-        Aggregates the specified tensor based on its name.
+        Aggregates the specified tensor based on its name and performs
+        subsequent operations if necessary.
 
         Args:
             tensor_name (str): The name of the tensor to aggregate.
-                It can be one of the following:
-                - "public_key": Aggregates public keys.
-                - "ciphertext": Aggregates ciphertexts.
-                - "seed_share" or "key_share": Aggregates secret shares,
-                    reconstructs secrets, generates agreed keys between
-                    all pairs of collaborators, and saves the local tensors
-                    to the tensor database.
+                It can be one of the following: "public_key", "ciphertext",
+                "seed_share", "key_share".
+
+        Raises:
+            ValueError: If the tensor_name is not one of the expected values.
+
+        Operations:
+            - Aggregates public keys if tensor_name is "public_key".
+            - Aggregates ciphertexts if tensor_name is "ciphertext".
+            - Aggregates seed shares if tensor_name is "seed_share".
+            - Aggregates key shares if tensor_name is "key_share".
+            - If both "seed_shares" and "key_shares" are present in the
+                results, it:
+                - Reconstructs secrets.
+                - Generates agreed keys between all pairs of collaborators.
+                - Saves the local tensors to the tensor database.
         """
         if tensor_name == "public_key":
             self._aggregate_public_keys()
         elif tensor_name == "ciphertext":
             self._aggregate_ciphertexts()
-        elif tensor_name in "seed_share":
+        elif tensor_name == "seed_share":
             self._aggregate_seed_shares()
-        elif tensor_name in "key_share":
-            self._aggregate_key_shares
+        elif tensor_name == "key_share":
+            self._aggregate_key_shares()
 
         if "seed_shares" in self._results and "key_shares" in self._results:
             self._reconstruct_secrets()
-            # print("lfg", self._results)
             # Generate agreed keys between all pairs of collaborators.
             self._generate_agreed_keys()
             # Save the local tensors to the tensor database.
@@ -190,9 +199,9 @@ class Setup:
             )
             for share in nparray:
                 # Creating a map for local use.
-                if share[0] not in self._results["seed_shares"]:
-                    self._results["seed_shares"][int(share[0])] = {}
-                self._results["seed_shares"][int(share[0])][int(share[1])] = share[2][2:-1]
+                if int(share[1]) not in self._results["seed_shares"]:
+                    self._results["seed_shares"][int(share[1])] = {}
+                self._results["seed_shares"][int(share[1])][int(share[0])] = share[2][2:-1]
 
     def _aggregate_key_shares(self):
         """
@@ -231,9 +240,9 @@ class Setup:
             )
             for share in nparray:
                 # Creating a map for local use.
-                if share[0] not in self._results["key_shares"]:
-                    self._results["key_shares"][int(share[0])] = {}
-                self._results["key_shares"][int(share[0])][int(share[1])] = share[2][2:-1]
+                if int(share[1]) not in self._results["key_shares"]:
+                    self._results["key_shares"][int(share[1])] = {}
+                self._results["key_shares"][int(share[1])][int(share[0])] = share[2][2:-1]
 
     def _reconstruct_secrets(self):
         """

@@ -13,7 +13,7 @@ from typing import List, Optional
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
-from openfl.interface.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import SecureAggregation, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
@@ -1103,6 +1103,12 @@ class Aggregator:
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             agg_function = WeightedAverage() if "metric" in tags else task_agg_function
+            # Check if secure aggregation is enabled, set aggregation function.
+            agg_function = (
+                SecureAggregation()
+                if "metric" in tags and self._secure_aggregation_enabled
+                else agg_function
+            )
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
                 collaborator_weight_dict,
@@ -1278,28 +1284,22 @@ class Aggregator:
         for named_tensor in named_tensors:
             # Check if the tensor belongs to one from secure aggregation
             # setup stages.
-            if "secagg" in tuple(named_tensor.tags):
+            if "secagg" not in tuple(named_tensor.tags):
+                continue
+            else:
+                secagg_setup = True
                 # Process and save tensor to local tensor db.
                 self._process_named_tensor(named_tensor, collaborator_name)
                 tensor_name = named_tensor.name
-                secagg_setup = True
-            else:
-                break
-
-        # Return if the tensor does not belong to secure aggregation setup.
-        if not secagg_setup:
-            return secagg_setup
-
-        # Check if all collaborators have sent their data for the current key.
-        all_collaborators_sent = self.secagg.wait_for_all_collaborators(
-            tensor_name
-        )
-
-        if not all_collaborators_sent:
-            return secagg_setup
-
-        # If all collaborators have sent their data, proceed with aggregation
-        # for the key.
-        self.secagg.aggregate_tensor(tensor_name)
+                # Check if all collaborators have sent their data for the
+                # current key.
+                all_collaborators_sent = self.secagg.wait_for_all_collaborators(
+                    tensor_name
+                )
+                if not all_collaborators_sent:
+                    continue
+                # If all collaborators have sent their data, proceed with
+                # aggregation for the key.
+                self.secagg.aggregate_tensor(tensor_name)
 
         return secagg_setup
