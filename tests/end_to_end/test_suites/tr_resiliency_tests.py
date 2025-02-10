@@ -31,7 +31,11 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
     assert fed_helper.run_federation(fx_federation_tr)
 
     db_file = fx_federation_tr.aggregator.tensor_db_file
-    _perform_restart_validate_rounds(fed_obj=fx_federation_tr, db_file=db_file, total_rounds=request.config.num_rounds)
+    _perform_restart_validate_rounds(
+        fed_obj=fx_federation_tr,
+        db_file=db_file,
+        total_rounds=request.config.num_rounds,
+    )
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -62,7 +66,11 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     fed_helper.run_federation_for_dws(fx_federation_tr_dws, request.config.use_tls)
 
     db_file = fx_federation_tr_dws.aggregator.tensor_db_file
-    _perform_restart_validate_rounds(fed_obj=fx_federation_tr_dws, db_file=db_file, total_rounds=request.config.num_rounds)
+    _perform_restart_validate_rounds(
+        fed_obj=fx_federation_tr_dws,
+        db_file=db_file,
+        total_rounds=request.config.num_rounds,
+    )
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
@@ -98,7 +106,9 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 
     assert (
         round_post_agg_restart := fed_helper.validate_round_increment(
-            init_round, db_file
+            init_round,
+            db_file,
+            total_rounds,
         )
     ), f"Expected current round to be ahead of {init_round} after aggregator restart"
 
@@ -108,7 +118,9 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 
     assert (
         round_post_collab_restart := fed_helper.validate_round_increment(
-            round_post_agg_restart, db_file
+            round_post_agg_restart,
+            db_file,
+            total_rounds,
         )
     ), f"Expected current round to be ahead of {round_post_agg_restart} after collaborators restart"
 
@@ -117,7 +129,8 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     log.info("All participants restarted successfully")
 
     assert fed_helper.validate_round_increment(
-        round_post_collab_restart, db_file,
+        round_post_collab_restart,
+        db_file,
         total_rounds,
     ), f"Expected current round to be ahead of {round_post_collab_restart} after all participants restart"
 
