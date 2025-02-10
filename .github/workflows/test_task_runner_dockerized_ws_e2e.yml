@@ -23,8 +23,8 @@ on:
         options:
           - all
           - test_with_tls
-          - test_without_tls
-          - test_without_client_auth
+          - test_with_non_tls
+          - test_with_no_client_auth
           - test_memory_logs
         required: false
 
@@ -90,12 +90,12 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "tr_tls_dockerized_ws"
 
-  test_without_tls:
+  test_with_non_tls_dockerized_ws:
     name: Without TLS
     needs: input_selection
-    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_tls'
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_non_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -133,12 +133,12 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_TLS"
+          test_type: "tr_non_tls_dockerized_ws"
 
-  test_without_client_auth:
-    name: Without Client Auth
+  test_with_no_client_auth_dockerized_ws:
+    name: Without client auth
     needs: input_selection
-    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_client_auth'
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_no_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -176,10 +176,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_Client_Auth"
+          test_type: "tr_no_client_auth_dockerized_ws"
 
-  test_memory_logs:
-    name: With Memory Logs
+  test_memory_logs_dockerized_ws:
+    name: With memory logs
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
@@ -220,4 +220,128 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_Memory_Logs"
+          test_type: "tr_tls_memory_logs_dockerized_ws"
+
+  # TODO - remove it before merging.
+  test_with_tls_restart:
+    name: With TLS
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        model_name: ["keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests with TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_tls_with_restart" 
+
+  test_with_non_tls_restart:
+    name: Without TLS
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        model_name: ["keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "tr_non_tls_restart"
+
+  test_with_no_client_auth_restart:
+    name: Without client auth
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        model_name: ["keras/mnist"]
+        python_version: ["3.10", "3.11", "3.12"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: 'tr_no_client_auth_restart'
