@@ -3,7 +3,6 @@
 
 import logging
 import docker
-import os
 from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
@@ -60,10 +59,9 @@ def check_docker_image():
     log.debug(f"Image {constants.DEFAULT_OPENFL_IMAGE} exists")
 
 
-def start_docker_container(
-    container_name,
-    workspace_path,
-    local_bind_path,
+def start_docker_container_with_federation_run(
+    participant,
+    use_tls=True,
     image=constants.DEFAULT_OPENFL_IMAGE,
     network=constants.DOCKER_NETWORK_NAME,
     env_keyval_list=None,
@@ -71,11 +69,11 @@ def start_docker_container(
     mount_mapping=None,
 ):
     """
-    Start the docker container with provided name.
+    Start the docker container for given participant and sets its container ID.
+    IMPORTANT: Internally runs the command to start the federation run.
     Args:
-        container_name: Name of the container
-        workspace_path: Workspace path
-        local_bind_path: Local bind path
+        participant: Participant object (aggregator/collaborator)
+        use_tls: Flag to indicate if TLS is enabled. Default is True.
         image: Docker image to use
         network: Docker network to use (default is openfl)
         env_keyval_list: List of environment variables to set.
@@ -93,13 +91,14 @@ def start_docker_container(
             local_participant_path = mount_mapping[0].split(":")[0]
             docker_participant_path = mount_mapping[0].split(":")[1]
         else:
-            local_participant_path = os.path.join(local_bind_path, container_name, "workspace")
-            docker_participant_path = "/workspace"
+            local_participant_path = participant.workspace_path
+
+            docker_participant_path = f"/{constants.DFLT_DOCKERIZE_IMAGE_NAME}"
 
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
         }
-        log.debug(f"Volumes for {container_name}: {volumes}")
+        log.debug(f"Volumes for {participant.name}: {volumes}")
 
         environment = {
             "WORKSPACE_PATH": docker_participant_path,
@@ -111,7 +110,26 @@ def start_docker_container(
                 key, val = keyval.split("=")
                 environment[key] = val
 
-        log.debug(f"Environment variables for {container_name}: {environment}")
+        log.debug(f"Environment variables for {participant.name}: {environment}")
+
+        # Prepare the commands to run based on the participant
+        log_file = f"{docker_participant_path}/{participant.name}.log"
+
+        if participant.name == "aggregator":
+            start_agg = constants.AGG_START_CMD
+            # Handle Fed Eval case
+            if participant.eval_scope:
+                start_agg += " --task_group evaluation"
+            command = ["bash", "-c", f"touch {log_file} && {start_agg} > {log_file} 2>&1"]
+        else:
+            start_collaborator = f"touch {log_file} && {constants.COL_START_CMD.format(participant.name)} > {log_file} 2>&1"
+            if use_tls:
+                command = ["bash", "-c", f"{constants.COL_CERTIFY_CMD.format(participant.name)} && {start_collaborator}"]
+            else:
+                command = ["bash", "-c", start_collaborator]
+
+        log.info(f"Command for {participant.name}: {command}")
+
         # Start a container from the image
         container = client.containers.run(
             image,
@@ -119,14 +137,15 @@ def start_docker_container(
             user="root",
             auto_remove=False,
             tty=True,
-            name=container_name,
+            name=participant.name,
             network=network,
             security_opt=security_opt,
             volumes=volumes,
             environment=environment,
             use_config_proxy=False,  # Do not use proxy for docker container
+            command=command
         )
-        log.info(f"Container for {container_name} started with ID: {container.id}")
+        log.info(f"Container for {participant.name} started with ID: {container.id}")
 
     except Exception as e:
         raise ex.DockerException(f"Error starting docker container: {e}")
@@ -169,3 +188,28 @@ def cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"]
 
         if containers:
             log.info(f"Docker containers {container_names} cleaned up successfully")
+
+
+def stop_start_docker_participant(participant, action):
+    """
+    Stop or start the docker participant.
+    Args:
+        participant: Participant object
+        action (str): Action to perform (stop/start)
+    """
+    if action not in ["stop", "start"]:
+        raise ex.DockerException(f"Invalid action {action}")
+
+    client = get_docker_client()
+
+    # List containers with the participant name
+    containers = client.containers.list(all=True, filters={"name": participant.name})
+    container_names = []
+
+    for container in containers:
+        # Restart the participant
+        container.stop() if action == "stop" else container.start()
+        log.debug(f"Docker {action} successful for {container.name}")
+        container_names.append(container.name)
+
+    return True
