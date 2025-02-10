@@ -9,6 +9,7 @@ on:
   push:
     branches: 
       - develop
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -30,6 +31,8 @@ on:
           - all
           - torch/mnist
           - keras/mnist
+          - keras/torch/mnist
+          - keras/jax/mnist
       python_version:
         description: "Python version"
         required: false
@@ -100,7 +103,7 @@ jobs:
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
           if [ "${{ env.MODEL_NAME }}" == "all" ]; then
-            echo "models_for_tls=[\"torch/mnist\", \"keras/mnist\"]" >> "$GITHUB_OUTPUT"
+            echo "models_for_tls=[\"keras/torch/mnist\", \"keras/jax/mnist\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_non_tls=[\"torch/mnist\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_no_client_auth=[\"keras/mnist\"]" >> "$GITHUB_OUTPUT"
             echo "models_for_memory_logs=[\"torch/mnist\"]" >> "$GITHUB_OUTPUT"

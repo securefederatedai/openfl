@@ -59,7 +59,8 @@ jobs:
     if: needs.input_selection.outputs.selected_jobs == 'tls' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
-        model_name: ["keras/mnist"]
+        # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
+        model_name: ["keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
