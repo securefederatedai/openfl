@@ -9,6 +9,7 @@ on:
   push:
     branches: 
       - develop
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
