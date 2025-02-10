@@ -104,7 +104,7 @@ def plan(context):
     "-i",
     "--init_model_path",
     required=False,
-    help="Path to save initial model protobuf file.",
+    help="Path to initial model protobuf file.",
     type=ClickPath(exists=True),
 )
 def initialize(

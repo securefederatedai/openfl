@@ -67,9 +67,7 @@ def aggregator(context):
 @option(
     "--task_group",
     required=False,
-    default="learning",
     help="Task group to execute as defined in the plan task assigner.",
-    show_default=True,
 )
 def start_(plan, authorized_cols, task_group):
     """Starts the aggregator service."""
