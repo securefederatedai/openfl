@@ -55,6 +55,14 @@ jobs:
     name: TaskRunner
     uses: ./.github/workflows/taskrunner.yml
 
+  task_runner_e2e:
+    name: TaskRunner E2E
+    uses: ./.github/workflows/task_runner_basic_e2e.yml
+  
+  task_runner_e2e_resiliency:
+    name: TaskRunner E2E Resiliency
+    uses: ./.github/workflows/task_runner_e2e_resiliency.yml
+
   taskrunner_eden_compression:
     name: TaskRunner (Eden Compression)
     uses: ./.github/workflows/taskrunner_eden_pipeline.yml

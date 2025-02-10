@@ -57,7 +57,8 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras/mnist"]
+        # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
+        model_name: ["keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
         python_version: ["3.10", "3.11", "3.12"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 

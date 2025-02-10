@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_details = collections.namedtuple(
     "federation_details",
-    "model_owner, aggregator, collaborators, workspace_path, local_bind_path",
+    "model_owner, aggregator, collaborators, workspace_path, local_bind_path, model_name",
 )
 
 
@@ -120,6 +120,7 @@ def create_tr_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
+        model_name=model_name,
     )
 
 
@@ -241,4 +242,5 @@ def create_tr_dws_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
+        model_name=model_name,
     )
