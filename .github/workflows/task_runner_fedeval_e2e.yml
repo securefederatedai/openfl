@@ -5,7 +5,7 @@ name: Task_Runner_FedEval_E2E  # Please do not modify the name as it is used in 
 
 on:
   schedule:
-    - cron: "0 0 * * *" # Run every day at midnight
+    - cron: "0 7 * * *" # Run every day at 7 am UTC
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -29,7 +29,7 @@ env:
 
 jobs:
   test_with_tls:
-    name: tr_tls
+    name: With TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -72,10 +72,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls"
+          test_type: "With_TLS"
 
-  test_with_non_tls:
-    name: tr_non_tls
+  test_without_tls:
+    name: Without TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -118,10 +118,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls"
+          test_type: "Without_TLS"
 
-  test_with_no_client_auth:
-    name: tr_no_client_auth
+  test_without_client_auth:
+    name: Without Client Auth
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -164,4 +164,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_no_client_auth"
+          test_type: "Without_Client_Auth"

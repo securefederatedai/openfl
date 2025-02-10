@@ -51,8 +51,8 @@ jobs:
         run: |
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}"
 
-  test_with_tls_dockerized_ws:
-    name: tr_tls_dockerized_ws
+  test_with_tls:
+    name: With TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
@@ -92,10 +92,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls_dockerized_ws"
+          test_type: "With_TLS"
 
-  test_with_non_tls_dockerized_ws:
-    name: tr_non_tls_dockerized_ws
+  test_without_tls:
+    name: Without TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
@@ -135,10 +135,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls_dockerized_ws"
+          test_type: "Without_TLS"
 
-  test_with_no_client_auth_dockerized_ws:
-    name: tr_no_client_auth_dockerized_ws
+  test_without_client_auth:
+    name: Without Client Auth
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
@@ -178,4 +178,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_no_client_auth_dockerized_ws"
+          test_type: "Without_Client_Auth"
