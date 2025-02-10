@@ -1022,10 +1022,11 @@ def set_keras_backend(model_name):
         return None
 
     parts = model_name.split("/")
-    if len(parts) > 1:
+    # TODO - modify the logic if the model name changes to have more than 3 parts
+    if len(parts) == 3:
         backend = parts[1]
     else:
-        raise ValueError(f"Invalid model name format: {model_name}")
+        return None
 
     os.environ["KERAS_BACKEND"] = backend
 
