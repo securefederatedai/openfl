@@ -128,7 +128,7 @@ class Aggregator:
             "runtime_backend": "single_process",
             "collaborators": self.authorized_cols,
         }
-        self.flow._setup_initial_state(self.runtime)
+        self.flow.setup_initial_state(self.runtime)
         self.name = "aggregator"
 
         self.__private_attrs_callable = private_attributes_callable

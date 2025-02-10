@@ -11,7 +11,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, List, Type, Union
 
 if TYPE_CHECKING:
-    pass
+    from openfl.experimental.workflow.runtime import FederatedRuntime, LocalRuntime, Runtime
 
 from openfl.experimental.workflow.utilities import (
     MetaflowInterface,
@@ -50,7 +50,6 @@ class FLSpec:
         """
         self._foreach_methods = []
         self._checkpoint = checkpoint
-        self._runtime = None
 
     @classmethod
     def reset_and_create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
@@ -96,14 +95,37 @@ class FLSpec:
             raise ValueError("checkpoint must be a boolean value.")
         self._checkpoint = value
 
-    def _setup_initial_state(self, runtime_info) -> None:
+    @property
+    def runtime(self) -> Type[Union[LocalRuntime, FederatedRuntime]]:
+        """Returns flow runtime.
+
+        Returns:
+            Type[Runtime]: The runtime of the flow.
+        """
+        return self._runtime
+
+    @runtime.setter
+    def runtime(self, runtime: Type[Runtime]) -> None:
+        """Sets flow runtime.
+
+        Args:
+            runtime (Type[Runtime]): The runtime to be set.
+
+        Raises:
+            TypeError: If the provided runtime is not a valid OpenFL Runtime.
+        """
+        if str(runtime) not in ["LocalRuntime", "FederatedRuntime"]:
+            raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
+        self._runtime = runtime
+
+    def setup_initial_state(self, runtime_info) -> None:
         """
         Sets up the flow's initial state
 
         Args:
             runtime_info (dict): Information about the runtime
         """
-        self._runtime = runtime_info["runtime"]
+        self.runtime = runtime_info["runtime"]
         self.collaborators = runtime_info["collaborators"]
         print("MetaflowInterface creation.")
         self._metaflow_interface = MetaflowInterface(
@@ -126,22 +148,6 @@ class FLSpec:
             setattr(self, name, deepcopy(attr))
 
         self._foreach_methods = flspec_obj._foreach_methods
-
-    def _get_flow_state(self) -> Union[FLSpec, None]:
-        """
-        Gets the updated flow state.
-
-        Returns:
-            flspec_obj (Union[FLSpec, None]): An updated FLSpec instance if the experiment
-                runs successfully. None if the experiment could not run.
-        """
-        status, flspec_obj = self.runtime.get_flow_state()
-        if status:
-            print("Experiment ran successfully")
-            return flspec_obj
-        else:
-            print("Experiment could not run")
-            return None
 
     def _capture_instance_snapshot(self, kwargs) -> List:
         """Takes backup of self before exclude or include filtering.

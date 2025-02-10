@@ -653,7 +653,7 @@ class LocalRuntime(Runtime):
             "runtime_backend": self.backend,
             "collaborators": self.collaborators,
         }
-        flspec_obj._setup_initial_state(runtime_info)
+        flspec_obj.setup_initial_state(runtime_info)
         try:
             # Execute all Participant (Aggregator & Collaborator) tasks and
             # retrieve the final attributes
