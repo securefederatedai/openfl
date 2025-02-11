@@ -11,12 +11,14 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 import dill
 from tabulate import tabulate
 
-from openfl.experimental.workflow.interface.fl_spec import FLSpec
+if TYPE_CHECKING:
+    from openfl.experimental.workflow.interface.fl_spec import FLSpec
+
 from openfl.experimental.workflow.runtime.runtime import Runtime
 from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
 from openfl.experimental.workflow.workspace_export import WorkspaceExport
