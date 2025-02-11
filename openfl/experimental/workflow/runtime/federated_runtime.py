@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from openfl.experimental.workflow.interface.fl_spec import FLSpec
 
 from openfl.experimental.workflow.runtime.runtime import Runtime
-from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
+from openfl.experimental.workflow.transport.grpc.director_client import RuntimeDirectorClient
 from openfl.experimental.workflow.workspace_export import WorkspaceExport
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class FederatedRuntime(Runtime):
         tls (bool): A flag indicating if TLS should be used for
             connections. Defaults to False.
         director (Optional[Dict[str, Any]]): Dictionary containing director info.
-        _dir_client (DirectorClient): The director client.
+        _runtime_dir_client (RuntimeDirectorClient): The Runtime director client.
         notebook_path (Optional[str]) : Path to the Jupyter notebook
         experiment_submitted (bool): Whether the experiment has been submitted.
         generated_workspace_path (Path): Path to generated workspace
@@ -67,7 +67,7 @@ class FederatedRuntime(Runtime):
                 self.director.get("api_private_key", None),
                 self.director.get("api_cert", None),
             )
-            self._dir_client = self._create_director_client()
+            self._runtime_dir_client = self._create_runtime_dir_client()
 
         self.notebook_path = notebook_path
         self.experiment_submitted = False
@@ -126,13 +126,13 @@ class FederatedRuntime(Runtime):
         else:
             self.root_certificate = self.private_key = self.certificate = None
 
-    def _create_director_client(self) -> DirectorClient:
-        """Create a DirectorClient instance.
+    def _create_runtime_dir_client(self) -> RuntimeDirectorClient:
+        """Create a RuntimeDirectorClient instance.
 
         Returns:
-            DirectorClient: Instance of the client
+            RuntimeDirectorClient: Instance of the client
         """
-        return DirectorClient(
+        return RuntimeDirectorClient(
             director_host=self.director["director_node_fqdn"],
             director_port=self.director["director_port"],
             tls=self.tls,
@@ -184,7 +184,7 @@ class FederatedRuntime(Runtime):
             exp_name (str): The name of the experiment to be submitted.
         """
         try:
-            response = self._dir_client.set_new_experiment(
+            response = self._runtime_dir_client.set_new_experiment(
                 archive_path=archive_path, experiment_name=exp_name, col_names=self.__collaborators
             )
             self.experiment_submitted = response.status
@@ -226,7 +226,7 @@ class FederatedRuntime(Runtime):
             online_envoys (List[str]): List of online envoys.
         """
         # Fetch envoy data
-        envoys = self._dir_client.get_envoys()
+        envoys = self._runtime_dir_client.get_envoys()
         DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
         now = datetime.now().strftime(DATETIME_FORMAT)
 
@@ -265,7 +265,9 @@ class FederatedRuntime(Runtime):
             print("No experiment has been submitted yet.")
             return
         print(f"Getting standard output for experiment: {experiment_name}...")
-        for stdout_message_dict in self._dir_client.stream_experiment_stdout(experiment_name):
+        for stdout_message_dict in self._runtime_dir_client.stream_experiment_stdout(
+            experiment_name
+        ):
             print(
                 f"Origin: {stdout_message_dict['stdout_origin']}, "
                 f"Task: {stdout_message_dict['task_name']}"
