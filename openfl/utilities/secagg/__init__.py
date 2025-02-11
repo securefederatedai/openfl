@@ -3,6 +3,7 @@
 
 
 from openfl.utilities.secagg.crypto import (
+    calculate_mask,
     calculate_shared_mask,
     create_ciphertext,
     decipher_ciphertext,
