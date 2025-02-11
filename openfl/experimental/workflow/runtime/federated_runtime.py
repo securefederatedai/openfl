@@ -199,13 +199,12 @@ class FederatedRuntime(Runtime):
         finally:
             self.remove_workspace_archive(archive_path)
 
-    def get_flow_state(self) -> Tuple[bool, Any]:
+    def get_flow_state(self) -> Optional[Any]:
         """
         Retrieve the updated flow status and deserialized flow object.
 
         Returns:
-            status (bool): The flow status.
-            flow_object: The deserialized flow object.
+            Optional[Any]: The deserialized flow object if successful, otherwise None
         """
         status, flspec_obj = self._dir_client.get_flow_state()
         if status:
