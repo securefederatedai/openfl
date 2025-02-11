@@ -27,7 +27,7 @@ jobs:
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'sarif'
@@ -52,8 +52,15 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --ignorefile .trivyignore.yaml \
           --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
           .
+
+      - name: Display Trivy Scan Results
+        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
 
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
@@ -62,7 +69,7 @@ jobs:
           path: trivy-code-results.json
       
       - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'json'
@@ -71,9 +78,16 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          ignorefile: '.trivyignore.yaml'
         env:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
   
+      - name: Display Trivy Scan Results
+        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:
@@ -88,9 +102,16 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --ignorefile .trivyignore.yaml \
           --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
           .
   
+      - name: Display Trivy Scan Results
+        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
@@ -98,7 +119,7 @@ jobs:
           path: trivy-code-spdx-results.json
         
       - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'spdx-json'
@@ -107,9 +128,16 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          ignorefile: '.trivyignore.yaml'
         env:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
     
+      - name: Display Trivy Scan Results
+        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:

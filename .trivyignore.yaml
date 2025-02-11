@@ -1,0 +1,17 @@
+# This file is used to suppress both:
+# * Trivy vulnerability scans (under the 'vulnerabilities' section).
+# * Trivy's linting warnings (under the 'misconfigurations' section).
+# For more information about the Trivy Ignore YAML file, please refer to:
+# https://aquasecurity.github.io/trivy/v0.48/docs/configuration/filtering/#trivyignoreyaml
+# Justification should be included above each suppression group.
+
+######################## Trivy CVE supressions ########################
+vulnerabilities:
+  #   * Relevant packages:: coreutils, gpgv, libc-bin, libc6, libgcrypt20, libncurses6, libncursesw6, libpcre3, libsystemd0,
+  #     libtinfo6, libudev1, locales, login, ncurses-base, ncurses-bin, passwd, gcc-12-base, libgcc-s1, libpam-modules, libssl3
+  #     libpam-modules-bin, libpam-runtime, libpcre2-8-0, libzstd1
+  #   * These packages are part of Intel's latest official Ubuntu base image.
+  #   * We do not install it as part of our Dockerfile.
+  #   * It is expected to be resolved when moving to a different (lighter) distribution or upgrading to a newer Ubuntu version.
+  - id: CVE-2025-0395
+
