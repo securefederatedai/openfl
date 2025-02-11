@@ -72,7 +72,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
+      (github.event.pull_request.draft == false)
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -135,6 +135,9 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
+        exclude:
+          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -178,6 +181,9 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_non_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_non_tls) }}
+        exclude:
+          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -221,6 +227,9 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_no_client_auth) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_no_client_auth) }}
+        exclude:
+          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -264,6 +273,9 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_memory_logs) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_memory_logs) }}
+        exclude:
+          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:

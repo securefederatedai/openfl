@@ -7,7 +7,7 @@ on:
   schedule:
     - cron: "0 5 * * *" # Run every day at 5 am UTC
   push:
-    branches: 
+    branches:
       - develop
   workflow_call:
   workflow_dispatch:
@@ -57,7 +57,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
+      (github.event.pull_request.draft == false))
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -82,6 +82,9 @@ jobs:
     strategy:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
+        exclude:
+          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
