@@ -84,6 +84,10 @@ jobs:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
       fail-fast: false # do not immediately fail if one of the combinations fail
 
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
