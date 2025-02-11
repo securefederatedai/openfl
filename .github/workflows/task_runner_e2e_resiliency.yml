@@ -57,7 +57,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false))
+      (github.event.pull_request.draft == false)
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
