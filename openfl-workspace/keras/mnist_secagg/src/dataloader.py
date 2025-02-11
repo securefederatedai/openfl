@@ -1,10 +1,10 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import KerasDataLoader
-from .mnist_utils import load_mnist_shard
+from .utils import load_mnist_shard
 
 
 class KerasMNISTInMemory(KerasDataLoader):
