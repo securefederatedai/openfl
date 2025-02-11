@@ -203,11 +203,10 @@ class Aggregator:
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
         self._secure_aggregation_enabled = secure_aggregation
+        if self._secure_aggregation_enabled:
+            self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
 
         # Callbacks
-        self._secure_aggregation_enabled = True
-        self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
-
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
@@ -1095,7 +1094,13 @@ class Aggregator:
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-            agg_function = WeightedAverage() if "metric" in tags else task_agg_function
+            if "metric" in tags:
+                if self._secure_aggregation_enabled:
+                    agg_function = SecureAggregation()
+                else:
+                    agg_function = WeightedAverage()
+            else:
+                agg_function = task_agg_function
             # Check if secure aggregation is enabled, set aggregation function.
             agg_function = (
                 SecureAggregation()
