@@ -14,7 +14,6 @@ from logging import basicConfig
 from pathlib import Path
 from sys import argv, path
 
-import pkg_resources
 from click import (
     Group,
     argument,
@@ -30,6 +29,7 @@ from click import (
 from rich.console import Console
 from rich.logging import RichHandler
 
+import openfl
 from openfl.utilities import add_log_level
 
 
@@ -157,35 +157,28 @@ class CLI(Group):
                     f"  {style('*', fg='green')} {style(name, fg='cyan'):<21} {help_str}" + "\n"
                 )
 
-
-def get_version():
-    """Get the version of the openfl module.
-
-    Returns:
-        str: Version of the openfl module.
-    """
-    try:
-        version = pkg_resources.get_distribution("openfl").version
-        return version
-    except pkg_resources.DistributionNotFound:
-        return "openfl is not installed"
+    def invoke(self, ctx):
+        if ctx.params.get("version"):
+            echo(f"OpenFL version: {openfl.__version__}")
+            ctx.exit()
+        super().invoke(ctx)
 
 
-@group(cls=CLI, invoke_without_command=True)
-@option("-l", "--log-level", default="info", help="Logging level.", show_default=True)
-@option(
-    "--no-warnings",
-    is_flag=True,
-    help="Flag to disable third-party warnings.",
-    show_default=True,
-)
-@option("-v", "--version", is_flag=True, help="Display OpenFL version.")
+@group(cls=CLI)
+@option("-l", "--log-level", default="info", help="Logging verbosity level.")
+@option("--no-warnings", is_flag=True, help="Disable third-party warnings.")
+@option("-v", "--version", is_flag=True, help="Show version")
 @pass_context
 def cli(context, log_level, no_warnings, version):
-    """Command-Line Interface."""
-    if version:
-        echo(f"OpenFL version: {get_version()}")
-        context.exit()
+    """
+    Command-line Interface.
+
+    Args:
+        context (click.core.Context): Click context.
+        log_level (str): Logging verbosity level.
+        no_warnings (bool): Flag to disable third-party warnings.
+        version (bool): Flag to show version.
+    """
 
     context.ensure_object(dict)
     context.obj["log_level"] = log_level
