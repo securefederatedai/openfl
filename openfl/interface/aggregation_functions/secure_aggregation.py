@@ -54,10 +54,7 @@ class SecureAggregation(AggregationFunction):
                 masks = item["nparray"]
                 break
 
-        tensor_sum_with_masks = np.sum(
-            [tensor.tensor for tensor in local_tensors],
-            axis=0
-        )
+        tensor_sum_with_masks = np.sum([tensor.tensor for tensor in local_tensors], axis=0)
         private_mask = masks[0]
         shared_mask = masks[1]
 

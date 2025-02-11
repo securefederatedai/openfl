@@ -55,14 +55,6 @@ class Setup:
                     ),
                 )
             )
-            # logger.info(
-            #     "hello there! {}: {}".format(
-            #         TensorKey(
-            #             tensor_name, self._aggregator_uuid, -1, False, (collaborator, "secagg", )
-            #         ),
-            #         nparray
-            #     )
-            # )
             if nparray is None:
                 all_received = False
 
