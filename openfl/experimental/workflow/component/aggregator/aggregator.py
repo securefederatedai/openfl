@@ -123,12 +123,11 @@ class Aggregator:
 
         self.flow = flow
         self.checkpoint = checkpoint
-        self.runtime = {
+        self.runtime_info = {
             "runtime": "FederatedRuntime",
             "runtime_backend": "single_process",
             "collaborators": self.authorized_cols,
         }
-        self.flow.setup_initial_state(self.runtime)
         self.name = "aggregator"
 
         self.__private_attrs_callable = private_attributes_callable
@@ -198,6 +197,8 @@ class Aggregator:
         """
         # Start function will be the first step if any flow
         f_name = "start"
+        # Initialize the flow state
+        self.flow.setup_initial_state(self.runtime_info)
         logger.info(f"Starting round {self.current_round}...")
         while True:
             next_step = self.do_task(f_name)
