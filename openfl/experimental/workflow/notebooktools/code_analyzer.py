@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import ast
@@ -17,32 +17,30 @@ logger = getLogger(__name__)
 
 
 class CodeAnalyzer:
-    """Code transforamtion and analysis functionality for NotebookTools
+    """Code analysis and transformation functionality for NotebookTools
 
     Attributes:
-       script_path: Absoluet path to python script.
+       script_path: Absolute path to python script.
        script_name: Name of the python script.
     """
 
-    def __init__(self) -> None:
-        """Initialize CodeTransformer"""
+    def __init__(self, notebook_path: Path, output_path: Path) -> None:
+        """Initialize CodeAnalzer and process the script from notebook
 
-        self.script_path = None
-        self.script_name = None
-
-    def _initialize_script(self, notebook_path: Path, output_path: Path) -> None:
-        """Initialize and process the script from notebook
         Args:
-           notebook_path (str): Path to Jupyter notebook.
-           output_workspace (str): Path to output_workspace to be
-               generated.
+            notebook_path (Path): The path to the Jupyter notebook that needs to be converted.
+            output_path (Path): The directory where the converted Python script will be saved.
         """
+        logger.info("Converting jupter notebook to python script...")
+
+        # Extract the export filename from the notebook
         export_filename = self.__get_exp_name(notebook_path)
         if export_filename is None:
             raise NameError(
                 "Please include `#| default_exp <experiment_name>` in "
                 "the first cell of the notebook."
             )
+        # Convert the notebook to a Python script and set the script path
         self.script_path = Path(
             self.__convert_to_python(
                 notebook_path,
@@ -50,7 +48,15 @@ class CodeAnalyzer:
                 f"{export_filename}.py",
             )
         ).resolve()
+        # Generated python script name
         self.script_name = self.script_path.name.split(".")[0].strip()
+
+        # Comment out flow.run() to prevent the flow from starting execution
+        # automatically when the script is imported.
+        self.__comment_flow_execution()
+
+        # Change the runtime backend from 'ray' to 'single_process'
+        self.__change_runtime()
 
     def __get_exp_name(self, notebook_path: Path) -> None:
         """Fetch the experiment name from the Jupyter notebook.
@@ -84,6 +90,29 @@ class CodeAnalyzer:
         nb_export(notebook_path, output_path)
 
         return Path(output_path).joinpath(export_filename).resolve()
+
+    def __comment_flow_execution(self) -> None:
+        """Comment out lines containing '.run()' in the specified Python script"""
+        with open(self.script_path, "r") as f:
+            data = f.readlines()
+        for idx, line in enumerate(data):
+            if ".run()" in line:
+                data[idx] = f"# {line}"
+        with open(self.script_path, "w") as f:
+            f.writelines(data)
+
+    def __change_runtime(self) -> None:
+        """Change the LocalRuntime backend from ray to single_process."""
+        with open(self.script_path, "r") as f:
+            data = f.read()
+
+        if "backend='ray'" in data or 'backend="ray"' in data:
+            data = data.replace("backend='ray'", "backend='single_process'").replace(
+                'backend="ray"', 'backend="single_process"'
+            )
+
+        with open(self.script_path, "w") as f:
+            f.write(data)
 
     def __import_exported_script(self) -> None:
         """
@@ -283,8 +312,8 @@ class CodeAnalyzer:
             "init_args": init_args,
         }
 
-    def analyze_flow_configuration(self, flow_details: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze flow configuration from flow details.
+    def fetch_flow_configuration(self, flow_details: Dict[str, Any]) -> Dict[str, Any]:
+        """Get flow configuration from flow details.
         Args:
             flow_details (Dict[str, Any]): Dictionary containing flow class details.
 
@@ -324,7 +353,7 @@ class CodeAnalyzer:
 
         return flow_config
 
-    def get_runtime_info(self, flow_class_name: str) -> Tuple[object, str]:
+    def get_flow_runtime_info(self, flow_class_name: str) -> Tuple[object, str]:
         """Get federated flow class and runtime information.
         Args:
             flow_class_name (str): The name of the federated flow class to retrieve.
@@ -336,10 +365,10 @@ class CodeAnalyzer:
             self.__import_exported_script()
 
         federated_flow_class = getattr(self.exported_script_module, flow_class_name)
-        flow_name, runtime = self._find_runtime_instance(federated_flow_class)
-        return runtime, flow_name
+        flow_instance_name, runtime = self._find_flow_instance_runtime(federated_flow_class)
+        return runtime, flow_instance_name
 
-    def _find_runtime_instance(self, federated_flow_class) -> Tuple[str, object]:
+    def _find_flow_instance_runtime(self, federated_flow_class) -> Tuple[str, object]:
         """Find runtime instance
         Args:
             federated_flow_class: The class object of the federated flow.
@@ -351,21 +380,21 @@ class CodeAnalyzer:
             tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
-                flow_name = tempstring
+                flow_instance_name = tempstring
                 if not hasattr(t, "_runtime"):
                     raise AttributeError("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
                     raise AttributeError("LocalRuntime instance does not have collaborators")
-                return flow_name, runtime
+                return flow_instance_name, runtime
         raise AttributeError("Runtime instance not found")
 
-    def process_aggregator(self, runtime, data, flow_name, runtime_name) -> bool:
+    def process_aggregator(self, runtime, data, flow_instance_name, runtime_name) -> bool:
         """Process the aggregator details.
         Args:
             runtime (Any): The runtime instance containing the aggregator.
             data (Dict[str, Any]): The data dictionary to be updated with aggregator details.
-            flow_name (str): The name of the flow.
+            flow_instance_name (str): The name of the flow instance.
             runtime_name (str): The name of the runtime.
 
         Returns:
@@ -397,7 +426,7 @@ class CodeAnalyzer:
         elif aggregator_private_attributes:
             runtime_created = True
             with open(self.script_path, "a") as f:
-                f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
+                f.write(f"\n{runtime_name} = {flow_instance_name}._runtime\n")
                 f.write(
                     f"\naggregator_private_attributes = "
                     f"{runtime_name}._aggregator.private_attributes\n"
@@ -408,13 +437,13 @@ class CodeAnalyzer:
         return runtime_created
 
     def process_collaborators(
-        self, runtime, data, flow_name, runtime_created, runtime_name
+        self, runtime, data, flow_instance_name, runtime_created, runtime_name
     ) -> Dict[str, Any]:
         """Process the collaborators.
         Args:
             runtime (Any): The runtime instance containing the collaborators.
             data (Dict[str, Any]): The data dictionary to be updated with collaborator details.
-            flow_name (str): The name of the flow.
+            flow_instance_name (str): The name of the flow instance.
             runtime_created (bool): Flag indicating if the runtime has been created.
             runtime_name (str): The name of the runtime.
 
@@ -449,7 +478,7 @@ class CodeAnalyzer:
             elif private_attributes:
                 with open(self.script_path, "a") as f:
                     if not runtime_created:
-                        f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
+                        f.write(f"\n{runtime_name} = {flow_instance_name}._runtime\n")
                         runtime_created = True
                     if not runtime_collab_created:
                         f.write(
@@ -463,5 +492,3 @@ class CodeAnalyzer:
                 data[collab_name] = {
                     "private_attributes": f"src.{self.script_name}.{collab_name}_private_attributes"
                 }
-
-        return data

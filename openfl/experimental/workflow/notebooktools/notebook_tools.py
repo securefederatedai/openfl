@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Notebook Tools module."""
@@ -10,8 +10,6 @@ from pathlib import Path
 from shutil import copytree
 from typing import Tuple
 
-import yaml
-
 from openfl.experimental.workflow.federated.plan import Plan
 from openfl.experimental.workflow.interface.cli.cli_helper import print_tree
 from openfl.experimental.workflow.notebooktools.code_analyzer import CodeAnalyzer
@@ -20,8 +18,8 @@ logger = getLogger(__name__)
 
 
 class NotebookTools:
-    """The class is responsible for converting workflow API
-    into an OpenFL workspace
+    """Class to convert LocalRuntime Jupyter notebook based on Workflow API into a
+    workspace that could be deployed on distributed infrastructure
 
     Attributes:
         notebook_path: Absolute path of jupyter notebook.
@@ -67,9 +65,7 @@ class NotebookTools:
         logger.info(f"Copied template workspace to {self.output_workspace_path}")
 
         # Initialize CodeAnalyzer object
-        self.code_analyzer = CodeAnalyzer()
-        # Initialize the script with in the CodeAnalyzer
-        self.code_analyzer._initialize_script(self.notebook_path, self.output_workspace_path)
+        self.code_analyzer = CodeAnalyzer(self.notebook_path, self.output_workspace_path)
 
     @classmethod
     def export_federated(
@@ -92,6 +88,7 @@ class NotebookTools:
         instance.generate_plan_yaml(director_fqdn, tls)
         instance._clean_generated_workspace()
         print_tree(output_workspace, level=2)
+        return instance.generate_experiment_archive()
 
     @classmethod
     def export(cls, notebook_path: str, output_workspace: str) -> None:
@@ -106,9 +103,27 @@ class NotebookTools:
         instance.generate_data_yaml()
         print_tree(output_workspace, level=2)
 
+    def generate_experiment_archive(self) -> Tuple[str, str]:
+        """
+        Create archive of the generated workspace
+
+        Returns:
+            Tuple[str, str]: A tuple containing:
+                (archive_path, flow_class_name).
+        """
+        parent_directory = self.output_workspace_path.parent
+        archive_path = parent_directory / "experiment"
+
+        # Create a ZIP archive of the generated_workspace directory
+        arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
+
+        print(f"Archive created at {archive_path}.zip")
+
+        return arch_path, self.flow_class_name
+
     def generate_requirements(self) -> None:
-        """Extracts pip libraries mentioned in exported python script and append
-        in workspace/requirements.txt.
+        """Extracts pip libraries from exported python script
+        and append in workspace/requirements.txt
         """
         requirements, line_numbers, data = self.code_analyzer.get_requirements()
 
@@ -137,43 +152,27 @@ class NotebookTools:
         if data_file.exists():
             data_file.unlink()
 
-    def __read_yaml(self, path) -> dict:
-        """Reads a YAML file and returns its contents.
-        Args:
-            path (str): The path to the YAML file.
-
-        Returns:
-            dict: The contents of the YAML file.
-        """
-        with open(path, "r") as y:
-            return yaml.safe_load(y)
-
-    def __write_yaml(self, path, data) -> None:
-        """Writes data to a YAML file.
-        Args:
-            path (str): The path to the YAML file.
-            data (dict): The data to write to the YAML file.
-        """
-        with open(path, "w") as y:
-            yaml.safe_dump(data, y)
-
     def generate_plan_yaml(self, director_fqdn: str = None, tls: bool = False) -> None:
-        """Generate the plan.yaml file containing the federated learning flow configuration
+        """Generate the plan.yaml
         Args:
             director_fqdn (str): Fully qualified domain name of the director node.
             tls (bool, optional): Whether to use TLS for the connection.
         """
-        flspec = import_module("openfl.experimental.workflow.interface").FLSpec
+
         # Get the flow_class details
-        flow_details = self.code_analyzer.get_flow_class_details(flspec)
-        # Analyze and generate plan configuration
-        flow_config = self.code_analyzer.analyze_flow_configuration(flow_details)
+        flow_details = self._extract_flow_details()
+
+        # Get flow_class_name
+        self.flow_class_name = flow_details["flow_class_name"]
+
+        # Get flow configuration
+        flow_config = self.code_analyzer.fetch_flow_configuration(flow_details)
 
         # Determine the path for the plan.yaml file
         plan = self.output_workspace_path.joinpath("plan", "plan.yaml").resolve()
 
-        ## Read or initialize the YAML data
-        data = self._read_or_initialize_plan_yaml(plan)
+        # Initialize the YAML data
+        data = self._initialize_plan_yaml(plan)
 
         # Update the plan_configuration with the analyzed flow configuration
         data["federated_flow"].update(flow_config["federated_flow"])
@@ -186,68 +185,68 @@ class NotebookTools:
             data["network"]["settings"]["tls"] = tls
 
         # Write the updated plan configuraiton to the plan.yaml file
-        self.__write_yaml(plan, data)
+        Plan.dump(plan, data)
 
     def generate_data_yaml(self) -> None:
-        """Generate data.yaml with runtime configuration"""
-        # Ensure flow_class is available
-        flow_class_name = self._ensure_flow_class()
+        """Generate data.yaml"""
+
+        # Get flow class_name
+        if not hasattr(self, "flow_class_name"):
+            flow_details = self._extract_flow_details()
+            self.flow_class_name = flow_details["flow_class_name"]
 
         # Get runtime information using CodeAnalyzer
-        runtime, flow_name = self.code_analyzer.get_runtime_info(flow_class_name)
+        runtime, flow_instance_name = self.code_analyzer.get_flow_runtime_info(self.flow_class_name)
 
         # Determine the path for the data.yaml
         data_yaml = self.output_workspace_path.joinpath("plan", "data.yaml").resolve()
 
-        # Read or initialize the YAML data
-        data = self._read_or_initialize_data_yaml(data_yaml)
+        # Initialize the YAML data
+        data = self._initialize_data_yaml(data_yaml)
 
         # Initiaize runtime name
         runtime_name = "local_runtime"
 
         # Process aggregator information using CodeAnalyzer
         runtime_created = self.code_analyzer.process_aggregator(
-            runtime, data, flow_name, runtime_name
+            runtime, data, flow_instance_name, runtime_name
         )
 
         # Process collaborator information using CodeAnalyzer
-        data = self.code_analyzer.process_collaborators(
-            runtime, data, flow_name, runtime_created, runtime_name
+        self.code_analyzer.process_collaborators(
+            runtime, data, flow_instance_name, runtime_created, runtime_name
         )
 
         # Write updated data configuration to the data.yaml file
-        self.__write_yaml(data_yaml, data)
+        Plan.dump(data_yaml, data)
 
-    def _ensure_flow_class(self) -> str:
-        """Ensure flow class is available and returns its name"""
-        if not hasattr(self, "flow_class_name"):
-            flspsec = import_module("openfl.experimental.workflow.interface").FLSpec
-            flow_details = self.code_analyzer.get_flow_class_details(flspsec)
-            self.flow_class_name = flow_details["flow_class_name"]
+    def _extract_flow_details(self) -> str:
+        """Extract the flow class details"""
+        flspsec = import_module("openfl.experimental.workflow.interface").FLSpec
+        flow_details = self.code_analyzer.get_flow_class_details(flspsec)
+        return flow_details
 
-        return self.flow_class_name
-
-    def _read_or_initialize_plan_yaml(self, plan_yaml) -> dict:
-        """Read or initialize the plan YAML data.
+    def _initialize_plan_yaml(self, plan_yaml) -> dict:
+        """Load or initialize the plan YAML data.
         Args:
             plan_yaml (Path): The path to the plan.yaml file.
 
         Returns:
             dict: The data dictionary from plan.yaml.
         """
-        data = self.__read_yaml(plan_yaml)
+        data = Plan.load(plan_yaml)
         if data is None:
             data = {}
             data["federated_flow"] = {"settings": {}, "template": ""}
         return data
 
-    def _read_or_initialize_data_yaml(self, data_yaml) -> dict:
-        """Read or initialize the YAML data.
+    def _initialize_data_yaml(self, data_yaml) -> dict:
+        """Load or initialize the YAML data.
         Args:
             data_yaml (Path): The path to the data.yaml file.
 
         Returns:
             dict: The data dictionary from data.yaml
         """
-        data = self.__read_yaml(data_yaml)
+        data = Plan.load(data_yaml)
         return data if data is not None else {}
