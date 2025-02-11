@@ -160,7 +160,7 @@ class Collaborator:
             add_metric_writer=write_logs,
             tensor_db=self.tensor_db,
             origin=self.collaborator_name,
-            client=self.client
+            client=self.client,
         )
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
@@ -178,10 +178,12 @@ class Collaborator:
 
         # FIXME: Not working when added to callbacks on line 157.
         callback = callbacks_module.CollaboratorSecAgg()
-        callback.set_params({
-            "origin": self.collaborator_name,
-            "client": self.client,
-        })
+        callback.set_params(
+            {
+                "origin": self.collaborator_name,
+                "client": self.client,
+            }
+        )
         callback.set_tensor_db(self.tensor_db)
         callback.on_experiment_begin()
 
@@ -351,25 +353,17 @@ class Collaborator:
 
             # Fetch private mask from tensor db.
             private_mask = self.tensor_db.get_tensor_from_cache(
-                TensorKey(
-                    "private_mask", self.collaborator_name, -1, False, ("secagg", )
-                )
+                TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
             # Fetch shared mask from tensor db.
             shared_mask = self.tensor_db.get_tensor_from_cache(
-                TensorKey(
-                    "shared_mask", self.collaborator_name, -1, False, ("secagg", )
-                )
+                TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
             for tensor_key in global_output_tensor_dict:
                 _, _, _, _, tags = tensor_key
                 if "metric" in tags:
-                    shared_mask = np.add(
-                        private_mask, global_output_tensor_dict[tensor_key]
-                    )
-                    global_output_tensor_dict[tensor_key] = np.add(
-                        shared_mask, shared_mask
-                    )
+                    shared_mask = np.add(private_mask, global_output_tensor_dict[tensor_key])
+                    global_output_tensor_dict[tensor_key] = np.add(shared_mask, shared_mask)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)

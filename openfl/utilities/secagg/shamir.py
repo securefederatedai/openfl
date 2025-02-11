@@ -49,8 +49,7 @@ def create_secret_shares(
     secret = pad(secret, SECRET_CHUNK_LENGTH)
     # Divide the secret into multiple chunks.
     secret_chunks = [
-        secret[i: i + SECRET_CHUNK_LENGTH]
-        for i in range(0, len(secret), SECRET_CHUNK_LENGTH)
+        secret[i : i + SECRET_CHUNK_LENGTH] for i in range(0, len(secret), SECRET_CHUNK_LENGTH)
     ]
     # Create shares for each of the chunk.
     for chunk in secret_chunks:
@@ -61,7 +60,7 @@ def create_secret_shares(
                 shares[id] = []
             shares[id].append(share.hex())
 
-    shares = {k: '.'.join(v) for k, v in shares.items()}
+    shares = {k: ".".join(v) for k, v in shares.items()}
 
     return shares
 
@@ -77,18 +76,12 @@ def reconstruct_secret(shares: dict) -> bytes:
     """
     secret = b""
 
-    shares = {
-        k: v.split('.')
-        for k, v in shares.items()
-    }
+    shares = {k: v.split(".") for k, v in shares.items()}
 
     total_chunks = max(len(share) for share in shares.values())
     for chunk_index in range(total_chunks):
         # Create a list for the respective chunk with all the shares.
-        chunk_shares = [
-            (key, bytes.fromhex(shares[key][chunk_index]))
-            for key in shares
-        ]
+        chunk_shares = [(key, bytes.fromhex(shares[key][chunk_index])) for key in shares]
         # Reconstruct the chunk of the secret.
         secret_chunk = Shamir.combine(chunk_shares)
         # Concatenate the chunk to the secret.

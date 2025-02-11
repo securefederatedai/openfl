@@ -9,5 +9,5 @@ from openfl.utilities.secagg.crypto import (
     pseudo_random_generator,
 )
 from openfl.utilities.secagg.key import generate_agreed_key, generate_key_pair
-from openfl.utilities.secagg.shamir import create_secret_shares, reconstruct_secret
 from openfl.utilities.secagg.setup import Setup
+from openfl.utilities.secagg.shamir import create_secret_shares, reconstruct_secret

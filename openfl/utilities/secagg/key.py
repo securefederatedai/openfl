@@ -54,9 +54,7 @@ def generate_agreed_key(
 
     # Using Diffie-Hellman key agreement.
     key = key_agreement(
-        static_priv=ECC.import_key(private_key),
-        static_pub=ECC.import_key(public_key),
-        kdf=kdf
+        static_priv=ECC.import_key(private_key), static_pub=ECC.import_key(public_key), kdf=kdf
     )
 
     return key

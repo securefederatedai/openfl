@@ -14,7 +14,6 @@ from openfl.utilities.secagg import (
     reconstruct_secret,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +21,7 @@ class Setup:
     """
     Used by the aggregator for the setup stage of secure aggregation.
     """
+
     def __init__(self, aggregator_uuid, collaborator_list, tensor_db):
         self._aggregator_uuid = aggregator_uuid
         self._collaborator_list = collaborator_list
@@ -40,17 +40,19 @@ class Setup:
             bool: True if the tensor has been received from all collaborators,
                 False otherwise.
         """
-        logger.debug(
-            "Checking if received {} from all collaborators".format(
-                tensor_name
-            )
-        )
+        logger.debug("Checking if received {} from all collaborators".format(tensor_name))
         all_received = True
         for collaborator in self._collaborator_list:
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    tensor_name, self._aggregator_uuid, -1, False,
-                    (collaborator, "secagg", )
+                    tensor_name,
+                    self._aggregator_uuid,
+                    -1,
+                    False,
+                    (
+                        collaborator,
+                        "secagg",
+                    ),
                 )
             )
             # logger.info(
@@ -119,13 +121,17 @@ class Setup:
             # Fetching public key for each collaborator from tensor db.
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    "public_key", self._aggregator_uuid, -1, False,
-                    (collaborator, "secagg", )
+                    "public_key",
+                    self._aggregator_uuid,
+                    -1,
+                    False,
+                    (
+                        collaborator,
+                        "secagg",
+                    ),
                 )
             )
-            aggregated_tensor.append(
-                [index, nparray[0], nparray[1]]
-            )
+            aggregated_tensor.append([index, nparray[0], nparray[1]])
             # Creating a map for local use.
             self._results["public_keys"][index] = [nparray[0], nparray[1]]
             self._results["index"][collaborator] = index
@@ -133,11 +139,13 @@ class Setup:
 
         # Storing the aggregated result in tensor db which is fetched by the
         # collaborators in subsequent steps.
-        self._tensor_db.cache_tensor({
-            TensorKey(
-                "public_keys", self._aggregator_uuid, -1, False, ("secagg", )
-            ): aggregated_tensor
-        })
+        self._tensor_db.cache_tensor(
+            {
+                TensorKey(
+                    "public_keys", self._aggregator_uuid, -1, False, ("secagg",)
+                ): aggregated_tensor
+            }
+        )
 
     def _aggregate_ciphertexts(self):
         """
@@ -151,8 +159,14 @@ class Setup:
             # Fetching ciphertext for each collaborator from tensor db.
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    "ciphertext", self._aggregator_uuid, -1, False,
-                    (collaborator, "secagg", )
+                    "ciphertext",
+                    self._aggregator_uuid,
+                    -1,
+                    False,
+                    (
+                        collaborator,
+                        "secagg",
+                    ),
                 )
             )
             for ciphertext in nparray:
@@ -161,11 +175,13 @@ class Setup:
                 self._results["ciphertexts"].append(ciphertext)
         # Storing the aggregated result in tensor db which is fetched by the
         # collaborators in subsequent steps.
-        self._tensor_db.cache_tensor({
-            TensorKey(
-                "ciphertexts", self._aggregator_uuid, -1, False, ("secagg", )
-            ): aggregated_tensor
-        })
+        self._tensor_db.cache_tensor(
+            {
+                TensorKey(
+                    "ciphertexts", self._aggregator_uuid, -1, False, ("secagg",)
+                ): aggregated_tensor
+            }
+        )
 
     def _aggregate_seed_shares(self):
         """
@@ -193,8 +209,14 @@ class Setup:
             # Fetching seed shares for each collaborator from tensor db.
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    "seed_share", self._aggregator_uuid, -1, False,
-                    (collaborator, "secagg", )
+                    "seed_share",
+                    self._aggregator_uuid,
+                    -1,
+                    False,
+                    (
+                        collaborator,
+                        "secagg",
+                    ),
                 )
             )
             for share in nparray:
@@ -234,8 +256,14 @@ class Setup:
             # Fetching key shares for each collaborator from tensor db.
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    "key_share", self._aggregator_uuid, -1, False,
-                    (collaborator, "secagg", )
+                    "key_share",
+                    self._aggregator_uuid,
+                    -1,
+                    False,
+                    (
+                        collaborator,
+                        "secagg",
+                    ),
                 )
             )
             for share in nparray:
@@ -258,9 +286,7 @@ class Setup:
             self._results["private_keys"][source_id] = reconstruct_secret(
                 self._results["key_shares"][source_id]
             )
-        logger.info(
-            "SecAgg: recreated secrets successfully"
-        )
+        logger.info("SecAgg: recreated secrets successfully")
 
     def _generate_agreed_keys(self):
         """
@@ -272,14 +298,16 @@ class Setup:
             for dest_index in self._results["index"].values():
                 if source_index == dest_index:
                     continue
-                self._results["agreed_keys"].append([
-                    source_index,
-                    dest_index,
-                    generate_agreed_key(
-                        self._results["private_keys"][source_index],
-                        self._results["public_keys"][dest_index][0],
-                    )
-                ])
+                self._results["agreed_keys"].append(
+                    [
+                        source_index,
+                        dest_index,
+                        generate_agreed_key(
+                            self._results["private_keys"][source_index],
+                            self._results["public_keys"][dest_index][0],
+                        ),
+                    ]
+                )
 
     def _generate_masks(self):
         """
@@ -317,12 +345,10 @@ class Setup:
             # TensorKey(
             #     "agreed_keys", "agg", -1, False, ("secagg", )
             # ): self._results["agreed_keys"],
-            TensorKey(
-                "masks_sum", "agg", -1, False, ("secagg", )
-            ): [private_mask_sum, shared_mask_sum],
-
+            TensorKey("masks_sum", "agg", -1, False, ("secagg",)): [
+                private_mask_sum,
+                shared_mask_sum,
+            ],
         }
         self._tensor_db.cache_tensor(local_tensor_dict)
-        logger.info(
-            "SecAgg: setup completed, saved required tensors to db."
-        )
+        logger.info("SecAgg: setup completed, saved required tensors to db.")

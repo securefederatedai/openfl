@@ -206,11 +206,7 @@ class Aggregator:
 
         # Callbacks
         self._secure_aggregation_enabled = True
-        self.secagg = secagg_setup(
-            self.uuid,
-            self.authorized_cols,
-            self.tensor_db
-        )
+        self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
 
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
@@ -752,10 +748,7 @@ class Aggregator:
         """
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
-            secagg_setup = self._secure_aggregation_setup(
-                collaborator_name,
-                named_tensors
-            )
+            secagg_setup = self._secure_aggregation_setup(collaborator_name, named_tensors)
             # Task results processing is not required if the tensors belong to
             # secure aggregation setup stage.
             if secagg_setup:
@@ -912,9 +905,9 @@ class Aggregator:
 
             return tensor_key, nparray
 
-        assert "compressed" in tags or "lossy_compressed" in tags, (
-            f"Named tensor {tensor_key} is not compressed"
-        )
+        assert (
+            "compressed" in tags or "lossy_compressed" in tags
+        ), f"Named tensor {tensor_key} is not compressed"
         if "compressed" in tags:
             dec_tk, decompressed_nparray = self.tensor_codec.decompress(
                 tensor_key,
@@ -1096,9 +1089,9 @@ class Aggregator:
         metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert collaborators_for_task[0] in tags, (
-                f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
-            )
+            assert (
+                collaborators_for_task[0] in tags
+            ), f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -1293,9 +1286,7 @@ class Aggregator:
                 tensor_name = named_tensor.name
                 # Check if all collaborators have sent their data for the
                 # current key.
-                all_collaborators_sent = self.secagg.wait_for_all_collaborators(
-                    tensor_name
-                )
+                all_collaborators_sent = self.secagg.wait_for_all_collaborators(tensor_name)
                 if not all_collaborators_sent:
                     continue
                 # If all collaborators have sent their data, proceed with

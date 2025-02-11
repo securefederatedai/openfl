@@ -46,12 +46,18 @@ class SecureAggregation(AggregationFunction):
             np.ndarray: aggregated tensor
         """
         for item in db_iterator:
-            if "tags" in item and item["tags"] == ("secagg", ):
-                print("saved tensor", item)
-            if "tags" in item and item["tags"] == ("secagg", ) and item["tensor_name"] == "masks_sum":
+            if (
+                "tags" in item
+                and item["tags"] == ("secagg",)
+                and item["tensor_name"] == "masks_sum"
+            ):
                 masks = item["nparray"]
+                break
 
-        tensor_sum_with_masks = np.sum([tensor.tensor for tensor in local_tensors], axis=0)
+        tensor_sum_with_masks = np.sum(
+            [tensor.tensor for tensor in local_tensors],
+            axis=0
+        )
         private_mask = masks[0]
         shared_mask = masks[1]
 

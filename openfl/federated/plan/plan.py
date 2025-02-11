@@ -538,7 +538,6 @@ class Plan:
                 certificate,
             )
 
-
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
 
