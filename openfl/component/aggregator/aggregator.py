@@ -18,7 +18,7 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.secagg import Setup as secagg_setup
+from openfl.utilities.secagg.setup import Setup as secagg_setup
 
 logger = logging.getLogger(__name__)
 
