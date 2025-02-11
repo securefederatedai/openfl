@@ -36,6 +36,7 @@ class FLSpec:
         _foreach_methods (list): A list of methods to be applied iteratively.
         _checkpoint (bool): A flag indicating whether checkpointing is enabled.
         _runtime (RuntimeType): The runtime of the flow.
+        _collaborators (list): A list of collaborators associated with the runtime.
     """
 
     _clones = []
@@ -117,6 +118,24 @@ class FLSpec:
         if str(runtime) not in ["LocalRuntime", "FederatedRuntime"]:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
         self._runtime = runtime
+
+    @property
+    def collaborators(self) -> List:
+        """Get the list of collaborators.
+
+        Returns:
+            _collaborators: A list of collaborators
+        """
+        return self._collaborators
+
+    @collaborators.setter
+    def collaborators(self, collaborators: List) -> None:
+        """Set the list of collaborators.
+
+        Args:
+            collaborators (List): A list of collaborators to be assigned.
+        """
+        self._collaborators = collaborators
 
     def setup_initial_state(self, runtime_info) -> None:
         """
