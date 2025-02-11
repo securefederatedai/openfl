@@ -82,14 +82,7 @@ jobs:
     strategy:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
-        exclude:
-          - model_name: "keras/torch/mnist" # Package torch-xla required for this model is not available in Python 3.12
-            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
-
-    env:
-      MODEL_NAME: ${{ matrix.model_name }}
-      PYTHON_VERSION: ${{ matrix.python_version }}
 
     steps:
       - name: Checkout OpenFL repository
@@ -108,7 +101,7 @@ jobs:
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
-          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_basic --model_name ${{ matrix.model_name }} \
           --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
           echo "Task runner end to end test run completed"
 
