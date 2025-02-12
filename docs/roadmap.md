@@ -26,15 +26,17 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 ## Upcoming OpenFL releases
 
-### 1.7 (Q1 2025)
-This release is focused on enabling a great developer experience for OpenFL users:
-1. Introducing the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans) for Workflow API, which allows running FL workflows in a distributed setting (after local simulation with the LocalRuntime).
-2. Adding support for federated XGBoost in OpenFL. See the example [XGBoost workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/xgb_higgs) based on Task Runner API.
-3. Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). The current release contains an initial set of changes that enable OpenFL compatibility with the broader confidential containers ecosystem.
-4. Streamlining the Federated Evaluation experiments with TaskRunner API
-5. Migrating a selection of key OpenFL tutorials from Python Native API to Workflow API. Check out the updated [Tutorials folder](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow)
-6. Deprecating the Python Native API
-7. Deprecating the Interactive API
+### 1.8 (March '2025)
+In this release, we intend to continue streamlining the OpenFL APIs, provide additional security options, and enhance ML/FL framework interoperability:
+- Removing the Python Native API and Interactive API
+- Further decoupling the Runtime from the FLSpec in Workflow API (see the design proposal [here](https://github.com/securefederatedai/openfl/discussions/1317))
+- ML frameworks integration (PyTorch 2.5 support, additional Keras back-ends)
+- Additional enhancements to Federated Evaluation with OpenFL, including:
+  * Dynamic switching from learning to evaluation mode via TaskRunner API within the same federation, without re-distributing the FL plan
+  * Workflow API tutorial for Federated Evaluation
+- PoC for [Secure Aggregation](https://eprint.iacr.org/2017/281.pdf) support
+- Design proposal for a configurable communication layer (enabling REST API support, in addition to gRPC)
+- (TBA) A leap forward in terms of FL framework interoperability (stay tuned for announcements)
 
-### 1.8 (TBA)
+### 1.9 (TBA)
 Stay tuned for updates!

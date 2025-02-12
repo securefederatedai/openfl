@@ -95,10 +95,10 @@ jobs:
           # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
           # Thus these models are excluded from the matrix for now.
           # Default combination if no input is provided (i.e. 'all' is selected).
-          # * TLS - models [torch/mnist, keras/mnist] and python versions [3.10, 3.11, 3.12]
-          # * Non-TLS - models [torch/mnist] and python version [3.10]
+          # * TLS - models [keras/torch/mnist, keras/jax/mnist] and python versions [3.10, 3.11]
+          # * Non-TLS - models [torch/mnist] and python version [3.12]
           # * No client auth - models [keras/mnist] and python version [3.10]
-          # * Memory logs - models [torch/mnist] and python version [3.10]
+          # * Memory logs - models [torch/mnist] and python version [3.11]
           # ---------------------------------------------------------------
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
@@ -115,9 +115,9 @@ jobs:
           fi
           if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
             echo "python_for_tls=[\"3.10\", \"3.11\", \"3.12\"]" >> "$GITHUB_OUTPUT"
-            echo "python_for_non_tls=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_non_tls=[\"3.12\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_no_client_auth=[\"3.10\"]" >> "$GITHUB_OUTPUT"
-            echo "python_for_memory_logs=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_memory_logs=[\"3.11\"]" >> "$GITHUB_OUTPUT"
           else
             echo "python_for_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_non_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
@@ -135,6 +135,14 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
+
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -178,6 +186,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_non_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_non_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -221,6 +236,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_no_client_auth) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_no_client_auth) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -264,6 +286,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_memory_logs) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_memory_logs) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
