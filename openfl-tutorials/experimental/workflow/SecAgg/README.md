@@ -22,7 +22,7 @@
    - Navigate to the tutorial:
     
    ```sh
-   cd openfl/openfl-tutorials/experimental/workflow/FederatedRuntime/102_SecAgg/
+   cd openfl/openfl-tutorials/experimental/workflow/SecAgg/
    ```
 
 <br/>
@@ -57,7 +57,7 @@ cd Delhi
 
 ```sh
 cd workspace
-jupyter lab 102_MNIST_SecAgg.ipynb
+jupyter lab MNIST_SecAgg.ipynb
 ```
 - A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
