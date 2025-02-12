@@ -64,6 +64,7 @@ jobs:
       # Output all the variables related to models and python versions to be used in the matrix strategy
       # for different jobs, however their usage depends on the selected job.
       selected_models_for_tls: ${{ steps.input_selection.outputs.models_for_tls }}
+      selected_python_for_tls: ${{ steps.input_selection.outputs.python_for_tls }}
     steps:
       - name: Job to select input values
         id: input_selection
@@ -72,6 +73,11 @@ jobs:
             echo "models_for_tls=[\"torch/mnist\", \"keras/mnist\"]" >> "$GITHUB_OUTPUT"
           else
             echo "models_for_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
+            echo "python_for_tls=[\"3.10\", \"3.11\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo "python_for_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
           fi
 
   resiliency_in_native:
@@ -82,6 +88,7 @@ jobs:
     strategy:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
         exclude: # Keras does not support Python 3.12
           - model_name: "keras/mnist"
             python_version: "3.12"
