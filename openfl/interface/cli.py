@@ -29,6 +29,7 @@ from click import (
 from rich.console import Console
 from rich.logging import RichHandler
 
+import openfl
 from openfl.utilities import add_log_level
 
 
@@ -156,12 +157,19 @@ class CLI(Group):
                     f"  {style('*', fg='green')} {style(name, fg='cyan'):<21} {help_str}" + "\n"
                 )
 
+    def invoke(self, ctx):
+        if ctx.params.get("version"):
+            echo(f"OpenFL version: {openfl.__version__}")
+            ctx.exit()
+        super().invoke(ctx)
+
 
 @group(cls=CLI)
 @option("-l", "--log-level", default="info", help="Logging verbosity level.")
 @option("--no-warnings", is_flag=True, help="Disable third-party warnings.")
+@option("-v", "--version", is_flag=True, help="Show version")
 @pass_context
-def cli(context, log_level, no_warnings):
+def cli(context, log_level, no_warnings, version):
     """
     Command-line Interface.
 
@@ -169,6 +177,7 @@ def cli(context, log_level, no_warnings):
         context (click.core.Context): Click context.
         log_level (str): Logging verbosity level.
         no_warnings (bool): Flag to disable third-party warnings.
+        version (bool): Flag to show version.
     """
 
     context.ensure_object(dict)

@@ -81,6 +81,16 @@ class Assigner:
         """Abstract method."""
         raise NotImplementedError
 
+    def is_task_group_evaluation(self):
+        """Check if the selected task group is for 'evaluation' run.
+
+        Returns:
+            bool: True if the selected task group is 'evaluation', False otherwise.
+        """
+        if hasattr(self, "selected_task_group"):
+            return self.selected_task_group == "evaluation"
+        return False
+
     def get_all_tasks_for_round(self, round_number):
         """Return tasks for the current round.
 

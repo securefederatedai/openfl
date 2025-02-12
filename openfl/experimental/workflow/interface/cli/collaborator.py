@@ -247,127 +247,122 @@ def certify_(collaborator_name, silent, request_pkg, import_):
     certify(collaborator_name, silent, request_pkg, import_)
 
 
-def certify(collaborator_name, silent, request_pkg=None, import_=False):  # noqa C901
-    """Sign/certify collaborator certificate key pair."""
+def _handle_request_package(request_pkg):
+    Path(f"{CERT_DIR}/client").mkdir(parents=True, exist_ok=True)
+    unpack_archive(request_pkg, extract_dir=f"{CERT_DIR}/client")
+    return glob(f"{CERT_DIR}/client/*.csr")[0]
 
-    common_name = f"{collaborator_name}"
 
-    if not import_:
-        if request_pkg:
-            Path(f"{CERT_DIR}/client").mkdir(parents=True, exist_ok=True)
-            unpack_archive(request_pkg, extract_dir=f"{CERT_DIR}/client")
-            csr = glob(f"{CERT_DIR}/client/*.csr")[0]
-        else:
-            if collaborator_name is None:
-                echo(
-                    "collaborator_name can only be omitted if signing\n"
-                    "a zipped request package.\n"
-                    "\n"
-                    "Example: fx collaborator certify --request-pkg "
-                    "col_one_to_agg_cert_request.zip"
-                )
-                return
-            csr = glob(f"{CERT_DIR}/client/col_{common_name}.csr")[0]
-            copy(csr, CERT_DIR)
-        cert_name = splitext(csr)[0]
-        file_name = basename(cert_name)
-        signing_key_path = "ca/signing-ca/private/signing-ca.key"
-        signing_crt_path = "ca/signing-ca.crt"
+def _load_certificate_files(common_name, request_pkg):
+    if request_pkg:
+        return _handle_request_package(request_pkg)
 
-        # Load CSR
-        if not Path(f"{cert_name}.csr").exists():
-            echo(
-                style(
-                    "Collaborator certificate signing request not found.",
-                    fg="red",
-                )
-                + " Please run `fx collaborator generate-cert-request`"
-                " to generate the certificate request."
-            )
+    csr_path = glob(f"{CERT_DIR}/client/col_{common_name}.csr")[0]
+    copy(csr_path, CERT_DIR)
+    return csr_path
 
-        csr, csr_hash = read_csr(f"{cert_name}.csr")
 
-        # Load private signing key
-        if not Path(CERT_DIR / signing_key_path).exists():
-            echo(
-                style("Signing key not found.", fg="red") + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority."
-            )
+def _validate_paths(cert_name):
+    signing_key_path = CERT_DIR / "ca/signing-ca/private/signing-ca.key"
+    signing_crt_path = CERT_DIR / "ca/signing-ca.crt"
 
-        signing_key = read_key(CERT_DIR / signing_key_path)
+    for path, error_message in [
+        (cert_name + ".csr", "Collaborator certificate signing request not found."),
+        (signing_key_path, "Signing key not found."),
+        (signing_crt_path, "Signing certificate not found."),
+    ]:
+        if not Path(path).exists():
+            echo(style(error_message, fg="red"))
+            return None, None
 
-        # Load signing cert
-        if not Path(CERT_DIR / signing_crt_path).exists():
-            echo(
-                style("Signing certificate not found.", fg="red")
-                + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority."
-            )
+    return read_key(signing_key_path), read_crt(signing_crt_path)
 
-        signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
+def _sign_and_register_certificate(file_name, csr, csr_hash, signing_key, signing_crt, silent):
+    echo(
+        f"The CSR Hash for file {style(f'{file_name}.csr', fg='green')} = "
+        f"{style(f'{csr_hash}', fg='red')}"
+    )
+
+    if silent:
         echo(
-            "The CSR Hash for file "
-            + style(f"{file_name}.csr", fg="green")
-            + " = "
-            + style(f"{csr_hash}", fg="red")
+            "Signing COLLABORATOR certificate\n"
+            "Warning: manual check of certificate hashes is bypassed in silent mode."
         )
-
-        if silent:
-            echo(" Signing COLLABORATOR certificate")
-            echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
-            signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-            write_crt(signed_col_cert, f"{cert_name}.crt")
-            register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
-
-        else:
-            echo("Make sure the two hashes above are the same.")
-            if confirm("Do you want to sign this certificate?"):
-                echo(" Signing COLLABORATOR certificate")
-                signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-                write_crt(signed_col_cert, f"{cert_name}.crt")
-                register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
-
-            else:
-                echo(
-                    style("Not signing certificate.", fg="red")
-                    + " Please check with this collaborator to get the"
-                    " correct certificate for this federation."
-                )
-                return
-
-        if len(common_name) == 0:
-            # If the collaborator name is provided, the collaborator and
-            # certificate does not need to be exported
+    else:
+        echo("Make sure the two hashes above are the same.")
+        if not confirm("Do you want to sign this certificate?"):
+            echo(
+                style("Not signing certificate.", fg="red")
+                + " Please check with this collaborator to get the"
+                " correct certificate for this federation."
+            )
             return
 
-        # Remove unneeded CSR
-        remove(f"{cert_name}.csr")
+    signed_cert = sign_certificate(csr, signing_key, signing_crt.subject)
+    write_crt(signed_cert, f"{CERT_DIR}/client/{file_name}.crt")
+    register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
-        archive_type = "zip"
-        archive_name = f"agg_to_{file_name}_signed_cert"
 
-        # Collaborator certificate signing request
-        tmp_dir = join(mkdtemp(), "openfl", archive_name)
+def _package_signed_certificate(file_name):
+    archive_type = "zip"
+    archive_name = f"agg_to_{file_name}_signed_cert"
+    tmp_dir = join(mkdtemp(), "openfl", archive_name)
 
-        Path(f"{tmp_dir}/client").mkdir(parents=True, exist_ok=True)
-        # Copy the signed cert to the temporary directory
-        copy(f"{CERT_DIR}/client/{file_name}.crt", f"{tmp_dir}/client/")
-        # Copy the CA certificate chain to the temporary directory
-        copy(f"{CERT_DIR}/cert_chain.crt", tmp_dir)
+    Path(f"{tmp_dir}/client").mkdir(parents=True, exist_ok=True)
+    # Copy the signed cert to the temporary directory
+    copy(f"{CERT_DIR}/client/{file_name}.crt", f"{tmp_dir}/client/")
+    # Copy the CA certificate chain to the temporary directory
+    copy(f"{CERT_DIR}/cert_chain.crt", tmp_dir)
 
-        # Create Zip archive of directory
-        make_archive(archive_name, archive_type, tmp_dir)
-        rmtree(tmp_dir)
+    # Create Zip archive of directory
+    make_archive(archive_name, archive_type, tmp_dir)
+    rmtree(tmp_dir)
 
+
+def _import_signed_certificate(import_):
+    # Copy the signed certificate and cert chain into PKI_DIR
+    previous_crts = glob(f"{CERT_DIR}/client/*.crt")
+    unpack_archive(import_, extract_dir=CERT_DIR)
+    updated_crts = glob(f"{CERT_DIR}/client/*.crt")
+    cert_difference = list(set(updated_crts) - set(previous_crts))
+
+    if cert_difference:
+        echo(f"Certificate {basename(cert_difference[0])} installed to PKI directory")
     else:
-        # Copy the signed certificate and cert chain into PKI_DIR
-        previous_crts = glob(f"{CERT_DIR}/client/*.crt")
-        unpack_archive(import_, extract_dir=CERT_DIR)
-        updated_crts = glob(f"{CERT_DIR}/client/*.crt")
-        cert_difference = list(set(updated_crts) - set(previous_crts))
-        if len(cert_difference) != 0:
-            crt = basename(cert_difference[0])
-            echo(f"Certificate {crt} installed to PKI directory")
-        else:
-            echo("Certificate updated in the PKI directory")
+        echo("Certificate updated in the PKI directory")
+
+
+def certify(collaborator_name, silent, request_pkg=None, import_=False):
+    if import_:
+        return _import_signed_certificate(import_)
+
+    if request_pkg is None and collaborator_name is None:
+        echo(
+            "collaborator_name can only be omitted if signing\n"
+            "a zipped request package.\n"
+            "\n"
+            "Example: fx collaborator certify --request-pkg "
+            "col_one_to_agg_cert_request.zip"
+        )
+        return
+
+    common_name = f"{collaborator_name}"
+    if len(common_name) == 0:
+        # If the collaborator name is provided, the collaborator and
+        # certificate does not need to be exported
+        return
+
+    csr_path = _load_certificate_files(common_name, request_pkg)
+    cert_name = splitext(csr_path)[0]
+    file_name = basename(cert_name)
+
+    signing_key, signing_crt = _validate_paths(cert_name)
+    if not signing_key or not signing_crt:
+        return
+
+    csr, csr_hash = read_csr(csr_path)
+    _sign_and_register_certificate(file_name, csr, csr_hash, signing_key, signing_crt, silent)
+
+    remove(csr_path)
+    _package_signed_certificate(file_name)
