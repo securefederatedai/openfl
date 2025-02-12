@@ -7,7 +7,7 @@ on:
   schedule:
     - cron: "0 5 * * *" # Run every day at 5 am UTC
   push:
-    branches: 
+    branches:
       - develop
   workflow_call:
   workflow_dispatch:
@@ -64,6 +64,7 @@ jobs:
       # Output all the variables related to models and python versions to be used in the matrix strategy
       # for different jobs, however their usage depends on the selected job.
       selected_models_for_tls: ${{ steps.input_selection.outputs.models_for_tls }}
+      selected_python_for_tls: ${{ steps.input_selection.outputs.python_for_tls }}
     steps:
       - name: Job to select input values
         id: input_selection
@@ -72,6 +73,11 @@ jobs:
             echo "models_for_tls=[\"torch/mnist\", \"keras/mnist\"]" >> "$GITHUB_OUTPUT"
           else
             echo "models_for_tls=[\"${{env.MODEL_NAME}}\"]" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
+            echo "python_for_tls=[\"3.10\", \"3.11\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo "python_for_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
           fi
 
   resiliency_in_native:
@@ -82,6 +88,10 @@ jobs:
     strategy:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
+        python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -115,46 +125,4 @@ jobs:
         with:
           test_type: "Resiliency_Native" 
 
-  # TODO - Once we have GitHub runners with higher configurations, we can enable this job.
-  # resiliency_in_dws:
-  #   name: With TLS (Dockerized)
-  #   needs: input_selection
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 30
-  #   strategy:
-  #     matrix:
-  #       # Dockerized WS for other models require higher config runners.
-  #       # Once the issue is fixed, we can enable the tests for other models as well.
-  #       model_name: ["keras/mnist"]
-  #     fail-fast: false # do not immediately fail if one of the combinations fail
-
-  #   env:
-  #     MODEL_NAME: ${{ matrix.model_name }}
-  #     PYTHON_VERSION: ${{ matrix.python_version }}
-
-  #   steps:
-  #     - name: Checkout OpenFL repository
-  #       id: checkout_openfl
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 2 # needed for detecting changes
-  #         submodules: "true"
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-
-  #     - name: Pre test run
-  #       uses: ./.github/actions/tr_pre_test_run
-  #       if: ${{ always() }}
-
-  #     - name: Run Task Runner E2E tests with TLS
-  #       id: run_tests
-  #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
-  #         -m task_runner_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
-  #         --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
-  #         echo "Task runner end to end test run completed"
-
-  #     - name: Post test run
-  #       uses: ./.github/actions/tr_post_test_run
-  #       if: ${{ always() }}
-  #       with:
-  #         test_type: "Resiliency_Dockerized" 
+  # TODO - Add dockerized approach as well once we have GitHub runners with higher configurations.
