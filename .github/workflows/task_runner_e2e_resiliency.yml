@@ -57,7 +57,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false)
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -82,6 +82,9 @@ jobs:
     strategy:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -105,7 +108,7 @@ jobs:
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
-          -m task_runner_basic --model_name ${{ matrix.model_name }} \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
           echo "Task runner end to end test run completed"
 
