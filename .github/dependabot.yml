@@ -1,20 +1,30 @@
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     open-pull-requests-limit: 3
+
   # Don't update these directories.
   - package-ecosystem: pip
     directory: /tests
     schedule:
-      interval: "daily"
+      interval: "monthly"
     ignore:
       - dependency-name: "*"
   - package-ecosystem: pip
     directory: /openfl-workspace
     schedule:
-      interval: "daily"
+      interval: "monthly"
     ignore:
       - dependency-name: "*"

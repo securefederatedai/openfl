@@ -20,14 +20,14 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build an image from Dockerfile
         run: |
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'sarif'
@@ -62,7 +62,7 @@ jobs:
           path: trivy-code-results.json
       
       - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'json'
@@ -98,7 +98,7 @@ jobs:
           path: trivy-code-spdx-results.json
         
       - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'spdx-json'
