@@ -319,7 +319,6 @@ class Plan:
     def get_assigner(self):
         """Get the plan task assigner."""
         aggregation_functions_by_task = None
-        assigner_function = None
 
         if assigner_function:
             self.assigner_ = Assigner(
