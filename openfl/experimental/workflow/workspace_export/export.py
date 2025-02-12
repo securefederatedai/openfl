@@ -19,6 +19,7 @@ import nbformat
 import yaml
 from nbdev.export import nb_export
 
+from openfl.experimental.workflow.federated.plan import Plan
 from openfl.experimental.workflow.interface.cli.cli_helper import print_tree
 
 logger = getLogger(__name__)
@@ -276,12 +277,16 @@ class WorkspaceExport:
             yaml.safe_dump(data, y)
 
     @classmethod
-    def export_federated(cls, notebook_path: str, output_workspace: str) -> Tuple[str, str]:
+    def export_federated(
+        cls, notebook_path: str, output_workspace: str, director_fqdn: str, tls: bool = False
+    ) -> Tuple[str, str]:
         """Exports workspace for FederatedRuntime.
 
         Args:
             notebook_path (str): Path to the Jupyter notebook.
             output_workspace (str): Path for the generated workspace directory.
+            director_fqdn (str): Fully qualified domain name of the director node.
+            tls (bool, optional): Whether to use TLS for the connection.
 
         Returns:
             Tuple[str, str]: A tuple containing:
@@ -289,7 +294,7 @@ class WorkspaceExport:
         """
         instance = cls(notebook_path, output_workspace)
         instance.generate_requirements()
-        instance.generate_plan_yaml()
+        instance.generate_plan_yaml(director_fqdn, tls)
         return instance.generate_experiment_archive()
 
     @classmethod
@@ -357,9 +362,13 @@ class WorkspaceExport:
                 if i not in line_nos:
                     f.write(line)
 
-    def generate_plan_yaml(self) -> None:
+    def generate_plan_yaml(self, director_fqdn: str = None, tls: bool = False) -> None:
         """
         Generates plan.yaml
+
+        Args:
+            director_fqdn (str): Fully qualified domain name of the director node.
+            tls (bool, optional): Whether to use TLS for the connection.
         """
         flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
         # Get flow classname
@@ -397,6 +406,13 @@ class WorkspaceExport:
         # Find kwargs of flow class and it's values
         kw_args = self.arguments_passed_to_initialize["kwargs"]
         update_dictionary(kw_args, data, dtype="kwargs")
+
+        # Updating the aggregator address with director's hostname and tls settings in plan.yaml
+        if director_fqdn:
+            network_settings = Plan.parse(plan).config["network"]
+            data["network"] = network_settings
+            data["network"]["settings"]["agg_addr"] = director_fqdn
+            data["network"]["settings"]["tls"] = tls
 
         self.__write_yaml(plan, data)
 
