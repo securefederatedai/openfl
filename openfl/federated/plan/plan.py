@@ -317,8 +317,6 @@ class Plan:
 
     def get_assigner(self):
         """Get the plan task assigner."""
-        pass
-
         # Backward compatibility
         defaults = self.config.get(
             "assigner",
