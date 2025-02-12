@@ -115,7 +115,7 @@ jobs:
           fi
           if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
             echo "python_for_tls=[\"3.10\", \"3.11\", \"3.12\"]" >> "$GITHUB_OUTPUT"
-            echo "python_for_non_tls=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_non_tls=[\"3.12\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_no_client_auth=[\"3.10\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_memory_logs=[\"3.10\"]" >> "$GITHUB_OUTPUT"
           else
