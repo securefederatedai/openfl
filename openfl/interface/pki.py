@@ -110,7 +110,10 @@ def get_token_(name, ca_url, ca_path):
     "-n",
     "--name",
     required=True,
-    help="Subject Alternative Name (SAN) to use for certificate. Use FQDN for aggregator, and common name for collaborator",
+    help=(
+        "Subject Alternative Name (SAN) to use for certificate. "
+        "Use FQDN for aggregator, and common name for collaborator"
+    ),
 )
 @option("-t", "--token", "token_with_cert", required=True, help="Authentication token.")
 @option(
