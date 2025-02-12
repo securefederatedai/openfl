@@ -386,12 +386,14 @@ def export_() -> str:
     is_flag=True,
     default=False,
     help="Export the docker image as ``<workspace_name>.tar`` file.",
+    show_default=True,
 )
 @option(
     "--rebuild",
     is_flag=True,
     default=False,
     help="If set, rebuilds docker images with ``--no-cache`` option.",
+    show_default=True,
 )
 @option(
     "--enclave-key",

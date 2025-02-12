@@ -128,6 +128,7 @@ def get_token_(name, ca_url, ca_path):
     help="Path to CA client, defaults to current directory.",
     type=ClickPath(exists=True),
     required=False,
+    show_default=True,
 )
 def certify_(name, token_with_cert, certs_path, ca_path):
     """Generates a certificate for the given name."""
