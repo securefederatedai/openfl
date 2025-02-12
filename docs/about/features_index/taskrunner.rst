@@ -170,7 +170,7 @@ STEP 1: Create a Workspace
 
 .. note::
 
-    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command.
+    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command. Note that Keras is supported only up to Python 3.11. Therefore, please use Python 3.10 or 3.11 for Keras-related workspaces.
 
   See the complete list of available templates.
 
