@@ -24,9 +24,9 @@ jobs:
 
       - name: Set up apt-get
         run: |
-          sudo apt-get update
-          sudo apt-get upgrade
-          
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+
       - name: Build an image from Dockerfile
         run: |
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
