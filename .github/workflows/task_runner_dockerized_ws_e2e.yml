@@ -35,7 +35,7 @@ permissions:
 # Environment variables common for all the jobs
 env:
   NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
-  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '1' }}
   JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'test_memory_logs' }}
 
 jobs:

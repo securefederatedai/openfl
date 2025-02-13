@@ -22,6 +22,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up apt-get
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade
+          
       - name: Build an image from Dockerfile
         run: |
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
