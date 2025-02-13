@@ -373,7 +373,7 @@ jobs:
       (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
 
     env:
-      MODEL_NAME: "keras/mnist_eden_compression"
+      MODEL_NAME: "torch/mnist_eden_compression"
       PYTHON_VERSION: "3.10"
 
     steps:
