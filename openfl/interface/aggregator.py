@@ -41,12 +41,7 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def aggregator(context):
-    """
-    Manage Federated Learning Aggregator.
-
-    Args:
-        context (click.Context): The context passed from the CLI.
-    """
+    """Manage Federated Learning Aggregator."""
     context.obj["group"] = "aggregator"
 
 
@@ -55,31 +50,27 @@ def aggregator(context):
     "-p",
     "--plan",
     required=False,
-    help="Federated learning plan [plan/plan.yaml]",
+    help="Path to an FL plan.",
     default="plan/plan.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-c",
     "--authorized_cols",
     required=False,
-    help="Authorized collaborator list [plan/cols.yaml]",
+    help="Path to an authorized collaborator list.",
     default="plan/cols.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "--task_group",
     required=False,
-    help="Selected task-group for assignment",
+    help="Task group to execute as defined in the plan task assigner.",
 )
 def start_(plan, authorized_cols, task_group):
-    """Start the aggregator service.
-
-    Args:
-        plan (str): Path to plan config file
-        authorized_cols (str): Path to authorized collaborators file
-        task_group (str): Selected task-group for assignement - defaults to 'learning'
-    """
+    """Starts the aggregator service."""
     if is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -110,21 +101,14 @@ def start_(plan, authorized_cols, task_group):
     "--fqdn",
     required=False,
     type=click_types.FQDN,
-    help=f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
-    default=getfqdn_env(),
+    help="The fully qualified domain name of aggregator node.",
 )
 def _generate_cert_request(fqdn):
-    """Create aggregator certificate key pair.
-
-    Args:
-        fqdn (str): The fully qualified domain name of aggregator node.
-    """
+    """Generates aggregator certificate key-pair."""
     generate_cert_request(fqdn)
 
 
 def generate_cert_request(fqdn):
-    """Create aggregator certificate key pair."""
-
     if fqdn is None:
         fqdn = getfqdn_env()
 
@@ -177,17 +161,16 @@ def find_certificate_name(file_name):
     "-n",
     "--fqdn",
     type=click_types.FQDN,
-    help=f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
-    default=getfqdn_env(),
+    help="The fully qualified domain name of aggregator node.",
 )
-@option("-s", "--silent", help="Do not prompt", is_flag=True)
+@option("-s", "--silent", help="If set, skips manual confirmation.", is_flag=True)
 def _certify(fqdn, silent):
-    """Sign/certify the aggregator certificate key pair."""
+    """Certifies the aggregator certificate key pair."""
     certify(fqdn, silent)
 
 
 def certify(fqdn, silent):
-    """Sign/certify the aggregator certificate key pair.
+    """Certifies the aggregator certificate key pair.
 
     Args:
         fqdn (str): The fully qualified domain name of aggregator node.
