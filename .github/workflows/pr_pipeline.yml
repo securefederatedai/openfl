@@ -59,9 +59,9 @@ jobs:
     name: TaskRunner (docker/gramine-direct)
     uses: ./.github/workflows/tr_docker_gramine_direct.yml
 
-  tr_docker_e2e_native:
+  tr_docker_native:
     name: TaskRunner (docker/native)
-    uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
+    uses: ./.github/workflows/tr_docker_native.yml
 
   trivy_scan:
     name: Trivy Scan
