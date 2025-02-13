@@ -13,7 +13,6 @@ from pathlib import Path
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.component.assigner.custom_assigner import Assigner
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
@@ -318,29 +317,17 @@ class Plan:
 
     def get_assigner(self):
         """Get the plan task assigner."""
-        aggregation_functions_by_task = None
-        assigner_function = None
+        defaults = self.config.get(
+            "assigner",
+            {TEMPLATE: "openfl.component.Assigner", SETTINGS: {}},
+        )
 
-        if assigner_function:
-            self.assigner_ = Assigner(
-                assigner_function=assigner_function,
-                aggregation_functions_by_task=aggregation_functions_by_task,
-                authorized_cols=self.authorized_cols,
-                rounds_to_train=self.rounds_to_train,
-            )
-        else:
-            # Backward compatibility
-            defaults = self.config.get(
-                "assigner",
-                {TEMPLATE: "openfl.component.Assigner", SETTINGS: {}},
-            )
+        defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
+        defaults[SETTINGS]["rounds_to_train"] = self.rounds_to_train
+        defaults[SETTINGS]["tasks"] = self.get_tasks()
 
-            defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
-            defaults[SETTINGS]["rounds_to_train"] = self.rounds_to_train
-            defaults[SETTINGS]["tasks"] = self.get_tasks()
-
-            if self.assigner_ is None:
-                self.assigner_ = Plan.build(**defaults)
+        if self.assigner_ is None:
+            self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
 
