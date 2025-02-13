@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import check_call
 from sys import executable
 
-from click import group, pass_context
+from click import echo, group, pass_context
 
 import openfl
 
@@ -19,13 +19,19 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def experimental(context):
-    """Manage Experimental Environment."""
+    """Manage experimental capabilities in OpenFL.
+
+    Currently, this command is used to activate Workflow API in OpenFL.
+    """
     context.obj["group"] = "experimental"
 
 
 @experimental.command(name="activate")
 def activate():
-    """Activate experimental environment."""
+    """
+    Activates experimental environment.
+    This command takes no additional arguments.
+    """
     settings = Path("~").expanduser().joinpath(".openfl").resolve()
     settings.mkdir(parents=False, exist_ok=True)
     settings = settings.joinpath("experimental").resolve()
@@ -49,3 +55,17 @@ def activate():
 
     with open(settings, "w") as f:
         f.write("experimental")
+
+
+@experimental.command(name="deactivate")
+def deactivate():
+    """
+    Deactivates experimental environment.
+    This command takes no additional arguments.
+    """
+    settings = Path("~").expanduser().joinpath(".openfl", "experimental").resolve()
+    if settings.is_file():
+        settings.unlink()
+        echo("Experimental capabilities deactivated.")
+    else:
+        echo("Experimental capabilities are not active, no changes were made.")

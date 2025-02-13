@@ -59,7 +59,7 @@ jobs:
       matrix:
         # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
         model_name: ["keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
-        python_version: ["3.10", "3.11", "3.12"]
+        python_version: ["3.10", "3.11"] # Keras does not support Python 3.12
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -69,7 +69,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -155,7 +155,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -198,7 +198,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
