@@ -97,7 +97,7 @@ def save_(
     model_protobuf_path,
     output_filepath,
 ):
-    """Saves a model proto in framework native format (PyTorch/Keras)."""
+    """Saves a model proto in framework native format."""
     output_filepath = Path(output_filepath).absolute()
     if output_filepath.exists():
         if not confirm(
