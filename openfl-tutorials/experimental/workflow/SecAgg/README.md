@@ -47,8 +47,8 @@ cd Bengaluru
 
 #### 4.2 Third terminal
 ```sh
-cd Delhi
-./start_envoy.sh Delhi Delhi_config.yaml
+cd Portland
+./start_envoy.sh Portland Portland_config.yaml
 ```
 
 <br/>
