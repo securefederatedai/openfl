@@ -10,12 +10,12 @@ on:
       num_rounds:
         description: "Number of rounds to train"
         required: false
-        default: "5"
+        default: "2"
         type: string
       num_collaborators:
         description: "Number of collaborators"
         required: false
-        default: "2"
+        default: "1"
         type: string
       jobs_to_run:
         description: "Jobs to run"
