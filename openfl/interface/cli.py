@@ -170,15 +170,7 @@ class CLI(Group):
 @option("-v", "--version", is_flag=True, help="Show version")
 @pass_context
 def cli(context, log_level, no_warnings, version):
-    """
-    Command-line Interface.
-
-    Args:
-        context (click.core.Context): Click context.
-        log_level (str): Logging verbosity level.
-        no_warnings (bool): Flag to disable third-party warnings.
-        version (bool): Flag to show version.
-    """
+    """Command-line Interface."""
 
     context.ensure_object(dict)
     context.obj["log_level"] = log_level
