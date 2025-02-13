@@ -240,6 +240,11 @@ class ModelOwner():
                 repo = os.getenv("GITHUB_REPOSITORY")
                 branch = os.getenv("GITHUB_BRANCH")
 
+            # get available disk space
+            cmd = "df -h /"
+            return_code, output, error = ssh.run_command(cmd)
+            log.info(f"Disk space: {output}")
+
             cmd = f"fx workspace dockerize --save --revision {repo}@{branch}"
             error_msg = "Failed to dockerize the workspace"
             return_code, output, error = fh.run_command(
