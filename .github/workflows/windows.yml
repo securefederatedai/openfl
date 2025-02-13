@@ -1,6 +1,7 @@
 name: Windows (latest)
 
 on:
+  workflow_call:
   schedule:
     - cron: '0 0 * * *'
 
@@ -36,7 +37,7 @@ jobs:
         coverage run -m pytest -rA
         coverage report
   
-  cli: # from taskrunner.yml
+  keras_mnist: # from taskrunner.yml -  keras/mnist
     needs: [pytest-coverage]
     runs-on: windows-latest
     timeout-minutes: 15
@@ -53,3 +54,39 @@ jobs:
       - name: Test TaskRunner API
         run: |
           python -m tests.github.test_hello_federation --template keras/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+
+  keras_mnist_eden_compression: # from taskrunner_eden_pipeline.yml - keras/mnist_eden_compression
+    needs: [pytest-coverage]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Test TaskRunner API with Eden Compression
+        run: |
+          python -m tests.github.test_hello_federation --template keras/mnist_eden_compression --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3
+
+  torch_mnist_straggler_check: # from straggler-handling.yml - torch/mnist_straggler_check
+    needs: [pytest-coverage]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Test Straggler Handling Interface
+        run: |
+          python -m tests.github.test_hello_federation --template torch/mnist_straggler_check --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3

@@ -16,6 +16,8 @@ class ModelName(Enum):
     XGB_HIGGS = "xgb_higgs"
     KERAS_TORCH_MNIST = "keras/torch/mnist"
     KERAS_JAX_MNIST = "keras/jax/mnist"
+    TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
+    TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5

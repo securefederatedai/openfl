@@ -4,6 +4,7 @@
 name: Task_Runner_Dockerized_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -21,11 +22,11 @@ on:
         type: choice
         default: "all"
         options:
-          - all
+          - test_memory_logs
           - test_with_tls
           - test_without_tls
           - test_without_client_auth
-          - test_memory_logs
+          - all
         required: false
 
 permissions:
@@ -35,7 +36,7 @@ permissions:
 env:
   NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
-  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
+  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'test_memory_logs' }}
 
 jobs:
   input_selection:
