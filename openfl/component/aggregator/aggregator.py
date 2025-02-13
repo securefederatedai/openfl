@@ -181,13 +181,18 @@ class Aggregator:
         self.use_delta_updates = use_delta_updates
 
         self.model = None  # Initialize the model attribute to None
-        if self.persistent_db and self._recover():
-            logger.info("recovered state of aggregator")
 
-        # The model is built by recovery if at least one round has finished
-        if self.model:
-            logger.info("Model was loaded by recovery")
-        elif initial_tensor_dict:
+        # Callbacks
+        self.callbacks = callbacks_module.CallbackList(
+            callbacks,
+            add_memory_profiler=log_memory_usage,
+            add_metric_writer=write_logs,
+            origin="aggregator",
+        )
+
+        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
+
+        if initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
                 tensor_dict=initial_tensor_dict,
@@ -198,15 +203,8 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
-
-        # Callbacks
-        self.callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_memory_profiler=log_memory_usage,
-            add_metric_writer=write_logs,
-            origin="aggregator",
-        )
+        if self.persistent_db and self._recover():
+            logger.info("Recovered state of aggregator")
 
         # TODO: Aggregator has no concrete notion of round_begin.
         # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
