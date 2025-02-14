@@ -243,8 +243,6 @@ def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds
         assert not round_increment, f"Current round number is increasing after {n} collaborators stop. Expected to stop."
         log.info(f"Current round number is not increasing after {n} collaborators stop as expected.")
 
-    log.info("Current round number is increasing after every stop as expected.")
-
     assert int_helper.restart_participants(fed_obj.collaborators[:n], action="start")
 
     log.info(f"{n} Collaborators restarted successfully")
