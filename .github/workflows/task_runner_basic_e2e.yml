@@ -328,7 +328,7 @@ jobs:
           test_type: "With_Memory_Logs"
 
   test_straggler_check:
-    name: Straggler Handling Test
+    name: Straggler Handling
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
@@ -364,7 +364,7 @@ jobs:
           test_type: "Straggler_Handling"
 
   test_eden_compression:
-    name: Eden Compression Test
+    name: Eden Compression
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
