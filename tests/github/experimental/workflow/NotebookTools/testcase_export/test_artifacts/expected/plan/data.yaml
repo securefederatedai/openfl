@@ -1,0 +1,51 @@
+Bangalore:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 3
+      n_collaborators: 5
+      test_dataset: src.experiment.mnist_test
+      train_dataset: src.experiment.mnist_train
+    template: src.experiment.callable_to_initialize_collaborator_private_attributes
+Chandler:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 2
+      n_collaborators: 5
+      test_dataset: src.experiment.mnist_test
+      train_dataset: src.experiment.mnist_train
+    template: src.experiment.callable_to_initialize_collaborator_private_attributes
+New Delhi:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 4
+      n_collaborators: 5
+      test_dataset: src.experiment.mnist_test
+      train_dataset: src.experiment.mnist_train
+    template: src.experiment.callable_to_initialize_collaborator_private_attributes
+Portland:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 0
+      n_collaborators: 5
+      test_dataset: src.experiment.mnist_test
+      train_dataset: src.experiment.mnist_train
+    template: src.experiment.callable_to_initialize_collaborator_private_attributes
+Seattle:
+  callable_func:
+    settings:
+      batch_size: 64
+      index: 1
+      n_collaborators: 5
+      test_dataset: src.experiment.mnist_test
+      train_dataset: src.experiment.mnist_train
+    template: src.experiment.callable_to_initialize_collaborator_private_attributes
+aggregator:
+  callable_func:
+    settings:
+      batch_size: 50
+      watermark_data: src.experiment.watermark_data
+    template: src.experiment.callable_to_initialize_aggregator_private_attributes
