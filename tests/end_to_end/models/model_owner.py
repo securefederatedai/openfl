@@ -172,6 +172,31 @@ class ModelOwner():
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
+
+    def modify_straggler_cutoff(self, straggler_cutoff, plan_path):
+        """
+        Modify the plan to set the straggler cutoff
+        Args:
+            straggler_cutoff (dict): Straggler cutoff settings
+            plan_path (str): Path to the plan file
+        """
+        plan_file = os.path.join(plan_path, "plan.yaml")
+
+        try:
+            with open(plan_file) as fp:
+                data = yaml.safe_load(fp)
+
+            # Modify the plan with the provided straggler cutoff settings
+            data["straggler_handling_policy"] = straggler_cutoff
+
+            with open(plan_file, "w+") as write_file:
+                yaml.dump(data, write_file)
+            log.info(f"Modified the plan with straggler cutoff settings.")
+        except Exception as e:
+            log.error(f"Failed to modify the plan with straggler cutoff settings: {e}")
+            raise ex.PlanModificationException(f"Failed to modify the plan with straggler cutoff settings: {e}")
+
+
     def initialize_plan(self, agg_domain_name, initial_model_path=None):
         """
         Initialize the plan
