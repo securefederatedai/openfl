@@ -84,11 +84,11 @@ class NotebookTools:
                 (archive_path, flow_class_name).
         """
         instance = cls(notebook_path, output_workspace)
-        instance.generate_requirements()
-        instance.generate_plan_yaml(director_fqdn, tls)
+        instance._generate_requirements()
+        instance._generate_plan_yaml(director_fqdn, tls)
         instance._clean_generated_workspace()
         print_tree(output_workspace, level=2)
-        return instance.generate_experiment_archive()
+        return instance._generate_experiment_archive()
 
     @classmethod
     def export(cls, notebook_path: str, output_workspace: str) -> None:
@@ -98,12 +98,12 @@ class NotebookTools:
             output_workspace (str): Path for the generated workspace directory.
         """
         instance = cls(notebook_path, output_workspace)
-        instance.generate_requirements()
-        instance.generate_plan_yaml()
-        instance.generate_data_yaml()
+        instance._generate_requirements()
+        instance._generate_plan_yaml()
+        instance._generate_data_yaml()
         print_tree(output_workspace, level=2)
 
-    def generate_experiment_archive(self) -> Tuple[str, str]:
+    def _generate_experiment_archive(self) -> Tuple[str, str]:
         """
         Create archive of the generated workspace
 
@@ -121,7 +121,7 @@ class NotebookTools:
 
         return arch_path, self.flow_class_name
 
-    def generate_requirements(self) -> None:
+    def _generate_requirements(self) -> None:
         """Extracts pip libraries from exported python script
         and append in workspace/requirements.txt
         """
@@ -152,7 +152,7 @@ class NotebookTools:
         if data_file.exists():
             data_file.unlink()
 
-    def generate_plan_yaml(self, director_fqdn: str = None, tls: bool = False) -> None:
+    def _generate_plan_yaml(self, director_fqdn: str = None, tls: bool = False) -> None:
         """Generate the plan.yaml
         Args:
             director_fqdn (str): Fully qualified domain name of the director node.
@@ -187,7 +187,7 @@ class NotebookTools:
         # Write the updated plan configuraiton to the plan.yaml file
         Plan.dump(plan, data)
 
-    def generate_data_yaml(self) -> None:
+    def _generate_data_yaml(self) -> None:
         """Generate data.yaml"""
 
         # Get flow class_name
@@ -224,6 +224,8 @@ class NotebookTools:
         """Extract the flow class details"""
         flspsec = import_module("openfl.experimental.workflow.interface").FLSpec
         flow_details = self.code_analyzer.get_flow_class_details(flspsec)
+        if not flow_details:
+            raise ValueError("Failed to extract flow class details")
         return flow_details
 
     def _initialize_plan_yaml(self, plan_yaml) -> dict:

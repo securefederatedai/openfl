@@ -58,7 +58,7 @@ class CodeAnalyzer:
         # Change the runtime backend from 'ray' to 'single_process'
         self.__change_runtime()
 
-    def __get_exp_name(self, notebook_path: Path) -> None:
+    def __get_exp_name(self, notebook_path: Path) -> str:
         """Fetch the experiment name from the Jupyter notebook.
         Args:
             notebook_path (str): Path to Jupyter notebook.
@@ -73,7 +73,10 @@ class CodeAnalyzer:
                 if match:
                     logger.info(f"Retrieved {match.group(1)} from default_exp")
                     return match.group(1)
-        return None
+        raise ValueError(
+            "The notebook does not contain a '#| default_exp <experiment_name' marker."
+            "Please add the marker to the first cell of the notebook"
+        )
 
     def __convert_to_python(self, notebook_path: Path, output_path: Path, export_filename) -> Path:
         """Converts a Jupyter notebook to a Python script.
@@ -216,7 +219,13 @@ class CodeAnalyzer:
         return instantiation_args
 
     def _extract_positional_args(self, args) -> Dict[str, Any]:
-        """Extract positional arguments from the AST nodes."""
+        """Extract positional arguments from the AST nodes.
+        Args:
+            args: AST nodes representing the arguments.
+
+        Returns:
+            Dict[str, Any]: Dictionary of argument names and their values.
+        """
         positional_args = {}
         for arg in args:
             if isinstance(arg, ast.Name):
@@ -228,7 +237,13 @@ class CodeAnalyzer:
         return positional_args
 
     def _extract_keyword_args(self, keywords) -> Dict[str, Any]:
-        """Extract keyword arguments from the AST nodes."""
+        """Extract keyword arguments from the AST nodes.
+        Args:
+            keywords: AST nodes representing the keyword arguments.
+
+        Returns:
+            Dict[str, Any]: Dictionary of keyword argument names and their values.
+        """
         keyword_args = {}
         for kwarg in keywords:
             value = ast.unparse(kwarg.value).strip()
@@ -241,7 +256,13 @@ class CodeAnalyzer:
         return keyword_args
 
     def _clean_value(self, value: str) -> str:
-        """Clean the value by removing unnecessary parentheses or brackets."""
+        """Clean the value by removing unnecessary parentheses or brackets.
+        Args:
+            value (str): The string value to be cleaned.
+
+        Returns:
+            str: The cleaned string value
+        """
         if value.startswith("(") and "," not in value:
             value = value.lstrip("(").rstrip(")")
         if value.startswith("[") and "," not in value:
