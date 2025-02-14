@@ -7,503 +7,238 @@ Federated Evaluation
 Introduction to Federated Evaluation
 -------------------------------------
 
-Model evaluation is an essential part of the machine learning development cycle. In a traditional centralized learning system, all evaluation data is collected on a localized server. Because of this, centralized evaluation of machine learning models is a fairly straightforward task. However, in a federated learning system, data is distributed across multiple decentralized devices or nodes. In an effort to preserve the security and privacy of the distributed data, it is infeasible to simply aggregate all the data into a centralized system. Federated evaluation offers a solution by assessing the model at the client side and aggregating the accuracy without ever having to share the data. This is crucial for ensuring the model's effectiveness and reliability in diverse and real-world environments while respecting privacy and data locality
+Model evaluation is an essential part of the machine learning development cycle. In a traditional centralized learning system, all evaluation data is collected on a localized server. Because of this, centralized evaluation of machine learning models is a fairly straightforward task. However, in a federated learning system, data is distributed across multiple decentralized devices or nodes. In an effort to preserve the security and privacy of the distributed data, it is infeasible to simply aggregate all the data into a centralized system. Federated evaluation offers a solution by assessing the model at the client side and aggregating the accuracy without ever having to share the data. This is crucial for ensuring the model's effectiveness and reliability in diverse and real-world environments while respecting privacy and data locality. Further sections of this document will detail how Federated Evaluation,a core feature within OpenFL, can be leveraged to achieve decentralized evaluation of an existing model.
 
 OpenFL's Support for Federated Evaluation
--------------------------------------------------
+------------------------------------------
 
-OpenFL, a flexible framework for Federated Learning, has the capability to perform federated evaluation by modifying the federation plan. In this document, we will show how OpenFL can facilitate this process through its task runner API (aggregator-based workflow), where the model evaluation is distributed across various collaborators before being sent to the aggregator. For the task runner API, this involves minor modifications to the ``plan.yaml`` file, which defines the workflow and tasks for the federation. In particular, the federation plan should be defined to run for one forward pass and perform only aggregated model validation
+OpenFL, a flexible framework for Federated Learning, has the capability to perform federated evaluation by modifying the federation plan. In this document, we will show how OpenFL can facilitate this process through its `TaskRunner API <https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html>`_, where the model evaluation is distributed across various collaborators before being sent to the aggregator. For the task runner API, this involves minor modifications to the ``plan.yaml`` file, which defines the workflow and tasks for the federation. In particular, the federation plan should be defined to run for one forward pass and perform only aggregated model validation.
 
-In general pipeline is as follows:
+In general a Federated Evaluation pipeline is as follows:
 
 1. **Setup**: Initialize the federation with the modified ``plan.yaml`` set to run for one round and only perform aggregated model validation
 2. **Execution**: Run the federation. The model is distributed across collaborators for evaluation.
 3. **Evaluation**: Each collaborator evaluates the model on its local data.
 4. **Aggregation**: The aggregator collects and aggregates these metrics to assess overall model performance.
 
-Example Using the Task Runner API (Aggregator-based Workflow)
---------------------------------------------------------------
+Overview
+--------
+OpenFL now supports FedEval even more seamlessly through its task runner API and the federation plan as defaults have been further refined with both training (a.k.a "learning") and evaluation task_groups being predefined in the default assigner configuration.
 
-The following steps can be leveraged to achieve practical e2e usage of FedEval
+In addition, one can now initialize a workspace for evaluation with a pre-trained model load feature thereby eliminating the need to manually replace the ``init.pbuf`` file. 
 
-*N.B*: We will be using torch/mnist plan itself for both training and with some minor changes for evaluation as well
+Further more all the evaluation run overrides like round_number check skipping, defaulting round_number to 1 and task_group selection, which were earlier to be manually ensured by changing the default plan configurations, are all now baked in aggregator behavior and no manual edits are needed to switch between `learning` and `evaluation` run of a plan. Basically the plan is distributed once and can be used for both learning and evaluation.
 
-*Prerequisites*: Please ensure that OpenFL version==1.7 is installed or you can also choose to install latest from source.
+Requirements
+------------
+- Latest OpenFL built from source.
+- A pre-trained model file (by default named ``best.pbuf``, unless overridden via aggregator configuration) should be available.
+- Familiarity with basic OpenFL commands (workspace creation, certificate generation, etc.)
 
-With OpenFL version==1.7 aggregator start command is enhanced to have an optional argument '--task_group' which, as the help suggest, will select the provided task_groups task to assigner for execution in the collaborator(s), since this defaults to 'learning'
+Federated Evaluation using TaskRunner API
+----------------------------------------------
+
+This section walks you through an end-to-end example of using the Task Runner API for Federated Evaluation (FedEval) by highlighting  the complete workflow - from training to evaluation.
+
+Workflow Overview
+-----------------
+
+**Training Phase:**
+
+- Create a training workspace using the torch/mnist template.
+
+- Certify the workspace and generate certificates for the aggregator and collaborators.
+
+- Initialize the federation plan (default settings target the "learning" task_group).
+
+- Start the aggregator and collaborators in learning mode.
+
+- Save the best model (typically stored as ``best.pbuf`` unless overridden via aggregator configuration).
+
+**Evaluation Phase:**
+
+- Create a new workspace for evaluation using the same torch/mnist template.
+
+- Certify the evaluation workspace and generate the required certificates.
+
+- Initialize the federation plan, loading your pre-trained model using the `-i` flag. For example:
+
+.. code-block:: bash
+
+    fx plan initialize -i ~/trained_model.pbuf
+
+- Start the aggregator in evaluation mode using the `--task_group` flag to override the default behavior:
+    
+.. code-block:: bash
+
+    fx aggregator start --task_group evaluation
+        
+- Start your evaluation collaborators and verify that only evaluation tasks are dispatched.
+
+**Aggregator Command Details:**
+
+The aggregator start command supports the optional `--task_group` argument. If this flag is not provided the aggregator will distribute all defined task_groups according to the plan's assigner configuration.
+
+By default, unless overridden by user, the assigner configurations guarantees that only "learning" tasks are assigned.
 
 .. code-block:: shell
 
     Usage: fx aggregator start [OPTIONS]
 
-    Start the aggregator service.
-
-    Args:     plan (str): Path to plan config file     authorized_cols (str): Path to authorized collaborators file
-    task_group (str): Selected task-group for assignement - defaults to 'learning'
+    Starts the aggregator service.
 
     Options:
-    -p, --plan PATH             Federated learning plan [plan/plan.yaml]
-    -c, --authorized_cols PATH  Authorized collaborator list [plan/cols.yaml]
-    --task_group TEXT           Selected task-group for assignment - defaults to learning
-    --help                      Show this message and exit.
+      -p, --plan PATH             Path to an FL plan.  [default: plan/plan.yaml]
+      -c, --authorized_cols PATH  Path to an authorized collaborator list.  [default: plan/cols.yaml]
+      --task_group TEXT           Task group to execute as defined in the plan task assigner.
+      --help                      Show this message and exit.
 
-1. **Setup**
-We will use the `torch/mnist` workspace for training
+**Plan Command Details:**
 
-Let's first configure a workspace with all necesary certificates
+The plan initialize command supports the optional `--init_model_path` (shortform `-i`) argument. When this option is used and points to a model protobuf file, it will load that model as initial model during plan initialization phase to either further train or evaluate. However in this example we shall use this for evaluation.
 
 .. code-block:: shell
 
-    fx workspace create --prefix ./cnn_train_eval --template torch/mnist
-    cd cnn_train_eval
+    Usage: fx plan initialize [OPTIONS]
+
+    Initializes a Data Science plan and generates a protobuf file of the initial model weights for the federation.
+
+    Options:
+    -p, --plan_config PATH         Path to an FL plan.  [default: plan/plan.yaml]
+    -c, --cols_config PATH         Path to an authorized collaborator list.  [default: plan/cols.yaml]
+    -d, --data_config PATH         The dataset shard configuration file.  [default: plan/data.yaml]
+    -a, --aggregator_address TEXT  The FQDN of the federation agregator
+    -f, --input_shape TEXT         The input spec of the model.
+
+                                    May be provided as a list for single input head: ``--input-shape [3,32,32]``,
+
+                                    or as a dictionary for multihead models (must be passed in quotes):
+
+                                    ``--input-shape "{'input_0': [1, 240, 240, 4],'input_1': [1, 240, 240, 1]}"``.
+    -g, --gandlf_config TEXT       GaNDLF Configuration File Path
+    -r, --install_reqs BOOLEAN     If set, installs packages listed under 'requirements.txt'.  [default: True]
+    -i, --init_model_path PATH     Path to initial model protobuf file.
+    --help                         Show this message and exit.
+
+The following section ensures that you have full guidance through the tasks required to transition from training (a.k.a learning) into evaluation using the TaskRunner API.
+
+Detailed Instructions
+---------------------
+
+**1. Training Phase:** Workspace Setup and Federation Run
+
+Create a training workspace (for example, using the torch/mnist template):
+
+.. code-block:: bash
+
+    fx workspace create --prefix ./cnn_train --template torch/mnist
+    cd cnn_train
     fx workspace certify
     fx aggregator generate-cert-request
     fx aggregator certify --silent
 
-Succesful run of this will show in console both the FL plan details and certificates generations
+Initialize the plan normally:
 
-.. code-block:: shell
+.. code-block:: bash
 
-            INFO     Parsing Federated Learning Plan : SUCCESS :                                                    
-        
-                        settings:                                                                                    
+    fx plan initialize
 
-                            best_state_path: save/best.pbuf                                                            
+By default the assigner ensures that only "learning" task_group tasks are executed
 
-                            db_store_rounds: 2                                                                         
+Run the federation using your collaborators. For example:
 
-                            init_state_path: save/init.pbuf                                                            
+.. code-block:: bash
 
-                            last_state_path: save/last.pbuf                                                            
-
-                            rounds_to_train: 2                                                                         
-
-                            write_logs: false                                                                          
-
-                        template: openfl.component.aggregator.Aggregator                                             
-
-                        assigner:                                                                                      
-
-                        settings:                                                                                    
-
-                            task_groups:                                                                               
-
-                            - name: learning                                                                           
-
-                            percentage: 1.0                                                                          
-
-                            tasks:                                                                                   
-
-                            - aggregated_model_validation                                                            
-
-                            - train                                                                                  
-
-                            - locally_tuned_model_validation                                                         
-
-                        template: openfl.component.RandomGroupedAssigner                                             
-
-                        collaborator:                                                                                  
-
-                        settings:                                                                                    
-                                    
-                            db_store_rounds: 1                                                                         
-
-                            delta_updates: false                                                                       
-
-                            opt_treatment: RESET                                                                       
-
-                        template: openfl.component.collaborator.Collaborator                                         
-
-                        compression_pipeline:                                                                          
-
-                        settings: {}                                                                                 
-
-                        template: openfl.pipelines.NoCompressionPipeline                                             
-
-                        data_loader:                                                                                   
-
-                        settings:                                                                                    
-
-                            batch_size: 64                                                                             
-
-                            collaborator_count: 2                                                                      
-
-                        template: src.dataloader.PyTorchMNISTInMemory                                                
-
-                        network:                                                                                       
-
-                        settings:                                                                                    
-
-                            agg_addr: devvm###.com                                                
-
-                            agg_port: 55529                                                                            
-
-                            cert_folder: cert                                                                          
-
-                            client_reconnect_interval: 5                                                               
-
-                            hash_salt: auto                                                                            
-
-                            require_client_auth: true                                                                  
-
-                            use_tls: true                                                                              
-
-                        template: openfl.federation.Network                                                          
-
-                        task_runner:                                                                                   
-
-                        settings: {}                                                                                 
-
-                        template: src.taskrunner.TemplateTaskRunner                                                  
-
-                        tasks:                                                                                         
-
-                        aggregated_model_validation:                                                                 
-
-                            function: validate_task                                                                    
-
-                            kwargs:                                                                                    
-
-                            apply: global                                                                            
-
-                            metrics:                                                                                 
-
-                            - acc                                                                                    
-
-                        locally_tuned_model_validation:                                                              
-
-                            function: validate_task                                                                    
-
-                            kwargs:                                                                                    
-
-                            apply: local                                                                             
-
-                            metrics:                                                                                 
-
-                            - acc                                                                                    
-
-                        settings: {}                                                                                 
-
-                        train:                                                                                       
-
-                            function: train_task                                                                       
-
-                            kwargs:                                                                                    
-
-                            epochs: 1                                                                                
-
-                            metrics:                                                                                 
-
-                            - loss                                                                                                                                                                                                 
-    New workspace directory structure:
-    cnn_train_eval
-    ├── requirements.txt
-    ├── .workspace
-    ├── logs
-    ├── data
-    ├── cert
-    ├── README.md
-    ├── src
-    │   ├── __init__.py
-    │   ├── taskrunner.py
-    │   ├── cnn_model.py
-    │   └── dataloader.py
-    ├── plan
-    │   ├── cols.yaml
-    │   ├── plan.yaml
-    │   ├── data.yaml
-    │   └── defaults
-    └── save
-
-    6 directories, 11 files
-
-    ✔️ OK
-    Setting Up Certificate Authority...
-
-    Done.
-
-    ✔️ OK
-    Creating AGGREGATOR certificate key pair with following settings: CN=devvm###.com, SAN=DNS:devvm###.com
-    
-    ✔️ OK
-    The CSR Hash for file server/agg_devvm###.com.csr = 3affa56ce391a084961c5f1ba634f223536173665daa6191e705e13557f36d58c844133758f804d1f85d93bfc113fd7b
-    
-    Signing AGGREGATOR certificate
-
-    ✔️ OK
-
-2. Initialize the plan
-
-.. code-block:: shell
-
-    cd ~/src/clean/openfl/cnn_train_eval
-    fx plan initialize >~/plan.log 2>&1 &
-    tail -f ~/plan.log
-
-This should initialize the plan with random initial weights in ``init.pbuf``
-
-.. code-block:: shell
-
-            WARNING  Following parameters omitted from global initial model, local initialization will determine values: []                           plan.py:186
-            INFO     Creating Initial Weights File    🠆 save/init.pbuf
-                                    plan.py:196
-    ✔️ OK
-
-3. Next run the 'learning' federation with two collaborators
-
-.. code-block:: shell
-
-    ## Create two collaborators
-    cd ~/src/clean/openfl/cnn_train_eval
     fx collaborator create -n collaborator1 -d 1
     fx collaborator generate-cert-request -n collaborator1
     fx collaborator certify -n collaborator1 --silent
+
     fx collaborator create -n collaborator2 -d 2
     fx collaborator generate-cert-request -n collaborator2
     fx collaborator certify -n collaborator2 --silent
 
-    ## start the fedeval federation
     fx aggregator start > ~/fx_aggregator.log 2>&1 &
     fx collaborator start -n collaborator1 > ~/collab1.log 2>&1 &
     fx collaborator start -n collaborator2 > ~/collab2.log 2>&1 &
-    cd ~
-    tail -f plan.log fx_aggregator.log collab1.log collab2.log
 
-This script will run two collaborator and start the aggregator with default `--task_group` 'learning'
+After training is complete, note the best model's performance and save the best model file (``best.pbuf``) as generated in your workspace (e.g. under cnn_train/save/).
 
-The same is defined in the assigner section of the plan which comes from the defaults itself
+In this example run we will save the ``best.pbuf`` in home-directory and name it as ``trained_model.pbuf``
 
-.. code-block:: yaml
+.. code-block:: bash
 
-    assigner:                                                                                      
+    cp ./cnn_train/save/best.pbuf ~/trained_model.pbuf
 
-        settings:                                                                                    
 
-            task_groups:                                                                               
+**2. Evaluation Phase:** Workspace Setup Without Manual Plan Changes
 
-            - name: learning                                                                           
+Create a new workspace for evaluation using the same template:
 
-            percentage: 1.0                                                                          
+.. code-block:: bash
 
-            tasks:                                                                                   
+    fx workspace create --prefix ./cnn_eval --template torch/mnist
+    cd cnn_eval
+    fx workspace certify
+    fx aggregator generate-cert-request
+    fx aggregator certify --silent
 
-            - aggregated_model_validation                                                            
+Since the default plan already includes definitions for both "learning" and "evaluation" task_groups, you do not need to modify the round_number or manually edit the assigner section. 
 
-            - train                                                                                  
+Simply initialize the plan and load your pre-trained model by specifying the `-i` option as shown below :
 
-            - locally_tuned_model_validation 
+.. code-block:: bash
 
-This will run the 2 rounds of training across both the collaborators
+    fx plan initialize -i ~/trained_model.pbuf
 
-.. code-block:: shell
+This command loads the best model from previous training run into the evaluation workspace without any manual file replacement.
 
-    ==> fx_aggregator.log <==
-            INFO     Sending tasks to collaborator collaborator2 for round 0                                        
-                                aggregator.py:409
+**3. Running the Evaluation Federation**
 
-    ==> collab2.log <==
-            INFO     Received Tasks: [name: "aggregated_model_validation"                                           
-                            collaborator.py:184
-                        , name: "train"                                                                                
+Start the federation for evaluation by explicitly assigning evaluation task_group on aggregator start:
 
-                        , name: "locally_tuned_model_validation"                                                       
+.. code-block:: bash
 
-                        ]                                                                                              
-
-Post the end of learning federation we can note what is the best model accuracy reported and save the ``best.pbuf`` file for next step - evaluation
-
-.. code-block:: shell
-
-        ==> fx_aggregator.log <==
-    [06:09:27] INFO     Collaborator collaborator1 is sending task results for train, round 1                          
-            
-    [06:09:28] INFO     Collaborator collaborator1 is sending task results for locally_tuned_model_validation, round 1                             aggregator.py:629
-            INFO     Round 1: Collaborators that have completed all tasks: ['collaborator2', 'collaborator1']                                  aggregator.py:1049
-            INFO     Round 1: saved the best model with score 0.960096                                              
-            
-            INFO     Saving round 1 model...                                                                        
-
-            INFO     Experiment Completed. Cleaning up...                                                           
-
-In this case we can confirm that post the 2 rounds of training the model reported an accuracy of 0.960096
-
-.. code-block:: shell
-
-    Round 1: saved the best model with score 0.960096                                              
-                                aggregator.py:955
-
-Let's save this model (``best.pbuf``) for later usage
-
-.. code-block:: shell
-
-    cp cnn_train_eval/save/best.pbuf ~/trained_model.pbuf
-    devuser@devvm:~/src/clean/openfl$ 
-
-Now let's create another workspace using the same plan and steps as mentioned in learning Setup:
-
-Post this we will do plan initialize and we shall replace the ``init.pbuf`` with the previously saved ``best.pbuf`` and then re-adjust the plan 
-to use "evaluation" defaults.
-
-Once all the pieces are in place we then run the aggregator in evaluation mode by supplying the `--task_group` as "evaluation" validating the 
-accuracy of the previously trained model
-
-The updated plan post initialization with edits to make it ready for evaluation will be as follows:
-
-.. code-block:: yaml
-
-    aggregator:
-    settings:
-        best_state_path: save/best.pbuf
-        db_store_rounds: 2
-        init_state_path: save/init.pbuf
-        last_state_path: save/last.pbuf
-        rounds_to_train: 1
-        write_logs: false
-    template: openfl.component.aggregator.Aggregator
-    assigner:
-    settings:
-        task_groups:
-        - name: evaluation
-        percentage: 1.0
-        tasks:
-        - aggregated_model_validation
-    template: openfl.component.RandomGroupedAssigner
-    collaborator:
-    settings:
-        db_store_rounds: 1
-        delta_updates: false
-        opt_treatment: RESET
-    template: openfl.component.collaborator.Collaborator
-    compression_pipeline:
-    settings: {}
-    template: openfl.pipelines.NoCompressionPipeline
-    data_loader:
-    settings:
-        batch_size: 64
-        collaborator_count: 2
-    template: src.dataloader.PyTorchMNISTInMemory
-    network:
-    settings:
-        agg_addr: devvm###.com
-        agg_port: 55529
-        cert_folder: cert
-        client_reconnect_interval: 5
-        hash_salt: auto
-        require_client_auth: true
-        use_tls: true
-    template: openfl.federation.Network
-    task_runner:
-    settings: {}
-    template: src.taskrunner.TemplateTaskRunner
-    tasks:
-    aggregated_model_validation:
-        function: validate_task
-        kwargs:
-        apply: global
-        metrics:
-        - acc
-    locally_tuned_model_validation:
-        function: validate_task
-        kwargs:
-        apply: local
-        metrics:
-        - acc
-    settings: {}
-    train:
-        function: train_task
-        kwargs:
-        epochs: 1
-        metrics:
-        - loss
-
-We have done following changes to the initialized torch/mnist plan in the new workspace:
- - Set the rounds_to_train to 1 as evaluation needs just one round of federation run across the collaborators
- - Removed all other training related tasks from assigner settings except "aggregated_model_validation"
-Now let's replace the ``init.pbuf`` with the previously saved ``trained_model.pbuf``
-
-.. code-block:: shell
-
-    ll cnn_eval/save/init.pbuf 
-    -rw------- 1 devuser devuser 1722958 Jan 14 09:44 cnn_eval/save/init.pbuf
-    (venv) devuser@devvm:~/src/clean/openfl$ cp ~/trained_model.pbuf cnn_eval/save/init.pbuf 
-    (venv) devuser@devvm:~/src/clean/openfl$ ll cnn_eval/save/init.pbuf
-    -rw------- 1 devuser devuser 1722974 Jan 14 09:52 cnn_eval/save/init.pbuf
-    (venv) devuser@devvm:~/src/clean/openfl$ 
-
-Notice the size changes in the ``init.pbuf`` as its replaced by the trained model we saved from the training run of the federation
-
-Now finally let's run the federation and this time we will launch the aggregator with overriding the default value of `--task_group` to "evaluation"
-
-.. code-block:: shell
-
-    ## Create two collaborators
-    cd ~/src/clean/openfl/cnn_eval
+    # Create evaluation collaborators as before:
     fx collaborator create -n collaborator1 -d 1
     fx collaborator generate-cert-request -n collaborator1
     fx collaborator certify -n collaborator1 --silent
+
     fx collaborator create -n collaborator2 -d 2
     fx collaborator generate-cert-request -n collaborator2
     fx collaborator certify -n collaborator2 --silent
 
-    ## start the fedeval federation
+    # Start the aggregator in evaluation mode:
     fx aggregator start --task_group evaluation > ~/fx_aggregator.log 2>&1 &
     fx collaborator start -n collaborator1 > ~/collab1.log 2>&1 &
     fx collaborator start -n collaborator2 > ~/collab2.log 2>&1 &
-    cd ~
-    tail -f plan.log fx_aggregator.log collab1.log collab2.log
 
-Notice the only change in fedration run steps from previous training round is the additional argument `--task_group` to aggregator start
+With the aggregator running with the "evaluation" task_group (set via `--task_group evaluation`), it will automatically bypass the round_number check and dispatch only the evaluation task i.e 'aggregated_model_validation' to each collaborator. 
 
-Now since the aggregators' task_group is set to "evaluation" it will skip the `round_number_check` and use the init model supplied just for evaluation
+Aggregator will further ensure that the evaluation tasks run only for 1 iteration irrespective of the number of rounds of training defined in the plan.
 
-.. code-block:: shell
+Log messages will indicate that:
+   - The aggregator is set to "evaluation" mode.
+   - Aggregator will log skipping of round number check and overrides to number of rounds of federation run.
+   - Collaborators are receiving only the aggregated model validation task.
+   - The final aggregated accuracy is reported matching the pre-trained model's performance
 
-        INFO     Setting aggregator to assign: evaluation task_group                                            
-                            aggregator.py:101
-        INFO     🧿 Starting the Aggregator Service.                                                            
-                            aggregator.py:103
-       
-        INFO     Skipping round_number check for evaluation task_group                                          
-                            aggregator.py:215
-        INFO     Starting Aggregator gRPC Server                                                                
+New Features Highlight
+----------------------
+- **Default Plan Completeness:** Both "learning" and "evaluation" task_groups are pre-defined in the default assigner. No manual edits are necessary.
+- **Model Loading via Initialization:** Use the ``fx plan initialize -i`` option to load a pre-trained ``best.pbuf`` model directly during plan initialization.
+- **Command-Line Flag for task_group selection:** The ``--task_group`` flag allows the aggregator to switch to any task_group present in the assigner.
 
-In each collaborator logs we can see that the assigned task is only the evaluation task
+Troubleshooting
+---------------
+- **Plan Initialization:** Ensure that fx plan initialize -i correctly loads your pre-trained model (check the log output).
+- **Certificate Validity:** Verify that all certificate generation steps have completed successfully.
+- **Log Monitoring:** Use tail on the various logs (plan, aggregator, collaborator) to confirm that only evaluation tasks are being dispatched.
+- **Network and TLS:** Confirm that network settings (e.g. aggregator address, port, and TLS configurations) remain consistent between training and evaluation.
 
-.. code-block:: shell
+Conclusion
+----------
+FedEval feature being more tightly integrated, one no longer needs to modify the federation plan manually for evaluation rounds nor manually replace the ``init.pbuf`` file.
 
-    => collab1.log <==
-            INFO     Waiting for tasks...                                                                           
-                            collaborator.py:234
-            INFO     Received Tasks: [name: "aggregated_model_validation"                                           
-                            collaborator.py:184
-                        ]                                     
-    ==> collab2.log <==
-            INFO     Waiting for tasks...                                                                           
-                            collaborator.py:234
-            INFO     Received Tasks: [name: "aggregated_model_validation"                                           
-                            collaborator.py:184
-                        ]
+Simply load the best model using the `-i`` option with `fx plan initialize` and run the aggregator with the `--task_group evaluation` flag.
 
-And post the federation run, since its only evaluation run, we get from the collaborator the accuracy of the init model which, as per successful 
-evaluation, is same as previously trained best models' accuracy, in our case that was 0.960096
-
-.. code-block:: shell
-
-    ==> fx_aggregator.log <==
-    [10:00:15] INFO     Collaborator collaborator2 is sending task results for aggregated_model_validation, round 0                                aggregator.py:629
-            INFO     Round 0: Collaborators that have completed all tasks: ['collaborator2']                        
-                            aggregator.py:1049
-            INFO     Collaborator collaborator1 is sending task results for aggregated_model_validation, round 0                                aggregator.py:629
-            INFO     Round 0: Collaborators that have completed all tasks: ['collaborator2', 'collaborator1']                                  aggregator.py:1049
-            INFO     Round 0: saved the best model with score 0.960096                                              
-                                aggregator.py:955
-            INFO     Saving round 0 model...                                                                        
-                                aggregator.py:994
-            INFO     Experiment Completed. Cleaning up...                                                           
-                            aggregator.py:1005
-            INFO     Sending signal to collaborator collaborator1 to shutdown...                                    
-                                aggregator.py:356
-
----
-
-Congratulations, you have successfully performed federated evaluation across two decentralized collaborator nodes using the same plan with minor evaluation-related changes leveraging a previously trained OpenFL model protobuf as input.
+These improvements simplify switching between learning and evaluation tasks via task_groups and ensure a seamless workflow for federated model assessment.
