@@ -185,10 +185,8 @@ class ModelOwner():
         try:
             with open(plan_file) as fp:
                 data = yaml.safe_load(fp)
-
             # Modify the plan with the provided straggler cutoff settings
             data["straggler_handling_policy"] = straggler_cutoff
-
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)
             log.info(f"Modified the plan with straggler cutoff settings.")

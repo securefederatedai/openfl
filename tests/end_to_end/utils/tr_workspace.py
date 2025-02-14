@@ -67,7 +67,7 @@ def common_workspace_creation(request, eval_scope=False):
 
     model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
 
-    if request.config.get("straggler_cutoff"):
+    if hasattr(request.config, 'straggler_cutoff') and request.config.straggler_cutoff:
         model_owner.modify_straggler_cutoff(
             request.config.straggler_cutoff, plan_path=plan_path
         )

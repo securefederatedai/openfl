@@ -27,14 +27,14 @@ def fx_configure_request_percentagepolicy(request):
     """
     request.config.num_rounds = 30
     request.config.num_collaborators = 3
-    request.config.straggler_cutoff = {
-            "straggler_handling_policy": {
-                "template": "openfl.component.aggregator.straggler_handling.PercentagePolicy",
-                "settings": {
-                    "percent_collaborators_needed": 0.5,
-                    "minimum_reporting": 2
-                }
-            } }
+    request.config.model_name = "torch/mnist_straggler_check"
+    request.config.straggler_cutoff ={
+            "template": "openfl.component.aggregator.straggler_handling.PercentagePolicy",
+            "settings": {
+                "percent_collaborators_needed": 0.5,
+                "minimum_reporting": 2
+            }
+        }
 
 
 @pytest.mark.task_runner_basic
@@ -88,10 +88,10 @@ def test_straggler_tests(request, fx_configure_request_percentagepolicy, fx_fede
     db_file = fx_federation_tr.aggregator.tensor_db_file
 
     # Perform restart and validate rounds with stragglers
-    minimum_reporting = request.config.straggler_cutoff["straggler_handling_policy"]["settings"]["minimum_reporting"]
+    minimum_reporting = request.config.straggler_cutoff["settings"]["minimum_reporting"]
     n =  request.config.num_collaborators - minimum_reporting
 
-    _perform_collaboator_restart_validate_rounds(
+    _perform_collaborator_restart_validate_rounds(
         fed_obj=fx_federation_tr,
         db_file=db_file,
         total_rounds=request.config.num_rounds,
@@ -99,7 +99,7 @@ def test_straggler_tests(request, fx_configure_request_percentagepolicy, fx_fede
         n=n
     )
 
-    _perform_collaboator_restart_validate_rounds(
+    _perform_collaborator_restart_validate_rounds(
         fed_obj=fx_federation_tr,
         db_file=db_file,
         total_rounds=request.config.num_rounds,
@@ -136,7 +136,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
 
     db_file = fx_federation_tr_dws.aggregator.tensor_db_file
 
-    _perform_collaboator_restart_validate_rounds(
+    _perform_restart_validate_rounds(
         fed_obj=fx_federation_tr_dws,
         db_file=db_file,
         total_rounds=request.config.num_rounds,
@@ -207,7 +207,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     log.info("Current round number is increasing after every restart as expected.")
 
 
-def _perform_collaboator_restart_validate_rounds(fed_obj, db_file, total_rounds, min_reporting, n=1):
+def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds, min_reporting, n=1):
     """
     Perform collaborator restart and validate round increments.
 
@@ -220,6 +220,8 @@ def _perform_collaboator_restart_validate_rounds(fed_obj, db_file, total_rounds,
     """
 
     init_round = fed_helper.get_current_round(db_file)
+    log.info(f"Initial round number is {init_round}")
+
     assert int_helper.restart_participants(fed_obj.collaborators[:n], action="stop")
 
     log.info(f"{n} Collaborators stopped successfully")
@@ -228,6 +230,7 @@ def _perform_collaboator_restart_validate_rounds(fed_obj, db_file, total_rounds,
         init_round,
         db_file,
         total_rounds,
+        timeout=120,
     ), f"Expected current round to be ahead of {init_round} after collaborator stop"
 
     # total number of collaborators - minimum reporting
@@ -235,8 +238,10 @@ def _perform_collaboator_restart_validate_rounds(fed_obj, db_file, total_rounds,
 
     if n <= max_collaborators:
         assert round_increment, f"Current round number is not increasing after {n} collaborators stop."
+        log.info(f"Current round number is increasing after {n} collaborators stop as expected.")
     else:
         assert not round_increment, f"Current round number is increasing after {n} collaborators stop. Expected to stop."
+        log.info(f"Current round number is not increasing after {n} collaborators stop as expected.")
 
     log.info("Current round number is increasing after every stop as expected.")
 
@@ -248,6 +253,7 @@ def _perform_collaboator_restart_validate_rounds(fed_obj, db_file, total_rounds,
         init_round,
         db_file,
         total_rounds,
+        timeout=120,
     ), f"Expected current round to be ahead of {init_round} after collaborator restart"
 
     log.info("Current round number is increasing after every restart as expected.")
