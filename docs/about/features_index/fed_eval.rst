@@ -12,7 +12,7 @@ Model evaluation is an essential part of the machine learning development cycle.
 OpenFL's Support for Federated Evaluation
 ------------------------------------------
 
-OpenFL, a flexible framework for Federated Learning, has the capability to perform federated evaluation by modifying the federation plan. In this document, we will show how OpenFL can facilitate this process through its `TaskRunner API <https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html>`_, where the model evaluation is distributed across various collaborators before being sent to the aggregator. For the task runner API, this involves minor modifications to the ``plan.yaml`` file, which defines the workflow and tasks for the federation. In particular, the federation plan should be defined to run for one forward pass and perform only aggregated model validation.
+OpenFL, a flexible framework for Federated Learning, has the capability to perform federated evaluation by modifying the federation plan. In this document, we will show how OpenFL can facilitate this process through its :doc:`taskrunner`, where the model evaluation is distributed across various collaborators before being sent to the aggregator. For the task runner API, this involves minor modifications to the ``plan.yaml`` file, which defines the workflow and tasks for the federation. In particular, the federation plan should be defined to run for one forward pass and perform only aggregated model validation.
 
 In general a Federated Evaluation pipeline is as follows:
 
