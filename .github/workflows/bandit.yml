@@ -29,8 +29,8 @@ jobs:
       - name: Define HTML Report Path
         run: echo "HTML_REPORT_PATH=${{ github.workspace }}/results.html" >> $GITHUB_ENV
     
-      - name: Install Bandit and BeautifulSoup
-        run: pip install bandit beautifulsoup4
+      - name: Install Bandit and pandas
+        run: pip install bandit pandas
     
       - name: Perform Bandit Analysis
         run: bandit -r . -f json -o bandit_results.json
