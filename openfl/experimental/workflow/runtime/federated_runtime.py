@@ -206,7 +206,7 @@ class FederatedRuntime(Runtime):
         Returns:
             Optional[Any]: The deserialized flow object if successful, otherwise None
         """
-        status, flspec_obj = self._dir_client.get_flow_state()
+        status, flspec_obj = self._runtime_dir_client.get_flow_state()
         if status:
             print("Experiment ran successfully")
             # Append generated workspace path to sys.path
