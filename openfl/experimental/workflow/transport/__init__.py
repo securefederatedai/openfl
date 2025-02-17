@@ -7,6 +7,7 @@
 from openfl.experimental.workflow.transport.grpc import (
     AggregatorGRPCClient,
     AggregatorGRPCServer,
-    DirectorClient,
     DirectorGRPCServer,
+    EnvoyDirectorClient,
+    RuntimeDirectorClient,
 )

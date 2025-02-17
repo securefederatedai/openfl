@@ -167,3 +167,29 @@ def calculate_shared_mask(agreed_keys: list):
             total_mask -= pseudo_random_generator(agreed_key)
 
     return total_mask
+
+
+def calculate_mask(collaborator_index, agreed_keys, private_seed) -> float:
+    """
+    Calculates the sum of shared masks between collaborators using
+    the agreed keys as the seed for each mask and adding private mask to it.
+    """
+    total_mask = 0.0
+    # Calculating the sum of all shared masks.
+    for index in agreed_keys:
+        # Using second agreed key to use as seed.
+        key = agreed_keys[index][1]
+        random.seed(key)
+        seed = random.random()
+        # mask_u,v = ∆_u,v * PRG(agreed2_u,v) such that
+        # ∆_u,v = 1 if u > v else ∆_u,v = -1 if u < v
+        # and ∆_u,v = 0 if u = v
+        if collaborator_index > index:
+            total_mask += seed
+        elif collaborator_index < index:
+            total_mask -= seed
+    # Calculating the private mask for the collaborator.
+    random.seed(private_seed)
+    total_mask += random.random()
+
+    return total_mask
