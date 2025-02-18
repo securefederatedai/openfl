@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------
 # OpenFL Base Image w/ Gramine support
-# $> docker build . -t openfl -f Dockerfile.base .
 # ------------------------------------
 FROM ubuntu:22.04 AS base
 
