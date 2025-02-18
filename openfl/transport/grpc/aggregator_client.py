@@ -96,10 +96,7 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
                 # If status code is not in retryable status codes
                 self.sleeping_policy.logger.info("Response code: %s", response.code())
-                if (
-                    self.status_for_retry
-                    and response.code() not in self.status_for_retry
-                ):
+                if self.status_for_retry and response.code() not in self.status_for_retry:
                     return response
 
                 self.sleeping_policy.sleep()
@@ -120,9 +117,7 @@ class RetryOnRpcErrorClientInterceptor(
         """
         return self._intercept_call(continuation, client_call_details, request)
 
-    def intercept_stream_unary(
-        self, continuation, client_call_details, request_iterator
-    ):
+    def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
         """
         Wrap intercept call for stream->unary RPC.
 
@@ -248,9 +243,7 @@ class AggregatorGRPCClient:
         self.resend_data_on_reconnection = resend_data_on_reconnection
 
         if not self.use_tls:
-            self.logger.warning(
-                "gRPC is running on insecure channel with TLS disabled."
-            )
+            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
