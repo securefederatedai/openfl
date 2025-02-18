@@ -2,8 +2,6 @@ name: Windows (latest)
 
 on:
   workflow_call:
-  schedule:
-    - cron: '0 0 * * *'
 
 permissions:
   contents: read
@@ -14,12 +12,13 @@ env:
 
 jobs:
   pytest-coverage: # from pytest_coverage.yml
+    if: github.event.pull_request.draft == false
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     runs-on: windows-latest
     timeout-minutes: 15
-    
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3
@@ -38,6 +37,7 @@ jobs:
         coverage report
   
   keras_mnist: # from taskrunner.yml -  keras/mnist
+    if: github.event.pull_request.draft == false
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -55,12 +55,9 @@ jobs:
           python -m tests.github.test_hello_federation --template keras/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
 
   torch_mnist_eden_compression: # from taskrunner_eden_pipeline.yml - torch/mnist_eden_compression
+    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')
     runs-on: windows-latest
     timeout-minutes: 15
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3
@@ -76,6 +73,7 @@ jobs:
           python -m tests.github.test_hello_federation --template torch/mnist_eden_compression --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3
 
   torch_mnist_straggler_check: # from straggler-handling.yml - torch/mnist_straggler_check
+    if: github.event.pull_request.draft == false
     runs-on: windows-latest
     timeout-minutes: 15
     steps:

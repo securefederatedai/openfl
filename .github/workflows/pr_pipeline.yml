@@ -3,6 +3,14 @@ name: OpenFL PR Pipeline
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.dockerignore'
+      - '.gitattributes'
+      - '.gitignore'
+      - 'CITATION'
+      - 'CODEOWNERS'
   workflow_dispatch:
 
 concurrency:
