@@ -67,7 +67,7 @@ class TestFlowIncludeExclude(FLSpec):
         self.next(
             self.test_include_exclude_agg_to_collab,
             foreach="collaborators",
-            include=["include_agg_to_collab", "collaborators"],
+            include=["include_agg_to_collab"],
         )
 
     @collaborator

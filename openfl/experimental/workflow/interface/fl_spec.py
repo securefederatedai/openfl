@@ -8,15 +8,11 @@ from __future__ import annotations
 
 import inspect
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, List, Type, Union
-
-if TYPE_CHECKING:
-    from openfl.experimental.workflow.runtime import FederatedRuntime, LocalRuntime, Runtime
+from typing import Callable, List, Type
 
 from openfl.experimental.workflow.utilities import (
     MetaflowInterface,
     aggregator_to_collaborator,
-    checkpoint,
     collaborator_to_aggregator,
     filter_attributes,
     generate_artifacts,
@@ -35,7 +31,6 @@ class FLSpec:
         _initial_state (FLSpec or None): The saved initial state of the FLSpec instance.
         _foreach_methods (list): A list of methods to be applied iteratively.
         _checkpoint (bool): A flag indicating whether checkpointing is enabled.
-        _runtime (RuntimeType): The runtime of the flow.
         _collaborators (list): A list of collaborators associated with the runtime.
     """
 
@@ -53,7 +48,7 @@ class FLSpec:
         self._checkpoint = checkpoint
 
     @classmethod
-    def reset_and_create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
+    def _reset_and_create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
         """Resets and creates clones for instance for each collaborator in names.
 
         Args:
@@ -97,29 +92,6 @@ class FLSpec:
         self._checkpoint = value
 
     @property
-    def runtime(self) -> Type[Union[LocalRuntime, FederatedRuntime]]:
-        """Returns flow runtime.
-
-        Returns:
-            Type[Runtime]: The runtime of the flow.
-        """
-        return self._runtime
-
-    @runtime.setter
-    def runtime(self, runtime: Type[Runtime]) -> None:
-        """Sets flow runtime.
-
-        Args:
-            runtime (Type[Runtime]): The runtime to be set.
-
-        Raises:
-            TypeError: If the provided runtime is not a valid OpenFL Runtime.
-        """
-        if str(runtime) not in ["LocalRuntime", "FederatedRuntime"]:
-            raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
-        self._runtime = runtime
-
-    @property
     def collaborators(self) -> List:
         """Get the list of collaborators.
 
@@ -137,22 +109,21 @@ class FLSpec:
         """
         self._collaborators = collaborators
 
-    def setup_initial_state(self, runtime_info) -> None:
+    def initialize_flow_state(self, collaborators: List, backend: str) -> None:
         """
         Sets up the flow's initial state
 
         Args:
             runtime_info (dict): Information about the runtime
+            collaborators (list): A list of collaborators
+            backend (str): The runtime backend
         """
-        self.runtime = runtime_info["runtime"]
-        self.collaborators = runtime_info["collaborators"]
+        self.collaborators = collaborators
         print("MetaflowInterface creation.")
-        self._metaflow_interface = MetaflowInterface(
-            self.__class__, runtime_info["runtime_backend"]
-        )
+        self._metaflow_interface = MetaflowInterface(self.__class__, backend)
         self._run_id = self._metaflow_interface.create_run()
         self._foreach_methods = []
-        FLSpec.reset_and_create_clones(self, self.collaborators)
+        FLSpec._reset_and_create_clones(self, self.collaborators)
         if self._checkpoint:
             print(f"Created flow {self.__class__.__name__}")
 
@@ -275,10 +246,6 @@ class FLSpec:
         parent = inspect.stack()[1][3]
         parent_func = getattr(self, parent)
 
-        if str(self._runtime) == "LocalRuntime":
-            # Checkpoint current attributes (if checkpoint==True)
-            checkpoint(self, parent_func)
-
         # Take back-up of current state of self
         agg_to_collab_ss = None
         if aggregator_to_collaborator(f, parent_func):
@@ -287,19 +254,15 @@ class FLSpec:
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
 
-        if str(self._runtime) == "FederatedRuntime":
-            if f.collaborator_step and not f.aggregator_step:
-                self._foreach_methods.append(f.__name__)
+        if f.collaborator_step and not f.aggregator_step:
+            self._foreach_methods.append(f.__name__)
 
-            self.execute_task_args = (
-                self,
-                f,
-                parent_func,
-                FLSpec._clones,
-                agg_to_collab_ss,
-                kwargs,
-            )
-
-        elif str(self._runtime) == "LocalRuntime":
-            # update parameters required to execute execute_task function
-            self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]
+        # update parameters required to execute next steps
+        self.execute_task_args = (
+            self,
+            f,
+            parent_func,
+            FLSpec._clones,
+            agg_to_collab_ss,
+            kwargs,
+        )

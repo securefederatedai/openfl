@@ -142,7 +142,11 @@ class FederatedRuntime(Runtime):
         )
 
     def run(self, flspec: Type[FLSpec]) -> None:
-        """Executes the flow using FederatedRuntime."""
+        """Executes the flow using FederatedRuntime.
+
+        Args:
+            flspec (Type[FLSpec]): Reference to the FLSpec (flow) object.
+        """
         try:
             # Prepare workspace and submit it for the FederatedRuntime
             archive_path, exp_name = self.prepare_workspace_archive()

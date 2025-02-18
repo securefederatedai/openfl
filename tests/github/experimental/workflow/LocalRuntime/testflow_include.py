@@ -40,7 +40,7 @@ class TestFlowInclude(FLSpec):
         self.include_agg_to_agg = 100
         self.next(
             self.test_include_agg_to_agg,
-            include=["include_agg_to_agg", "collaborators"],
+            include=["include_agg_to_agg"],
         )
 
     @aggregator
@@ -67,7 +67,7 @@ class TestFlowInclude(FLSpec):
         self.next(
             self.test_include_agg_to_collab,
             foreach="collaborators",
-            include=["include_agg_to_collab", "collaborators"],
+            include=["include_agg_to_collab"],
         )
 
     @collaborator

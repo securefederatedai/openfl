@@ -557,14 +557,14 @@ class LocalRuntime(Runtime):
 
         return kwargs
 
-    def initialize_aggregator(self):
+    def _initialize_aggregator(self):
         """Initialize aggregator private attributes."""
         if self.backend == "single_process":
             self._aggregator.initialize_private_attributes()
         else:
             ray.get(self._aggregator.initialize_private_attributes.remote())
 
-    def initialize_collaborators(self):
+    def _initialize_collaborators(self):
         """Initialize collaborator private attributes."""
         if self.backend == "single_process":
 
@@ -579,7 +579,12 @@ class LocalRuntime(Runtime):
         for collaborator in self.__collaborators.values():
             init_private_attrs(collaborator)
 
-    def restore_instance_snapshot(self, ctx: Type[FLSpec], instance_snapshot: List[Type[FLSpec]]):
+    def _initialize_private_attributes(self):
+        """Initializes private attributes for aggregator and collaborators."""
+        self._initialize_aggregator()
+        self._initialize_collaborators()
+
+    def _restore_instance_snapshot(self, ctx: Type[FLSpec], instance_snapshot: List[Type[FLSpec]]):
         """Restores attributes from backup (in instance snapshot) to context
         (ctx).
 
@@ -603,20 +608,19 @@ class LocalRuntime(Runtime):
             f_name (str): The name of the function to be executed.
             clones (Optional[Any], optional): Clones if any. Defaults to None.
         """
+        f = getattr(ctx, f_name)
+        # Join step
         if clones is not None:
-            f = getattr(ctx, f_name)
             f(clones)
-        else:
-            not_at_transition_point = True
-            while not_at_transition_point:
-                f = getattr(ctx, f_name)
-                f()
-
-                f, parent_func = ctx.execute_task_args[:2]
-                if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
-                    not_at_transition_point = False
-
-                f_name = f.__name__
+            checkpoint(ctx, f)
+            return
+        while True:
+            f()
+            checkpoint(ctx, f)
+            f, parent_func = ctx.execute_task_args[1:3]
+            if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
+                break
+            f_name = f.__name__
 
     def execute_collab_steps(self, ctx: Any, f_name: str):
         """Execute collaborator steps until at transition point.
@@ -625,15 +629,13 @@ class LocalRuntime(Runtime):
             ctx (Any): The context in which the function is executed.
             f_name (str): The name of the function to be executed.
         """
-        not_at_transition_point = True
-        while not_at_transition_point:
-            f = getattr(ctx, f_name)
+        f = getattr(ctx, f_name)
+        while True:
             f()
-
-            f, parent_func = ctx.execute_task_args[:2]
+            checkpoint(ctx, f)
+            f, parent_func = ctx.execute_task_args[1:3]
             if ctx._is_at_transition_point(f, parent_func):
-                not_at_transition_point = False
-
+                break
             f_name = f.__name__
 
     def run(self, flspec_obj: Type[FLSpec]):
@@ -643,23 +645,28 @@ class LocalRuntime(Runtime):
             flspec_obj: Reference to the FLSpec (flow) object. Contains
                 information about task sequence, flow attributes.
         """
-        # Initialize aggregator private attributes
-        self.initialize_aggregator()
-        # Initialize collaborator private attributes
-        self.initialize_collaborators()
+        self._initialize_private_attributes()
         # Set initial state of the flow
-        runtime_info = {
-            "runtime": self.__class__.__name__,
-            "runtime_backend": self.backend,
-            "collaborators": self.collaborators,
-        }
-        flspec_obj.setup_initial_state(runtime_info)
+        flspec_obj.initialize_flow_state(self.collaborators, self.backend)
+
+        final_attributes = self._execute_flow(flspec_obj)
+
+        # Updating the flow state with the final attributes
+        for name, attr in final_attributes:
+            setattr(flspec_obj, name, attr)
+
+    def _execute_flow(self, flspec_obj: Type[FLSpec]):
+        """Executes the flow and returns the final attributes.
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object.
+        """
         try:
             # Execute all Participant (Aggregator & Collaborator) tasks and
             # retrieve the final attributes
             # start step is the first task & invoked on aggregator through
             # runtime.execute_task
-            final_attributes = self.execute_task(
+            return self._execute_task(
                 flspec_obj,
                 flspec_obj.start,
             )
@@ -678,10 +685,8 @@ class LocalRuntime(Runtime):
                 raise SerializationError(str(e) + msg)
             else:
                 raise e
-        for name, attr in final_attributes:
-            setattr(flspec_obj, name, attr)
 
-    def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
+    def _execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.
 
         Updates the arguments and executes until end is not reached.
@@ -700,21 +705,19 @@ class LocalRuntime(Runtime):
 
         while f.__name__ != "end":
             if "foreach" in kwargs:
-                flspec_obj = self.execute_collab_task(
+                flspec_obj = self._execute_collab_task(
                     flspec_obj, f, parent_func, instance_snapshot, **kwargs
                 )
             else:
-                flspec_obj = self.execute_agg_task(flspec_obj, f)
-            f, parent_func, instance_snapshot, kwargs = flspec_obj.execute_task_args
+                flspec_obj = self._execute_agg_task(flspec_obj, f)
+            _, f, parent_func, _, instance_snapshot, kwargs = flspec_obj.execute_task_args
         else:
-            flspec_obj = self.execute_agg_task(flspec_obj, f)
-            f = flspec_obj.execute_task_args[0]
+            flspec_obj = self._execute_agg_task(flspec_obj, f)
 
-            checkpoint(flspec_obj, f)
             artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
             return artifacts_iter()
 
-    def execute_agg_task(self, flspec_obj, f):
+    def _execute_agg_task(self, flspec_obj, f):
         """Performs execution of aggregator task.
 
         Args:
@@ -749,7 +752,7 @@ class LocalRuntime(Runtime):
         gc.collect()
         return flspec_obj
 
-    def execute_collab_task(self, flspec_obj, f, parent_func, instance_snapshot, **kwargs):
+    def _execute_collab_task(self, flspec_obj, f, parent_func, instance_snapshot, **kwargs):
         """
         Performs
             1. Filter include/exclude
@@ -767,13 +770,11 @@ class LocalRuntime(Runtime):
         Returns:
             flspec_obj: updated FLSpec (flow) object
         """
-
-        flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
         self.selected_collaborators = selected_collaborators
 
         # filter exclude/include attributes for clone
-        self.filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
+        self._filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
 
         if self.backend == "ray":
             ray_executor = RayExecutor()
@@ -809,7 +810,7 @@ class LocalRuntime(Runtime):
         flspec_obj.execute_task_args = clone.execute_task_args
 
         # Restore the flspec_obj state if back-up is taken
-        self.restore_instance_snapshot(flspec_obj, instance_snapshot)
+        self._restore_instance_snapshot(flspec_obj, instance_snapshot)
         del instance_snapshot
 
         gc.collect()
@@ -817,7 +818,7 @@ class LocalRuntime(Runtime):
         self.join_step = True
         return flspec_obj
 
-    def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
+    def _filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
         """
         This function filters exclude/include attributes
         Args:

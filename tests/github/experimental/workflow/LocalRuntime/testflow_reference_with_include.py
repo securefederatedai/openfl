@@ -60,7 +60,7 @@ class TestFlowReferenceWithInclude(FLSpec):
             f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating references "
             + f"{bcolors.ENDC}"
         )
-        self.next(self.test_create_agg_attr, include=["collaborators", "agg_agg_attr_dict"])
+        self.next(self.test_create_agg_attr, include=["agg_agg_attr_dict"])
 
     @aggregator
     def test_create_agg_attr(self):
@@ -78,7 +78,7 @@ class TestFlowReferenceWithInclude(FLSpec):
         self.next(
             self.test_create_collab_attr,
             foreach="collaborators",
-            include=["agg_attr_list", "collaborators"],
+            include=["agg_attr_list"],
         )
 
     @collaborator

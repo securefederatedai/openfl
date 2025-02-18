@@ -206,8 +206,8 @@ if __name__ == "__main__":
 
     def callable_to_initialize_collaborator_private_attributes(index):
         return {
-            "train_loader": np.random.rand(idx * 50, 28, 28),
-            "test_loader": np.random.rand(idx * 10, 28, 28),
+            "train_loader": np.random.rand(index * 50, 28, 28),
+            "test_loader": np.random.rand(index * 10, 28, 28),
         }
 
     collaborators = []
