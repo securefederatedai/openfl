@@ -93,7 +93,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 
 
 @pytest.mark.straggler_tests
-def test_straggler_tests(request, fx_configure_request_cutoffpolicy, fx_federation_tr):
+def test_straggler_cutoff_tests(request, fx_configure_request_cutoffpolicy, fx_federation_tr):
     """
     Test federation with stragglers
     Args:
@@ -150,7 +150,7 @@ def test_straggler_tests(request, fx_configure_request_cutoffpolicy, fx_federati
 
 
 @pytest.mark.straggler_tests
-def test_straggler_tests(request, fx_configure_request_percentagepolicy, fx_federation_tr):
+def test_straggler_percent_tests(request, fx_configure_request_percentagepolicy, fx_federation_tr):
     """
     Test federation with stragglers
     Args:
