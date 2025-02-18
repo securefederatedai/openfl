@@ -151,7 +151,13 @@ class Collaborator:
 
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
-            callbacks.append(callbacks_module.CollaboratorSecAgg())
+            secure_aggregation_callback = callbacks_module.CollaboratorSecAgg()
+            if isinstance(callbacks, callbacks_module.Callback):
+                callbacks = [callbacks, secure_aggregation_callback]
+            elif isinstance(callbacks, list):
+                callbacks.append(secure_aggregation_callback)
+            else:
+                callbacks = [secure_aggregation_callback]
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -175,18 +181,6 @@ class Collaborator:
     def run(self):
         """Run the collaborator."""
         # Experiment begin
-
-        # FIXME: Not working when added to callbacks on line 157.
-        callback = callbacks_module.CollaboratorSecAgg()
-        callback.set_params(
-            {
-                "origin": self.collaborator_name,
-                "client": self.client,
-            }
-        )
-        callback.set_tensor_db(self.tensor_db)
-        callback.on_experiment_begin()
-
         self.callbacks.on_experiment_begin()
 
         while True:

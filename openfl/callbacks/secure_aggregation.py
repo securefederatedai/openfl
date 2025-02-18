@@ -39,7 +39,7 @@ class CollaboratorSecAgg(Callback):
     It also requires the tensor-db client to be set.
     """
 
-    def on_experiment_begin(self):
+    def on_experiment_begin(self, logs=None):
         """
         Used to perform secure aggregation setup before experiment begins.
         """
