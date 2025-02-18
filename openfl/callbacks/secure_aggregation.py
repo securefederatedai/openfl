@@ -132,7 +132,7 @@ class CollaboratorSecAgg(Callback):
                 indices and values are lists containing public keys of the
                 collaborators.
         """
-        logger.debug("SecAgg: Generating ciphertexts to be shared with other " "collaborators")
+        logger.debug("SecAgg: Generating ciphertexts to be shared with other collaborators")
         collaborator_count = len(public_keys)
 
         private_seed = self.params["private_seed"]
