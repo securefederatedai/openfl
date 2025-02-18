@@ -28,7 +28,7 @@ class Setup:
         self._tensor_db = tensor_db
         self._results = {}
 
-    def wait_for_all_collaborators(self, tensor_name):
+    def check_tensors_received(self, tensor_name):
         """
         Checks if the tensor with the given name has been received from all
         collaborators.

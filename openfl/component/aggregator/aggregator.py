@@ -1298,7 +1298,7 @@ class Aggregator:
                 tensor_name = named_tensor.name
                 # Check if all collaborators have sent their data for the
                 # current key.
-                all_collaborators_sent = self.secagg.wait_for_all_collaborators(tensor_name)
+                all_collaborators_sent = self.secagg.check_tensors_received(tensor_name)
                 if not all_collaborators_sent:
                     continue
                 # If all collaborators have sent their data, proceed with
