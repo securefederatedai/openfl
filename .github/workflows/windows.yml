@@ -18,6 +18,8 @@ jobs:
     if: (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
       (github.event.pull_request.draft == false)
+    steps:
+    - run: "Run this workflow"
 
   pytest-coverage: # from pytest_coverage.yml
     needs: run_this_workflow
