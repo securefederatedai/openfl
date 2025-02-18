@@ -3,6 +3,10 @@ name: OpenFL PR Pipeline
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 concurrency:
