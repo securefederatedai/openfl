@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
-      - '**/*.md'
+      - 'CONTRIBUTING.md'
   workflow_dispatch:
 
 concurrency:
