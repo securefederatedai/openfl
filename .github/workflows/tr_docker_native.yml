@@ -27,9 +27,7 @@ jobs:
 
     - name: Build base image
       run: |
-        docker build -t openfl \
-            --build-arg OPENFL_REVISION=https://github.com/${GITHUB_REPOSITORY}.git@${{ github.event.pull_request.head.sha }} \
-            -f openfl-docker/Dockerfile.base .
+        docker build -t openfl -f openfl-docker/Dockerfile.base .
 
     - name: Create workspace image
       run: |
