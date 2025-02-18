@@ -72,7 +72,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
+      (github.event.pull_request.draft == false)
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -326,3 +326,75 @@ jobs:
         if: ${{ always() }}
         with:
           test_type: "With_Memory_Logs"
+
+  test_straggler_check:
+    name: Straggler Handling
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+
+    env:
+      MODEL_NAME: "torch/mnist_straggler_check"
+      PYTHON_VERSION: "3.10"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Straggler Handling Interface Test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Straggler handling test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Straggler_Handling"
+
+  test_eden_compression:
+    name: Eden Compression
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
+
+    env:
+      MODEL_NAME: "torch/mnist_eden_compression"
+      PYTHON_VERSION: "3.10"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Eden Compression Test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Eden compression test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Eden_Compression"

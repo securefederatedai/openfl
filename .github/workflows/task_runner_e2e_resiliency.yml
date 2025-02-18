@@ -15,7 +15,7 @@ on:
       num_rounds:
         description: "Number of rounds to train"
         required: false
-        default: "50"
+        default: "30"
         type: string
       num_collaborators:
         description: "Number of collaborators"
@@ -25,12 +25,12 @@ on:
       model_name:
         description: "Model name"
         required: false
-        default: "all"
+        default: "torch/mnist"
         type: choice
         options:
-          - all
           - torch/mnist
           - keras/mnist
+          - all
       python_version:
         description: "Python version"
         required: false
@@ -47,9 +47,9 @@ permissions:
 # Environment variables common for all the jobs
 # DO NOT use double quotes for the values of the environment variables
 env:
-  NUM_ROUNDS: ${{ inputs.num_rounds || 50 }}
+  NUM_ROUNDS: ${{ inputs.num_rounds || 30 }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
-  MODEL_NAME: ${{ inputs.model_name || 'all' }}
+  MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
+      (github.event.pull_request.draft == false)
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
