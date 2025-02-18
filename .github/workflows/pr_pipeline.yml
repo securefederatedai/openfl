@@ -4,9 +4,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
-      - 'README.md'
+      - '**.md'
       - 'docs/**'
-      - 'CONTRIBUTING.md'
+      - '.dockerignore'
+      - '.gitattributes'
+      - '.gitignore'
+      - 'CITATION'
+      - 'CODEOWNERS'
   workflow_dispatch:
 
 concurrency:
