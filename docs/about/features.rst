@@ -97,3 +97,16 @@ Quantitatively audit data privacy in statistical and machine learning algorithms
 
     features_index/privacy_meter
     
+.. _secure_aggregation:
+
+---------------------
+Secure Aggregation
+---------------------
+
+In Federated Learning (FL), Secure Aggregation (SecAgg) is a technique that allows the participants to collaborate on the central model without revealing their individual contributions (local model updates). For more info see :doc:`features_index/secure_aggregation`
+    
+.. toctree::
+    :hidden:
+
+    features_index/secure_aggregation
+    
