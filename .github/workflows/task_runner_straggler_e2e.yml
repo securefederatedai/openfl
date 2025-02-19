@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 30
     env:
       MODEL_NAME: 'torch/mnist_straggler_check'
-      PYTHON_VERSION: 3.10
+      PYTHON_VERSION: '3.10'
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 30
     env:
       MODEL_NAME: 'torch/mnist_straggler_check'
-      PYTHON_VERSION: 3.10
+      PYTHON_VERSION: '3.10'
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
