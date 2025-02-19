@@ -81,6 +81,7 @@ def common_workspace_creation(request, eval_scope=False):
     # Return the federation fixture
     return workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path
 
+
 def create_tr_workspace(request, eval_scope=False):
     """
     Create a task runner workspace.
