@@ -45,7 +45,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "With_TLS_Percentage"
 
   test_straggler_cutoff:
     name: Cutoff Policy (torch/mnist_straggler_check, 3.10)
@@ -80,4 +80,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "With_TLS_Cutoff"
