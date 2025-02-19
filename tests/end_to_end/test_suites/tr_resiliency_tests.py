@@ -320,7 +320,6 @@ def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds
     
     # total number of collaborators - minimum reporting
     max_collaborators = len(fed_obj.collaborators)- min_reporting
-    breakpoint()
     if n_colls <= max_collaborators:
         assert round_increment, f"Current round number is not increasing after {n_colls} collaborators stop."
         log.info(f"Current round number is increasing after {n_colls} collaborators stop as expected.")
