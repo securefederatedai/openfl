@@ -320,13 +320,11 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds, min_reporting, n_cols=1):
     """
     Perform collaborator restart and validate round increments.
-
         fed_obj (object): The federated learning object containing collaborators.
         db_file (str): The database file to track the current round.
         total_rounds (int): The total number of rounds to validate.
-        n_cols (int, optional): The number of collaborators to restart. Defaults to 1.
-
-        int: The initial round number before the restart.
+        min_reporting (int): The minimum number of collaborators to report.
+        n_cols (int, optional): The number of collaborators to stop/start. Defaults to 1.
     """
 
     init_round = fed_helper.get_current_round(db_file)

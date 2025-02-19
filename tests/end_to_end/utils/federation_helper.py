@@ -1004,7 +1004,7 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         current_round = get_current_round(database_file)
 # Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
         if current_round > inp_round + 1:
-            log.info(f"Round number has increased to {current_round} from {inp_round}")
+            log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
         log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
