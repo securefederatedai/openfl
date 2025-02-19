@@ -181,7 +181,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
     
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
-    model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_DOCKERFILE)
+    model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_IMAGE)
     image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS
