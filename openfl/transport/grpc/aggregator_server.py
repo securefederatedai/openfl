@@ -258,12 +258,17 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             tags,
             require_lossless,
         )
-
-        return aggregator_pb2.GetAggregatedTensorResponse(
+        try:
+            response = aggregator_pb2.GetAggregatedTensorResponse(
             header=self.get_header(collaborator_name),
             round_number=round_number,
             tensor=named_tensor,
-        )
+            )
+        finally:
+            # Ensure any resources used by named_tensor are released
+            del named_tensor
+
+        return response
 
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """Request a model download from aggregator.

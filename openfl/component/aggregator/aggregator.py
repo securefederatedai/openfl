@@ -6,6 +6,7 @@
 import logging
 import queue
 import time
+import gc
 from threading import Lock
 from typing import List, Optional
 
@@ -19,7 +20,6 @@ from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 
 logger = logging.getLogger(__name__)
-
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -62,7 +62,6 @@ class Aggregator:
     .. note::
         - plan setting
     """
-
     def __init__(
         self,
         aggregator_uuid,
@@ -381,6 +380,7 @@ class Aggregator:
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
         )
+        del og_tensor_dict, tensor_keys, tensor_dict
         utils.dump_proto(self.model, file_path)
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
@@ -613,7 +613,7 @@ class Aggregator:
         named_tensor = self._nparray_to_named_tensor(
             agg_tensor_key, nparray, send_model_deltas=True, compress_lossless=compress_lossless
         )
-
+        del nparray
         return named_tensor
 
     def _nparray_to_named_tensor(self, tensor_key, nparray, send_model_deltas, compress_lossless):
@@ -658,6 +658,7 @@ class Aggregator:
                 metadata,
                 lossless=compress_lossless,
             )
+            del model_nparray, delta_comp_tensor_key, delta_comp_nparray, metadata
 
         else:
             # Assume every other tensor requires lossless compression
@@ -670,7 +671,7 @@ class Aggregator:
                 metadata,
                 lossless=compress_lossless,
             )
-
+            del compressed_tensor_key, compressed_nparray, metadata
         return named_tensor
 
     def _collaborator_task_completed(self, collaborator, task_name, round_num):
@@ -800,6 +801,7 @@ class Aggregator:
             self._is_collaborator_done(collaborator_name, round_number)
 
             self._end_of_round_with_stragglers_check()
+
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -1083,7 +1085,6 @@ class Aggregator:
                         self._save_model(round_number, self.best_state_path)
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
-
         return metrics
 
     def _end_of_round_check(self):
@@ -1107,9 +1108,6 @@ class Aggregator:
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
 
-        # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
-
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -1131,8 +1129,12 @@ class Aggregator:
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
             self.callbacks.on_round_begin(self.round_number)
 
-        # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
+        gc.collect()
+
+        # End of round callbacks.
+        self.callbacks.on_round_end(self.round_number, logs)
+
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
 

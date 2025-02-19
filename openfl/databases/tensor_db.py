@@ -15,7 +15,6 @@ from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _s
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor, TensorKey, change_tags
 
-
 class TensorDB:
     """The TensorDB stores a tensor key and the data that it corresponds to.
 
@@ -29,7 +28,6 @@ class TensorDB:
         mutex: A threading Lock object used to ensure thread-safe operations
             on the tensor_db Dataframe.
     """
-
     def __init__(self) -> None:
         """Initializes a new instance of the TensorDB class."""
         types_dict = {
@@ -83,16 +81,25 @@ class TensorDB:
             remove_older_than (int, optional): Entries older than this number
                 of rounds are removed. Defaults to 1.
         """
+
         if remove_older_than < 0:
             # Getting a negative argument calls off cleaning
             return
         current_round = self.tensor_db["round"].astype(int).max()
         if current_round == ROUND_PLACEHOLDER:
             current_round = np.sort(self.tensor_db["round"].astype(int).unique())[-2]
+        # Keep only recent records
+        old_tensor_db = self.tensor_db
         self.tensor_db = self.tensor_db[
             (self.tensor_db["round"].astype(int) > current_round - remove_older_than)
             | self.tensor_db["report"]
-        ].reset_index(drop=True)
+        ].copy()  # Avoid unnecessary memory retention
+
+        self.tensor_db.reset_index(drop=True, inplace=True)
+
+        # Delete old DataFrame and force garbage collection
+        del old_tensor_db
+
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert a tensor into TensorDB (dataframe).
@@ -106,25 +113,28 @@ class TensorDB:
         """
         entries_to_add = []
         with self.mutex:
+            old_tensor_db = self.tensor_db
             for tensor_key, nparray in tensor_key_dict.items():
                 tensor_name, origin, fl_round, report, tags = tensor_key
-                entries_to_add.append(
-                    pd.DataFrame(
+                new_entry = pd.DataFrame(
+                    [
                         [
-                            [
-                                tensor_name,
-                                origin,
-                                fl_round,
-                                report,
-                                tags,
-                                nparray,
-                            ]
-                        ],
-                        columns=list(self.tensor_db.columns),
-                    )
+                            tensor_name,
+                            origin,
+                            fl_round,
+                            report,
+                            tags,
+                            nparray,
+                        ]
+                    ],
+                    columns=list(self.tensor_db.columns),
                 )
+                entries_to_add.append(new_entry)
 
-            self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True)
+            self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True, copy=True)
+
+            del old_tensor_db
+            entries_to_add.clear()
 
     def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """Perform a lookup of the tensor_key in the TensorDB.
@@ -149,6 +159,8 @@ class TensorDB:
 
         if len(df) == 0:
             return None
+
+
         return np.array(df["nparray"].iloc[0])
 
     def get_tensors_by_round_and_tags(self, fl_round: int, tags: tuple) -> dict:
@@ -249,6 +261,7 @@ class TensorDB:
             else:
                 agg_tensor_dict[col] = raw_df.iloc[0]
 
+        del raw_df
         local_tensors = [
             LocalTensor(
                 col_name=col_name,
@@ -276,6 +289,7 @@ class TensorDB:
         db_iterator = self._iterate()
         agg_nparray = aggregation_function(local_tensors, db_iterator, tensor_name, fl_round, tags)
         self.cache_tensor({tensor_key: agg_nparray})
+
 
         return np.array(agg_nparray)
 
