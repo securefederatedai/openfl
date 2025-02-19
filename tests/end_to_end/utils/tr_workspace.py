@@ -9,6 +9,7 @@ import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
+import tests.end_to_end.utils.docker_helper as dh
 
 log = logging.getLogger(__name__)
 
@@ -175,9 +176,12 @@ def create_tr_dws_workspace(request, eval_scope=False):
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
     model_name = request.config.model_name
 
+    # Create openfl image
+    fh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
+    
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
-    model_owner.dockerize_workspace()
+    model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_DOCKERFILE)
     image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS

@@ -251,19 +251,13 @@ class ModelOwner():
         except Exception as e:
             raise ex.WorkspaceCertificationException(f"{error_msg}: {e}")
 
-    def dockerize_workspace(self):
+    def dockerize_workspace(self, image_name):
         """
         Dockerize the workspace. It internally uses workspace name as the image name
         """
         log.info("Dockerizing the workspace. It will take some time to complete..")
         try:
-            if not os.getenv("GITHUB_REPOSITORY") or not os.getenv("GITHUB_BRANCH"):
-                repo, branch = ssh.get_git_repo_and_branch()
-            else:
-                repo = os.getenv("GITHUB_REPOSITORY")
-                branch = os.getenv("GITHUB_BRANCH")
-
-            cmd = f"fx workspace dockerize --save --revision {repo}@{branch}"
+            cmd = f"fx workspace dockerize --base-image {image_name} --save"
             error_msg = "Failed to dockerize the workspace"
             return_code, output, error = fh.run_command(
                 cmd,

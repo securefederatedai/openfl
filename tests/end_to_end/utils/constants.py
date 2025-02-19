@@ -30,6 +30,7 @@ CREATE_OPENFL_NW = "docker network create"
 REMOVE_OPENFL_NW = "docker network rm"
 DOCKER_NETWORK_NAME = "openfl"
 DEFAULT_OPENFL_IMAGE = "openfl:latest"
+DEFAULT_OPENFL_DOCKERFILE = "openfl-docker/Dockerfile.base"
 
 AGG_WORKSPACE_PATH = "{}/aggregator/workspace" # example - /tmp/my_federation/aggregator/workspace
 COL_WORKSPACE_PATH = "{}/{}/workspace"  # example - /tmp/my_federation/collaborator1/workspace
