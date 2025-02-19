@@ -213,21 +213,3 @@ def stop_start_docker_participant(participant, action):
         container_names.append(container.name)
 
     return True
-
-
-def build_docker_image(image_name, dockerfile_path):
-    """
-    Build a docker image.
-    Args:
-        image_name (str): Name of the image to build
-        dockerfile_path (str): Path to the Dockerfile
-    """
-    client = get_docker_client()
-    log.info(f"Building docker image {image_name}")
-
-    try:
-        image, _ = client.images.build(path=".", dockerfile=dockerfile_path, tag=image_name)
-        log.info(f"Image {image_name} built successfully")
-        return image
-    except Exception as e:
-        raise ex.DockerException(f"Error building docker image: {e}")
