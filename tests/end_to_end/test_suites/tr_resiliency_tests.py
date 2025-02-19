@@ -4,6 +4,7 @@
 import pytest
 import logging
 import time
+import math
 
 from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,
@@ -22,7 +23,7 @@ log = logging.getLogger(__name__)
 @pytest.fixture(scope="function")
 def fx_configure_request_percentagepolicy(request):
     """
-    Fixture to configure the request cutoff for the test.
+    Fixture to configure the Percentage Policy Straggler for the test.
     Args:
         request (Fixture): Pytest fixture
     """
@@ -41,7 +42,7 @@ def fx_configure_request_percentagepolicy(request):
 @pytest.fixture(scope="function")
 def fx_configure_request_cutoffpolicy(request):
     """
-    Fixture to configure the request cutoff for the test.
+    Fixture to configure the request CutoffTime policy straggler for the test.
     Args:
         request (Fixture): Pytest fixture
     """
@@ -96,10 +97,13 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 @pytest.mark.straggler_tests
 def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federation_tr):
     """
-    Test federation with stragglers
+    The cutoff policy in OpenFL stipulates that the aggregation process will happen 
+    with the 'minimum_reporting' number of collaborators if the remaining collaborators 
+    do not respond within the 'cutoff-time'. This means that aggregation could potentially 
+    happen with any number of collaborators, provided that the number is greater than the 'minimum_reporting' value.
     Args:
         request (Fixture): Pytest fixture
-        fx_configure_request_percentagepolicy (Fixture): Pytest fixture to configure the request cutoff for the test
+        fx_configure_request_cutoffpolicy (Fixture): Pytest fixture to configure the request cutoff for the test
         fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
     # Start the federation
@@ -155,10 +159,19 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
 @pytest.mark.straggler_tests
 def test_straggler_percent_cutoff(request, fx_configure_request_percentagepolicy, fx_federation_tr):
     """
-    Test federation with stragglers
+    The percentage policy in OpenFL ensures that the aggregation process 
+    always occurs with the 'minimum_reporting' number of collaborators and 
+    a satisfying percentage of collaborators. For instance, if there are a 
+    total of 5 collaborators, the 'minimum_reporting' value is 2, and the 
+    'percentage_cutoff' is 0.5, the aggregation process will always happen 
+    with at least 3 collaborators. It does not wait for the remaining 2 
+    collaborators to finish, as there's no specified cutoff time. In other 
+    words, the conditions for the percentage policy are met when both the 
+    'minimum_reporting' and 'percentage_cutoff' criteria are satisfied.
     Args:
         request (Fixture): Pytest fixture
-        fx_configure_request_percentagepolicy (Fixture): Pytest fixture to configure the request cutoff for the test
+        fx_configure_request_percentagepolicy (Fixture): Pytest fixture to 
+        configure the request cutoff for the test
         fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
     # Start the federation
@@ -166,9 +179,18 @@ def test_straggler_percent_cutoff(request, fx_configure_request_percentagepolicy
 
     db_file = fx_federation_tr.aggregator.tensor_db_file
 
-    # Perform restart and validate rounds with stragglers
+    # Retrieve the minimum reporting value from the configuration
     minimum_reporting = request.config.straggler_cutoff["settings"]["minimum_reporting"]
-    n_colls =  request.config.num_collaborators - minimum_reporting
+    
+    # Calculate the required percentage of collaborators needed for reporting
+    percentage_reporting = request.config.straggler_cutoff["settings"]["percent_collaborators_needed"]
+    percentage_reporting = math.ceil(percentage_reporting * request.config.num_collaborators)
+    
+    # Ensure the minimum reporting value is at least the calculated percentage
+    minimum_reporting = max(minimum_reporting, percentage_reporting)
+    
+    # Calculate the number of collaborators that can be restarted
+    n_colls = request.config.num_collaborators - minimum_reporting
     
     # sleep for sometime before starting validation
     time.sleep(30)
