@@ -433,9 +433,8 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         num_rounds = 1
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
-    workspace_path = local_bind_path
-
-    _remove_stale_processes()     
+    workspace_path = local_bind_path    
+    
     # if path exists delete it
     if os.path.exists(workspace_path):
         shutil.rmtree(workspace_path)
@@ -1036,21 +1035,27 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def _remove_stale_processes():
+def remove_stale_processes(num_collaborators):
     """
     Remove stale processes
     """
     log.info("Removing stale processes..")
     # Remove any stale processes
     try:
+        for i in range(1, num_collaborators + 1):
+            subprocess.run(
+                f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
         subprocess.run(
-            "sudo kill -9 $(ps -ef | grep -e 'collaborator' -e 'aggregator' | awk '{print $2}')",
+            "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{print $2}')",
             shell=True,
             check=True,
         )
     except subprocess.CalledProcessError as e:
         log.warning(f"Failed to kill processes: {e}")
-        
+
         
 def build_docker_image(image_name, dockerfile_path):
     """
