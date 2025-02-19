@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 # IMPORTANT - Please run the resiliency scenarios with higher no of rounds.
 
 @pytest.fixture(scope="function")
-def fx_configure_request_percentagepolicy(request):
+def fx_configure_percentagepolicy(request):
     """
     Fixture to configure the Percentage Policy Straggler for the test.
     Args:
@@ -40,7 +40,7 @@ def fx_configure_request_percentagepolicy(request):
 
 
 @pytest.fixture(scope="function")
-def fx_configure_request_cutoffpolicy(request):
+def fx_configure_cutoffpolicy(request):
     """
     Fixture to configure the request CutoffTime policy straggler for the test.
     Args:
@@ -95,7 +95,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
 
 
 @pytest.mark.straggler_tests
-def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federation_tr):
+def test_straggler_cutoff(request, fx_configure_cutoffpolicy, fx_federation_tr):
     """
     The cutoff policy in OpenFL stipulates that the aggregation process will happen
     with the 'minimum_reporting' number of collaborators if the remaining collaborators
@@ -103,7 +103,7 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
     happen with any number of collaborators, provided that the number is greater than the 'minimum_reporting' value.
     Args:
         request (Fixture): Pytest fixture
-        fx_configure_request_cutoffpolicy (Fixture): Pytest fixture to configure the request cutoff for the test
+        fx_configure_cutoffpolicy (Fixture): Pytest fixture to configure the request cutoff for the test
         fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
     # Start the federation
@@ -113,7 +113,7 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
 
     # Perform restart and validate rounds with stragglers
     minimum_reporting = request.config.straggler_policy["settings"]["minimum_reporting"]
-    n_cols =  request.config.num_collaborators - minimum_reporting
+    n_cols = request.config.num_collaborators - minimum_reporting
 
     # sleep for sometime before starting validation
     time.sleep(30)
@@ -123,7 +123,7 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
         db_file=db_file,
         total_rounds=request.config.num_rounds,
         min_reporting=minimum_reporting,
-        n_cols = n_cols
+        n_cols=n_cols
     )
     log.info("Successfully tested minimum_reporting positive scenario")
     # sleep for sometime before starting validation
@@ -134,7 +134,7 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
         db_file=db_file,
         total_rounds=request.config.num_rounds,
         min_reporting=minimum_reporting,
-        n_cols = n_cols+1
+        n_cols=n_cols+1
     )
 
     log.info("Successfully tested minimum_reporting negative scenario")
@@ -157,7 +157,7 @@ def test_straggler_cutoff(request, fx_configure_request_cutoffpolicy, fx_federat
 
 
 @pytest.mark.straggler_tests
-def test_straggler_percent_policy(request, fx_configure_request_percentagepolicy, fx_federation_tr):
+def test_straggler_percent_policy(request, fx_configure_percentagepolicy, fx_federation_tr):
     """
     The percentage policy in OpenFL ensures that the aggregation process
     always occurs with the 'minimum_reporting' number of collaborators and
@@ -170,7 +170,7 @@ def test_straggler_percent_policy(request, fx_configure_request_percentagepolicy
     'minimum_reporting' and 'percent_collaborators_needed' criteria are satisfied.
     Args:
         request (Fixture): Pytest fixture
-        fx_configure_request_percentagepolicy (Fixture): Pytest fixture to
+        fx_configure_percentagepolicy (Fixture): Pytest fixture to
         configure the request percentage policy for the test
         fx_federation_tr (Fixture): Pytest fixture for native task runner
     """
@@ -200,7 +200,7 @@ def test_straggler_percent_policy(request, fx_configure_request_percentagepolicy
         db_file=db_file,
         total_rounds=request.config.num_rounds,
         min_reporting=minimum_reporting,
-        n_cols = n_cols
+        n_cols=n_cols
     )
     log.info("Successfully tested minimum_reporting positive scenario")
 
@@ -211,7 +211,7 @@ def test_straggler_percent_policy(request, fx_configure_request_percentagepolicy
         db_file=db_file,
         total_rounds=request.config.num_rounds,
         min_reporting=minimum_reporting,
-        n_cols = n_cols+1
+        n_cols=n_cols+1
     )
 
     log.info("Successfully tested minimum_reporting negative scenario")
@@ -363,4 +363,3 @@ def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds
     ), f"Expected current round to be ahead of {init_round} after collaborator restart"
 
     log.info("Current round number is increasing after every restart as expected.")
-    return init_round
