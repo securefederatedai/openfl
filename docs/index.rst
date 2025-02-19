@@ -87,8 +87,8 @@ Round
    :maxdepth: 2
 
    openfl
+   fx
    troubleshooting
-
 
 .. toctree::
    :hidden:

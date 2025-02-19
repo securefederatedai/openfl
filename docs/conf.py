@@ -47,6 +47,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosectionlabel',
     'sphinx_substitution_extensions',
+    'sphinx_click.ext',
 ]
 
 pygments_style = None
@@ -123,7 +124,7 @@ autodoc_typehints = "description"
 autodoc_typehints_description_target = "all"
 
 # Remove auto-generated API docs from sidebars. They take too long to build.
-remove_from_toctrees = ["_autosummary/*"]
+remove_from_toctrees = ["reference/_autosummary/*"]
 
 # Customize code links via sphinx.ext.linkcode
 
