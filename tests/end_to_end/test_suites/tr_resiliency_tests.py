@@ -121,6 +121,8 @@ def test_straggler_cutoff_tests(request, fx_configure_request_cutoffpolicy, fx_f
         n_colls = n_colls
     )
     log.info("Successfully tested minimum_reporting positive scenario")
+    # sleep for sometime before starting validation
+    time.sleep(30)
     
     _perform_collaborator_restart_validate_rounds(
         fed_obj=fx_federation_tr,
@@ -178,6 +180,8 @@ def test_straggler_percent_tests(request, fx_configure_request_percentagepolicy,
         n_colls = n_colls
     )
     log.info("Successfully tested minimum_reporting positive scenario")
+    
+    time.sleep(30)    
     
     _perform_collaborator_restart_validate_rounds(
         fed_obj=fx_federation_tr,
