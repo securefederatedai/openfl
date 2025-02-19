@@ -35,7 +35,7 @@ jobs:
         uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
-      - name: Run Task Runner E2E tests with TLS
+      - name: Run Task Runner percent cutoff straggler test
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_percent_cutoff
@@ -70,7 +70,7 @@ jobs:
         uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
-      - name: Run Task Runner E2E tests without TLS
+      - name: Run Task Runner cutofftime straggler tests
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_cutoff
