@@ -19,7 +19,6 @@ jobs:
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
-    fail-fast: false # do not immediately fail if one of the combinations fail
     env:
       MODEL_NAME: 'torch/mnist_straggler_check'
       PYTHON_VERSION: 3.10
@@ -49,7 +48,7 @@ jobs:
           test_type: "With_TLS"
 
   test_straggler_cutoff:
-    name: Without TLS
+    name: Straggler Cutoff
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
