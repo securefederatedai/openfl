@@ -385,14 +385,14 @@ def export_() -> str:
     "--save",
     is_flag=True,
     default=False,
-    help="Export the docker image as ``<workspace_name>.tar`` file.",
+    help="Export the workspace image as ``<workspace_name>.tar`` file.",
     show_default=True,
 )
 @option(
     "--rebuild",
     is_flag=True,
     default=False,
-    help="If set, rebuilds docker images with ``--no-cache`` option.",
+    help="If set, rebuilds workspace image with ``--no-cache`` option.",
     show_default=True,
 )
 @option(
@@ -407,46 +407,33 @@ def export_() -> str:
     ),
 )
 @option(
-    "--revision",
+    "--base-image",
+    "base_image",
     required=False,
-    default=None,
+    default="ghcr.io/securefederatedai/openfl:latest",
     help=(
-        "Optional, version of OpenFL source code to build base image from. "
-        "If unspecified, default value in `Dockerfile.base` will be used, "
-        "typically the latest stable release. "
-        "Format: ``OPENFL_GIT_URL@<COMMIT_ID/BRANCH>``"
+        "OpenFL base image to use for creating a workspace. "
+        "If unspecified, default latest base image will be pulled. "
+        "To build a base image from source, follow docker build "
+        "`instructions. <https://openfl.readthedocs.io/en/latest/installation.html#using-docker>`_ "
+        "Format: ``IMAGE_URI:TAG``"
     ),
+    show_default=True,
 )
 @pass_context
-def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, revision: str):
+def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, base_image: str):
     """Packages current workspace as a TEE-ready docker image."""
-
-    # Docker build options
-    options = []
-    options.append("--no-cache" if rebuild else "")
-    options.append(f"--build-arg OPENFL_REVISION={revision}" if revision else "")
-    options = " ".join(options)
 
     # Export workspace
     archive = context.invoke(export_)
     workspace_name, _ = archive.split(".")
 
-    # Build OpenFL base image.
-    logging.info("Building OpenFL Base image")
-    base_image_build_cmd = (
-        "DOCKER_BUILDKIT=1 docker build {options} -t {image_name} -f {dockerfile} {build_context}"
-    ).format(
-        options=options,
-        image_name="openfl",
-        dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.base"),
-        build_context=".",
-    )
-    _execute(base_image_build_cmd)
-
     # Build workspace image.
     options = []
     options.append("--no-cache" if rebuild else "")
+    options.append(f"--build-arg BASE_IMAGE={base_image}")
     options = " ".join(options)
+    logging.info(f"Using base image: {base_image}")
     if enclave_key is None:
         _execute("openssl genrsa -out key.pem -3 3072")
         enclave_key = os.path.abspath("key.pem")
