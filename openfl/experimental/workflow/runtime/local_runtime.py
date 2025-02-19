@@ -614,12 +614,13 @@ class LocalRuntime(Runtime):
             f(clones)
             checkpoint(ctx, f)
             return
-        while True:
+        not_at_transition_point = True
+        while not_at_transition_point:
             f()
             checkpoint(ctx, f)
             f, parent_func = ctx.execute_task_args[1:3]
             if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
-                break
+                not_at_transition_point = False
             f_name = f.__name__
 
     def execute_collab_steps(self, ctx: Any, f_name: str):
@@ -630,12 +631,13 @@ class LocalRuntime(Runtime):
             f_name (str): The name of the function to be executed.
         """
         f = getattr(ctx, f_name)
-        while True:
+        not_at_transition_point = True
+        while not_at_transition_point:
             f()
             checkpoint(ctx, f)
             f, parent_func = ctx.execute_task_args[1:3]
             if ctx._is_at_transition_point(f, parent_func):
-                break
+                not_at_transition_point = False
             f_name = f.__name__
 
     def run(self, flspec_obj: Type[FLSpec]):
@@ -646,17 +648,14 @@ class LocalRuntime(Runtime):
                 information about task sequence, flow attributes.
         """
         self._initialize_private_attributes()
+
         # Set initial state of the flow
         flspec_obj.initialize_flow_state(self.collaborators, self.backend)
-
-        final_attributes = self._execute_flow(flspec_obj)
-
-        # Updating the flow state with the final attributes
-        for name, attr in final_attributes:
-            setattr(flspec_obj, name, attr)
+        # Execute the flow
+        self._execute_flow(flspec_obj)
 
     def _execute_flow(self, flspec_obj: Type[FLSpec]):
-        """Executes the flow and returns the final attributes.
+        """Executes and updates the flow with  the final attributes.
 
         Args:
             flspec_obj: Reference to the FLSpec (flow) object.
@@ -666,7 +665,7 @@ class LocalRuntime(Runtime):
             # retrieve the final attributes
             # start step is the first task & invoked on aggregator through
             # runtime.execute_task
-            return self._execute_task(
+            final_attributes = self._execute_task(
                 flspec_obj,
                 flspec_obj.start,
             )
@@ -685,6 +684,10 @@ class LocalRuntime(Runtime):
                 raise SerializationError(str(e) + msg)
             else:
                 raise e
+
+        # Updating the flow state with the final attributes
+        for name, attr in final_attributes:
+            setattr(flspec_obj, name, attr)
 
     def _execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.
