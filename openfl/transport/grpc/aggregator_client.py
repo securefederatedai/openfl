@@ -160,6 +160,9 @@ def _resend_data_on_reconnection(func):
                 if self.refetch_server_cert_callback is not None:
                     self.logger.info("Refetching server certificate")
                     self.root_certificate = self.refetch_server_cert_callback()
+                if not self.enable_atomic_connections:
+                    self.logger.info("Reconnecting to aggregator")
+                    self.reconnect()
                 self.sleeping_policy.sleep()
         return response
 
