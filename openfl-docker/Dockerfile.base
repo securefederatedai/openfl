@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------
 # OpenFL Base Image w/ Gramine support
-# $> docker build . -t openfl -f Dockerfile.base [--build-arg OPENFL_REVISION=GIT_URL@COMMIT_ID]
 # ------------------------------------
 FROM ubuntu:22.04 AS base
 
@@ -43,8 +42,9 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     rm -rf /var/lib/apt/lists/*
 
 # Install OpenFL.
-ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@develop
-RUN pip install --no-cache-dir git+${OPENFL_REVISION} && \
+WORKDIR /repo
+COPY . .
+RUN pip install --no-cache-dir . && \
     INSTALL_SOURCES=yes /opt/venv/lib/python3.10/site-packages/openfl-docker/licenses.sh
 
 # Create an unprivileged user.

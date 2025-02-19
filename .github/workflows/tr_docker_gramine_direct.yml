@@ -25,6 +25,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
 
+    - name: Build base image
+      run: |
+        docker build -t openfl -f openfl-docker/Dockerfile.base .
+
     - name: Create workspace image
       run: |
         fx workspace create --prefix example_workspace --template keras/mnist
@@ -35,7 +39,7 @@ jobs:
         # https://github.com/gramineproject/examples/issues/33
         sed -i 's/write_logs: true/write_logs: false/g' plan/plan.yaml
 
-        fx workspace dockerize --save --revision https://github.com/${GITHUB_REPOSITORY}.git@${{ github.event.pull_request.head.sha }}
+        fx workspace dockerize --base-image openfl --save
 
     - name: Create certificate authority for workspace
       run: |
