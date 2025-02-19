@@ -17,7 +17,8 @@ logger = getLogger(__name__)
 
 
 class CodeAnalyzer:
-    """Code analysis and transformation functionality for NotebookTools
+    """Analyzes and process Jupyter Notebooks.
+      Provides code extraction and transformation functionality to NotebookTools
 
     Attributes:
        script_path: Absolute path to python script.
@@ -28,18 +29,14 @@ class CodeAnalyzer:
         """Initialize CodeAnalzer and process the script from notebook
 
         Args:
-            notebook_path (Path): The path to the Jupyter notebook that needs to be converted.
+            notebook_path (Path): Path to Jupyter notebook to be converted.
             output_path (Path): The directory where the converted Python script will be saved.
         """
         logger.info("Converting jupter notebook to python script...")
 
         # Extract the export filename from the notebook
         export_filename = self.__get_exp_name(notebook_path)
-        if export_filename is None:
-            raise NameError(
-                "Please include `#| default_exp <experiment_name>` in "
-                "the first cell of the notebook."
-            )
+
         # Convert the notebook to a Python script and set the script path
         self.script_path = Path(
             self.__convert_to_python(
@@ -51,15 +48,14 @@ class CodeAnalyzer:
         # Generated python script name
         self.script_name = self.script_path.name.split(".")[0].strip()
 
-        # Comment out flow.run() to prevent the flow from starting execution
-        # automatically when the script is imported.
-        self.__comment_flow_execution()
-
-        # Change the runtime backend from 'ray' to 'single_process'
-        self.__change_runtime()
+        # Transform the script
+        self._transform_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
-        """Fetch the experiment name from the Jupyter notebook.
+        """Extract experiment name from Jupyter notebook
+        Looks for '#| default_exp <name>' pattern in code cells
+        and extracts the experiment name. The name must be a valid Python identifier.
+
         Args:
             notebook_path (str): Path to Jupyter notebook.
         """
@@ -93,6 +89,16 @@ class CodeAnalyzer:
         nb_export(notebook_path, output_path)
 
         return Path(output_path).joinpath(export_filename).resolve()
+
+    def _transform_script(self) -> None:
+        """
+        Transform the script by commenting out flow.run() and changing the runtime backend.
+        """
+        # Comment out flow.run() to prevent the flow from starting execution
+        self.__comment_flow_execution()
+
+        # Change the runtime backend from 'ray' to 'single_process'
+        self.__change_runtime()
 
     def __comment_flow_execution(self) -> None:
         """Comment out lines containing '.run()' in the specified Python script"""
@@ -380,7 +386,7 @@ class CodeAnalyzer:
             flow_class_name (str): The name of the federated flow class to retrieve.
 
         Returns:
-            tuple: A tuple containing the runtime instance and the flow class name.
+            tuple: A tuple containing the runtime instance and the flow name.
         """
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
