@@ -433,7 +433,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         num_rounds = 1
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
-    workspace_path = local_bind_path    
+    workspace_path = local_bind_path
     
     # if path exists delete it
     if os.path.exists(workspace_path):

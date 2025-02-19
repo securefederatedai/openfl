@@ -19,7 +19,7 @@ jobs:
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
-      fail-fast: false # do not immediately fail if one of the combinations fail
+    fail-fast: false # do not immediately fail if one of the combinations fail
     env:
       MODEL_NAME: 'torch/mnist_straggler_check'
       PYTHON_VERSION: 3.10
