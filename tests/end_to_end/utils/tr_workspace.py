@@ -68,9 +68,9 @@ def common_workspace_creation(request, eval_scope=False):
 
     model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
 
-    if hasattr(request.config, 'straggler_cutoff') and request.config.straggler_cutoff:
-        model_owner.modify_straggler_cutoff(
-            request.config.straggler_cutoff, plan_path=plan_path
+    if hasattr(request.config, 'straggler_policy') and request.config.straggler_policy:
+        model_owner.modify_straggler_policy(
+            request.config.straggler_policy, plan_path=plan_path
         )
 
     # Initialize the plan
@@ -146,7 +146,7 @@ def create_tr_workspace(request, eval_scope=False):
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators, local_bind_path)
-        
+
     fh.remove_stale_processes(request.config.num_collaborators)
 
     # Return the federation fixture
@@ -179,8 +179,8 @@ def create_tr_dws_workspace(request, eval_scope=False):
     model_name = request.config.model_name
 
     # Create openfl image
-    fh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
-    
+    dh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
+
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
     model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_IMAGE)

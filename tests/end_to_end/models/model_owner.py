@@ -173,7 +173,7 @@ class ModelOwner():
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
 
-    def modify_straggler_cutoff(self, straggler_cutoff, plan_path):
+    def modify_straggler_policy(self, straggler_cutoff, plan_path):
         """
         Modify the plan to set the straggler cutoff
         Args:

@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  test_straggler_percentage_cutoff:
-    name: Straggler PercentageCutoff
+  test_straggler_percentage_policy:
+    name: Percentage Policy (torch/mnist_straggler_check, 3.10)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -38,7 +38,7 @@ jobs:
       - name: Run Task Runner percent cutoff straggler test
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_percent_cutoff
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_percent_policy
           echo "Task runner end to end test run completed"
 
       - name: Post test run
@@ -48,7 +48,7 @@ jobs:
           test_type: "With_TLS"
 
   test_straggler_cutoff:
-    name: Straggler Cutoff
+    name: Cutoff Policy (torch/mnist_straggler_check, 3.10)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')

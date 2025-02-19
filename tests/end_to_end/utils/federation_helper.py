@@ -434,7 +434,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
     workspace_path = local_bind_path
-    
+
     # if path exists delete it
     if os.path.exists(workspace_path):
         shutil.rmtree(workspace_path)
@@ -1055,22 +1055,3 @@ def remove_stale_processes(num_collaborators):
         )
     except subprocess.CalledProcessError as e:
         log.warning(f"Failed to kill processes: {e}")
-
-        
-def build_docker_image(image_name, dockerfile_path):
-    """
-    Build a docker image.
-    Args:
-        image_name (str): Name of the image to build
-        dockerfile_path (str): Path to the Dockerfile
-    """
-    log.info(f"Building docker image {image_name}")
-
-    try:
-        subprocess.run(
-            f"docker build -t {image_name} -f {dockerfile_path} .",
-            shell=True,
-            check=True,
-        )
-    except Exception as e:
-        raise ex.DockerException(f"Error building docker image: {e}")
