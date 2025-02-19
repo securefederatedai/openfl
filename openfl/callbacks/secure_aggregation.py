@@ -1,8 +1,8 @@
 # Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """
-This file contains callbacks that help setup for secure aggregation for
-both, the aggregator and collaborator.
+This file contains callback that help setup for secure aggregation for the
+collaborator.
 """
 
 import json
@@ -30,11 +30,11 @@ logger = logging.getLogger(__name__)
 class CollaboratorSecAgg(Callback):
     """
     This callback is used by the collaborator to perform the setup steps
-    for scure aggregation on the collaborators.
+    for secure aggregation on the collaborators.
 
     Required params include:
     - origin: Name of the collaborator using the callback.
-    - client: Client for aggregator secure aggregation setup.
+    - client: AggregatorGRPCClient to communicate with the aggregator server.
 
     It also requires the tensor-db client to be set.
     """
@@ -57,7 +57,7 @@ class CollaboratorSecAgg(Callback):
         # aggregator.
         self._decrypt_ciphertexts(collaborator_keys)
         # Save the tensors which are required for masking of gradients.
-        self._save_tensors()
+        self._save_mask_tensors()
 
     def _generate_keys(self):
         """
@@ -93,21 +93,16 @@ class CollaboratorSecAgg(Callback):
 
     def _fetch_public_keys(self):
         """
-        Fetches public keys from participants and identifies the index of the
-        current participant's public key.
-
-        This method retrieves the public keys from the aggregator's secure
-        aggregation mechanism. It then iterates through the fetched public
-        keys to find the index of the current participant's public key based
-        on the provided parameters.
+        Fetches collaborators' public keys from the aggregator and identifies
+        the index of the current collaborator using it's public key.
 
         Returns:
-            dict: A dictionary containing the public keys of all participants,
-                where the keys are the participant indices and the values are
+            dict: A dictionary containing the public keys of all collaborators,
+                where the keys are the collaborator indices and the values are
                 the public keys.
         """
         public_keys = {}
-        public_keys_tensor = self._fetch_from_collaborator("public_keys")
+        public_keys_tensor = self._fetch_from_aggregator("public_keys")
         for tensor in public_keys_tensor:
             # Creating a dictionary of the received public keys.
             public_keys[int(tensor[0])] = [tensor[1], tensor[2]]
@@ -177,21 +172,21 @@ class CollaboratorSecAgg(Callback):
 
     def _decrypt_ciphertexts(self, public_keys):
         """
-        Decrypts the ciphertexts received from participants using the provided
+        Decrypts the ciphertexts received from collaborators using the provided
         public keys.
 
         This method fetches the ciphertexts from the aggregator, decrypts them
-        using the participant's private key and the provided public keys, and
+        using the collaborator's private key and the provided public keys, and
         then sends the decrypted seed shares and key shares back to the
-        participants.
+        aggregator.
 
         Args:
             public_keys (dict): A dictionary containing the public keys of the
-                participants.
+                collaborators.
         """
         logger.debug("SecAgg: fetching addressed ciphertexts from the aggregator")
 
-        ciphertexts = self._fetch_from_collaborator("ciphertexts")
+        ciphertexts = self._fetch_from_aggregator("ciphertexts")
         private_keys = self.params["private_key"]
         ciphertext_verification = self.params["ciphertext_verification"]
 
@@ -223,21 +218,13 @@ class CollaboratorSecAgg(Callback):
 
         return private_mask, shared_mask
 
-    def _save_tensors(self):
+    def _save_mask_tensors(self):
         """
         Generates private and shared masks, stores them in a local tensor
         dictionary, and caches the dictionary in the tensor database.
 
         These tensors are then added to the gradient before sharing them
-        with the aggregator during trainign task.
-
-        This method performs the following steps:
-        1. Generates private and shared masks by calling the `_generate_masks`
-            method.
-        2. Creates a local tensor dictionary with the generated masks.
-        3. Caches the local tensor dictionary in the tensor database.
-        4. Logs an informational message indicating the completion of the
-            setup and the saving of required tensors to the database.
+        with the aggregator during training task.
         """
         private_mask, shared_mask = self._generate_masks()
         local_tensor_dict = {
@@ -277,9 +264,9 @@ class CollaboratorSecAgg(Callback):
 
         self.client.send_local_task_results(self.name, -1, f"secagg_{stage}", -1, named_tensors)
 
-    def _fetch_from_collaborator(self, key_name):
+    def _fetch_from_aggregator(self, key_name):
         """
-        Fetches the aggregated tensor data from a collaborator.
+        Fetches the aggregated tensor data from a aggregator.
 
         Args:
             key_name (str): The name of the key to fetch the tensor for.

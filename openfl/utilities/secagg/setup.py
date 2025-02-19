@@ -1,7 +1,8 @@
 # Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """
-Thsi file contains the Setup class used on the server side for secure aggregation setup.
+This file contains the Setup class used on the server side for secure
+aggregation setup.
 """
 
 import logging
@@ -88,10 +89,8 @@ class Setup:
             self._aggregate_public_keys()
         elif tensor_name == "ciphertext":
             self._aggregate_ciphertexts()
-        elif tensor_name == "seed_share":
-            self._aggregate_seed_shares()
-        elif tensor_name == "key_share":
-            self._aggregate_key_shares()
+        elif tensor_name in ["seed_share", "key_share"]:
+            self._aggregate_secret_shares(tensor_name)
 
         if "seed_shares" in self._results and "key_shares" in self._results:
             self._reconstruct_secrets()
@@ -175,33 +174,24 @@ class Setup:
             }
         )
 
-    def _aggregate_seed_shares(self):
+    def _aggregate_secret_shares(self, key_name):
         """
-        Aggregates seed shares for each collaborator from the tensor database
-        and stores them in the results dictionary.
+        Aggregates secret shares for a given key name from the tensor database.
 
         This method fetches seed shares for each collaborator from the tensor
-        database using the `get_tensor_from_cache` method.
-        It then creates a map of seed shares for local use and stores it in
-        the `self._results["seed_shares"]` dictionary.
+        database and organizes them into a dictionary for local use.
 
-        The structure of `self._results["seed_shares"]` is as follows:
-        {
-            collaborator_id: {
-                share_id: share_value,
-                ...
-            },
-            ...
-        }
+        Args:
+            key_name (str): The name of the key for which secret shares are to
+                be aggregated.
         """
-        self._results["seed_shares"] = {}
+        self._results[f"{key_name}s"] = {}
 
         for collaborator in self._collaborator_list:
-            # Seed shares
             # Fetching seed shares for each collaborator from tensor db.
             nparray = self._tensor_db.get_tensor_from_cache(
                 TensorKey(
-                    "seed_share",
+                    key_name,
                     self._aggregator_uuid,
                     -1,
                     False,
@@ -213,56 +203,9 @@ class Setup:
             )
             for share in nparray:
                 # Creating a map for local use.
-                if int(share[1]) not in self._results["seed_shares"]:
-                    self._results["seed_shares"][int(share[1])] = {}
-                self._results["seed_shares"][int(share[1])][int(share[0])] = share[2][2:-1]
-
-    def _aggregate_key_shares(self):
-        """
-        Aggregates key shares from the tensor database for each collaborator
-        and stores them in the results dictionary.
-
-        This method fetches key shares for each collaborator from the tensor
-        database and creates a local map of these key shares. The key shares
-        are stored in the `self._results["key_shares"]` dictionary, where the
-        keys are the first elements of the shares and the values are
-        dictionaries mapping the second elements of the shares to the third
-        elements.
-
-        The structure of `self._results["key_shares"]` is as follows:
-        {
-            share[0]: {
-                share[1]: share[2]
-            }
-        }
-
-        The method assumes that `self._collaborator_list` is a list of
-        collaborators and `self._tensor_db` is an instance of a tensor
-        database that has a method `get_tensor_from_cache` which takes a
-        `TensorKey` object as an argument.
-        """
-        self._results["key_shares"] = {}
-
-        for collaborator in self._collaborator_list:
-            # Key shares
-            # Fetching key shares for each collaborator from tensor db.
-            nparray = self._tensor_db.get_tensor_from_cache(
-                TensorKey(
-                    "key_share",
-                    self._aggregator_uuid,
-                    -1,
-                    False,
-                    (
-                        collaborator,
-                        "secagg",
-                    ),
-                )
-            )
-            for share in nparray:
-                # Creating a map for local use.
-                if int(share[1]) not in self._results["key_shares"]:
-                    self._results["key_shares"][int(share[1])] = {}
-                self._results["key_shares"][int(share[1])][int(share[0])] = share[2][2:-1]
+                if int(share[1]) not in self._results[f"{key_name}s"]:
+                    self._results[f"{key_name}s"][int(share[1])] = {}
+                self._results[f"{key_name}s"][int(share[1])][int(share[0])] = share[2][2:-1]
 
     def _reconstruct_secrets(self):
         """
