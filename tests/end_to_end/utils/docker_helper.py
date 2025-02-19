@@ -3,6 +3,7 @@
 
 import logging
 import docker
+import subprocess
 from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
