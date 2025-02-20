@@ -1,7 +1,0 @@
-wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
-matplotlib
-torch==2.3.1
-torchvision==0.18.1
-git+https://github.com/pyviz-topics/imagen.git@master
-holoviews==1.15.4
-ipywidgets

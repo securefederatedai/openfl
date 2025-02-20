@@ -10,11 +10,9 @@ collaborator:
 federated_flow:
   settings:
     checkpoint: true
-    model: src.experiment.model
-    optimizer: src.experiment.optimizer
-    round_number: 0
-    watermark_pretrain_optimizer: src.experiment.watermark_pretrain_optimizer
-    watermark_retrain_optimizer: src.experiment.watermark_retrain_optimizer
-  template: src.experiment.FederatedFlow_MNIST_Watermarking
+    model: null
+    optimizer: null
+    rounds: 2
+  template: src.experiment.FederatedFlow
 network:
   defaults: plan/defaults/network.yaml
