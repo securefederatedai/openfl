@@ -11,4 +11,4 @@ Specify the type of change being made.
 [Describe the testing done for this PR. If applicable include screenshots.]
 
 <!-- ## Additional Information
-[Any additional information that reviewers should be aware of.] -->ßßß
+[Any additional information that reviewers should be aware of.] -->
