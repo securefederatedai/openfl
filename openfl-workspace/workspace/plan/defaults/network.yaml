@@ -7,3 +7,4 @@ settings:
     client_reconnect_interval  : 5
     require_client_auth        : True
     cert_folder                : cert
+    enable_atomic_connections  : False
