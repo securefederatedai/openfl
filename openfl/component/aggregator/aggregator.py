@@ -1101,18 +1101,13 @@ class Aggregator:
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-            if "metric" in tags:
-                if self._secure_aggregation_enabled:
-                    agg_function = SecureAggregation()
-                else:
-                    agg_function = WeightedAverage()
-            else:
-                agg_function = task_agg_function
             # Check if secure aggregation is enabled, set aggregation function.
             agg_function = (
-                SecureAggregation()
-                if "metric" in tags and self._secure_aggregation_enabled
-                else agg_function
+                task_agg_function
+                if "metric" not in tags
+                else SecureAggregation()
+                if self._secure_aggregation_enabled
+                else WeightedAverage()
             )
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
