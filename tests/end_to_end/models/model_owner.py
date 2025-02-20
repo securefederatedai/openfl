@@ -172,6 +172,29 @@ class ModelOwner():
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
+
+    def modify_straggler_policy(self, straggler_cutoff, plan_path):
+        """
+        Modify the plan to set the straggler cutoff
+        Args:
+            straggler_cutoff (dict): Straggler cutoff settings
+            plan_path (str): Path to the plan file
+        """
+        plan_file = os.path.join(plan_path, "plan.yaml")
+
+        try:
+            with open(plan_file) as fp:
+                data = yaml.safe_load(fp)
+            # Modify the plan with the provided straggler cutoff settings
+            data["straggler_handling_policy"] = straggler_cutoff
+            with open(plan_file, "w+") as write_file:
+                yaml.dump(data, write_file)
+            log.info(f"Modified the plan with straggler cutoff settings.")
+        except Exception as e:
+            log.error(f"Failed to modify the plan with straggler cutoff settings: {e}")
+            raise ex.PlanModificationException(f"Failed to modify the plan with straggler cutoff settings: {e}")
+
+
     def initialize_plan(self, agg_domain_name, initial_model_path=None):
         """
         Initialize the plan
@@ -228,19 +251,13 @@ class ModelOwner():
         except Exception as e:
             raise ex.WorkspaceCertificationException(f"{error_msg}: {e}")
 
-    def dockerize_workspace(self):
+    def dockerize_workspace(self, image_name):
         """
         Dockerize the workspace. It internally uses workspace name as the image name
         """
         log.info("Dockerizing the workspace. It will take some time to complete..")
         try:
-            if not os.getenv("GITHUB_REPOSITORY") or not os.getenv("GITHUB_BRANCH"):
-                repo, branch = ssh.get_git_repo_and_branch()
-            else:
-                repo = os.getenv("GITHUB_REPOSITORY")
-                branch = os.getenv("GITHUB_BRANCH")
-
-            cmd = f"fx workspace dockerize --save --revision {repo}@{branch}"
+            cmd = f"fx workspace dockerize --base-image {image_name} --save"
             error_msg = "Failed to dockerize the workspace"
             return_code, output, error = fh.run_command(
                 cmd,
