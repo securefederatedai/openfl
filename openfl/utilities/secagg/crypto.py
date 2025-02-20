@@ -140,7 +140,7 @@ def pseudo_random_generator(seed: Union[int, float, bytes]) -> np.ndarray:
     return random.random()
 
 
-def calculate_shared_mask(agreed_keys: list):
+def calculate_shared_mask(agreed_keys: list) -> float:
     """
     Calculate the shared mask based on a list of agreed keys.
 
