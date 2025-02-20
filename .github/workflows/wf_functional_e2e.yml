@@ -1,7 +1,7 @@
 ---
 # Workflow functional E2E tests
 
-name: Workflow Functional E2E
+name: Workflow_Functional_E2E
 
 on:
   workflow_call:
