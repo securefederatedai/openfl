@@ -1,10 +1,6 @@
 name: Bandit Code Scan
 
 on:
-  push:
-    branches: 
-      - develop
-      - v1.7.x
   workflow_call:
   workflow_dispatch:
 

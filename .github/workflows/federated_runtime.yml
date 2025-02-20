@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------
 # Workflow to run 301_MNIST_Watermarking notebook
 #---------------------------------------------------------------------------
-name: Federated Runtime 301 MNIST Watermarking
+name: Federated Runtime Watermarking E2E
 
 on:
   workflow_call:
