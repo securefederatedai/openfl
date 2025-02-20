@@ -76,6 +76,7 @@ def stop_start_native_participant(participant, action):
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
     if action == "stop":
+        log.info(f"Stopping participant {participant.name}")
         cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
         pids = []
         # Find the process ID
@@ -95,6 +96,7 @@ def stop_start_native_participant(participant, action):
 
     else:
         try:
+            log.info(f"Starting participant {participant.name}")
             participant.start(res_file=participant.res_file)
         except Exception as e:
             raise ex.ParticipantStartException(f"Error starting participant: {e}")

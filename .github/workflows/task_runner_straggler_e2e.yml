@@ -1,0 +1,83 @@
+---
+# Task Runner E2E tests with straggler handling policy with bare metal approach
+
+name: Task_Runner_Straggler_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # Run every day at 7 am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test_straggler_percentage_policy:
+    name: Percentage Policy (torch/mnist_straggler_check, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      MODEL_NAME: 'torch/mnist_straggler_check'
+      PYTHON_VERSION: '3.10'
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner percent cutoff straggler test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_percent_policy
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_TLS_Percentage"
+
+  test_straggler_cutoff:
+    name: Cutoff Policy (torch/mnist_straggler_check, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      MODEL_NAME: 'torch/mnist_straggler_check'
+      PYTHON_VERSION: '3.10'
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner cutofftime straggler tests
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_cutoff
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_TLS_Cutoff"
