@@ -3,7 +3,7 @@
 ## **How to run this tutorial (without TLS and locally as a simulation):**
 <br/>
 
-**NOTE**: This is for demonstration purpose only. When using **FederatedRuntime**, envoys and director SHOULD NOT be run on the same machine in a production environment.
+**NOTE**: This is for demonstration purpose only. Use `LocalRuntime` to simulate the federation locally.
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
 
