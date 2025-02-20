@@ -135,6 +135,8 @@ class RetryOnRpcErrorClientInterceptor(
 
 def _atomic_connection(func):
     def wrapper(self, *args, **kwargs):
+        if not self.enable_atomic_connections:
+            return func(self, *args, **kwargs)
         self.reconnect()
         response = func(self, *args, **kwargs)
         self.disconnect()
@@ -145,6 +147,8 @@ def _atomic_connection(func):
 
 def _resend_data_on_reconnection(func):
     def wrapper(self, *args, **kwargs):
+        if not self.resend_data_on_reconnection:
+            return func(self, *args, **kwargs)
         while True:
             try:
                 response = func(self, *args, **kwargs)
@@ -156,6 +160,9 @@ def _resend_data_on_reconnection(func):
                 if self.refetch_server_cert_callback is not None:
                     self.logger.info("Refetching server certificate")
                     self.root_certificate = self.refetch_server_cert_callback()
+                if not self.enable_atomic_connections:
+                    self.logger.info("Reconnecting to aggregator")
+                    self.reconnect()
                 self.sleeping_policy.sleep()
         return response
 
@@ -198,6 +205,8 @@ class AggregatorGRPCClient:
         federation_uuid=None,
         single_col_cert_common_name=None,
         refetch_server_cert_callback=None,
+        enable_atomic_connections=False,
+        resend_data_on_reconnection=True,
         **kwargs,
     ):
         """
@@ -228,9 +237,13 @@ class AggregatorGRPCClient:
         self.certificate = certificate
         self.private_key = private_key
         self.sleeping_policy = ConstantBackoff(
-            int(kwargs.get("client_reconnect_interval", 1)), getLogger(__name__), self.uri
+            int(kwargs.get("client_reconnect_interval", 1)),
+            getLogger(__name__),
+            self.uri,
         )
         self.logger = getLogger(__name__)
+        self.enable_atomic_connections = enable_atomic_connections
+        self.resend_data_on_reconnection = resend_data_on_reconnection
 
         if not self.use_tls:
             self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
@@ -345,7 +358,7 @@ class AggregatorGRPCClient:
 
     def disconnect(self):
         """Close the gRPC channel."""
-        self.logger.debug("Disconnecting from gRPC server at %s", self.uri)
+        self.logger.info("Disconnecting from gRPC server at %s", self.uri)
         self.channel.close()
 
     def reconnect(self):
@@ -365,7 +378,7 @@ class AggregatorGRPCClient:
                 self.private_key,
             )
 
-        self.logger.debug("Connecting to gRPC at %s", self.uri)
+        self.logger.info("Connecting to gRPC at %s", self.uri)
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
