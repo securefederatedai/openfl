@@ -2,7 +2,6 @@
   <img src="https://github.com/securefederatedai/artwork/blob/main/PNG/OpenFL%20Logo%20-%20color.png?raw=true" width="70%">
 </div>
 
-
 <div align="center">
 	
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)

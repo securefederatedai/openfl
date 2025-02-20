@@ -3,6 +3,7 @@
 
 import logging
 import docker
+import subprocess
 from functools import lru_cache
 
 import tests.end_to_end.utils.constants as constants
@@ -213,3 +214,22 @@ def stop_start_docker_participant(participant, action):
         container_names.append(container.name)
 
     return True
+
+
+def build_docker_image(image_name, dockerfile_path):
+    """
+    Build a docker image.
+    Args:
+        image_name (str): Name of the image to build
+        dockerfile_path (str): Path to the Dockerfile
+    """
+    log.info(f"Building docker image {image_name}")
+
+    try:
+        subprocess.run(
+            f"docker build -t {image_name} -f {dockerfile_path} .",
+            shell=True,
+            check=True,
+        )
+    except Exception as e:
+        raise ex.DockerException(f"Error building docker image: {e}")
