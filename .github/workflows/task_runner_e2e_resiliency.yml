@@ -6,9 +6,6 @@ name: Task_Runner_E2E_Resiliency  # Please do not modify the name as it is used 
 on:
   schedule:
     - cron: "0 5 * * *" # Run every day at 5 am UTC
-  push:
-    branches:
-      - develop
   workflow_call:
   workflow_dispatch:
     inputs:
