@@ -328,7 +328,7 @@ jobs:
           test_type: "With_Memory_Logs"
 
   test_straggler_check:
-    name: Straggler Handling
+    name: With TLS (torch/mnist_straggler_check, 3.10)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
@@ -361,10 +361,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Straggler_Handling"
+          test_type: "With_TLS"
 
   test_eden_compression:
-    name: Eden Compression
+    name: With TLS (torch/mnist_eden_compression, 3.10)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
@@ -397,4 +397,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Eden_Compression"
+          test_type: "With_TLS"
