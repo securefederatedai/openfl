@@ -1002,11 +1002,13 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_round = get_current_round(database_file)
-
-        if current_round > inp_round:
+# Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
+        if current_round > inp_round + 1:
+            log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
         log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
+    log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
     return False
 
 
@@ -1031,3 +1033,25 @@ def set_keras_backend(model_name):
     os.environ["KERAS_BACKEND"] = backend
 
     return [f"KERAS_BACKEND={backend}"]
+
+
+def remove_stale_processes(num_collaborators):
+    """
+    Remove stale processes
+    """
+    log.info("Removing stale processes..")
+    # Remove any stale processes
+    try:
+        for i in range(1, num_collaborators + 1):
+            subprocess.run(
+                f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
+        subprocess.run(
+            "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{print $2}')",
+            shell=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        log.warning(f"Failed to kill processes: {e}")
