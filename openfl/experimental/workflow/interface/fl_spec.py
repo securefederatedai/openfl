@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import inspect
+import types
 from copy import deepcopy
 from typing import TYPE_CHECKING, Callable, List, Type, Union
 
@@ -51,6 +52,28 @@ class FLSpec:
         """
         self._foreach_methods = []
         self._checkpoint = checkpoint
+
+    def _get_base_attrs(self):
+        base_attrs = set()
+        for base in self.__class__.__bases__:
+            base_attrs.update(dir(base))
+        return base_attrs
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        base_attrs = self._get_base_attrs()
+
+        # Remove functions/methods that are not from base class
+        for key in list(state.keys()):
+            if (
+                isinstance(state[key], (types.FunctionType, types.MethodType))
+                and key not in base_attrs
+            ):
+                del state[key]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
