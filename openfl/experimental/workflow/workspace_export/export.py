@@ -139,15 +139,14 @@ class WorkspaceExport:
         class_names = ["LocalRuntime", "FederatedRuntime"]
 
         with open(self.script_path, "r") as file:
-            tree = ast.parse(file.read())
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+        tree = ast.parse(code)
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-                if isinstance(node.value.func, ast.Name):
-                    class_name = node.value.func.id
-                    if class_name in class_names:
-                        for target in node.targets:
-                            if isinstance(target, ast.Name):
-                                instance_names.append(target.id)
+                if isinstance(node.value.func, ast.Name) and node.value.func.id in class_names:
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            instance_names.append(target.id)
         return instance_names
 
     def __comment_flow_execution(self) -> None:
