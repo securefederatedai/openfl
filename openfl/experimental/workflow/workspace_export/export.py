@@ -13,7 +13,7 @@ import sys
 from logging import getLogger
 from pathlib import Path
 from shutil import copytree
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import nbformat
 import yaml
@@ -127,15 +127,42 @@ class WorkspaceExport:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
+    def __extract_runtime_instance_names(self) -> List[str]:
+        """
+        Identifies instances of given classes in the script and returns
+        their variable names.
+
+        Returns:
+            List[str]: A list of runtime instances variable names.
+        """
+        instance_names = []
+        class_names = ["LocalRuntime", "FederatedRuntime"]
+
+        with open(self.script_path, "r") as file:
+            tree = ast.parse(file.read())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                if isinstance(node.value.func, ast.Name):
+                    class_name = node.value.func.id
+                    if class_name in class_names:
+                        for target in node.targets:
+                            if isinstance(target, ast.Name):
+                                instance_names.append(target.id)
+        return instance_names
+
     def __comment_flow_execution(self) -> None:
-        """In the python script search for ".run()" and comment it."""
+        """In the python script search for "runtime_instance.run("
+        and comment it."""
+
+        runtime_instance_names = self.__extract_runtime_instance_names()
         with open(self.script_path, "r") as f:
             data = f.readlines()
-        for idx, line in enumerate(data):
-            if ".run()" in line:
-                data[idx] = f"# {line}"
-        with open(self.script_path, "w") as f:
-            f.writelines(data)
+        for runtime_instance_name in runtime_instance_names:
+            for idx, line in enumerate(data):
+                if f"{runtime_instance_name}.run(" in line:
+                    data[idx] = f"# {line}"
+            with open(self.script_path, "w") as f:
+                f.writelines(data)
 
     def __change_runtime(self) -> None:
         """Change the LocalRuntime backend from ray to single_process."""

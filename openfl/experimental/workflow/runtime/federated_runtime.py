@@ -147,6 +147,7 @@ class FederatedRuntime(Runtime):
         Args:
             flspec (Type[FLSpec]): Reference to the FLSpec (flow) object.
         """
+        exp_name = None
         try:
             # Prepare workspace and submit it for the FederatedRuntime
             archive_path, exp_name = self.prepare_workspace_archive()
@@ -159,9 +160,12 @@ class FederatedRuntime(Runtime):
             # Update state of self
             flspec._update_from_flspec_obj(updated_flspec)
         except Exception as e:
-            raise Exception(
-                f"FederatedRuntime: Experiment {exp_name} failed to run due to error: {e}"
+            error_msg = (
+                "FederatedRuntime: Failed to prepare workspace archive"
+                if exp_name is None
+                else f"FederatedRuntime: Experiment {exp_name} failed"
             )
+            raise Exception(f"{error_msg} due to error: {e}")
 
     def prepare_workspace_archive(self) -> Tuple[Path, str]:
         """
