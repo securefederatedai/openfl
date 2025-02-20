@@ -151,7 +151,7 @@ class Collaborator:
 
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
-            secure_aggregation_callback = callbacks_module.CollaboratorSecAgg()
+            secure_aggregation_callback = callbacks_module.SecAggBootstrapping()
             if isinstance(callbacks, callbacks_module.Callback):
                 callbacks = [callbacks, secure_aggregation_callback]
             elif isinstance(callbacks, list):

@@ -27,10 +27,10 @@ from openfl.utilities.secagg import (
 logger = logging.getLogger(__name__)
 
 
-class CollaboratorSecAgg(Callback):
+class SecAggBootstrapping(Callback):
     """
-    This callback is used by the collaborator to perform the setup steps
-    for secure aggregation on the collaborators.
+    This callback is used by the collaborator to perform secure aggregation
+    bootstrapping.
 
     Required params include:
     - origin: Name of the collaborator using the callback.
