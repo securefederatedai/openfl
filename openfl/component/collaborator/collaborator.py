@@ -342,7 +342,8 @@ class Collaborator:
         )
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
-        self._secure_aggregation_masking(global_output_tensor_dict)
+        if self._secure_aggregation_enabled:
+            self._secure_aggregation_masking(global_output_tensor_dict)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -664,19 +665,18 @@ class Collaborator:
         Returns:
             None: The method modifies the global_output_tensor_dict in place.
         """
-        if self._secure_aggregation_enabled:
-            import numpy as np
+        import numpy as np
 
-            # Fetch private mask from tensor db.
-            private_mask = self.tensor_db.get_tensor_from_cache(
-                TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
-            )[0]
-            # Fetch shared mask from tensor db.
-            shared_mask = self.tensor_db.get_tensor_from_cache(
-                TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
-            )[0]
-            for tensor_key in global_output_tensor_dict:
-                _, _, _, _, tags = tensor_key
-                if "metric" in tags:
-                    shared_mask = np.add(private_mask, global_output_tensor_dict[tensor_key])
-                    global_output_tensor_dict[tensor_key] = np.add(shared_mask, shared_mask)
+        # Fetch private mask from tensor db.
+        private_mask = self.tensor_db.get_tensor_from_cache(
+            TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
+        )[0]
+        # Fetch shared mask from tensor db.
+        shared_mask = self.tensor_db.get_tensor_from_cache(
+            TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
+        )[0]
+        for tensor_key in global_output_tensor_dict:
+            _, _, _, _, tags = tensor_key
+            if "metric" in tags:
+                shared_mask = np.add(private_mask, global_output_tensor_dict[tensor_key])
+                global_output_tensor_dict[tensor_key] = np.add(shared_mask, shared_mask)
