@@ -3,6 +3,7 @@
 
 """Notebook Tools module."""
 
+import logging
 import shutil
 from importlib import import_module
 from logging import getLogger
@@ -14,6 +15,7 @@ from openfl.experimental.workflow.federated.plan import Plan
 from openfl.experimental.workflow.interface.cli.cli_helper import print_tree
 from openfl.experimental.workflow.notebooktools.code_analyzer import CodeAnalyzer
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = getLogger(__name__)
 
 
@@ -215,7 +217,7 @@ class NotebookTools:
         """Generate data.yaml"""
 
         # Get runtime information
-        runtime, flow_instance_name = self._get_runtime_info()
+        runtime, flow_instance_name = self._get_flow_runtime()
 
         # Determine the path for the data.yaml
         data_yaml = self.output_workspace_path.joinpath("plan", "data.yaml").resolve()
@@ -247,9 +249,9 @@ class NotebookTools:
             raise ValueError("Failed to extract flow class details")
         return flow_details
 
-    def _get_runtime_info(self) -> Tuple[object, str]:
+    def _get_flow_runtime(self) -> Tuple[object, str]:
         """
-        Get runtime information for the flow class.
+        Get the runtime and flow instance name using CodeAnalyzer
 
         Returns:
             Tuple[object, str]: A tuple containing the runtime and flow instance name.
@@ -258,8 +260,10 @@ class NotebookTools:
             flow_details = self._extract_flow_details()
             self.flow_class_name = flow_details["flow_class_name"]
 
-        # Get runtime information using CodeAnalyzer
-        runtime, flow_instance_name = self.code_analyzer.get_flow_runtime_info(self.flow_class_name)
+        # Get runtime information and flow instance name using CodeAnalyzer
+        runtime, flow_instance_name = self.code_analyzer.fetch_flow_runtime_info(
+            self.flow_class_name
+        )
         return runtime, flow_instance_name
 
     def _initialize_plan_yaml(self, plan_yaml: Path) -> dict:

@@ -49,7 +49,7 @@ class CodeAnalyzer:
         self.script_name = self.script_path.name.split(".")[0].strip()
 
         # Transform the script
-        self._transform_script()
+        self.__transform_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -90,7 +90,7 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def _transform_script(self) -> None:
+    def __transform_script(self) -> None:
         """
         Transform the script by commenting out flow.run() and changing the runtime backend.
         """
@@ -380,13 +380,13 @@ class CodeAnalyzer:
 
         return flow_config
 
-    def get_flow_runtime_info(self, flow_class_name: str) -> Tuple[object, str]:
-        """Get federated flow class and runtime information.
+    def fetch_flow_runtime_info(self, flow_class_name: str) -> Tuple[object, str]:
+        """Fetch the federated flow class, its runtime information and flow instance name
         Args:
-            flow_class_name (str): The name of the federated flow class to retrieve.
+            flow_class_name (str): The name of the federated flow class.
 
         Returns:
-            tuple: A tuple containing the runtime instance and the flow name.
+            tuple: A tuple containing the runtime instance and the flow instance name.
         """
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
@@ -401,7 +401,7 @@ class CodeAnalyzer:
             federated_flow_class: The class object of the federated flow.
 
         Returns:
-            tuple: A tuple containing the name of the flow instance and the runtime instance.
+            tuple: A tuple containing the name of the flow instance and the runtime.
         """
         for t in self.available_modules_in_exported_script:
             tempstring = t
