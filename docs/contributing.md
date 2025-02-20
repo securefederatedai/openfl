@@ -26,7 +26,7 @@ Once the change is ready, open a PR from your branch in your fork, to the `devel
 
 OpenFL follows standard recommendations for PR formatting. Make sure to use the [Pull Request Template](https://github.com/securefederatedai/openfl/tree/develop/.github/pull_request_template.md) to provide a clear description of your changes, motivation, and relevant details.
 
-Find more details [here](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
+[How to write the perfect pull request](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
 
 ### Step 4. Sign your work
 
