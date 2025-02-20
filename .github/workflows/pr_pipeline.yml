@@ -36,7 +36,7 @@ jobs:
     uses: ./.github/workflows/docker-bench-security.yml
 
   fr_301_watermark_nb_run:
-    name: Federated Runtime 301 MNIST Watermarking
+    name: Federated Runtime Watermarking E2E
     uses: ./.github/workflows/federated_runtime.yml
 
   gandlf_taskrunner:

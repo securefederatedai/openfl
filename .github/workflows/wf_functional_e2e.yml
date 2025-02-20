@@ -5,7 +5,6 @@ name: Workflow_Functional_E2E
 
 on:
   workflow_call:
-
   workflow_dispatch:
     inputs:
       num_rounds:
