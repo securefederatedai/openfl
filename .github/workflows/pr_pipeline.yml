@@ -85,7 +85,7 @@ jobs:
     uses: ./.github/workflows/wf_functional_e2e.yml
 
   workflow_interface_101_mnist:
-    name: Workflow Interface 101 MNIST Notebook
+    name: Federated Runtime Watermarking E2E
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
 
   workflow_interface_tests:
