@@ -22,7 +22,11 @@ To modify code, you need to fork the repository. Set up a development environmen
 
 ### Step 3. Create a Pull Request (PR)
 
-Once the change is ready, open a PR from your branch in your fork, to the `develop` branch in [securefederatedai/openfl](https://github.com/securefederatedai/openfl). OpenFL follows standard recommendations of PR formatting. Find more details [here](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
+Once the change is ready, open a PR from your branch in your fork, to the `develop` branch in [securefederatedai/openfl](https://github.com/securefederatedai/openfl). 
+
+OpenFL follows standard recommendations for PR formatting. Make sure to use the [Pull Request Template](https://github.com/securefederatedai/openfl/tree/develop/.github/pull_request_template.md) to provide a clear description of your changes, motivation, and relevant details.
+
+[How to write the perfect pull request](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
 
 ### Step 4. Sign your work
 
