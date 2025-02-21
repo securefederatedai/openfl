@@ -166,4 +166,3 @@ def activate_experimental_feature(workspace_path):
             raise Exception(error)
 
     log.info(f"Activated the experimental feature.")
-
