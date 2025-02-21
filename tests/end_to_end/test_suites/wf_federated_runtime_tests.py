@@ -139,8 +139,6 @@ def test_federated_runtime_secure_aggregation(request):
     ), "Experiment failed"
 
     log.info("Experiment completed successfully")
-    # kill all the envoys
-    fh.remove_stale_processes(envoys=envoys,director=True)
 
 
 def activate_experimental_feature(workspace_path):

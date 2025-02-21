@@ -1050,7 +1050,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
                     check=True,
                 )
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{print $2}')",
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
             )
@@ -1060,7 +1060,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
     if director:
         try:
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{print $2}')",
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
             )
