@@ -114,7 +114,6 @@ class FLSpec:
         Sets up the flow's initial state
 
         Args:
-            runtime_info (dict): Information about the runtime
             collaborators (list): A list of collaborators
             backend (str): The runtime backend
         """
