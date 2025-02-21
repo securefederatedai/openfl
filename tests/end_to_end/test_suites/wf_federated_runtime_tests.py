@@ -75,8 +75,6 @@ def test_federated_runtime_301_watermarking(request):
     ), "Experiment failed"
 
     log.info("Experiment completed successfully")
-    # kill all the envoys
-    fh.remove_stale_processes(envoys=envoys,director=True)
 
 
 @pytest.mark.federated_runtime_secure_aggregation
@@ -87,7 +85,6 @@ def test_federated_runtime_secure_aggregation(request):
         request (Fixture): Pytest fixture
     """
     envoys = ["Bengaluru", "Portland"]
-    fh.remove_stale_processes(envoys=envoys,director=True)
     workspace_path = os.path.join(
         os.getcwd(),
         "openfl-tutorials/experimental/workflow/SecAgg",
