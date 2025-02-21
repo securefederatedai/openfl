@@ -123,7 +123,6 @@ class Aggregator:
 
         self.flow = flow
         self.checkpoint = checkpoint
-        self.backend = "single_process"
         self.name = "aggregator"
 
         self.__private_attrs_callable = private_attributes_callable
@@ -194,7 +193,7 @@ class Aggregator:
         # Start function will be the first step if any flow
         f_name = "start"
         # Initialize the flow state
-        self.flow.initialize_flow_state(self.authorized_cols, self.backend)
+        self.flow.initialize_flow_state(self.authorized_cols)
         logger.info(f"Starting round {self.current_round}...")
         while True:
             next_step = self.do_task(f_name)

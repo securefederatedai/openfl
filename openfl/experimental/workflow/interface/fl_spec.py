@@ -32,6 +32,8 @@ class FLSpec:
         _foreach_methods (list): A list of methods to be applied iteratively.
         _checkpoint (bool): A flag indicating whether checkpointing is enabled.
         _collaborators (list): A list of collaborators associated with the runtime.
+        _metaflow_interface (MetaflowInterface): The interface to the Metaflow runtime.
+        _run_id (str): The ID of the current run.
     """
 
     _clones = []
@@ -109,23 +111,6 @@ class FLSpec:
         """
         self._collaborators = collaborators
 
-    def initialize_flow_state(self, collaborators: List, backend: str) -> None:
-        """
-        Sets up the flow's initial state
-
-        Args:
-            collaborators (list): A list of collaborators
-            backend (str): The runtime backend
-        """
-        self.collaborators = collaborators
-        print("MetaflowInterface creation.")
-        self._metaflow_interface = MetaflowInterface(self.__class__, backend)
-        self._run_id = self._metaflow_interface.create_run()
-        self._foreach_methods = []
-        FLSpec._reset_and_create_clones(self, self.collaborators)
-        if self._checkpoint:
-            print(f"Created flow {self.__class__.__name__}")
-
     def _update_from_flspec_obj(self, flspec_obj: FLSpec) -> None:
         """Update self with attributes from the updated flspec instance.
 
@@ -189,6 +174,23 @@ class FLSpec:
 
         elif collaborator_to_aggregator(f, parent_func):
             print("Sending state from collaborator to aggregator")
+
+    def initialize_flow_state(self, collaborators: List, backend: str = "single_process") -> None:
+        """
+        Sets up the flow's initial state
+
+        Args:
+            collaborators (list): A list of collaborators
+            backend (str): The runtime backend
+        """
+        self.collaborators = collaborators
+        print("MetaflowInterface creation.")
+        self._metaflow_interface = MetaflowInterface(self.__class__, backend)
+        self._run_id = self._metaflow_interface.create_run()
+        self._foreach_methods = []
+        FLSpec._reset_and_create_clones(self, self.collaborators)
+        if self._checkpoint:
+            print(f"Created flow {self.__class__.__name__}")
 
     def filter_exclude_include(self, f, **kwargs) -> None:
         """Filters exclude/include attributes for a given task within the flow.
