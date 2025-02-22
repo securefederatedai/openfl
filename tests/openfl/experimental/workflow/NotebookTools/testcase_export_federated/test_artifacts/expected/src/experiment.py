@@ -99,9 +99,9 @@ def FedAvg(agg_model, models, weights=None):
     state_dict = agg_model.state_dict()
     for key in models[0].state_dict():
         state_dict[key] = torch.from_numpy(np.average([state[key].numpy() for state in state_dicts],
-                                                      axis=0, 
+                                                      axis=0,
                                                       weights=weights))
-        
+
     agg_model.load_state_dict(state_dict)
     return agg_model
 
@@ -300,7 +300,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
             retrain_round += 1
 
         self.next(self.internal_loop)
-    
+
     @aggregator
     def internal_loop(self):
         """
@@ -333,7 +333,7 @@ authorized_collaborators = ['Bangalore', 'Chandler']
 
 federated_runtime = FederatedRuntime(
     collaborators=authorized_collaborators,
-    director=director_info, 
+    director=director_info,
     notebook_path='./MNIST_Watermarking.ipynb',
 )
 

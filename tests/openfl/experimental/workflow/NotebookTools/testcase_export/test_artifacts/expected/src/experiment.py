@@ -103,7 +103,7 @@ def FedAvg(models, weights=None):
     state_dict = new_model.state_dict()
     for key in models[1].state_dict():
         state_dict[key] = torch.from_numpy(np.average([state[key].numpy() for state in state_dicts],
-                                                      axis=0, 
+                                                      axis=0,
                                                       weights=weights))
     new_model.load_state_dict(state_dict)
     return new_model
@@ -142,7 +142,6 @@ class FederatedFlow(FLSpec):
         self.model.train()
         self.optimizer = optim.SGD(self.model.parameters(), lr=learning_rate,
                                    momentum=momentum)
-        train_losses = []
         for batch_idx, (data, target) in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             output = self.model(data)

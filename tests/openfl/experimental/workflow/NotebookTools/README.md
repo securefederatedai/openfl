@@ -25,26 +25,20 @@ tests/openfl/experimental/workflow/NotebookTools
 
 Ensure that pytest and all dependencies for Workflow Interface are installed in virtual environment
 
+
 - For running `test_export`
-
-Navigate to the directory
-
-`tests/openfl/experimental/workflow/NotebookTools/test_export`
 
 To run a specific test case, use below command:
 
 ```sh
-pytest -s test_script.py
+pytest -s tests/openfl/experimental/workflow/NotebookTools/testcase_export
 ```
 
 - For running `test_export_federated`
 
-Navigate to the directory
-
-`tests/openfl/experimental/workflow/NotebookTools/test_export_federated`
 
 To run a specific test case, use below command:
 
 ```sh
-pytest -s test_script.py
+pytest -s tests/openfl/experimental/workflow/NotebookTools/testcase_export_federated
 ```
