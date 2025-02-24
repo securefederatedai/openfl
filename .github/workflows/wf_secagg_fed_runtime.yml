@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------
-# Workflow to run 301_MNIST_Watermarking notebook
+# Workflow to run Secure Aggregation notebook
 #---------------------------------------------------------------------------
 name: Secure Aggregation Runtime E2E
 
@@ -40,7 +40,7 @@ jobs:
         pip install .
         pip install -r test-requirements.txt
 
-    - name: Run Federated Runtime 301 MNIST Watermarking via pytest
+    - name: Run Federated Runtime Secure aggregation via pytest
       id: run_tests
       run: |
         python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_secure_aggregation
