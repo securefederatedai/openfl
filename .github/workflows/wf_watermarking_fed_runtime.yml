@@ -50,7 +50,7 @@ jobs:
       if: ${{ always() }}
       run: |
         export PYTHONPATH="$PYTHONPATH:."
-        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --folder_name "wf_watermarking"
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --nb_name "wf_watermarking"
         echo "Test summary printed"
 
     - name: Tar files

@@ -1066,6 +1066,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
             )
         except subprocess.CalledProcessError as e:
             log.warning(f"Failed to kill processes: {e}")
+
     if envoys:
         for envoy in envoys:
             try:
