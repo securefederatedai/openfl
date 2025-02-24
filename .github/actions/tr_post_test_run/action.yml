@@ -30,20 +30,10 @@ runs:
         echo "MODEL_NAME_MODIFIED=${tmp//\//_}" >> $GITHUB_ENV
       shell: bash
 
-    - name: Get Job ID
-      uses: austenstone/job-id@v1
-      id: job-id
-
-    - name: Echo Job ID
-      run: echo $GITHUB_JOB_ID
-      env:
-      GITHUB_JOB_ID: ${{ steps.job-id.outputs.job-id }}
-
     - name: Upload Artifacts
       id: upload_artifacts
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-      env:
-        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME_MODIFIED }}_python${{ env.PYTHON_VERSION }}_${{ env.GITHUB_JOB_ID }}
+        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME_MODIFIED }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
         path: result.tar

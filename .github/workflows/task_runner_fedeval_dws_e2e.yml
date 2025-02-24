@@ -52,7 +52,7 @@ jobs:
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}"
 
   test_with_tls:
-    name: With TLS
+    name: FedEval DWS With TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
@@ -96,7 +96,7 @@ jobs:
           test_type: "With_TLS"
 
   test_without_tls:
-    name: Without TLS
+    name: FedEval DWS Without TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
@@ -139,7 +139,7 @@ jobs:
           test_type: "Without_TLS"
 
   test_without_client_auth:
-    name: Without Client Auth
+    name: FedEval DWS Without Client Auth
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15

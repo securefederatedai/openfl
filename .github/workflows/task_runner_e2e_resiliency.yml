@@ -76,7 +76,7 @@ jobs:
           fi
 
   resiliency_in_native:
-    name: With TLS
+    name: Resiliency With TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30

@@ -48,6 +48,8 @@ on:
           - test_without_tls
           - test_without_client_auth
           - test_memory_logs
+          - test_straggler_check
+          - test_eden_compression
         required: false
 
 permissions:
@@ -164,6 +166,7 @@ jobs:
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
+
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
@@ -329,7 +332,8 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false)
+      (github.event.pull_request.draft == false) ||
+      (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_straggler_check')
 
     env:
       MODEL_NAME: "torch/mnist_straggler_check"
@@ -365,7 +369,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_eden_compression')
 
     env:
       MODEL_NAME: "torch/mnist_eden_compression"
