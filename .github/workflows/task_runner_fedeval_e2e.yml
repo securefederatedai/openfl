@@ -117,7 +117,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_TLS"
+          test_type: "FedEval_Without_TLS"
 
   test_without_client_auth:
     name: FedEval Without Client Auth
@@ -163,4 +163,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_Client_Auth"
+          test_type: "FedEval_Without_Client_Auth"

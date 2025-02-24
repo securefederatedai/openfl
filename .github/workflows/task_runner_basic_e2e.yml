@@ -360,7 +360,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "straggler_check"
 
   test_eden_compression:
     name: With TLS (torch/mnist_eden_compression, 3.10)
@@ -396,4 +396,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "eden_compression"

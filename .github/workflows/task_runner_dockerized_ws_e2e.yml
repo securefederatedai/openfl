@@ -92,7 +92,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "DWS_With_TLS"
 
   test_without_tls:
     name: DWS Without TLS
@@ -135,7 +135,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_TLS"
+          test_type: "DWS_Without_TLS"
 
   test_without_client_auth:
     name: DWS Without Client Auth
@@ -178,7 +178,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_Client_Auth"
+          test_type: "DWS_Without_Client_Auth"
 
   test_memory_logs:
     name: DWS With Memory Logs
@@ -222,4 +222,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_Memory_Logs"
+          test_type: "DWS_With_Memory_Logs"
