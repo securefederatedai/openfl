@@ -4,8 +4,6 @@
 name: Task_Runner_E2E_Resiliency  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 5 * * *" # Run every day at 5 am UTC
   workflow_call:
   workflow_dispatch:
     inputs:

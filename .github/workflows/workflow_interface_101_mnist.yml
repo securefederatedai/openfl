@@ -1,8 +1,7 @@
 #---------------------------------------------------------------------------
 # Workflow to run 101 MNIST Notebook
-# Authors - Noopur, Payal Chaurasiya
 #---------------------------------------------------------------------------
-name: Workflow Interface 101 MNIST Notebook
+name: Workflow MNIST Local Runtime E2E
 
 on:
   workflow_call:

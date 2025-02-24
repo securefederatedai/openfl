@@ -4,6 +4,7 @@
 name: Task_Runner_Dockerized_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
