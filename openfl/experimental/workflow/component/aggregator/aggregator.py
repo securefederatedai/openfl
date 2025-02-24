@@ -226,20 +226,20 @@ class Aggregator:
                     # Waiting for collaborators to connect.
                     logger.info(
                         "Waiting for "
-                        + f"{len_connected_collabs}/{len_sel_collabs}"
+                        + f"{len_sel_collabs - len_connected_collabs}/{len_sel_collabs}"
                         + " collaborators to connect..."
                     )
                 elif self.tasks_sent_to_collaborators != len_sel_collabs:
                     logger.info(
                         "Waiting for "
-                        + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
+                        + f"{len_sel_collabs - self.tasks_sent_to_collaborators}/{len_sel_collabs}"
                         + " to make requests for tasks..."
                     )
                 else:
                     # Waiting for selected collaborators to send the results.
                     logger.info(
                         "Waiting for "
-                        + f"{self.collaborators_counter}/{len_sel_collabs}"
+                        + f"{len_sel_collabs - self.collaborators_counter}/{len_sel_collabs}"
                         + " collaborators to send results..."
                     )
                 await asyncio.sleep(Aggregator._get_sleep_time())

@@ -1,0 +1,68 @@
+#---------------------------------------------------------------------------
+# Workflow to run Secure Aggregation notebook
+#---------------------------------------------------------------------------
+name: Secure Aggregation Runtime E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  test_secure_agg_notebook:
+    name: WF SecAgg Without TLS (torch/mnist, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2 # needed for detecting changes
+        submodules: "true"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies # Without this step, fx command will not work
+      id: install_dependencies
+      run: |
+        python -m pip install --upgrade pip ipython ipykernel
+        pip install .
+        pip install -r test-requirements.txt
+
+    - name: Run Federated Runtime Secure aggregation via pytest
+      id: run_tests
+      run: |
+        python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_secure_aggregation
+        echo "Federated Runtime Secure Aggregation test run completed"
+
+    - name: Print test summary
+      id: print_test_summary
+      if: ${{ always() }}
+      run: |
+        export PYTHONPATH="$PYTHONPATH:."
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --nb_name "wf_secagg"
+        echo "Test summary printed"
+
+    - name: Tar files
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      run: |
+        tar -cvf notebook_secure_agg.tar --exclude="__pycache__" $HOME/results --ignore-failed-read
+        echo "TAR file created"
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      with:
+        name: secure_agg_${{ github.run_id }}
+        path: notebook_secure_agg.tar
