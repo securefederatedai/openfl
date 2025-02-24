@@ -29,7 +29,7 @@ def test_federated_runtime_301_watermarking(request):
 
     # Create result log files for the director and envoys
     result_path, participant_res_files = fh.create_federated_runtime_participant_res_files(
-        request.config.results_dir, envoys
+        request.config.results_dir, envoys, model_name="wf_watermarking"
     )
 
     # Start the director
@@ -94,7 +94,7 @@ def test_federated_runtime_secure_aggregation(request):
 
     # Create result log files for the director and envoys
     result_path, participant_res_files = fh.create_federated_runtime_participant_res_files(
-        request.config.results_dir, envoys, model_name="secure_aggregation_workflow"
+        request.config.results_dir, envoys, model_name="wf_secagg"
     )
     # Start the director
     fh.start_director(workspace_path, participant_res_files["director"])

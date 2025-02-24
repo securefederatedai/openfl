@@ -29,7 +29,7 @@ env:
 jobs:
   test_wf_functional_local_runtime:
     if: github.event.pull_request.draft == false
-    name: wf_functional_local_runtime
+    name: WF Functional Without TLS
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:

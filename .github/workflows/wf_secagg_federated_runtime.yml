@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   test_secure_agg_notebook:
-    name: SecAgg Without TLS (torch/mnist, 3.10)
+    name: WF SecAgg Without TLS (torch/mnist, 3.10)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
@@ -51,7 +51,7 @@ jobs:
       if: ${{ always() }}
       run: |
         export PYTHONPATH="$PYTHONPATH:."
-        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score"
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --folder_name "wf_secagg"
         echo "Test summary printed"
 
     - name: Tar files

@@ -831,7 +831,7 @@ def start_envoy(envoy_name, workspace_path, res_file):
     return True
 
 
-def create_federated_runtime_participant_res_files(results_dir, envoys, model_name="301_mnist_watermarking"):
+def create_federated_runtime_participant_res_files(results_dir, envoys, model_name):
     """
     Create result log files for the director and envoys.
     Args:
