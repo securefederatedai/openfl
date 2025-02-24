@@ -20,11 +20,7 @@ jobs:
 
       - name: Update package list
         run: sudo apt update
-
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-
+      
       - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
           trivy --quiet fs \
@@ -32,9 +28,25 @@ jobs:
           --output trivy-code-results.json \
           --ignore-unfixed \
           --vuln-type os,library \
-          --severity CRITICAL,HIGH,MEDIUM \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
           --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
           .
+
+      - name: Display Trivy Scan Results
+        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+
+      - name: Upload Code Vulnerability Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-code-report-json
+          path: trivy-code-results.json
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
       - name: Build an image from Dockerfile
         run: |
@@ -115,6 +127,16 @@ jobs:
         env:
           TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
 
+      - name: Display Trivy Scan Results
+        if: failure()
+        run: |
+            if [ -s trivy-docker-results.json ]; then
+              echo "Trivy Scan Results:"
+              cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+            else
+              echo "Trivy scan results file is empty or not found."
+            fi
+
       - name: Add unresolved CVEs to .trivyignore
         if: failure()
         run: |
@@ -136,13 +158,7 @@ jobs:
             echo "Final Trivy scan results file is empty or not found."
           fi
 
-      - name: Upload final Trivy scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-final-report-json
-          path: trivy-final-results.json
-
-      - name: Upload Docker Vulnerability Scan
+      - name: Upload final Trivy Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report-json
