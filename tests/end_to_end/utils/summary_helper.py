@@ -169,7 +169,7 @@ def print_task_runner_score():
             )
 
 
-def print_federated_runtime_score():
+def print_federated_runtime_score(nb_name):
     """
     Function to get the federated runtime score from the director log file
     And write the results to GitHub step summary
@@ -183,7 +183,7 @@ def print_federated_runtime_score():
     # Assumption - result directory is present in the home directory
     dir_res_file = os.path.join(
         result_path,
-        "301_mnist_watermarking",
+        nb_name,
         "director.log",
     )
 
@@ -243,6 +243,10 @@ def fetch_args():
     parser.add_argument(
         "--func_name", required=True, default="", type=str, help="Name of function to be called"
     )
+    # This argument is needed for workflow api and it value is set in the workflow during create_federated_runtime_participant_res_files as model_name
+    parser.add_argument(
+        "--nb_name", required=False, default="", type=str, help="Name of output folder"
+    )
     args = parser.parse_args()
     return args
 
@@ -255,4 +259,7 @@ if __name__ == "__main__":
     if func_name in ["print_task_runner_score", "print_local_runtime_score"]:
         print_task_runner_score()
     elif func_name == "print_federated_runtime_score":
-        print_federated_runtime_score()
+        nb_name = args.nb_name
+        if not nb_name:
+            raise ValueError("nb_name argument is required for print_federated_runtime_score function")
+        print_federated_runtime_score(nb_name)

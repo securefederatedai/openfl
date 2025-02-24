@@ -12,7 +12,11 @@ permissions:
 
 jobs:
   test_federated_runtime_301_watermarking_notebook:
-    if: github.event.pull_request.draft == false
+    name: WF Watermarking Without TLS (torch/mnist, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
@@ -46,7 +50,7 @@ jobs:
       if: ${{ always() }}
       run: |
         export PYTHONPATH="$PYTHONPATH:."
-        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score"
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --nb_name "wf_watermarking"
         echo "Test summary printed"
 
     - name: Tar files
