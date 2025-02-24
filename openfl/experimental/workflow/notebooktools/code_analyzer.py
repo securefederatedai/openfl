@@ -26,13 +26,13 @@ class CodeAnalyzer:
     """
 
     def __init__(self, notebook_path: Path, output_path: Path) -> None:
-        """Initialize CodeAnalzer and process the script from notebook
+        """Initialize CodeAnalyzer and process the script from notebook
 
         Args:
             notebook_path (Path): Path to Jupyter notebook to be converted.
             output_path (Path): The directory where the converted Python script will be saved.
         """
-        logger.info("Converting jupter notebook to python script...")
+        logger.info("Converting jupyter notebook to python script...")
 
         # Extract the export filename from the notebook
         export_filename = self.__get_exp_name(notebook_path)

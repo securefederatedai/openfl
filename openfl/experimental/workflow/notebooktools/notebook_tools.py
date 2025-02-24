@@ -225,7 +225,7 @@ class NotebookTools:
         # Initialize the YAML data
         data_config = self._initialize_data_yaml(data_yaml)
 
-        # Initiaize runtime name
+        # Initialize runtime name
         runtime_name = "runtime_local"
 
         # Process aggregator information using CodeAnalyzer
