@@ -7,11 +7,12 @@ jobs:
   build:
     if: github.event.pull_request.draft == false
     permissions:
-      contents: read
+      contents: write  # Ensure write permissions
       security-events: write
       actions: read
+      pull-requests: write
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     
     steps:
       - name: Checkout code
@@ -96,10 +97,10 @@ jobs:
       - name: Rebuild Docker image after updates
         if: failure()
         run: |
-          docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base . --no-cache
+          docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
       - name: Run final Trivy vulnerability scanner for Docker image (JSON Output)
-        if: failure()
+        id: final-trivy-scan
         uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
@@ -123,22 +124,28 @@ jobs:
             done
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git config --global user.name "github-actions[bot]"
+            git checkout -b update-trivyignore-${{ github.run_id }}
             git add .trivyignore
             git commit -m "Add unresolved CVEs to .trivyignore"
-            git push
+            git push origin update-trivyignore-${{ github.run_id }}
+            echo "PR_BRANCH=update-trivyignore-${{ github.run_id }}" >> $GITHUB_ENV
+            echo "PR_TITLE=Update .trivyignore with unresolved CVEs" >> $GITHUB_ENV
+            echo "PR_BODY=This PR adds unresolved CVEs to .trivyignore based on the Trivy scan results." >> $GITHUB_ENV
           else
             echo "Final Trivy scan results file is empty or not found."
           fi
       
-      - name: Display Trivy Scan Results
-        if: failure()
-        run: |
-          if [ -s trivy-docker-results.json ]; then
-            echo "Trivy Scan Results:"
-            cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
-          else
-            echo "Trivy scan results file is empty or not found."
-          fi
+      - name: Create PR for .trivyignore updates
+        if: env.PR_BRANCH
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: ${{ env.PR_TITLE }}
+          branch: ${{ env.PR_BRANCH }}
+          commit-message: "Update .trivyignore with unresolved CVEs"
+          body: ${{ env.PR_BODY }}
+          labels: security,trivy
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
 
       - name: Upload final Trivy scan results
         uses: actions/upload-artifact@v4
