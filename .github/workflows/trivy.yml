@@ -7,9 +7,9 @@ jobs:
   build:
     if: github.event.pull_request.draft == false
     permissions:
-      contents: write  # Ensure write permissions
-      security-events: write
-      actions: read
+      contents: write # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
       pull-requests: write
     runs-on: ubuntu-22.04
     timeout-minutes: 25
@@ -97,9 +97,10 @@ jobs:
       - name: Rebuild Docker image after updates
         if: failure()
         run: |
-          docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
+          docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base . --no-cache
 
       - name: Run final Trivy vulnerability scanner for Docker image (JSON Output)
+        if: failure()
         id: final-trivy-scan
         uses: aquasecurity/trivy-action@0.29.0
         with:
@@ -134,18 +135,6 @@ jobs:
           else
             echo "Final Trivy scan results file is empty or not found."
           fi
-      
-      - name: Create PR for .trivyignore updates
-        if: env.PR_BRANCH
-        uses: peter-evans/create-pull-request@v5
-        with:
-          title: ${{ env.PR_TITLE }}
-          branch: ${{ env.PR_BRANCH }}
-          commit-message: "Update .trivyignore with unresolved CVEs"
-          body: ${{ env.PR_BODY }}
-          labels: security,trivy
-          assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
 
       - name: Upload final Trivy scan results
         uses: actions/upload-artifact@v4
