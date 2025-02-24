@@ -71,7 +71,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "FedEval_With_TLS"
 
   test_without_tls:
     name: FedEval Without TLS
