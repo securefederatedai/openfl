@@ -79,5 +79,5 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Dockerized E2E
-    needs: task_runner_e2e
+    needs: task_runner_straggler_e2e
     uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
