@@ -138,21 +138,25 @@ class WorkspaceExport:
         instance_names = []
         class_names = ["LocalRuntime", "FederatedRuntime"]
 
+        # Open the script file and read its contents while filtering out shell-style commands (!, %)
         with open(self.script_path, "r") as file:
             code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
         tree = ast.parse(code)
         for node in ast.walk(tree):
+            # Check if the node represents a variable assignment where a class is being instantiated
             if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                # Ensure the function being called is a direct class instantiation by name
                 if isinstance(node.value.func, ast.Name) and node.value.func.id in class_names:
+                    # Extract the variable name(s) the instance is assigned to
                     for target in node.targets:
                         if isinstance(target, ast.Name):
                             instance_names.append(target.id)
         return instance_names
 
     def __comment_flow_execution(self) -> None:
-        """In the python script search for "runtime_instance.run("
-        and comment it."""
-
+        """Search and comment runtime_instance.run(...) in python script.
+        runtime_instance could be an instance of either LocalRuntime or FederatedRuntime.
+        """
         runtime_instance_names = self.__extract_runtime_instance_names()
         with open(self.script_path, "r") as f:
             data = f.readlines()
