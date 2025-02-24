@@ -9,15 +9,15 @@ Validate `NotebookTools.export()` and `NotebookTools.export_federated()` APIs th
 tests/openfl/experimental/workflow/NotebookTools
 
 ├── test_export
-│   ├── test_artifacts    # Actual output of the testcase, and is generated when the test is executed.
+│   ├── test_artifacts    # Actual output of the testcase is generated when the test is executed.
 │   │   └── expected      # Expected output to compare with actual output which is predefined and stored
 │   ├── test_101_MNIST    # Notebook used for testing 
-│   └── test_script.py    # test script file to run the tests
+│   └── test_export.py    # test script file to run the tests
 ├── test_export_federated
 │   ├── test_artifacts    # Actual output of the testcase is generated when the test is executed.
 │   │   └── expected      # Expected output to compare with actual output which is predefined and stored
 │   ├── test_MNIST_Watermarking  # Notebook used for testing 
-│   └── test_script.py    # test script file to run the tests
+│   └── test_export_federated.py    # test script file to run the tests
 ├── READ.md               # Readme File
 ```
 

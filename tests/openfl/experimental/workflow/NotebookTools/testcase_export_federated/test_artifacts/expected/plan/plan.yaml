@@ -10,11 +10,11 @@ collaborator:
 federated_flow:
   settings:
     checkpoint: true
-    model: src.experiment.model
-    optimizer: src.experiment.optimizer
-    watermark_pretrain_optimizer: src.experiment.watermark_pretrain_optimizer
-    watermark_retrain_optimizer: src.experiment.watermark_retrain_optimizer
-  template: src.experiment.FederatedFlow_MNIST_Watermarking
+    model: src.experiment_federated.model
+    optimizer: src.experiment_federated.optimizer
+    watermark_pretrain_optimizer: src.experiment_federated.watermark_pretrain_optimizer
+    watermark_retrain_optimizer: src.experiment_federated.watermark_retrain_optimizer
+  template: src.experiment_federated.FederatedFlow_MNIST_Watermarking
 network:
   settings:
     agg_addr: localhost
