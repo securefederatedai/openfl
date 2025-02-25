@@ -51,7 +51,7 @@ jobs:
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
   test_with_tls:
-    name: DWS With TLS
+    name: With TLS
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_tls'
     runs-on: ubuntu-22.04
@@ -95,7 +95,7 @@ jobs:
           test_type: "DWS_With_TLS"
 
   test_without_tls:
-    name: DWS Without TLS
+    name: Without TLS
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_tls'
     runs-on: ubuntu-22.04
@@ -138,7 +138,7 @@ jobs:
           test_type: "DWS_Without_TLS"
 
   test_without_client_auth:
-    name: DWS Without Client Auth
+    name: Without Client Auth
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_client_auth'
     runs-on: ubuntu-22.04
@@ -181,7 +181,7 @@ jobs:
           test_type: "DWS_Without_Client_Auth"
 
   test_memory_logs:
-    name: DWS With Memory Logs
+    name: With Memory Logs
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04

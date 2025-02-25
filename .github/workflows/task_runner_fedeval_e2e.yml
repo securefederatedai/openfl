@@ -28,7 +28,7 @@ env:
 
 jobs:
   test_with_tls:
-    name: FedEval With TLS
+    name: With TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -74,7 +74,7 @@ jobs:
           test_type: "FedEval_With_TLS"
 
   test_without_tls:
-    name: FedEval Without TLS
+    name: Without TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -120,7 +120,7 @@ jobs:
           test_type: "FedEval_Without_TLS"
 
   test_without_client_auth:
-    name: FedEval Without Client Auth
+    name: Without Client Auth
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
