@@ -15,7 +15,7 @@ OpenFL treats SecAgg as a core security feature and can be enabled for any exper
 
 The following plan shows secure aggregation being enabled on `keras/mnist <https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras/mnist>`_ workspace by simply modifying the plan.
 
-.. code-block:: bash
+.. code-block:: yaml
     :emphasize-lines: 10
 
     aggregator:
