@@ -6,6 +6,7 @@
 from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
 
+
 def model_proto_to_bytes_and_metadata(model_proto):
     """Convert the model protobuf to bytes and metadata.
 
@@ -292,6 +293,7 @@ def dump_proto(model_proto, fpath):
     """
     with open(fpath, "wb") as f:
         f.write(model_proto.SerializeToString())
+
 
 def datastream_to_proto(proto, stream, logger=None):
     """Convert the datastream to the protobuf.

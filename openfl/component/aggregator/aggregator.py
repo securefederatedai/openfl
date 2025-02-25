@@ -3,10 +3,12 @@
 
 """Aggregator module."""
 
+import ctypes
+import gc
 import logging
+import os
 import queue
 import time
-import gc
 from threading import Lock
 from typing import List, Optional
 
@@ -20,6 +22,7 @@ from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 
 logger = logging.getLogger(__name__)
+
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -62,6 +65,7 @@ class Aggregator:
     .. note::
         - plan setting
     """
+
     def __init__(
         self,
         aggregator_uuid,
@@ -802,7 +806,6 @@ class Aggregator:
 
             self._end_of_round_with_stragglers_check()
 
-
     def _end_of_round_with_stragglers_check(self):
         """
         Checks if the minimum required collaborators have reported their results,
@@ -1120,6 +1123,13 @@ class Aggregator:
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+        self.tensor_db.clean_up(self.db_store_rounds)
+        self.release_memory()
+        # End of round callbacks.
+        self.callbacks.on_round_end(self.round_number, logs)
+
+        # Reset straggler handling policy for the next round.
+        self.straggler_handling_policy.reset_policy_for_round()
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -1128,15 +1138,6 @@ class Aggregator:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
             self.callbacks.on_round_begin(self.round_number)
-
-        self.tensor_db.clean_up(self.db_store_rounds)
-        gc.collect()
-
-        # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
-
-        # Reset straggler handling policy for the next round.
-        self.straggler_handling_policy.reset_policy_for_round()
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
@@ -1202,3 +1203,10 @@ class Aggregator:
                 collaborator_name,
             )
             self.quit_job_sent_to.append(collaborator_name)
+
+    def release_memory():
+        """Release memory back to the operating system."""
+        gc.collect()
+        if os.name == "posix":
+            libc = ctypes.CDLL("libc.so.6")
+            libc.malloc_trim(0)

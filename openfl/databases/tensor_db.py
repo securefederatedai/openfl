@@ -15,6 +15,7 @@ from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _s
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor, TensorKey, change_tags
 
+
 class TensorDB:
     """The TensorDB stores a tensor key and the data that it corresponds to.
 
@@ -28,6 +29,7 @@ class TensorDB:
         mutex: A threading Lock object used to ensure thread-safe operations
             on the tensor_db Dataframe.
     """
+
     def __init__(self) -> None:
         """Initializes a new instance of the TensorDB class."""
         types_dict = {
@@ -100,7 +102,6 @@ class TensorDB:
         # Delete old DataFrame and force garbage collection
         del old_tensor_db
 
-
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert a tensor into TensorDB (dataframe).
 
@@ -131,7 +132,9 @@ class TensorDB:
                 )
                 entries_to_add.append(new_entry)
 
-            self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True, copy=True)
+            self.tensor_db = pd.concat(
+                [self.tensor_db, *entries_to_add], ignore_index=True, copy=True
+            )
 
             del old_tensor_db
             entries_to_add.clear()
@@ -159,7 +162,6 @@ class TensorDB:
 
         if len(df) == 0:
             return None
-
 
         return np.array(df["nparray"].iloc[0])
 
@@ -289,7 +291,6 @@ class TensorDB:
         db_iterator = self._iterate()
         agg_nparray = aggregation_function(local_tensors, db_iterator, tensor_name, fl_round, tags)
         self.cache_tensor({tensor_key: agg_nparray})
-
 
         return np.array(agg_nparray)
 

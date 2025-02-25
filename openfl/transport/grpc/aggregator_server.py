@@ -260,9 +260,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
         try:
             response = aggregator_pb2.GetAggregatedTensorResponse(
-            header=self.get_header(collaborator_name),
-            round_number=round_number,
-            tensor=named_tensor,
+                header=self.get_header(collaborator_name),
+                round_number=round_number,
+                tensor=named_tensor,
             )
         finally:
             # Ensure any resources used by named_tensor are released
