@@ -25,7 +25,18 @@ There are several modifications we make in our reimagined version of this interf
 How to use it?
 ==============
 
-Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the :code:`start` task and concludes with the :code:`end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by the name of the task passed to the :code:`next` function. In the line before each task, there is a **placement decorator**. The placement decorator defines where that task will be run. The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with start and concludes with the end task. In the following example, The aggregator begins the flow with :code:`start` task and optionally passed in model and optimizer. The list of collaborators in federation :code:`(self.collaborators)` is automatically populated by LocalRuntime infrastructure and is then used as the list of participants to run the task listed in :code:`self.next`, :code:`aggregated_model_validation`. The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the start function on the aggregator to the aggregated_model_validation task on the collaborator. Where the tasks run is determined by the placement decorator that precedes each task definition (:code:`@aggregator` or :code:`@collaborator`). Once each of the collaborators (defined in the runtime) complete the aggregated_model_validation task, they pass their current state onto the train task, from train to local_model_validation, and then finally to join at the aggregator. It is in join that an average is taken of the model weights, and the next round can begin. 
+Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the :code:`start` task and concludes with the
+:code:`end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by
+the name of the task passed to the :code:`next` function.
+In the line before each task, there is a **placement decorator**. The placement decorator defines where that task will be run (:code:`@aggregator` or :code:`@collaborator`).
+The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with start andconcludes with the end task. In the following example, the
+aggregator begins the flow with :code:`start` task and optionally passed in model and optimizer. The list of collaborators in the federation, :code:`self.collaborators`,
+is automatically populated by the Runtime infrastructure. It serves as the participant list for executing tasks listed in :code:`self.next` and :code:`aggregated_model_validation`.
+The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the start function on the aggregator to the
+aggregated_model_validation task on the collaborator.
+Once each of the collaborators (defined in the runtime) complete the :code:`aggregated_model_validation` task, they
+pass their current state onto the :code:`train` task, from :code:`train` to :code:`local_model_validation`, and then finally to :code:`join` at the aggregator.
+It is in :code:`join` that an average is taken of the model weights, and the next round can begin.
 
 .. code-block:: python
 
@@ -45,9 +56,9 @@ Let's start with the basics. A flow is intended to define the entirety of federa
         @aggregator
         def start(self):
             print(f'Performing initialization for model')
-            self.collaborators = self.runtime.collaborators
             self.private = 10
             self.current_round = 0
+            print(f'Collaborators participating in federation: {self.collaborators}')
             self.next(self.aggregated_model_validation,foreach='collaborators',exclude=['private'])
 
         @collaborator
@@ -237,7 +248,7 @@ Some important points to remember while creating callback function and private a
     - In above example multiple collaborators have the same callback function or private attributes. Depending on the Federated Learning requirements, user can specify unique callback function or private attributes for each Participant
     - *Private attributes* needs to be set after instantiating the participant.
 
-Now let's see how the flow is passed to the runtime, and the flow gets run:
+To run the flow, simply pass the instance of the flow to the :code:`run()` method of runtime:
 
 .. code-block:: python
    
@@ -249,7 +260,7 @@ And that's it! This will run an instance of the :code:`FederatedFlow` on a singl
 LocalRuntime Backends
 ---------------------
 
-The Runtime defines where code will run, but the Runtime has a :code:`Backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`single_process` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware
+The Runtime defines where code will run, but the Runtime has a :code:`backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`single_process` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware
 
 For users with large servers or multiple GPUs they wish to take advantage of, we also provide a :code:`ray` `<https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated CPU / GPUs for Participants by using the :code:`num_cpus` and :code:`num_gpus` arguments while instantiating the Participant in following manner:
 
@@ -427,7 +438,7 @@ Below is an example of how to set up and instantiate a :code:`FederatedRuntime`:
        tls=False
    )
 
-To distribute the experiment on the Federation, we now provide the flow instance to the federated_runtime and execute it.
+To distribute the experiment on the Federation, we simply pass the instance of flow to :code:`run()` method of :code:`FederatedRuntime`
 
 .. code-block:: python
 
