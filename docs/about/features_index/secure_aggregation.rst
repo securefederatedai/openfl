@@ -11,7 +11,7 @@ OpenFL integrates `SecAgg <https://eprint.iacr.org/2017/281.pdf>`_ into TaskRunn
 TaskRunner API
 -------------------------------------
 
-OpenFL treats SecAgg as a first class citizen and can be enabled for any experiment by simply modifying the plan.
+OpenFL treats SecAgg as a core security feature and can be enabled for any experiment by simply modifying the plan.
 
 The following plan shows secure aggregation being enabled on `keras/mnist <https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras/mnist>`_ workspace by simply modifying the plan.
 
