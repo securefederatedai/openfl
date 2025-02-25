@@ -1,7 +1,7 @@
 ---
 # Task Runner E2E tests for resiliency. Currently only native tests are enabled.
 
-name: Task_Runner_E2E_Resiliency  # Please do not modify the name as it is used in the composite action
+name: Task_Runner_Resiliency_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
   workflow_call:
@@ -76,7 +76,7 @@ jobs:
           fi
 
   resiliency_in_native:
-    name: Resiliency With TLS
+    name: With TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30

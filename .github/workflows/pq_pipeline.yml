@@ -55,7 +55,7 @@ jobs:
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner E2E Resiliency
     needs: task_runner_e2e
-    uses: ./.github/workflows/task_runner_e2e_resiliency.yml
+    uses: ./.github/workflows/task_runner_resiliency_e2e.yml
 
   task_runner_fedeval_e2e:
     if: |

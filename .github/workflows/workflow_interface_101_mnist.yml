@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   wf_local_101_mnist:
+    name: WF Local Without TLS
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     timeout-minutes: 30
