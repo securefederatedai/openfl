@@ -11,7 +11,6 @@ from openfl.utilities import TensorKey
 from openfl.utilities.secagg import (
     calculate_shared_mask,
     generate_agreed_key,
-    pseudo_random_generator,
     reconstruct_secret,
 )
 
@@ -244,19 +243,6 @@ class Setup:
                     ]
                 )
 
-    def _generate_masks(self):
-        """
-        Use the private seeds and agreed keys to calculate the masks to be
-        removed from gradient aggregate.
-        """
-        private_mask_sum = 0.0
-        for seed in self._results["private_seeds"].values():
-            private_mask_sum += pseudo_random_generator(seed)
-
-        shared_mask_sum = calculate_shared_mask(self._results["agreed_keys"])
-
-        return private_mask_sum, shared_mask_sum
-
     def _save_tensors(self):
         """
         Generate and save tensors required for secure aggregation.
@@ -269,21 +255,16 @@ class Setup:
         These tensors are then added to the gradient before to get the
         actual aggregate after removing the masks.
         """
-        private_mask_sum, shared_mask_sum = self._generate_masks()
+        shared_mask_sum = calculate_shared_mask(self._results["agreed_keys"])
         local_tensor_dict = {
-            # TensorKey(
-            #     "private_seeds", "agg", -1, False, ("secagg", )
-            # ): [
-            #     [index, seed]
-            #     for index, seed in self._results["private_seeds"].items()
-            # ],
-            # TensorKey(
-            #     "agreed_keys", "agg", -1, False, ("secagg", )
-            # ): self._results["agreed_keys"],
-            TensorKey("masks_sum", "agg", -1, False, ("secagg",)): [
-                private_mask_sum,
-                shared_mask_sum,
+            TensorKey("indices", "agg", -1, False, ("secagg",)): [
+                [collaborator, index] for collaborator, index in self._results["index"].items()
             ],
+            TensorKey("private_seeds", "agg", -1, False, ("secagg",)): [
+                [index, seed] for index, seed in self._results["private_seeds"].items()
+            ],
+            TensorKey("agreed_keys", "agg", -1, False, ("secagg",)): self._results["agreed_keys"],
+            TensorKey("shared_mask_sum", "agg", -1, False, ("secagg",)): [shared_mask_sum],
         }
         self._tensor_db.cache_tensor(local_tensor_dict)
         logger.info("SecAgg: setup completed, saved required tensors to db.")
