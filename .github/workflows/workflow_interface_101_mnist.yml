@@ -1,8 +1,7 @@
 #---------------------------------------------------------------------------
 # Workflow to run 101 MNIST Notebook
-# Authors - Noopur, Payal Chaurasiya
 #---------------------------------------------------------------------------
-name: Workflow Interface 101 MNIST Notebook
+name: Workflow MNIST Local Runtime E2E
 
 on:
   workflow_call:
@@ -13,6 +12,7 @@ permissions:
 
 jobs:
   wf_local_101_mnist:
+    name: WF Local Without TLS
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     timeout-minutes: 30

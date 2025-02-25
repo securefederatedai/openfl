@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test_federated_runtime_301_watermarking_notebook:
-    name: WF Watermarking Without TLS (torch/mnist, 3.10)
+    name: WF Watermarking Without TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||

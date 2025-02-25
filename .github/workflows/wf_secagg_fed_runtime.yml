@@ -5,15 +5,14 @@ name: Secure Aggregation Runtime E2E
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   test_secure_agg_notebook:
-    name: WF SecAgg Without TLS (torch/mnist, 3.10)
+    name: WF SecAgg Without TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
