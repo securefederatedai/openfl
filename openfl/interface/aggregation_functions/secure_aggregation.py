@@ -93,23 +93,15 @@ class SecureAggregation(AggregationFunction):
         agreed_keys = []
         col_indices = []
         # Get all required values from tensor db.
-        for item in db_iterator:
-            if "tags" in item and item["tags"] == ("secagg",):
-                if item["tensor_name"] == "private_seeds":
-                    private_seeds = item["nparray"]
-                elif item["tensor_name"] == "agreed_keys":
-                    agreed_keys = item["nparray"]
-                elif item["tensor_name"] == "indices":
-                    col_indices = item["nparray"]
-
+        private_seeds, agreed_keys, col_indices = self._get_secagg_items_from_db(db_iterator)
         if not self._shared_masks:
             # Calculate shared mask
             self._shared_masks = calculate_shared_mask(agreed_keys)
 
         if not self._private_masks:
             # Create a dict with collaborator index and their name.
-            # This dict is used to map private masks to the collaborator name as
-            # they are stored with collaborator index in the db.
+            # This dict is used to map private masks to the collaborator name
+            # as they are stored with collaborator index in the db.
             col_idx = {}
             for col in col_indices:
                 col_idx[col[1]] = col[0]
@@ -160,3 +152,35 @@ class SecureAggregation(AggregationFunction):
         del masks
 
         return weighted_mask
+
+    def _get_secagg_items_from_db(self, db_iterator):
+        """
+        Extracts secure aggregation items from a database iterator.
+        It retrieves the private seeds, agreed keys, and column indices from
+        the database items.
+
+        Args:
+            db_iterator (iterable): An iterator that yields database items.
+                Each item is expected to be a dictionary with keys "tags",
+                "tensor_name", and "nparray".
+
+        Returns:
+            tuple: A tuple containing three elements:
+                - private_seeds (numpy.ndarray): The private seeds array.
+                - agreed_keys (numpy.ndarray): The agreed keys array.
+                - col_indices (numpy.ndarray): The column indices array.
+
+        Raises:
+            KeyError: If any of the required keys ("tags", "tensor_name",
+                "nparray") are missing in an item.
+        """
+        for item in db_iterator:
+            if "tags" in item and item["tags"] == ("secagg",):
+                if item["tensor_name"] == "private_seeds":
+                    private_seeds = item["nparray"]
+                elif item["tensor_name"] == "agreed_keys":
+                    agreed_keys = item["nparray"]
+                elif item["tensor_name"] == "indices":
+                    col_indices = item["nparray"]
+
+        return private_seeds, agreed_keys, col_indices
