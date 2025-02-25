@@ -15,7 +15,7 @@ from openfl.utilities.secagg import (
 
 
 class SecureWeightedAverage(WeightedAverage):
-    """FedAvg with secure aggregation."""
+    """Weighted average with secure aggregation."""
 
     def __init__(self):
         super().__init__()
