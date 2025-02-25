@@ -4,4 +4,4 @@
 
 """openfl version information."""
 
-__version__ = "1.8-SNAPSHOT"
+__version__ = "1.8.0.dev0"
