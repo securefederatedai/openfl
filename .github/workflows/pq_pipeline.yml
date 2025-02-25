@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 # Nightly pipeline for OpenFL Product Quality
-# This pipeline is scheduled to run every day at 2:30 PM UTC on weekdays
+# This pipeline is scheduled to run every day at 2:30 PM UTC time.
 #---------------------------------------------------------------------------
 name: OpenFL Product Quality Pipeline
 
