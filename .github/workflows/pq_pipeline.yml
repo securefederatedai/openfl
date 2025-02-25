@@ -53,7 +53,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
-    name: TaskRunner E2E Resiliency
+    name: TaskRunner Resiliency E2E
     needs: task_runner_e2e
     uses: ./.github/workflows/task_runner_resiliency_e2e.yml
 
@@ -73,7 +73,7 @@ jobs:
     needs: task_runner_resiliency_e2e
     uses: ./.github/workflows/task_runner_straggler_e2e.yml
 
-# run basic dockerize test with keras/mnist
+  # run basic dockerized test with keras/mnist
   task_runner_dockerized_e2e:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||

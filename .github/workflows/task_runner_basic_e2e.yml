@@ -167,7 +167,6 @@ jobs:
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
 
-
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
@@ -360,7 +359,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "straggler_check"
+          test_type: "With_TLS"
 
   test_eden_compression:
     name: With TLS (torch/mnist_eden_compression, 3.10)
@@ -396,4 +395,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "eden_compression"
+          test_type: "With_TLS"

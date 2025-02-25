@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/task_runner_basic_e2e.yml
   
   task_runner_e2e_resiliency:
-    name: TaskRunner E2E Resiliency
+    name: TaskRunner Resiliency E2E
     uses: ./.github/workflows/task_runner_resiliency_e2e.yml
 
   tr_docker_gramine_direct:
