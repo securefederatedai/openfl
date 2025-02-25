@@ -71,8 +71,9 @@ def compare_files(file1, file2):
         lines2 = f2.readlines()
 
         # Remove comment lines (lines starting with '#') and trailing whitespace
-        lines1 = [line.rstrip() for line in lines1 if not line.startswith("#")]
-        lines2 = [line.rstrip() for line in lines2 if not line.startswith("#")]
+        # Excluded agg_port as it is randomly generated in plan.yaml
+        lines1 = [line.rstrip() for line in lines1 if not line.startswith("#") and "agg_port" not in line]
+        lines2 = [line.rstrip() for line in lines2 if not line.startswith("#") and "agg_port" not in line]
 
         if lines1 == lines2:
             print(f"{bcolors.OKGREEN}✅ Successfully compared: {file1} and {file2}{bcolors.ENDC}")

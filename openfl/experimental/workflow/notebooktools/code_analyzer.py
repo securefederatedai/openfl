@@ -176,7 +176,7 @@ class CodeAnalyzer:
             return []
         logger.error(f"{cls} is not a class")
 
-    def __get_class_name_and_sourcecode_from_parent_class(
+    def __get_class_meta_source(
         self, parent_class
     ) -> Optional[Tuple[Optional[str], Optional[str]]]:
         """Provided the parent_class name returns derived class source code and
@@ -323,7 +323,7 @@ class CodeAnalyzer:
                 expected_args (List[str]): The expected arguments for the flow class.
                 init_args (Dict[str, Any]): The initialization arguments for the flow class.
         """
-        _, flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(parent_class)
+        _, flow_class_name = self.__get_class_meta_source(parent_class)
         if not flow_class_name:
             raise ValueError("No flow class found that inherits from FLSpec")
 
