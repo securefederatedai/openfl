@@ -7,7 +7,7 @@ name: OpenFL Product Quality Pipeline
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 14 * * 1-5'
+    - cron: '30 14 * * *'
 
 permissions:
   contents: read
