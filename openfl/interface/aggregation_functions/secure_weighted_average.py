@@ -6,7 +6,6 @@
 
 import numpy as np
 
-from openfl.interface.aggregation_functions.core import AggregationFunction
 from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities import LocalTensor
 from openfl.utilities.secagg import (
@@ -15,8 +14,8 @@ from openfl.utilities.secagg import (
 )
 
 
-class SecureAggregation(AggregationFunction):
-    """FedAvg with secure aggregation"""
+class SecureWeightedAverage(WeightedAverage):
+    """FedAvg with secure aggregation."""
 
     def __init__(self):
         super().__init__()
@@ -60,7 +59,7 @@ class SecureAggregation(AggregationFunction):
         # Calaculate the weighted avreage of collaborator masks.
         weighted_mask = self._calculcate_weighted_mask_average(self._private_masks, local_tensors)
         # Get weighted average for shared tensors.
-        tensor_avg = WeightedAverage().call(local_tensors)
+        tensor_avg = super().call(local_tensors)
         # Subtract weighted average of masks from the tensor average.
         return np.subtract(np.subtract(tensor_avg, weighted_mask), self._shared_masks)
 

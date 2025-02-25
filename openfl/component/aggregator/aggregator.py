@@ -13,7 +13,7 @@ from typing import List, Optional
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
-from openfl.interface.aggregation_functions import SecureAggregation, WeightedAverage
+from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
@@ -1105,7 +1105,7 @@ class Aggregator:
             agg_function = (
                 task_agg_function
                 if "metric" not in tags
-                else SecureAggregation()
+                else SecureWeightedAverage()
                 if self._secure_aggregation_enabled
                 else WeightedAverage()
             )
