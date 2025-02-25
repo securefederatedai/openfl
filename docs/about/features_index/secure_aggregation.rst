@@ -94,7 +94,7 @@ The following plan shows secure aggregation being enabled on `keras/mnist <https
             metrics:
             - loss
         
-As can be seen in the above plan, by only enabling ``aggregator.settings.secure_aggregation`` and ``collaborator.settings.secure_aggregation`` in the workspace plan, one can enable SecAgg.
+As can be seen in the above plan, by only enabling ``aggregator.settings.secure_aggregation`` in the workspace plan, one can enable SecAgg.
 
 After the flags have been set in plan.yml and the setup for the experiment is completed, one can verify that SecAgg was enabled by looking at the aggregator logs
 
