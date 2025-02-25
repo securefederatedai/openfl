@@ -1,6 +1,7 @@
 name: Trivy Nightly Scan
 on:
   workflow_dispatch:
+  workflow_call:
   schedule:
     - cron: '0 0 * * *' # This runs the workflow every night at midnight UTC
 
