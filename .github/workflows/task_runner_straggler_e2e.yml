@@ -4,8 +4,7 @@
 name: Task_Runner_Straggler_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 7 * * *" # Run every day at 7 am UTC
+  workflow_call:
   workflow_dispatch:
 
 permissions:

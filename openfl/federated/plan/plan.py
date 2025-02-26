@@ -513,6 +513,10 @@ class Plan:
 
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
+        # Check if secure aggregation is enabled.
+        defaults[SETTINGS]["secure_aggregation"] = (
+            self.config.get("aggregator", {}).get(SETTINGS, {}).get("secure_aggregation", False)
+        )
         if client is not None:
             defaults[SETTINGS]["client"] = client
         else:

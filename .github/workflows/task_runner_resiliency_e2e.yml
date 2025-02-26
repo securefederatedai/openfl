@@ -1,11 +1,9 @@
 ---
 # Task Runner E2E tests for resiliency. Currently only native tests are enabled.
 
-name: Task_Runner_E2E_Resiliency  # Please do not modify the name as it is used in the composite action
+name: Task_Runner_Resiliency_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 5 * * *" # Run every day at 5 am UTC
   workflow_call:
   workflow_dispatch:
     inputs:

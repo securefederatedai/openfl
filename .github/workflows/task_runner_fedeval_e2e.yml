@@ -4,8 +4,7 @@
 name: Task_Runner_FedEval_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 7 * * *" # Run every day at 7 am UTC
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -72,7 +71,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "FedEval_With_TLS"
 
   test_without_tls:
     name: Without TLS
@@ -118,7 +117,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_TLS"
+          test_type: "FedEval_Without_TLS"
 
   test_without_client_auth:
     name: Without Client Auth
@@ -164,4 +163,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_Client_Auth"
+          test_type: "FedEval_Without_Client_Auth"

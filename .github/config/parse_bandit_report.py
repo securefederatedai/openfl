@@ -61,11 +61,11 @@ def generate_summary_and_details(filtered_results):
         line_number = result['line_number']
         test_id = result['test_id']
         issue_text = result['issue_text']
-        
+
         summary[severity]['issue_count'] += 1
         if file_path not in [detail['file'] for detail in details]:
             summary[severity]['file_count'] += 1
-        
+
         details.append({
             'file': file_path,
             'line_numbers': line_number,

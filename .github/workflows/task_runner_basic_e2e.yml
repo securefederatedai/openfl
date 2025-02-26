@@ -4,8 +4,6 @@
 name: Task_Runner_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Run every day at midnight
   workflow_call:
   workflow_dispatch:
     inputs:
@@ -50,6 +48,8 @@ on:
           - test_without_tls
           - test_without_client_auth
           - test_memory_logs
+          - test_straggler_check
+          - test_eden_compression
         required: false
 
 permissions:
@@ -331,7 +331,8 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false)
+      (github.event.pull_request.draft == false) ||
+      (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_straggler_check')
 
     env:
       MODEL_NAME: "torch/mnist_straggler_check"
@@ -367,7 +368,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_eden_compression')
 
     env:
       MODEL_NAME: "torch/mnist_eden_compression"

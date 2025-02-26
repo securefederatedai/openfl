@@ -1,0 +1,83 @@
+#---------------------------------------------------------------------------
+# Nightly pipeline for OpenFL Product Quality
+# This pipeline is scheduled to run every day at 2:30 PM UTC time.
+#---------------------------------------------------------------------------
+name: OpenFL Product Quality Pipeline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 14 * * *'
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
+
+jobs:
+  wf_mnist_local_runtime:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow MNIST Local Runtime
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+
+  wf_watermark_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Watermarking Federated Runtime E2E
+    needs: wf_mnist_local_runtime
+    uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
+
+  wf_secagg_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Secure Aggregation Federated Runtime E2E
+    needs: wf_watermark_e2e
+    uses: ./.github/workflows/wf_secagg_fed_runtime.yml
+
+  task_runner_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner E2E
+    uses: ./.github/workflows/task_runner_basic_e2e.yml
+
+  task_runner_resiliency_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Resiliency E2E
+    needs: task_runner_e2e
+    uses: ./.github/workflows/task_runner_resiliency_e2e.yml
+
+  task_runner_fedeval_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner FedEval E2E
+    needs: task_runner_e2e
+    uses: ./.github/workflows/task_runner_fedeval_e2e.yml
+
+  task_runner_straggler_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Straggler E2E
+    needs: task_runner_resiliency_e2e
+    uses: ./.github/workflows/task_runner_straggler_e2e.yml
+
+  # run basic dockerized test with keras/mnist
+  task_runner_dockerized_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Dockerized E2E
+    needs: task_runner_straggler_e2e
+    uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
