@@ -11,6 +11,7 @@ from threading import Lock
 from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
+from openfl.component import constants
 from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
@@ -76,10 +77,10 @@ class Aggregator:
         assigner,
         use_delta_updates=True,
         straggler_handling_policy: StragglerPolicy = CutoffTimePolicy,
-        rounds_to_train=256,
+        rounds_to_train=constants.ROUNDS_TO_TRAIN,
         single_col_cert_common_name=None,
         compression_pipeline=None,
-        db_store_rounds=1,
+        db_store_rounds=constants.DB_STORE_ROUNDS,
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
@@ -103,13 +104,13 @@ class Aggregator:
             assigner: Assigner object.
             straggler_handling_policy (optional): Straggler handling policy.
             rounds_to_train (int, optional): Number of rounds to train.
-                Defaults to 256.
+                Defaults to constants.ROUNDS_TO_TRAIN.
             single_col_cert_common_name (str, optional): Common name for single
                 collaborator certificate. Defaults to None.
             compression_pipeline (optional): Compression pipeline. Defaults to
                 NoCompressionPipeline.
             db_store_rounds (int, optional): Rounds to store in TensorDB.
-                Defaults to 1.
+                Defaults to constants.DB_STORE_ROUNDS.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
             callbacks: List of callbacks to be used during the experiment.
         """
@@ -123,15 +124,15 @@ class Aggregator:
                 "provide proper Public Key Infrastructure (PKI) security. "
                 "Please use this mode with caution."
             )
-        # FIXME: "" instead of None is for protobuf compatibility.
-        self.single_col_cert_common_name = single_col_cert_common_name or ""
+        # FIXME: using CERT_COMMON_NAME for protobuf compatibility.
+        self.single_col_cert_common_name = single_col_cert_common_name or constants.CERT_COMMON_NAME
 
         self.straggler_handling_policy = straggler_handling_policy()
 
         self.rounds_to_train = rounds_to_train
         self.assigner = assigner
         if self.assigner.is_task_group_evaluation():
-            self.rounds_to_train = 1
+            self.rounds_to_train = constants.EVALUATION_ROUNDS
             logger.info(f"For evaluation tasks setting rounds_to_train = {self.rounds_to_train}")
 
         self._end_of_round_check_done = [False] * rounds_to_train
@@ -146,7 +147,7 @@ class Aggregator:
 
         self.tensor_db = TensorDB()
         if persist_checkpoint:
-            persistent_db_path = persistent_db_path or "tensor.db"
+            persistent_db_path = persistent_db_path or constants.PERSISTENT_DB_PATH
             logger.info(
                 "Persistent checkpoint is enabled, setting persistent db at path %s",
                 persistent_db_path,
@@ -606,7 +607,8 @@ class Aggregator:
 
         tensor_key = TensorKey(tensor_name, self.uuid, round_number, report, tags)
         tensor_name, origin, round_number, report, tags = tensor_key
-
+        # TODO: This is a temporary fix. The tags should be updated in the
+        #  TensorDB.
         if "aggregated" in tags and "delta" in tags and round_number != 0:
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("aggregated",))
         else:

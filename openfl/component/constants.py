@@ -1,0 +1,10 @@
+# Centralized constants for openfl/component modules
+
+ROUNDS_TO_TRAIN = 256
+EVALUATION_ROUNDS = 1
+DB_STORE_ROUNDS = 1
+PERSISTENT_DB_PATH = "tensor.db"
+CERT_COMMON_NAME = ""
+OPT_TREATMENT = "RESET"
+DEVICE_ASSIGNMENT_POLICY = "CPU_ONLY"
+DELTA_UPDATES = False
