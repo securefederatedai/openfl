@@ -20,6 +20,7 @@ class SecureWeightedAverage(WeightedAverage):
     def __init__(self):
         super().__init__()
         self._private_masks, self._shared_masks = None, None
+        self.private_seeds, self.agreed_keys, self.col_indices = None, None, None
 
     def call(self, local_tensors, db_iterator, *_) -> np.ndarray:
         """Aggregate tensors.
@@ -88,33 +89,27 @@ class SecureWeightedAverage(WeightedAverage):
         if self._shared_masks and self._private_masks:
             return
 
-        private_seeds = []
-        agreed_keys = []
-        col_indices = []
         # Get all required values from tensor db.
-        private_seeds, agreed_keys, col_indices = self._get_secagg_items_from_db(db_iterator)
+        self._get_secagg_items_from_db(db_iterator)
         if not self._shared_masks:
             # Calculate shared mask
-            self._shared_masks = calculate_shared_mask(agreed_keys)
+            self._shared_masks = calculate_shared_mask(self.agreed_keys)
 
         if not self._private_masks:
             # Create a dict with collaborator index and their name.
             # This dict is used to map private masks to the collaborator name
             # as they are stored with collaborator index in the db.
             col_idx = {}
-            for col in col_indices:
+            for col in self.col_indices:
                 col_idx[col[1]] = col[0]
-
-            del col_indices
 
             # Generate private masks for each collaborator.
             self._private_masks = {}
-            for seed in private_seeds:
+            for seed in self.private_seeds:
                 # col_name: col_private_mask
                 self._private_masks[col_idx[seed[0]]] = pseudo_random_generator(seed[1])
 
             del col_idx
-            del private_seeds
 
     def _calculcate_weighted_mask_average(
         self, private_masks: dict, local_tensors: list[LocalTensor]
@@ -163,12 +158,6 @@ class SecureWeightedAverage(WeightedAverage):
                 Each item is expected to be a dictionary with keys "tags",
                 "tensor_name", and "nparray".
 
-        Returns:
-            tuple: A tuple containing three elements:
-                - private_seeds (numpy.ndarray): The private seeds array.
-                - agreed_keys (numpy.ndarray): The agreed keys array.
-                - col_indices (numpy.ndarray): The column indices array.
-
         Raises:
             KeyError: If any of the required keys ("tags", "tensor_name",
                 "nparray") are missing in an item.
@@ -176,10 +165,8 @@ class SecureWeightedAverage(WeightedAverage):
         for item in db_iterator:
             if "tags" in item and item["tags"] == ("secagg",):
                 if item["tensor_name"] == "private_seeds":
-                    private_seeds = item["nparray"]
+                    self.private_seeds = item["nparray"]
                 elif item["tensor_name"] == "agreed_keys":
-                    agreed_keys = item["nparray"]
+                    self.agreed_keys = item["nparray"]
                 elif item["tensor_name"] == "indices":
-                    col_indices = item["nparray"]
-
-        return private_seeds, agreed_keys, col_indices
+                    self.col_indices = item["nparray"]

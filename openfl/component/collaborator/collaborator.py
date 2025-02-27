@@ -344,8 +344,11 @@ class Collaborator:
         )
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
+        unmasked_metrics = {}
         if self._secure_aggregation_enabled:
-            self._secure_aggregation_masking(global_output_tensor_dict)
+            unmasked_metrics = self._secure_aggregation_masking(
+                global_output_tensor_dict, task_name
+            )
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -354,6 +357,8 @@ class Collaborator:
         # send the results for this tasks; delta and compression will occur in
         # this function
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
+        # Add unmasked metrics to the metrics that are logged, if any.
+        metrics.update(unmasked_metrics)
         return metrics
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
@@ -649,7 +654,7 @@ class Collaborator:
 
         return decompressed_nparray
 
-    def _secure_aggregation_masking(self, global_output_tensor_dict):
+    def _secure_aggregation_masking(self, global_output_tensor_dict, task_name):
         """
         Apply secure aggregation masking to the global output tensor
         dictionary.
@@ -682,8 +687,17 @@ class Collaborator:
                 TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
 
+        metrics = {}
         for tensor_key in global_output_tensor_dict:
-            _, _, _, _, tags = tensor_key
+            tensor_name, _, _, report, tags = tensor_key
             if "metric" in tags:
+                if report:
+                    # Reportable metric must be a scalar
+                    value = float(global_output_tensor_dict[tensor_key])
+                    metrics.update(
+                        {f"{self.collaborator_name}/{task_name}/{tensor_name}/unmasked": value}
+                    )
                 masked_metric = np.add(self._private_mask, global_output_tensor_dict[tensor_key])
                 global_output_tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
+
+        return metrics
