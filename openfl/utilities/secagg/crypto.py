@@ -163,6 +163,8 @@ def calculate_shared_mask(agreed_keys: list) -> float:
         agreed_key = key[2]
         if source_index > dest_index:
             total_mask += pseudo_random_generator(agreed_key)
+        elif source_index == dest_index:
+            continue
         else:
             total_mask -= pseudo_random_generator(agreed_key)
 

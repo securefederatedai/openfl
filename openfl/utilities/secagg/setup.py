@@ -6,6 +6,7 @@ aggregation setup.
 """
 
 import logging
+import struct
 
 from openfl.utilities import TensorKey
 from openfl.utilities.secagg import (
@@ -214,9 +215,9 @@ class Setup:
         self._results["private_keys"] = {}
 
         for source_id in self._results["seed_shares"]:
-            self._results["private_seeds"][source_id] = reconstruct_secret(
-                self._results["seed_shares"][source_id]
-            )
+            self._results["private_seeds"][source_id] = struct.unpack(
+                "d", reconstruct_secret(self._results["seed_shares"][source_id])
+            )[0]
             self._results["private_keys"][source_id] = reconstruct_secret(
                 self._results["key_shares"][source_id]
             )
