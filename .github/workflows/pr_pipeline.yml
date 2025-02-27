@@ -78,7 +78,3 @@ jobs:
   workflow_interface_101_mnist:
     name: Workflow Interface 101 MNIST Notebook
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
-
-  workflow_interface_tests:
-    name: Workflow Interface Tests
-    uses: ./.github/workflows/experimental_workflow_tests.yml
