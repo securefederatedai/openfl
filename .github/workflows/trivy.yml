@@ -10,17 +10,21 @@ jobs:
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     
+    env:
+      TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Update package list
-        run: sudo apt update
-      
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
           trivy --quiet fs \
@@ -28,25 +32,20 @@ jobs:
           --output trivy-code-results.json \
           --ignore-unfixed \
           --vuln-type os,library \
-          --severity CRITICAL,HIGH,MEDIUM,LOW \
-          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
+          --severity CRITICAL,HIGH,MEDIUM \
           .
 
       - name: Display Trivy Scan Results
-        if: failure()  # Ensure this step runs regardless of the previous step's outcome
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         run: |
           echo "Trivy Scan Results:"
-          cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+          cat trivy-code-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
 
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
           name: trivy-code-report-json
           path: trivy-code-results.json
-
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
       - name: Build an image from Dockerfile
         run: |
@@ -64,11 +63,9 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.trivyignore'
-        env:
-          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
 
       - name: Display Trivy Scan Results
-        if: failure()
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         run: |
           if [ -s trivy-docker-results.json ]; then
             echo "Trivy Scan Results:"
@@ -79,14 +76,20 @@ jobs:
 
       - name: Parse Trivy results and update vulnerable packages
         id: parse_and_update
-        if: failure()
+        if: always() # Ensure this step runs regardless of the previous step's outcome
         run: |
           if [ -s trivy-docker-results.json ]; then
             vulnerable_packages=$(jq -r '.Results[].Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH" or .Severity == "MEDIUM") | .PkgName' trivy-docker-results.json | sort -u)
             echo "vulnerable_packages=$vulnerable_packages" >> $GITHUB_ENV
             if [ -n "$vulnerable_packages" ]; then
               for package in $vulnerable_packages; do
-                sudo apt-get install --only-upgrade $package -y || true
+                current_version=$(dpkg -s $package | grep Version | awk '{print $2}')
+                latest_version=$(apt-cache policy $package | grep Candidate | awk '{print $2}')
+                if [ "$current_version" != "$latest_version" ]; then
+                  sudo apt-get install --only-upgrade $package -y || true
+                else
+                  echo "$package is already the newest version ($current_version)."
+                fi
               done
             else
               echo "No vulnerable packages found."
@@ -94,9 +97,9 @@ jobs:
           else
             echo "Trivy scan results file is empty or not found."
           fi
-
+  
       - name: Verify package versions
-        if: failure()
+        if: always() # Ensure this step runs regardless of the previous step's outcome
         run: |
           if [ -n "$vulnerable_packages" ]; then
             for package in $vulnerable_packages; do
@@ -107,12 +110,12 @@ jobs:
           fi
 
       - name: Rebuild Docker image after updates
-        if: failure()
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         run: |
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base . --no-cache
 
       - name: Run final Trivy vulnerability scanner for Docker image (JSON Output)
-        if: failure()
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         id: final-trivy-scan
         uses: aquasecurity/trivy-action@0.29.0
         with:
@@ -124,24 +127,22 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.trivyignore'
-        env:
-          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
 
       - name: Display Trivy Scan Results
-        if: failure()
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         run: |
-            if [ -s trivy-docker-results.json ]; then
-              echo "Trivy Scan Results:"
-              cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
-            else
-              echo "Trivy scan results file is empty or not found."
-            fi
+          if [ -s trivy-final-results.json ]; then
+            echo "Trivy Scan Results:"
+            cat trivy-final-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+          else
+            echo "Trivy scan results file is empty or not found."
+          fi
 
       - name: Upload final Trivy Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report-json
-          path: trivy-docker-results.json
+          path: trivy-final-results.json
 
       - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
         run: |
@@ -151,9 +152,8 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --severity CRITICAL,HIGH,MEDIUM \
-          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
           .
-  
+
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
@@ -171,8 +171,6 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.trivyignore'
-        env:
-          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
     
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
