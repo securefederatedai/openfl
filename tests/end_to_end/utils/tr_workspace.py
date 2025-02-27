@@ -63,10 +63,9 @@ def common_workspace_creation(request, eval_scope=False):
             "Setting up evaluation scope, update the plan for 1 round and initial "
             "model to previous experiment best model"
         )
-        param_config.num_rounds = 1
         initial_model_path = request.config.best_model_path
 
-    model_owner.modify_plan(param_config, plan_path=plan_path, eval_scope=eval_scope)
+    model_owner.modify_plan(param_config, plan_path=plan_path)
 
     if hasattr(request.config, 'straggler_policy') and request.config.straggler_policy:
         model_owner.modify_straggler_policy(
