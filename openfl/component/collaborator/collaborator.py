@@ -85,7 +85,8 @@ class Collaborator:
         db_store_rounds=1,
         log_memory_usage=False,
         write_logs=False,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[List] = [],
+        secure_aggregation=False,
     ):
         """Initialize the Collaborator object.
 
@@ -148,12 +149,26 @@ class Collaborator:
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
+        self._secure_aggregation_enabled = secure_aggregation
+        if self._secure_aggregation_enabled:
+            self._private_mask = None
+            self._shared_mask = None
+            secure_aggregation_callback = callbacks_module.SecAggBootstrapping()
+            if isinstance(callbacks, callbacks_module.Callback):
+                callbacks = [callbacks, secure_aggregation_callback]
+            elif isinstance(callbacks, list):
+                callbacks.append(secure_aggregation_callback)
+            else:
+                callbacks = [secure_aggregation_callback]
+
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
             origin=self.collaborator_name,
+            client=self.client,
         )
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
@@ -327,6 +342,10 @@ class Collaborator:
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
+        # If secure aggregation is enabled, add masks to the dict to be shared
+        # with the aggregator.
+        if self._secure_aggregation_enabled:
+            self._secure_aggregation_masking(global_output_tensor_dict)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -629,3 +648,42 @@ class Collaborator:
         self.tensor_db.cache_tensor({decompressed_tensor_key: decompressed_nparray})
 
         return decompressed_nparray
+
+    def _secure_aggregation_masking(self, global_output_tensor_dict):
+        """
+        Apply secure aggregation masking to the global output tensor
+        dictionary.
+
+        This method modifies the provided global output tensor dictionary by
+        applying secure aggregation masking if secure aggregation is enabled.
+        It fetches the private and shared masks from the tensor database and
+        applies them to the tensors in the global output tensor dictionary
+        that have the "metric" tag.
+
+        Args:
+            global_output_tensor_dict (dict): A dictionary where keys are
+                tensor keys and values are the corresponding tensors.
+
+        Returns:
+            None: The method modifies the global_output_tensor_dict in place.
+        """
+        import numpy as np
+
+        # Storing the masks as class attributes to reduce the number of
+        # lookups in the database.
+        # Fetch private mask from tensor db if not already fetched.
+        if not self._private_mask:
+            self._private_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
+            )[0]
+        # Fetch shared mask from tensor db if not alreday fetched.
+        if not self._shared_mask:
+            self._shared_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
+            )[0]
+
+        for tensor_key in global_output_tensor_dict:
+            _, _, _, _, tags = tensor_key
+            if "metric" in tags:
+                masked_metric = np.add(self._private_mask, global_output_tensor_dict[tensor_key])
+                global_output_tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
