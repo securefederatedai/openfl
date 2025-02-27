@@ -9,7 +9,7 @@ This file contains utility functions for Secure Aggregation for key operations.
 from Crypto.PublicKey import ECC
 
 
-def generate_key_pair(curve: str = "ed25519") -> tuple[bytes, bytes]:
+def generate_key_pair(curve: str = "ed25519") -> tuple[str, str]:
     """
     Generates a public-private key pair for a specific curve.
 
@@ -18,8 +18,8 @@ def generate_key_pair(curve: str = "ed25519") -> tuple[bytes, bytes]:
             Defaults to 'ed25519'
 
     Returns:
-        bytes: Private key in bytes.
-        bytes: Public key in bytes.
+        str: Private key in string.
+        str: Public key in string.
     """
     # Generate private key.
     private_key = ECC.generate(curve=curve)
