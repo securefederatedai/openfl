@@ -537,6 +537,43 @@ class LocalRuntime(Runtime):
             get_collab_name(collaborator): collaborator for collaborator in collaborators
         }
 
+    def __handle_execution_exception(self, e: Exception):
+        """Handles exceptions encountered during flow execution."""
+        if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
+            msg = (
+                "\nA serialization error was encountered that could not"
+                "\nbe handled by the ray backend."
+                "\nTry rerunning the flow without ray as follows:\n"
+                "\nLocalRuntime(...,backend='single_process')\n"
+                "\n or for more information about the original error,"
+                "\nPlease see the official Ray documentation"
+                "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/"
+                "objects/serialization.html"
+            )
+            raise SerializationError(str(e) + msg)
+        else:
+            raise e
+
+    def get_collaborator_kwargs(self, collaborator_name: str):
+        """Returns kwargs of collaborator.
+
+        Args:
+            collaborator_name: Collaborator name for which kwargs is to be
+                returned
+
+        Returns:
+            kwargs: Collaborator private_attributes_callable function name, and
+             arguments required to call it.
+        """
+        collab = self.__collaborators[collaborator_name]
+        kwargs = {}
+        if hasattr(collab, "private_attributes_callable"):
+            if collab.private_attributes_callable is not None:
+                kwargs.update(collab.kwargs)
+                kwargs["private_attributes_callable"] = collab.private_attributes_callable.__name__
+
+        return kwargs
+
     def _initialize_aggregator(self):
         """Initialize aggregator private attributes."""
         if self.backend == "single_process":
@@ -579,40 +616,46 @@ class LocalRuntime(Runtime):
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
-    def _execute_flow(self, flspec_obj: Type[FLSpec]):
-        """Executes and updates the flow with  the final attributes.
+    def execute_agg_steps(self, ctx: Any, f_name: str, clones: Optional[Any] = None):
+        """
+        Execute aggregator steps until at transition point.
 
         Args:
-            flspec_obj: Reference to the FLSpec (flow) object.
+            ctx (Any): The context in which the function is executed.
+            f_name (str): The name of the function to be executed.
+            clones (Optional[Any], optional): Clones if any. Defaults to None.
         """
-        try:
-            # Execute all Participant (Aggregator & Collaborator) tasks and
-            # retrieve the final attributes
-            # start step is the first task & invoked on aggregator through
-            # runtime.execute_task
-            final_attributes = self._execute_task(
-                flspec_obj,
-                flspec_obj.start,
-            )
-        except Exception as e:
-            if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
-                msg = (
-                    "\nA serialization error was encountered that could not"
-                    "\nbe handled by the ray backend."
-                    "\nTry rerunning the flow without ray as follows:\n"
-                    "\nLocalRuntime(...,backend='single_process')\n"
-                    "\n or for more information about the original error,"
-                    "\nPlease see the official Ray documentation"
-                    "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/\
-                    objects/serialization.html"
-                )
-                raise SerializationError(str(e) + msg)
-            else:
-                raise e
+        f = getattr(ctx, f_name)
+        # Join step
+        if clones is not None:
+            f(clones)
+            checkpoint(ctx, f)
+            return
+        not_at_transition_point = True
+        while not_at_transition_point:
+            f()
+            checkpoint(ctx, f)
+            f, parent_func = ctx.execute_task_args[1:3]
+            if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
+                not_at_transition_point = False
+            f_name = f.__name__
 
-        # Updating the flow state with the final attributes
-        for name, attr in final_attributes:
-            setattr(flspec_obj, name, attr)
+    def execute_collab_steps(self, ctx: Any, f_name: str):
+        """Execute collaborator steps until at transition point.
+
+        Args:
+            ctx (Any): The context in which the function is executed.
+            f_name (str): The name of the function to be executed.
+        """
+        f = getattr(ctx, f_name)
+        not_at_transition_point = True
+        while not_at_transition_point:
+            f()
+            checkpoint(ctx, f)
+            f, parent_func = ctx.execute_task_args[1:3]
+            if ctx._is_at_transition_point(f, parent_func):
+                not_at_transition_point = False
+            f_name = f.__name__
 
     def _execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.
@@ -767,66 +810,27 @@ class LocalRuntime(Runtime):
                 setattr(clone, name, deepcopy(attr))
             clone._foreach_methods = flspec_obj._foreach_methods
 
-    def get_collaborator_kwargs(self, collaborator_name: str):
-        """Returns kwargs of collaborator.
+    def _execute_flow(self, flspec_obj: Type[FLSpec]):
+        """Executes and updates the flow with the final attributes.
 
         Args:
-            collaborator_name: Collaborator name for which kwargs is to be
-                returned
-
-        Returns:
-            kwargs: Collaborator private_attributes_callable function name, and
-             arguments required to call it.
+            flspec_obj: Reference to the FLSpec (flow) object.
         """
-        collab = self.__collaborators[collaborator_name]
-        kwargs = {}
-        if hasattr(collab, "private_attributes_callable"):
-            if collab.private_attributes_callable is not None:
-                kwargs.update(collab.kwargs)
-                kwargs["private_attributes_callable"] = collab.private_attributes_callable.__name__
+        try:
+            # Execute all Participant (Aggregator & Collaborator) tasks and
+            # retrieve the final attributes.
+            # start step is the first task & invoked on aggregator through
+            # self._execute_task
+            final_attributes = self._execute_task(
+                flspec_obj,
+                flspec_obj.start,
+            )
+        except Exception as e:
+            self.__handle_execution_exception(e)
 
-        return kwargs
-
-    def execute_agg_steps(self, ctx: Any, f_name: str, clones: Optional[Any] = None):
-        """
-        Execute aggregator steps until at transition point.
-
-        Args:
-            ctx (Any): The context in which the function is executed.
-            f_name (str): The name of the function to be executed.
-            clones (Optional[Any], optional): Clones if any. Defaults to None.
-        """
-        f = getattr(ctx, f_name)
-        # Join step
-        if clones is not None:
-            f(clones)
-            checkpoint(ctx, f)
-            return
-        not_at_transition_point = True
-        while not_at_transition_point:
-            f()
-            checkpoint(ctx, f)
-            f, parent_func = ctx.execute_task_args[1:3]
-            if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
-                not_at_transition_point = False
-            f_name = f.__name__
-
-    def execute_collab_steps(self, ctx: Any, f_name: str):
-        """Execute collaborator steps until at transition point.
-
-        Args:
-            ctx (Any): The context in which the function is executed.
-            f_name (str): The name of the function to be executed.
-        """
-        f = getattr(ctx, f_name)
-        not_at_transition_point = True
-        while not_at_transition_point:
-            f()
-            checkpoint(ctx, f)
-            f, parent_func = ctx.execute_task_args[1:3]
-            if ctx._is_at_transition_point(f, parent_func):
-                not_at_transition_point = False
-            f_name = f.__name__
+        # Updating the flow state with the final attributes
+        for name, attr in final_attributes:
+            setattr(flspec_obj, name, attr)
 
     def run(self, flspec_obj: Type[FLSpec]):
         """Runs the flow using the LocalRuntime.
@@ -836,10 +840,7 @@ class LocalRuntime(Runtime):
                 information about task sequence, flow attributes.
         """
         self._initialize_private_attributes()
-
-        # Set initial state of the flow
         flspec_obj.initialize_flow_state(self.collaborators, self.backend)
-        # Execute the flow
         self._execute_flow(flspec_obj)
 
     def __repr__(self):
