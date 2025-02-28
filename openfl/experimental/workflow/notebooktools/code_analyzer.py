@@ -97,8 +97,7 @@ class CodeAnalyzer:
         # Comment out flow.run() to prevent the flow from starting execution
         self.__comment_flow_execution()
 
-        # Change the runtime backend from 'ray' to 'single_process'
-        self.__change_runtime()
+        self.__switch_to_single_process_backend()
 
     def __comment_flow_execution(self) -> None:
         """Comment out lines containing '.run()' in the specified Python script"""
@@ -110,7 +109,7 @@ class CodeAnalyzer:
         with open(self.script_path, "w") as f:
             f.writelines(data)
 
-    def __change_runtime(self) -> None:
+    def __switch_to_single_process_backend(self) -> None:
         """Change the LocalRuntime backend from ray to single_process."""
         with open(self.script_path, "r") as f:
             data = f.read()
@@ -123,7 +122,7 @@ class CodeAnalyzer:
         with open(self.script_path, "w") as f:
             f.write(data)
 
-    def __import_exported_script(self) -> None:
+    def __import_generated_script(self) -> None:
         """
         Imports the generated python script using the importlib module
         """
@@ -147,7 +146,7 @@ class CodeAnalyzer:
         """
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
-            self.__import_exported_script()
+            self.__import_generated_script()
 
         # Find class from imported python script module
         for idx, attr in enumerate(self.available_modules_in_exported_script):
@@ -191,7 +190,7 @@ class CodeAnalyzer:
         """
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
-            self.__import_exported_script()
+            self.__import_generated_script()
 
         # Going though all attributes in imported python script
         for attr in self.available_modules_in_exported_script:
@@ -389,7 +388,7 @@ class CodeAnalyzer:
             tuple: A tuple containing the runtime instance and the flow instance name.
         """
         if not hasattr(self, "exported_script_module"):
-            self.__import_exported_script()
+            self.__import_generated_script()
 
         federated_flow_class = getattr(self.exported_script_module, flow_class_name)
         flow_instance_name, runtime = self._find_flow_instance_runtime(federated_flow_class)

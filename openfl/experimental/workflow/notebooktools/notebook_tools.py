@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 
 
 class NotebookTools:
-    """Class to convert LocalRuntime Jupyter notebook based on Workflow API into a
+    """Class to convert Jupyter notebook based on Workflow API into a
     workspace that could be deployed on distributed infrastructure
 
     Attributes:
