@@ -199,4 +199,4 @@ def pytest_sessionfinish(session, exitstatus):
         # Cleanup docker network created for openfl, if any.
         dh.remove_docker_network(["openfl"])
     else:
-        log.warning("Docker is not running or not accessible. Skipping Docker cleanup steps.")
+        log.info("Docker is not running or not accessible. Skipping Docker cleanup steps.")
