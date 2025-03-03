@@ -176,7 +176,7 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
@@ -430,6 +430,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"\tModel name: {request.config.model_name}\n"
         f"\tClient authentication: {request.config.require_client_auth}\n"
         f"\tTLS: {request.config.use_tls}\n"
+        f"\tSecure Aggregation: {request.config.secure_agg}\n"
         f"\tMemory Logs: {request.config.log_memory_usage}\n"
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
