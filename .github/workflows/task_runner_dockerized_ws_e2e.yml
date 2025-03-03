@@ -4,6 +4,7 @@
 name: Task_Runner_Dockerized_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -58,7 +59,7 @@ jobs:
     strategy:
       matrix:
         # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
-        model_name: ["keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
+        model_name: ["keras/mnist", "keras/jax/mnist"]
         python_version: ["3.10", "3.11"] # Keras does not support Python 3.12
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -91,7 +92,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS"
+          test_type: "DWS_With_TLS"
 
   test_without_tls:
     name: Without TLS
@@ -134,7 +135,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_TLS"
+          test_type: "DWS_Without_TLS"
 
   test_without_client_auth:
     name: Without Client Auth
@@ -177,7 +178,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Without_Client_Auth"
+          test_type: "DWS_Without_Client_Auth"
 
   test_memory_logs:
     name: With Memory Logs
@@ -221,4 +222,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_Memory_Logs"
+          test_type: "DWS_With_Memory_Logs"

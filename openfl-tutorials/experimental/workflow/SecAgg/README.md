@@ -3,6 +3,7 @@
 ## **How to run this tutorial (without TLS and locally as a simulation):**
 <br/>
 
+**NOTE**: This is for demonstration purpose only. Use `LocalRuntime` to simulate the federation locally.
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
 
@@ -59,7 +60,7 @@ cd Portland
 cd workspace
 jupyter lab MNIST_SecAgg.ipynb
 ```
-- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
+- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the MNIST_SecAgg.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
 - You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
  

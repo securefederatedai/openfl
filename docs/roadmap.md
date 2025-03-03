@@ -26,6 +26,8 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 ## Upcoming OpenFL releases
 
+The roadmap for the upcoming releases is provided for informational purposes only. It is intended to offer visibility into our current planning and priorities. However, please note that the features and timelines outlined here are not commitments and are subject to change. We are continuously evaluating and adjusting our plans to best meet the needs of our users and the evolving technological landscape.
+
 ### 1.8 (March '2025)
 In this release, we intend to continue streamlining the OpenFL APIs, provide additional security options, and enhance ML/FL framework interoperability:
 - Removing the Python Native API and Interactive API
@@ -39,4 +41,16 @@ In this release, we intend to continue streamlining the OpenFL APIs, provide add
 - (TBA) A leap forward in terms of FL framework interoperability (stay tuned for announcements)
 
 ### 1.9 (TBA)
-Stay tuned for updates!
+In the upcoming 1.9 release, our focus is going to be on significantly accelerating the API consolidation and enhancing OpenFL's privacy and security features. Key initiatives include:
+- Production readiness of Workflow API (FederatedRuntime):
+  * Provide a plan agreement mechanism for all experiment participants
+  * Improved controls of the types of data that gets sent across the network
+  * Support branching in Workflow API (in line with the Metaflow API)
+  * Streamlined support for TLS in distributed deployments
+  * Enhanced straggler handling
+  * ... and finally, removing the experimental tag on the Workflow API feature!
+- Support data loading from S3
+  * This also includes enhanced DataSet and DataSource abstractions
+- Support for Federated Analytics via TaskRunner API
+- Support for remote attestation of OpenFL nodes running in a TEE
+- Design proposal for a SecureFederatedRuntime for Workflow API

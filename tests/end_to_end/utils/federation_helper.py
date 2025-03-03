@@ -192,28 +192,6 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     except Exception as e:
         raise e
 
-    # Copy the cols.yaml file from aggregator to all the collaborators
-    # File cols.yaml is updated after PKI setup
-    try:
-        results = [
-            executor.submit(
-                copy_file_between_participants,
-                local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=constants.COL_PLAN_PATH.format(
-                    local_bind_path, collaborator.name
-                ),
-                file_name="cols.yaml",
-                run_with_sudo=True,
-            )
-            for collaborator in collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to copy cols.yaml file from aggregator to one or more collaborators"
-            )
-    except Exception as e:
-        raise e
-
     return True
 
 
@@ -832,7 +810,7 @@ def start_envoy(envoy_name, workspace_path, res_file):
     return True
 
 
-def create_federated_runtime_participant_res_files(results_dir, envoys, model_name="301_mnist_watermarking"):
+def create_federated_runtime_participant_res_files(results_dir, envoys, model_name):
     """
     Create result log files for the director and envoys.
     Args:
@@ -947,7 +925,7 @@ def verify_federated_runtime_experiment_completion(participant_res_files):
         last_7_lines = list(filter(str.rstrip, lines))[-7:]
         if (
             name == "director"
-            and [1 for content in last_7_lines if "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" in content]
+            and [1 for content in last_7_lines if "was finished successfully" in content]
         ):
             log.debug(f"Process completed for {name}")
             continue
@@ -1036,23 +1014,46 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def remove_stale_processes(num_collaborators):
+def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
     """
     Remove stale processes
     """
-    log.info("Removing stale processes..")
-    # Remove any stale processes
-    try:
-        for i in range(1, num_collaborators + 1):
+    if num_collaborators > 0:
+        log.info("Removing stale processes..")
+        # Remove any stale processes
+        try:
+            for i in range(1, num_collaborators + 1):
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                )
             subprocess.run(
-                f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
             )
-        subprocess.run(
-            "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{print $2}')",
-            shell=True,
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        log.warning(f"Failed to kill processes: {e}")
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if director:
+        try:
+            subprocess.run(
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if envoys:
+        for envoy in envoys:
+            try:
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                log.warning(f"Failed to kill processes: {e}")
+    log.info("Stale processes removed successfully")

@@ -1,10 +1,6 @@
 name: Build and Push Openfl Docker Image
 
 on:
-  push:
-    branches: 
-      - develop
-      - v1.7.x
   workflow_dispatch:
     inputs:
       version:
