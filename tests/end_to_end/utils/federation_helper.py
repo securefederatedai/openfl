@@ -408,7 +408,6 @@ def federation_env_setup_and_validate(request, eval_scope=False):
 
     if eval_scope:
         local_bind_path = f"{local_bind_path}_eval"
-        num_rounds = 1
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
     workspace_path = local_bind_path
