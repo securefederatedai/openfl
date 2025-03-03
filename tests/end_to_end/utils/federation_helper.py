@@ -363,7 +363,7 @@ def _verify_completion_for_participant(
         content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
-        log.info(f"Last line in {participant.name} log: {content}")
+        log.info(f"Last line in {participant.name} log: {lines[-1:]}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
