@@ -5,6 +5,7 @@
 from openfl.utilities.secagg.crypto import (
     calculate_mask,
     calculate_shared_mask,
+    calulcate_masked_input_vectors,
     create_ciphertext,
     decipher_ciphertext,
     pseudo_random_generator,
