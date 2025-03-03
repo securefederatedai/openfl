@@ -29,6 +29,7 @@ def pytest_addoption(parser):
     parser.addoption("--disable_client_auth", action="store_true")
     parser.addoption("--disable_tls", action="store_true")
     parser.addoption("--log_memory_usage", action="store_true")
+    parser.addoption("--ray_backend", action="store_true")
 
 
 def pytest_configure(config):
@@ -46,6 +47,7 @@ def pytest_configure(config):
     config.require_client_auth = not args.disable_client_auth
     config.use_tls = not args.disable_tls
     config.log_memory_usage = args.log_memory_usage
+    config.ray_backend = args.ray_backend
     config.results_dir = config.getini("results_dir")
 
 
