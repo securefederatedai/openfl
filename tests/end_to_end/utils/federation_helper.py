@@ -192,28 +192,6 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     except Exception as e:
         raise e
 
-    # Copy the cols.yaml file from aggregator to all the collaborators
-    # File cols.yaml is updated after PKI setup
-    try:
-        results = [
-            executor.submit(
-                copy_file_between_participants,
-                local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=constants.COL_PLAN_PATH.format(
-                    local_bind_path, collaborator.name
-                ),
-                file_name="cols.yaml",
-                run_with_sudo=True,
-            )
-            for collaborator in collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to copy cols.yaml file from aggregator to one or more collaborators"
-            )
-    except Exception as e:
-        raise e
-
     return True
 
 

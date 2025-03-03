@@ -12,6 +12,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Install dependencies.
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y \
     git \
     curl \

@@ -233,3 +233,13 @@ def build_docker_image(image_name, dockerfile_path):
         )
     except Exception as e:
         raise ex.DockerException(f"Error building docker image: {e}")
+
+
+def is_docker_running():
+    try:
+        subprocess.run(["docker", "info"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+    except FileNotFoundError:
+        return False
