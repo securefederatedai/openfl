@@ -8,10 +8,6 @@ import numpy as np
 
 from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities import LocalTensor
-from openfl.utilities.secagg import (
-    calculate_shared_mask,
-    pseudo_random_generator,
-)
 
 
 class SecureWeightedAverage(WeightedAverage):
@@ -86,6 +82,11 @@ class SecureWeightedAverage(WeightedAverage):
             - The private masks are stored in a dictionary with the
                 collaborator's name as the key.
         """
+        from openfl.utilities.secagg import (
+            calculate_shared_mask,
+            pseudo_random_generator,
+        )
+
         if self._shared_masks and self._private_masks:
             return
 
