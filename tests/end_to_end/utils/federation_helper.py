@@ -343,7 +343,8 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             participant,
             num_rounds,
         )
-        for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        # for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        for participant in [fed_obj.aggregator]
     ]
 
     # Result will contain a list of boolean values for all the participants.

@@ -72,7 +72,10 @@ def common_workspace_creation(request, eval_scope=False):
         model_owner.modify_straggler_policy(
             request.config.straggler_policy, plan_path=plan_path
         )
-
+    
+    if hasattr(request.config, 'secc_agg') and request.config.secc_agg:
+        model_owner.modify_secc_agg(plan_path=plan_path)
+        
     # Initialize the plan
     model_owner.initialize_plan(
         agg_domain_name=agg_domain_name, initial_model_path=initial_model_path
