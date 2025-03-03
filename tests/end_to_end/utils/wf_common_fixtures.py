@@ -63,9 +63,12 @@ def fx_local_federated_workflow(request):
             )
         )
 
-    # Currently, we only have ray as a backend option, thus a one-liner assignment is sufficient.
-    backend = "ray" if hasattr(request.config, "ray_backend") else None
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    if hasattr(request.config, "backend"):
+        backend = request.config.backend
+        print(f"Using backend: {backend}")
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    else:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
     # Return the federation fixture
     return workflow_local_fixture(
@@ -130,9 +133,12 @@ def fx_local_federated_workflow_prvt_attr(request):
         }
         collaborators_list.append(collab)
 
-    # Currently, we only have ray as a backend option, thus a one-liner assignment is sufficient.
-    backend = "ray" if hasattr(request.config, "ray_backend") else None
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    if hasattr(request.config, "backend"):
+        backend = request.config.backend
+        print(f"Using backend: {backend}")
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    else:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
     # Return the federation fixture
     return workflow_local_fixture(

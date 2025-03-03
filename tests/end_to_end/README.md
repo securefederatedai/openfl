@@ -48,7 +48,7 @@ Below parameters are available for modification:
 3. --model_name <str>          - to use a specific model
 4. --disable_tls               - to disable TLS communication (by default it is enabled)
 5. --disable_client_auth       - to disable the client authentication (by default it is enabled)
-6. --ray_backend               - to use Ray as backend
+6. --backend <str>             - to use a backend. For instance - ray.
 
 For example, to run Task runner (bare metal approach) with - torch/mnist model, 3 collaborators, 5 rounds and non-TLS scenario:
 
