@@ -3,8 +3,8 @@
 
 import pytest
 import logging
-import time
-import math
+pass
+pass
 import pandas as pd
 import json
 import os
@@ -32,7 +32,7 @@ def fx_configure_secc_agg(request):
     """
     request.config.secc_agg = True
 
-    
+
 @pytest.mark.task_runner_basic
 def test_federation_via_native_with_sec_agg(request, fx_configure_secc_agg, fx_federation_tr):
     """
@@ -56,7 +56,7 @@ def test_federation_via_native_with_sec_agg(request, fx_configure_secc_agg, fx_f
     for collaborator in fx_federation_tr.collaborators:
         metric_file = os.path.join(fx_federation_tr.workspace_path, collaborator, "logs", f"{collaborator}_metrics.txt")
         assert verify_masked_metrics(metric_file)
-        
+
     # Get the best aggregated score
     best_agg_score = fed_helper.get_best_agg_score(db_file)
     log.info(
@@ -99,7 +99,7 @@ def validate_unmasked_difference(df, columns_to_check):
 
     for column in columns_to_check:
         is_different(column)
-        
+
 
 def verify_masked_metrics(metric_file):
     """

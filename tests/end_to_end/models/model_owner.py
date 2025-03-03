@@ -161,7 +161,7 @@ class ModelOwner():
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
-            
+
     def modify_straggler_policy(self, straggler_cutoff, plan_path):
         """
         Modify the plan to set the straggler cutoff
@@ -182,8 +182,8 @@ class ModelOwner():
         except Exception as e:
             log.error(f"Failed to modify the plan with straggler cutoff settings: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan with straggler cutoff settings: {e}")
-        
-        
+
+
     def modify_secc_agg(self, plan_path):
         """
         Modify the plan to set the secc_agg flag

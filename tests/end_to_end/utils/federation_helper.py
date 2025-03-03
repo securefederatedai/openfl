@@ -176,7 +176,7 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
