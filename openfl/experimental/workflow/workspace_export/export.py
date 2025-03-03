@@ -463,14 +463,16 @@ class WorkspaceExport:
     def _find_runtime_instance(self, federated_flow_class):
         """Find the runtime instance."""
         for t in self.available_modules_in_exported_script:
+            tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
+                flow_name = tempstring
                 if not hasattr(t, "_runtime"):
                     raise AttributeError("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
                     raise AttributeError("LocalRuntime instance does not have collaborators")
-                return runtime
+                return flow_name, runtime
         raise AttributeError("Runtime instance not found")
 
     def _read_or_initialize_yaml(self, data_yaml):
