@@ -100,11 +100,11 @@ def create_tr_workspace(request, eval_scope=False):
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
     model_name = request.config.model_name
     # Certify the workspace in case of TLS
-    # Register the collaborators in case of non-TLS
     if request.config.use_tls:
         model_owner.certify_workspace()
-    else:
-        model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+
+    # Register the collaborators. It will also update plan/cols.yaml file with the collaborator names.
+    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
 
     # Create the objects for aggregator and collaborators
     # Workspace path for aggregator is uniform in case of docker or task_runner
@@ -188,11 +188,11 @@ def create_tr_dws_workspace(request, eval_scope=False):
     image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS
-    # Register the collaborators in case of non-TLS
     if request.config.use_tls:
         model_owner.certify_workspace()
-    else:
-        model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+
+    # Register the collaborators. It will also update plan/cols.yaml file with the collaborator names.
+    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
 
     # Create the objects for aggregator and collaborators
     # Workspace path for aggregator is uniform in case of docker or task_runner
