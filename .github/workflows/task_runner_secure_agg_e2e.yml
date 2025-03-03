@@ -34,6 +34,7 @@ jobs:
       - name: Install Secure Aggregation dependies
         run: |
           python -m pip install pycryptodome
+          
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
