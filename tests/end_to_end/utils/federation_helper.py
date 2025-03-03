@@ -359,13 +359,21 @@ def _verify_completion_for_participant(
     ):
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-        content = list(filter(str.rstrip, lines))[-1:]
+    # Below change is done to incorporate warnings coming in end of runs
+        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {content}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
+        # In case of Exception thru an error
+        if constants.EXCEPTION in content:
+            log.error(
+                f"Process {participant.name} is throwing Exception. Check the logs for more details"
+            )
+            raise Exception(f"Process failed for {participant.name}")
+
         time.sleep(45)
 
     if constants.SUCCESS_MARKER not in content:
