@@ -57,7 +57,7 @@ class FederatedRuntime(Runtime):
             tls (bool): Whether to use TLS for the connection.
         """
         super().__init__()
-        self.__collaborators = collaborators
+        self.collaborators = collaborators
 
         self.tls = tls
         if director:
@@ -193,7 +193,7 @@ class FederatedRuntime(Runtime):
         """
         try:
             response = self._runtime_dir_client.set_new_experiment(
-                archive_path=archive_path, experiment_name=exp_name, col_names=self.__collaborators
+                archive_path=archive_path, experiment_name=exp_name, col_names=self.collaborators
             )
             self.experiment_submitted = response.status
 
