@@ -50,7 +50,6 @@ jobs:
         pip uninstall onnx -y
         cat ./GANDLF/version.py
         echo "Download data and Split CSVs into training and validation"
-        # python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
         pytest --cov=. --cov-report=xml -k "prepare_data_for_ci"
         head -n 1 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
         tail -n +9 testing/data/train_2d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
@@ -80,4 +79,17 @@ jobs:
         # sed -i 's/0,255/0,1/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         # sed -i 's/128,128/32,32,32/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "/home/runner/work/openfl/openfl/config_segmentation.yaml"
-        
+
+    - name: Create Tar (exclude folders - cert/data/__pycache__, files - tensor.db/workspace.tar)
+      id: tar_files
+      if: ${{ always() }}
+      run: |
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" /home/runner/work/openfl
+
+    - name: Upload Artifacts
+      id: upload_artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: gandlf_artifacts
+        path: result.tar
