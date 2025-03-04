@@ -24,9 +24,9 @@ jobs:
     timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
     - name: Install dependencies
@@ -35,4 +35,4 @@ jobs:
         pip install .
     - name: Test Straggler Handling Interface
       run: |
-        python -m tests.github.test_hello_federation --template torch_cnn_mnist_straggler_check --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3
+        python -m tests.github.test_hello_federation --template torch/mnist_straggler_check --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3

@@ -193,25 +193,10 @@ def pytest_sessionfinish(session, exitstatus):
         shutil.rmtree(cache_dir, ignore_errors=False)
         log.debug(f"Cleared .pytest_cache directory at {cache_dir}")
 
-    # Cleanup docker containers related to aggregator and collaborators, if any.
-    dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
-    # Cleanup docker network created for openfl, if any.
-    dh.remove_docker_network(["openfl"])
-
-
-def pytest_configure(config):
-    """
-    Configure the pytest plugin.
-    Args:
-        config: pytest config object
-    """
-    # Declare some global variables
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    config.model_name = args.model_name
-    config.num_collaborators = args.num_collaborators
-    config.num_rounds = args.num_rounds
-    config.require_client_auth = not args.disable_client_auth
-    config.use_tls = not args.disable_tls
-    config.log_memory_usage = args.log_memory_usage
-    config.results_dir = config.getini("results_dir")
+    if dh.is_docker_running():
+        # Cleanup docker containers related to aggregator and collaborators, if any.
+        dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
+        # Cleanup docker network created for openfl, if any.
+        dh.remove_docker_network(["openfl"])
+    else:
+        log.info("Docker is not running or not accessible. Skipping Docker cleanup steps.")

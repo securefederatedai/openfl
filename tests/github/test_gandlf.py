@@ -21,7 +21,7 @@ def exec(command, directory):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--template', default='keras_cnn_mnist')
+    parser.add_argument('--template', default='keras/mnist')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one')
     parser.add_argument('--col2', default='two')
@@ -49,6 +49,7 @@ def main():
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
+    check_call(['pip', 'install', '-r', 'requirements.txt'])
     Path(Path.cwd().resolve() / 'data' / col1).mkdir(exist_ok=True)
     with os.scandir(origin_dir) as iterator:
         for entry in iterator:

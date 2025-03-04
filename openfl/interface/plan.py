@@ -4,14 +4,12 @@
 
 """Plan module."""
 
-import os
 import sys
 from logging import getLogger
 from os import makedirs
 from os.path import isfile
 from pathlib import Path
 from shutil import copyfile, rmtree
-from subprocess import check_call  # nosec
 
 from click import Path as ClickPath
 from click import echo, group, option, pass_context
@@ -32,11 +30,7 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def plan(context):
-    """Manage Federated Learning Plans.
-
-    Args:
-        context (click.core.Context): Click context.
-    """
+    """Manage Federated Learning Plans."""
     context.obj["group"] = "plan"
 
 
@@ -46,25 +40,28 @@ def plan(context):
     "-p",
     "--plan_config",
     required=False,
-    help="Federated learning plan [plan/plan.yaml]",
+    help="Path to an FL plan.",
     default="plan/plan.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-c",
     "--cols_config",
     required=False,
-    help="Authorized collaborator list [plan/cols.yaml]",
+    help="Path to an authorized collaborator list.",
     default="plan/cols.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-d",
     "--data_config",
     required=False,
-    help="The data set/shard configuration file [plan/data.yaml]",
+    help="The dataset shard configuration file.",
     default="plan/data.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-a",
@@ -77,10 +74,15 @@ def plan(context):
     "--input_shape",
     cls=InputSpec,
     required=False,
-    help="The input shape to the model. May be provided as a list:\n\n"
-    "--input_shape [1,28,28]\n\n"
-    "or as a dictionary for multihead models (must be passed in quotes):\n\n"
-    "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ",
+    help="""
+    The input spec of the model.
+
+    May be provided as a list for single input head: ``--input-shape [3,32,32]``,
+
+    or as a dictionary for multihead models (must be passed in quotes):
+
+    ``--input-shape "{'input_0': [1, 240, 240, 4],'input_1': [1, 240, 240, 1]}"``.
+    """,
 )
 @option(
     "-g",
@@ -89,17 +91,10 @@ def plan(context):
     help="GaNDLF Configuration File Path",
 )
 @option(
-    "-r",
-    "--install_reqs",
-    required=False,
-    help="Install packages listed under 'requirements.txt'. True/False [Default: True]",
-    default=True,
-)
-@option(
     "-i",
     "--init_model_path",
     required=False,
-    help="Path to initial model protobuf file",
+    help="Path to initial model protobuf file.",
     type=ClickPath(exists=True),
 )
 def initialize(
@@ -110,24 +105,11 @@ def initialize(
     aggregator_address,
     input_shape,
     gandlf_config,
-    install_reqs,
     init_model_path,
 ):
-    """Initialize Data Science plan.
-
-    Create a protocol buffer file of the initial model weights for the
-    federation.
-
-    Args:
-        context (click.core.Context): Click context.
-        plan_config (str): Federated learning plan.
-        cols_config (str): Authorized collaborator list.
-        data_config (str): The data set/shard configuration file.
-        aggregator_address (str): The FQDN of the federation aggregator.
-        feature_shape (str): The input shape to the model.
-        gandlf_config (str): GaNDLF Configuration File Path.
-        install_reqs (bool): Whether to install packages listed under 'requirements.txt'.
-        init_model_path (str): Optional path to initialization model protobuf file.
+    """
+    Initializes a Data Science plan and generates a protobuf file of the
+    initial model weights for the federation.
     """
 
     for p in [plan_config, cols_config, data_config]:
@@ -140,10 +122,6 @@ def initialize(
     data_config = Path(data_config).absolute()
     if gandlf_config is not None:
         gandlf_config = Path(gandlf_config).absolute()
-
-    if install_reqs:
-        requirements_path = Path("requirements.txt").absolute()
-        _handle_requirements_install(requirements_path)
 
     plan = Plan.parse(
         plan_config_path=plan_config,
@@ -212,37 +190,6 @@ def initialize(
     logger.info(f"{context.obj['plans']}")
 
 
-def _handle_requirements_install(requirements_path):
-    """Handle the installation of requirements and process restart if needed.
-
-    This method checks if a requirements.txt file exists at the provided path.
-    If found, it installs the packages listed in the file using pip. After
-    successful installation, it restarts the current process with the same
-    arguments, but with the --install_reqs flag set to False to avoid
-    re-installing requirements.
-
-    If no requirements.txt file is found, it prints a message indicating that
-    no additional requirements are defined for the workspace and skips the
-    installation.
-
-    Args:
-        requirements_path (str or Path): The path to the requirements.txt file.
-    """
-    if isfile(str(requirements_path)):
-        check_call(
-            [sys.executable, "-m", "pip", "install", "-r", str(requirements_path)],
-            shell=False,
-        )
-        echo(f"Successfully installed packages from {requirements_path}.")
-
-        # Required to restart the process for newly installed packages to be recognized
-        args_restart = [arg for arg in sys.argv if not arg.startswith("--install_reqs")]
-        args_restart.append("--install_reqs=False")
-        os.execv(args_restart[0], args_restart)
-    else:
-        echo("No additional requirements for workspace defined. Skipping...")
-
-
 def _initialize_tensor_dict(plan, input_shape, init_model_path):
     """Initialize and return the tensor dictionary.
 
@@ -294,9 +241,10 @@ def freeze_plan(plan_config):
     "-p",
     "--plan_config",
     required=False,
-    help="Federated learning plan [plan/plan.yaml]",
+    help="Path to an FL plan.",
     default="plan/plan.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 def freeze(plan_config):
     """Finalize the Data Science plan.
@@ -351,16 +299,12 @@ def switch_plan(name):
     "-n",
     "--name",
     required=False,
-    help="Name of the Federated learning plan",
+    help="Name of the FL plan to switch to.",
     default="default",
     type=str,
 )
 def switch_(name):
-    """Switch the current plan to this plan.
-
-    Args:
-        name (str): Name of the Federated learning plan.
-    """
+    """Switch the current plan to this plan."""
     switch_plan(name)
 
 
@@ -369,16 +313,12 @@ def switch_(name):
     "-n",
     "--name",
     required=False,
-    help="Name of the Federated learning plan",
+    help="Name of the FL plan.",
     default="default",
     type=str,
 )
 def save_(name):
-    """Save the current plan to this plan and switch.
-
-    Args:
-        name (str): Name of the Federated learning plan.
-    """
+    """Saves the given plan and switches to it."""
 
     echo(f"Saving plan to {name}")
     # TODO: How do we get the prefix path? What happens if this gets executed
@@ -395,16 +335,13 @@ def save_(name):
     "-n",
     "--name",
     required=False,
-    help="Name of the Federated learning plan",
+    help="Name of the FL plan to remove.",
     default="default",
     type=str,
+    show_default=True,
 )
 def remove_(name):
-    """Remove this plan.
-
-    Args:
-        name (str): Name of the Federated learning plan.
-    """
+    """Removes given plan."""
 
     if name != "default":
         echo(f"Removing plan {name}")
@@ -419,9 +356,8 @@ def remove_(name):
         echo("ERROR: Can't remove default plan")
 
 
-@plan.command(name="print")
-def print_():
-    """Print the current plan."""
-
+@plan.command(name="show")
+def show_():
+    """Shows the active plan."""
     current_plan_name = get_workspace_parameter("current_plan_name")
     echo(f"The current plan is: {current_plan_name}")

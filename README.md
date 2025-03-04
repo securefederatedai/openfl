@@ -2,11 +2,10 @@
   <img src="https://github.com/securefederatedai/artwork/blob/main/PNG/OpenFL%20Logo%20-%20color.png?raw=true" width="70%">
 </div>
 
+<div align="center">
+	
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
 [![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
-[![DockerHub](https://img.shields.io/docker/pulls/intel/openfl.svg)](https://hub.docker.com/r/intel/openfl)
-[![Ubuntu CI status](https://github.com/securefederatedai/openfl/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/ubuntu.yml)
-[![Windows CI status](https://github.com/securefederatedai/openfl/actions/workflows/windows.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/windows.yml)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6599/badge)](https://bestpractices.coreinfrastructure.org/projects/6599)
@@ -16,10 +15,12 @@
 </a>
 
 [**Overview**](#overview)
-| [**Features**](#features)
 | [**Installation**](#installation)
+| [**Features**](#features)
 | [**Changelog**](https://openfl.readthedocs.io/en/latest/releases.html)
 | [**Documentation**](https://openfl.readthedocs.io/en/latest/)
+
+</div>
 
 OpenFL is a Python framework for Federated Learning. It enables organizations to train and validate machine learning models on sensitive data. It increases privacy by allowing collaborative model training or validation across local private datasets without ever sharing that data with a central server. OpenFL is hosted by The Linux Foundation.
 
@@ -70,9 +71,6 @@ OpenFL supports popular aggregation algorithms out-of-the-box, with more algorit
 | FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | yes | yes | yes |
 | FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | yes | yes | - |
 | FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | yes | - | - |
-
-### Enabling Bandit Precommit
-To ensure that precommit is setup in your local for Bandit Scan. For more details, kindly follow this doc: [Setup Guide - Precommit](precommit-doc.md)
 
 ## Contributing
 We welcome contributions! Please refer to the [contributing guidelines](https://openfl.readthedocs.io/en/latest/contributing.html).

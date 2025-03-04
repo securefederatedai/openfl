@@ -19,15 +19,6 @@ Task Runner
 
         features_index/taskrunner
 
-Interactive (Deprecated)
-    Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected.
-    Formerly known as the director-based workflow.
-    For more info see :doc:`features_index/interactive`
-
-    .. toctree::
-        :hidden:
-
-        features_index/interactive
 
 Workflow Interface (Experimental)
     Formulate the experiment as a series of tasks, or a flow. Every flow begins with the start task and concludes with end.
@@ -105,4 +96,17 @@ Quantitatively audit data privacy in statistical and machine learning algorithms
     :hidden:
 
     features_index/privacy_meter
+    
+.. _secure_aggregation:
+
+---------------------
+Secure Aggregation
+---------------------
+
+In Federated Learning (FL), Secure Aggregation (SecAgg) is a technique that allows the participants to collaborate on the central model without revealing their individual contributions (local model updates). For more info see :doc:`features_index/secure_aggregation`
+    
+.. toctree::
+    :hidden:
+
+    features_index/secure_aggregation
     

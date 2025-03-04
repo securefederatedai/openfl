@@ -4,8 +4,7 @@
 name: Task_Runner_FedEval_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Run every day at midnight
+  workflow_call:
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -29,14 +28,17 @@ env:
 
 jobs:
   test_with_tls:
-    name: tr_tls
+    name: With TLS
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Models like XGBoost (xgb_higgs) and torch_cnn_histology require runners with higher memory and CPU to run.
+        # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
         # Thus these models are excluded from the matrix for now.
-        model_name: ["torch_cnn_mnist", "keras_cnn_mnist"]
+        model_name: ["torch/mnist", "keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -47,7 +49,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -69,17 +71,20 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls"
+          test_type: "FedEval_With_TLS"
 
-  test_with_non_tls:
-    name: tr_non_tls
+  test_without_tls:
+    name: Without TLS
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Testing this scenario only for torch_cnn_mnist model and python 3.10
+        # Testing this scenario only for torch/mnist model and python 3.10
         # If required, this can be extended to other models and python versions
-        model_name: ["torch_cnn_mnist"]
+        model_name: ["torch/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -90,7 +95,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -112,17 +117,20 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls"
+          test_type: "FedEval_Without_TLS"
 
-  test_with_no_client_auth:
-    name: tr_no_client_auth
+  test_without_client_auth:
+    name: Without Client Auth
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
-        # Testing this scenario for keras_cnn_mnist model and python 3.10
+        # Testing this scenario for keras/mnist model and python 3.10
         # If required, this can be extended to other models and python versions
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -133,7 +141,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -155,4 +163,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_no_client_auth"
+          test_type: "FedEval_Without_Client_Auth"

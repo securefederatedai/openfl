@@ -13,7 +13,6 @@ from pathlib import Path
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.component.assigner.custom_assigner import Assigner
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
@@ -99,12 +98,12 @@ class Plan:
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def parse(  # noqa: C901
+    def parse(
         plan_config_path: Path,
         cols_config_path: Path = None,
         data_config_path: Path = None,
-        gandlf_config_path=None,
-        resolve=True,
+        gandlf_config_path: Path = None,
+        resolve: bool = True,
     ):
         """
         Parse the Federated Learning plan.
@@ -130,66 +129,18 @@ class Plan:
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
-            # ensure 'settings' appears in each top-level section
-            for section in plan.config.keys():
-                if plan.config[section].get(SETTINGS) is None:
-                    plan.config[section][SETTINGS] = {}
-
-            # walk the top level keys and load 'defaults' in sorted order
-            for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].pop(DEFAULTS, None)
-
-                if defaults is not None:
-                    defaults = WORKSPACE / "workspace" / defaults
-
-                    plan.files.append(defaults)
-
-                    if resolve:
-                        Plan.logger.info(
-                            f"Loading DEFAULTS for section [red]{section}[/] "
-                            f"from file [red]{defaults}[/].",
-                            extra={"markup": True},
-                        )
-
-                    defaults = Plan.load(Path(defaults))
-
-                    if SETTINGS in defaults:
-                        # override defaults with section settings
-                        defaults[SETTINGS].update(plan.config[section][SETTINGS])
-                        plan.config[section][SETTINGS] = defaults[SETTINGS]
-
-                    defaults.update(plan.config[section])
-
-                    plan.config[section] = defaults
+            Plan._ensure_settings_in_sections(plan)
+            Plan._load_defaults(plan, resolve)
 
             if gandlf_config_path is not None:
-                Plan.logger.info(
-                    f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
-                    extra={"markup": True},
-                )
-
-                gandlf_config = Plan.load(Path(gandlf_config_path))
-                # check for some defaults
-                gandlf_config["output_dir"] = gandlf_config.get("output_dir", ".")
-                plan.config["task_runner"]["settings"]["gandlf_config"] = gandlf_config
+                Plan._import_gandlf_config(plan, gandlf_config_path)
 
             plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
-            # TODO: Does this need to be a YAML file? Probably want to use key
-            #  value as the plan hash
-            plan.cols_data_paths = {}
-            if data_config_path is not None:
-                data_config = open(data_config_path, "r")
-                for line in data_config:
-                    line = line.rstrip()
-                    if len(line) > 0:
-                        if line[0] != "#":
-                            collab, data_path = line.split(",", maxsplit=1)
-                            plan.cols_data_paths[collab] = data_path
+            Plan._load_collaborator_data_paths(plan, data_config_path)
 
             if resolve:
                 plan.resolve()
-
                 Plan.logger.info(
                     f"Parsing Federated Learning Plan : [green]SUCCESS[/] : "
                     f"[blue]{plan_config_path}[/].",
@@ -205,6 +156,65 @@ class Plan:
                 extra={"markup": True},
             )
             raise
+
+    @staticmethod
+    def _ensure_settings_in_sections(plan):
+        """Ensure 'settings' appears in each top-level section."""
+        for section in plan.config.keys():
+            if plan.config[section].get(SETTINGS) is None:
+                plan.config[section][SETTINGS] = {}
+
+    @staticmethod
+    def _load_defaults(plan, resolve):
+        """Load 'defaults' in sorted order for each top-level section."""
+        for section in sorted(plan.config.keys()):
+            defaults = plan.config[section].pop(DEFAULTS, None)
+
+            if defaults is not None:
+                defaults = WORKSPACE / "workspace" / defaults
+                plan.files.append(defaults)
+
+                if resolve:
+                    Plan.logger.info(
+                        f"Loading DEFAULTS for section [red]{section}[/] "
+                        f"from file [red]{defaults}[/].",
+                        extra={"markup": True},
+                    )
+
+                defaults = Plan.load(Path(defaults))
+
+                if SETTINGS in defaults:
+                    # override defaults with section settings
+                    defaults[SETTINGS].update(plan.config[section][SETTINGS])
+                    plan.config[section][SETTINGS] = defaults[SETTINGS]
+
+                defaults.update(plan.config[section])
+                plan.config[section] = defaults
+
+    @staticmethod
+    def _import_gandlf_config(plan, gandlf_config_path):
+        """Import GaNDLF Config into the plan."""
+        Plan.logger.info(
+            f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
+            extra={"markup": True},
+        )
+
+        gandlf_config = Plan.load(Path(gandlf_config_path))
+        # check for some defaults
+        gandlf_config["output_dir"] = gandlf_config.get("output_dir", ".")
+        plan.config["task_runner"]["settings"]["gandlf_config"] = gandlf_config
+
+    @staticmethod
+    def _load_collaborator_data_paths(plan, data_config_path):
+        """Load collaborator data paths from the data configuration file."""
+        plan.cols_data_paths = {}
+        if data_config_path is not None:
+            with open(data_config_path, "r") as data_config:
+                for line in data_config:
+                    line = line.rstrip()
+                    if len(line) > 0 and line[0] != "#":
+                        collab, data_path = line.split(",", maxsplit=1)
+                        plan.cols_data_paths[collab] = data_path
 
     @staticmethod
     def build(template, settings, **override):
@@ -307,34 +317,17 @@ class Plan:
 
     def get_assigner(self):
         """Get the plan task assigner."""
-        aggregation_functions_by_task = None
-        assigner_function = None
-        try:
-            aggregation_functions_by_task = self.restore_object("aggregation_function_obj.pkl")
-            assigner_function = self.restore_object("task_assigner_obj.pkl")
-        except Exception as exc:
-            self.logger.error(f"Failed to load aggregation and assigner functions: {exc}")
-            self.logger.info("Using Task Runner API workflow")
-        if assigner_function:
-            self.assigner_ = Assigner(
-                assigner_function=assigner_function,
-                aggregation_functions_by_task=aggregation_functions_by_task,
-                authorized_cols=self.authorized_cols,
-                rounds_to_train=self.rounds_to_train,
-            )
-        else:
-            # Backward compatibility
-            defaults = self.config.get(
-                "assigner",
-                {TEMPLATE: "openfl.component.Assigner", SETTINGS: {}},
-            )
+        defaults = self.config.get(
+            "assigner",
+            {TEMPLATE: "openfl.component.Assigner", SETTINGS: {}},
+        )
 
-            defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
-            defaults[SETTINGS]["rounds_to_train"] = self.rounds_to_train
-            defaults[SETTINGS]["tasks"] = self.get_tasks()
+        defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
+        defaults[SETTINGS]["rounds_to_train"] = self.rounds_to_train
+        defaults[SETTINGS]["tasks"] = self.get_tasks()
 
-            if self.assigner_ is None:
-                self.assigner_ = Plan.build(**defaults)
+        if self.assigner_ is None:
+            self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
 
@@ -422,7 +415,7 @@ class Plan:
 
         return self.straggler_policy_
 
-    # legacy api (TaskRunner subclassing)
+    # TaskRunner API
     def get_data_loader(self, collaborator_name):
         """Get data loader for a specific collaborator.
 
@@ -443,20 +436,6 @@ class Plan:
             self.loader_ = Plan.build(**defaults)
 
         return self.loader_
-
-    # Python interactive api
-    def initialize_data_loader(self, data_loader, shard_descriptor):
-        """Initialize data loader.
-
-        Args:
-            data_loader (DataLoader): Data loader to initialize.
-            shard_descriptor (ShardDescriptor): Descriptor of the data shard.
-
-        Returns:
-            DataLoader: Initialized data loader.
-        """
-        data_loader.shard_descriptor = shard_descriptor
-        return data_loader
 
     # legacy api (TaskRunner subclassing)
     def get_task_runner(self, data_loader):
@@ -483,49 +462,6 @@ class Plan:
 
         return self.runner_
 
-    # Python interactive api
-    def get_core_task_runner(self, data_loader=None, model_provider=None, task_keeper=None):
-        """Get core task runner.
-
-        Args:
-            data_loader (DataLoader, optional): Data loader for the tasks.
-                Defaults to None.
-            model_provider (ModelProvider, optional): Provider for the model.
-                Defaults to None.
-            task_keeper (TaskKeeper, optional): Keeper for the tasks. Defaults
-                to None.
-
-        Returns:
-            CoreTaskRunner: Core task runner for the tasks.
-        """
-        defaults = self.config.get(
-            "task_runner",
-            {
-                TEMPLATE: "openfl.federated.task.task_runner.CoreTaskRunner",
-                SETTINGS: {},
-            },
-        )
-
-        # We are importing a CoreTaskRunner instance!!!
-        if self.runner_ is None:
-            self.runner_ = Plan.build(**defaults)
-
-        self.runner_.set_data_loader(data_loader)
-
-        self.runner_.set_model_provider(model_provider)
-        self.runner_.set_task_provider(task_keeper)
-
-        framework_adapter = Plan.build(
-            self.config["task_runner"]["required_plugin_components"]["framework_adapters"],
-            {},
-        )
-
-        # This step initializes tensorkeys
-        # Which have no sens if task provider is not set up
-        self.runner_.set_framework_adapter(framework_adapter)
-
-        return self.runner_
-
     def get_collaborator(
         self,
         collaborator_name,
@@ -534,7 +470,6 @@ class Plan:
         certificate=None,
         task_runner=None,
         client=None,
-        shard_descriptor=None,
     ):
         """Get collaborator.
 
@@ -554,8 +489,6 @@ class Plan:
                 collaborator. Defaults to None.
             client (Client, optional): Client for the collaborator. Defaults
                 to None.
-            shard_descriptor (ShardDescriptor, optional): Descriptor of the
-                data shard. Defaults to None.
 
         Returns:
             self.collaborator_ (Collaborator): The collaborator instance.
@@ -574,27 +507,16 @@ class Plan:
         if task_runner is not None:
             defaults[SETTINGS]["task_runner"] = task_runner
         else:
-            # Here we support new interactive api as well as old task_runner subclassing interface
-            # If Task Runner class is placed incide openfl `task-runner` subpackage it is
-            # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
-            # a part of the old interface and we follow legacy initialization procedure.
-            if "openfl.federated.task.task_runner" in self.config["task_runner"]["template"]:
-                # Interactive API
-                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
-                defaults[SETTINGS]["task_runner"] = self.get_core_task_runner(
-                    data_loader=data_loader,
-                    model_provider=model_provider,
-                    task_keeper=task_keeper,
-                )
-            else:
-                # TaskRunner subclassing API
-                data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
+            # TaskRunner subclassing API
+            data_loader = self.get_data_loader(collaborator_name)
+            defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
 
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
+        # Check if secure aggregation is enabled.
+        defaults[SETTINGS]["secure_aggregation"] = (
+            self.config.get("aggregator", {}).get(SETTINGS, {}).get("secure_aggregation", False)
+        )
         if client is not None:
             defaults[SETTINGS]["client"] = client
         else:
@@ -702,85 +624,6 @@ class Plan:
             self.server_ = AggregatorGRPCServer(**server_args)
 
         return self.server_
-
-    def interactive_api_get_server(
-        self, *, tensor_dict, root_certificate, certificate, private_key, tls
-    ):
-        """Get gRPC server of the aggregator instance for interactive API.
-
-        Args:
-            tensor_dict (dict): Dictionary of tensors.
-            root_certificate (str): Root certificate for the server.
-            certificate (str): Certificate for the server.
-            private_key (str): Private key for the server.
-            tls (bool): Whether to use Transport Layer Security.
-
-        Returns:
-            AggregatorGRPCServer: gRPC server of the aggregator instance.
-        """
-        server_args = self.config["network"][SETTINGS]
-
-        # patch certificates
-        server_args["root_certificate"] = root_certificate
-        server_args["certificate"] = certificate
-        server_args["private_key"] = private_key
-        server_args["use_tls"] = tls
-
-        server_args["aggregator"] = self.get_aggregator(tensor_dict)
-
-        if self.server_ is None:
-            self.server_ = AggregatorGRPCServer(**server_args)
-
-        return self.server_
-
-    def deserialize_interface_objects(self):
-        """Deserialize objects for TaskRunner.
-
-        Returns:
-            tuple: Tuple containing the deserialized objects.
-        """
-        api_layer = self.config["api_layer"]
-        filenames = [
-            "model_interface_file",
-            "tasks_interface_file",
-            "dataloader_interface_file",
-        ]
-        return (self.restore_object(api_layer["settings"][filename]) for filename in filenames)
-
-    def get_serializer_plugin(self, **kwargs):
-        """Get serializer plugin.
-
-        This plugin is used for serialization of interfaces in new interactive
-        API.
-
-        Args:
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            SerializerPlugin: Serializer plugin.
-        """
-        if self.serializer_ is None:
-            if "api_layer" not in self.config:  # legacy API
-                return None
-            required_plugin_components = self.config["api_layer"]["required_plugin_components"]
-            serializer_plugin = required_plugin_components["serializer_plugin"]
-            self.serializer_ = Plan.build(serializer_plugin, kwargs)
-        return self.serializer_
-
-    def restore_object(self, filename):
-        """Deserialize an object.
-
-        Args:
-            filename (str): Name of the file.
-
-        Returns:
-            object: Deserialized object.
-        """
-        serializer_plugin = self.get_serializer_plugin()
-        if serializer_plugin is None:
-            return None
-        obj = serializer_plugin.restore_object(filename)
-        return obj
 
     def save_model_to_state_file(self, tensor_dict, round_number, output_path):
         """Save model weights to a protobuf state file.

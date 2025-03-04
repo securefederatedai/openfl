@@ -51,15 +51,16 @@ jobs:
         run: |
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}"
 
-  test_with_tls_dockerized_ws:
-    name: tr_tls_dockerized_ws
+  test_with_tls:
+    name: With TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     if: needs.input_selection.outputs.selected_jobs == 'tls' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
+        model_name: ["keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -70,7 +71,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -92,17 +93,17 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls_dockerized_ws"
+          test_type: "DWS_FedEval_With_TLS"
 
-  test_with_non_tls_dockerized_ws:
-    name: tr_non_tls_dockerized_ws
+  test_without_tls:
+    name: Without TLS
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     if: needs.input_selection.outputs.selected_jobs == 'non_tls' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -113,7 +114,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -135,17 +136,17 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls_dockerized_ws"
+          test_type: "DWS_FedEval_Without_TLS"
 
-  test_with_no_client_auth_dockerized_ws:
-    name: tr_no_client_auth_dockerized_ws
+  test_without_client_auth:
+    name: Without Client Auth
     needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     if: needs.input_selection.outputs.selected_jobs == 'no_client_auth' || needs.input_selection.outputs.selected_jobs == 'all'
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -156,7 +157,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -178,4 +179,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_no_client_auth_dockerized_ws"
+          test_type: "DWS_FedEval_Without_Client_Auth"

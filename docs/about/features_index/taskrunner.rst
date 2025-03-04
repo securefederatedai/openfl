@@ -88,7 +88,7 @@ Each YAML top-level section contains the following subsections:
 
 The following is an example of a **plan.yaml**:
 
-.. literalinclude:: ../../../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
+.. literalinclude:: ../../../openfl-workspace/torch/mnist/plan/plan.yaml
   :language: yaml
 
 
@@ -106,10 +106,6 @@ Each task subsection contains the following:
 
 
 .. _running_the_federation_manual:
-
-
-.. _interactive_api (Deprecated):
-
 
 
 Bare Metal Approach
@@ -150,22 +146,31 @@ STEP 1: Create a Workspace
 		$ fx
 
 
-2. 	This example uses the :code:`keras_cnn_mnist` template.
+2. 	This example uses the :code:`keras/mnist` template.
 
-	Set the environment variables to use the :code:`keras_cnn_mnist` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
+	Set the environment variables to use the :code:`keras/mnist` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
 
     .. code-block:: shell
 
-        $ export WORKSPACE_TEMPLATE=keras_cnn_mnist
+        $ export WORKSPACE_TEMPLATE=keras/mnist
         $ export WORKSPACE_PATH=${HOME}/my_federation
 
 3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sample of available templates:
 
- - :code:`keras_cnn_mnist`: a workspace with a simple `Keras <http://keras.io/>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras/mnist`: a workspace with a simple `Keras <http://keras.io/>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  - :code:`tf_2dunet`: a workspace with a simple `TensorFlow <http://tensorflow.org>`__ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
  - :code:`tf_cnn_histology`: a workspace with a simple `TensorFlow <http://tensorflow.org>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras/histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch/mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras/jax/mnist`: a workspace with a simple `Keras <http://keras.io/>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation with jax as backend. You can export the environment variable KERAS_BACKEND to configure your backend. Available backend options are: "jax", "tensorflow", "torch". Example:
+
+     .. code-block:: shell
+
+       $ export KERAS_BACKEND="jax"
+
+.. note::
+
+    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command. Note that Keras is supported only up to Python 3.11. Therefore, please use Python 3.10 or 3.11 for Keras-related workspaces.
 
   See the complete list of available templates.
 
