@@ -33,6 +33,7 @@ jobs:
       run: |
         fx workspace create --prefix example_workspace --template keras/mnist
         cd example_workspace
+        pip install -r requirements.txt
         fx plan initialize -a localhost
         fx workspace dockerize --base-image openfl --save
 

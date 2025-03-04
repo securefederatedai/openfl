@@ -4,14 +4,12 @@
 
 """Plan module."""
 
-import os
 import sys
 from logging import getLogger
 from os import makedirs
 from os.path import isfile
 from pathlib import Path
 from shutil import copyfile, rmtree
-from subprocess import check_call  # nosec
 
 from click import Path as ClickPath
 from click import echo, group, option, pass_context
@@ -93,14 +91,6 @@ def plan(context):
     help="GaNDLF Configuration File Path",
 )
 @option(
-    "-r",
-    "--install_reqs",
-    required=False,
-    help="If set, installs packages listed under 'requirements.txt'.",
-    default=True,
-    show_default=True,
-)
-@option(
     "-i",
     "--init_model_path",
     required=False,
@@ -115,7 +105,6 @@ def initialize(
     aggregator_address,
     input_shape,
     gandlf_config,
-    install_reqs,
     init_model_path,
 ):
     """
@@ -133,10 +122,6 @@ def initialize(
     data_config = Path(data_config).absolute()
     if gandlf_config is not None:
         gandlf_config = Path(gandlf_config).absolute()
-
-    if install_reqs:
-        requirements_path = Path("requirements.txt").absolute()
-        _handle_requirements_install(requirements_path)
 
     plan = Plan.parse(
         plan_config_path=plan_config,
@@ -203,37 +188,6 @@ def initialize(
         context.obj["plans"] = []
     context.obj["plans"].append(f"{plan_config.stem}_{plan_origin.hash[:8]}")
     logger.info(f"{context.obj['plans']}")
-
-
-def _handle_requirements_install(requirements_path):
-    """Handle the installation of requirements and process restart if needed.
-
-    This method checks if a requirements.txt file exists at the provided path.
-    If found, it installs the packages listed in the file using pip. After
-    successful installation, it restarts the current process with the same
-    arguments, but with the --install_reqs flag set to False to avoid
-    re-installing requirements.
-
-    If no requirements.txt file is found, it prints a message indicating that
-    no additional requirements are defined for the workspace and skips the
-    installation.
-
-    Args:
-        requirements_path (str or Path): The path to the requirements.txt file.
-    """
-    if isfile(str(requirements_path)):
-        check_call(
-            [sys.executable, "-m", "pip", "install", "-r", str(requirements_path)],
-            shell=False,
-        )
-        echo(f"Successfully installed packages from {requirements_path}.")
-
-        # Required to restart the process for newly installed packages to be recognized
-        args_restart = [arg for arg in sys.argv if not arg.startswith("--install_reqs")]
-        args_restart.append("--install_reqs=False")
-        os.execv(args_restart[0], args_restart)
-    else:
-        echo("No additional requirements for workspace defined. Skipping...")
 
 
 def _initialize_tensor_dict(plan, input_shape, init_model_path):

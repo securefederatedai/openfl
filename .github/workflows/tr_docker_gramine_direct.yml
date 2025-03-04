@@ -33,6 +33,7 @@ jobs:
       run: |
         fx workspace create --prefix example_workspace --template keras/mnist
         cd example_workspace
+        pip install -r requirements.txt
         fx plan initialize -a localhost
         
         # Disable tensorboard logging as multiprocessing is not supported in Gramine
