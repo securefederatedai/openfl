@@ -145,7 +145,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
-        fh.import_pki_for_collaborators(collaborators, local_bind_path)
+        fh.import_pki_for_collaborators(collaborators)
 
     fh.remove_stale_processes(request.config.num_collaborators)
 

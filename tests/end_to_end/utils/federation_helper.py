@@ -171,12 +171,11 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
     return True
 
 
-def import_pki_for_collaborators(collaborators, local_bind_path):
+def import_pki_for_collaborators(collaborators):
     """
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
@@ -359,13 +358,21 @@ def _verify_completion_for_participant(
     ):
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-        content = list(filter(str.rstrip, lines))[-1:]
+        # Below change is done to incorporate warnings coming in end of runs
+        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
-        log.info(f"Last line in {participant.name} log: {content}")
+        log.info(f"Last line in {participant.name} log: {lines[-1:]}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
+        # If in logs Exception is encountered, throw Exception and stop the process
+        if constants.EXCEPTION in content:
+            log.error(
+                f"Process {participant.name} is throwing Exception. Check the logs for more details"
+            )
+            raise Exception(f"Process failed for {participant.name}")
+
         time.sleep(45)
 
     if constants.SUCCESS_MARKER not in content:
@@ -430,6 +437,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"\tModel name: {request.config.model_name}\n"
         f"\tClient authentication: {request.config.require_client_auth}\n"
         f"\tTLS: {request.config.use_tls}\n"
+        f"\tSecure Aggregation: {request.config.secure_agg}\n"
         f"\tMemory Logs: {request.config.log_memory_usage}\n"
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
