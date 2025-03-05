@@ -4,19 +4,37 @@
 
 """openfl.experimental.workflow.runtime module Runtime class."""
 
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from openfl.experimental.workflow.interface.fl_spec import FLSpec
 from openfl.experimental.workflow.interface.participants import Aggregator, Collaborator
 
 
 class Runtime:
-    def __init__(self):
+    def __init__(self, prohibited_data_types: Optional[List[str]] = None):
         """Initializes the Runtime object.
 
         This serves as a base interface for runtimes that can run FLSpec flows.
+
+        Args:
+            prohibited_data_types (Optional[List[str]]): A list of data types that are not allowed to be sent
+                through the network. Defaults to an empty list if not provided.
         """
-        pass
+        self.prohibited_data_types = prohibited_data_types or []
+
+    @property
+    def prohibited_data_types(self) -> List[str]:
+        """Return the prohibited data types for the runtime."""
+        return self._prohibited_data_types
+
+    @prohibited_data_types.setter
+    def prohibited_data_types(self, value: List[str]):
+        """Set the prohibited data types for the runtime."""
+        if not isinstance(value, list):
+            raise TypeError("prohibited_data_types must be a list of strings.")
+        if not all(isinstance(item, str) for item in value):
+            raise ValueError("All items in prohibited_data_types must be strings.")
+        self._prohibited_data_types = value
 
     @property
     def aggregator(self):

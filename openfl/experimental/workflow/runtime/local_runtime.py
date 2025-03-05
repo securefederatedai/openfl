@@ -302,6 +302,7 @@ class LocalRuntime(Runtime):
         aggregator: Dict = None,
         collaborators: Dict = None,
         backend: str = "single_process",
+        prohibited_data_types: Optional[List[str]] = None,
         **kwargs,
     ) -> None:
         """Initializes the LocalRuntime object to run the flow on a single
@@ -314,6 +315,8 @@ class LocalRuntime(Runtime):
             collaborators (List[Type[Collaborator]], optional): A list of
                 collaborators; each with their own private attributes.
             backend (str, optional): The backend that will execute the tasks.
+            prohibited_data_types (List[str]): A list of data types that are not allowed to be sent
+                through the network.
             Defaults to "single_process".
                 Available options are:
                 - 'single_process': (default) Executes every task within the
@@ -324,7 +327,7 @@ class LocalRuntime(Runtime):
                   The RayGroups run concurrently while participants in the
                   group run serially.
                   The default is 1 RayGroup and can be changed by using the
-                  num_actors=1 kwarg. By using more RayGroups more concurency
+                  num_actors=1 kwarg. By using more RayGroups more concurrency
                   is allowed with the trade off being that each RayGroup has
                   extra memory overhead in the form of extra CUDA CONTEXTS.
 
@@ -346,7 +349,7 @@ class LocalRuntime(Runtime):
             access. If the system has one GPU, collaborator tasks will run
             sequentially.
         """
-        super().__init__()
+        super().__init__(prohibited_data_types=prohibited_data_types)
         if backend not in ["ray", "single_process"]:
             raise ValueError(
                 f"Invalid 'backend' value '{backend}', accepted values are "
@@ -737,7 +740,9 @@ class LocalRuntime(Runtime):
             # Set new LocalRuntime for clone as it is required
             # new runtime object will not contain private attributes of
             # aggregator or other collaborators
-            clone.runtime = LocalRuntime(backend="single_process")
+            clone.runtime = LocalRuntime(
+                backend="single_process", prohibited_data_types=super().prohibited_data_types
+            )
 
             # write the clone to the object store
             # ensure clone is getting latest _metaflow_interface

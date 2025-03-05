@@ -7,6 +7,7 @@
 import inspect
 import itertools
 from types import MethodType
+from typing import List
 
 import numpy as np
 
@@ -96,6 +97,31 @@ def filter_attributes(ctx, f, **kwargs):
         _process_exclusion(ctx, cls_attrs, kwargs["exclude"], f)
 
 
+def validate_data_types(
+    prohibited_data_types: List[str], reserved_words=["collaborators"], **kwargs
+):
+    """Validates that the types of attributes in kwargs are not among the prohibited data types.
+    Raises a TypeError if any prohibited data type is found.
+
+    Args:
+        prohibited_data_types (List[str]): A list of prohibited data type names
+            (e.g., ['int', 'float']).
+        kwargs (dict): Arbitrary keyword arguments representing attribute names and their values.
+
+    Raises:
+        TypeError: If any prohibited data types are found in kwargs.
+        ValueError: If prohibited_data_types is empty.
+    """
+    if not prohibited_data_types:
+        raise ValueError("prohibited_data_types must not be empty.")
+    for attr_name, attr_value in kwargs.items():
+        if type(attr_value).__name__ in prohibited_data_types and attr_value not in reserved_words:
+            raise TypeError(
+                f"The attribute '{attr_name}' = '{attr_value}' has a prohibited value type: "
+                f"{type(attr_value).__name__}"
+            )
+
+
 def _validate_include_exclude(kwargs, cls_attrs):
     """Validates that 'include' and 'exclude' are not both present, and that
     attributes in 'include' or 'exclude' exist in the context.
@@ -152,13 +178,13 @@ def _process_exclusion(ctx, cls_attrs, exclude_list, f):
             delattr(ctx, attr)
 
 
-def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
+def checkpoint(ctx, parent_func, checkpoint_reserved_words=["next", "runtime"]):
     """Optionally saves the current state for the task just executed.
 
     Args:
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
-        chkpnt_reserved_words (list, optional): A list of reserved words to
+        checkpoint_reserved_words (list, optional): A list of reserved words to
             exclude from checkpointing. Defaults to ["next", "runtime"].
 
     Returns:
@@ -173,7 +199,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
     if ctx._checkpoint:
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
-        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=chkpnt_reserved_words)
+        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=checkpoint_reserved_words)
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -188,15 +214,15 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
-    # TODO for each GPU the funtion tries see if all participant usages fit
+    # TODO for each GPU the function tries see if all participant usages fit
     # into a GPU, it it doesn't it removes that participant from the
     # participant list, and adds it to the remaining_gpu_memory dict. So any
     # sum of GPU requirements above 1 triggers this.
-    # But at this point the funtion will raise an error because
+    # But at this point the function will raise an error because
     # remaining_gpu_memory is never cleared.
     # The participant list should remove the participant if it fits in the gpu
-    # and save the partipant if it doesn't and continue to the next GPU to see
-    # if it fits in that one, only if we run out of GPUs should this funtion
+    # and save the participant if it doesn't and continue to the next GPU to see
+    # if it fits in that one, only if we run out of GPUs should this function
     # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
@@ -230,7 +256,7 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
-                # participant doesn't fitm break to next GPU
+                # participant doesn't fit; break to next GPU
                 break
             else:
                 # if participant fits remove from need_assigned

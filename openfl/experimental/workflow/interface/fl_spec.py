@@ -22,6 +22,7 @@ from openfl.experimental.workflow.utilities import (
     filter_attributes,
     generate_artifacts,
     should_transfer,
+    validate_data_types,
 )
 
 
@@ -343,8 +344,14 @@ class FLSpec:
         if aggregator_to_collaborator(f, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
-        # Remove included / excluded attributes from next task
-        filter_attributes(self, f, **kwargs)
+        # Remove prohibited attributes from the next task
+        if kwargs:
+            filter_attributes(self, f, **kwargs)
+            if self._runtime._prohibited_data_types:
+                # try:
+                validate_data_types(self._runtime._prohibited_data_types, **kwargs)
+                # except Exception as exception:
+                #     print(exception)
 
         if str(self._runtime) == "FederatedRuntime":
             if f.collaborator_step and not f.aggregator_step:

@@ -42,6 +42,7 @@ class FederatedRuntime(Runtime):
         collaborators: Optional[List[str]] = None,
         director: Optional[Dict[str, Any]] = None,
         notebook_path: Optional[str] = None,
+        prohibited_data_types: Optional[List[str]] = None,
         tls: bool = False,
     ) -> None:
         """Initializes the FederatedRuntime object.
@@ -51,9 +52,11 @@ class FederatedRuntime(Runtime):
                 Defaults to None.
             director (Optional[Dict[str, Any]]): Director information. Defaults to None
             notebook_path (Optional[str]): Jupyter notebook path
+            prohibited_data_types (List[str]): A list of data types that are not allowed to be sent
+                through the network.
             tls (bool): Whether to use TLS for the connection.
         """
-        super().__init__()
+        super().__init__(prohibited_data_types=prohibited_data_types)
         self.__collaborators = collaborators
 
         self.tls = tls
