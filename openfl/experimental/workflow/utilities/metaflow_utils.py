@@ -71,7 +71,6 @@ class SystemMutex:
         # Using SHA-256 to address security warning
         self.fp = open(os.path.join(tempfile.mkdtemp(), f".lock-{lock_id}.lck"), "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
-
     def __exit__(self, _type, value, tb):
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
         self.fp.close()
