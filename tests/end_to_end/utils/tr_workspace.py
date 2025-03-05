@@ -4,6 +4,7 @@
 import collections
 import concurrent.futures
 import logging
+import os
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.federation_helper as fh
@@ -166,6 +167,33 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     Args:
         request (object): Pytest request
     """
+    curr_work_dir = os.getcwd()
+
+    # Raise exception if openfl does not contain gandlf folder.
+    if not os.path.isdir(os.path.join(curr_work_dir, "gandlf")):
+        raise Exception(
+            "Folder 'gandlf' is not present in the current working directory. "
+            "Please ensure that all the pre-requisites are met before running the test. "
+            "Refer file .github/workflows/gandlf.yaml for the same."
+        )
+
+    # Check if valid.csv and train.csv are present in openfl folder
+    if not os.path.exists(os.path.join(curr_work_dir, "valid.csv")) or not os.path.exists(
+        os.path.join(curr_work_dir, "train.csv")
+    ):
+        raise ex.DataSetupException("Required data files for GanDLF are missing in the openfl folder")
+
+    # Check if file config_segmentation.yaml is present in openfl folder
+    gandlf_seg_file = constants.GANDLF_CONFIG_SEG_FILE.format(curr_work_dir)
+    if not os.path.exists(gandlf_seg_file):
+        raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} not available.")
+
+    with open(gandlf_seg_file, 'r') as file:
+        content = file.read()
+    
+    if not "num_channels" in content:
+        raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} must contain entry for num_channels.")
+
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
@@ -181,28 +209,23 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         container_id=model_owner.container_id,  # None in case of native environment
     )
 
+    # GanDLF data entry must be present in the plan/data.yaml before the plan is initialised.
     fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators)
-
-    # Modify config_segmentation.yaml
-    model_owner.modify_config_segmentation()
 
     # Initialize the plan
     model_owner.initialize_plan(
         agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
     )
-    # Certify the workspace in case of TLS
+    # Certify the workspace, generate the sign request and certify the aggregator
     if request.config.use_tls:
         model_owner.certify_workspace()
-    
-    # Generate the sign request and certify the aggregator in case of TLS
-    if request.config.use_tls:
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
 
     # Export the workspace
     # By default the workspace will be exported to workspace.zip
     model_owner.export_workspace()
-    
+
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 

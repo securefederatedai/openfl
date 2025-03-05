@@ -129,23 +129,6 @@ class ModelOwner():
             raise e
         return True
 
-    def modify_config_segmentation(self):
-        """
-        Modify config segmentation yaml for GaNDLF
-        """
-        curr_work_dir = os.getcwd()
-        log.info(f"Current working directory: {curr_work_dir}")
-        seg_file = constants.GANDLF_CONFIG_SEG_FILE.format(curr_work_dir)
-
-        if not os.path.exists(seg_file):
-            raise ex.GaNDLFConfigSegException(f"File {seg_file} does not exist.")
-
-        try:
-            os.system(f"sed -i 's/# n_channels: 3/num_channels: 3/g' {seg_file}")
-        except Exception as e:
-            log.error(f"Failed to modify config segmentation: {e}")
-            raise ex.GaNDLFConfigSegException(f"Failed to modify config segmentation: {e}")
-
     def modify_plan(self, param_config, plan_path):
         """
         Modify the plan to train the model
@@ -224,8 +207,7 @@ class ModelOwner():
             if initial_model_path:
                 cmd += f" -i {initial_model_path}"
             if model_name == constants.ModelName.GANDLF_SEG_TEST.value:
-                curr_work_dir = os.getcwd()
-                cmd += f" --gandlf_config {constants.GANDLF_CONFIG_SEG_FILE.format(curr_work_dir)}"
+                cmd += f" --gandlf_config {constants.GANDLF_CONFIG_SEG_FILE.format(os.getcwd())}"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,

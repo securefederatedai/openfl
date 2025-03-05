@@ -114,5 +114,5 @@ class TensorDBException(Exception):
 
 
 class GaNDLFConfigSegException(Exception):
-    """Exception for plan modification"""
+    """Exception for GaNDLF config segmentation file"""
     pass

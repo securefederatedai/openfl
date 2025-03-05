@@ -61,7 +61,9 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
 @pytest.mark.task_runner_basic_gandlf
 def test_federation_via_native_gandlf(request, fx_federation_tr_gandlf):
     """
-    Test federation via native task runner with Gandlf.
+    Test federation via native task runner with GaNDLF.
+    IMPORTANT - ensure that all the pre-requisites steps for GanDLF are met before this test is run.
+    Refer file .github/workflows/gandlf.yaml for the same.
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr (Fixture): Pytest fixture for native task runner

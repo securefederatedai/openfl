@@ -53,7 +53,7 @@ jobs:
         # in torch to work with a later version.
         git checkout 0.1.1
 
-    - name: GaNDLF Task Runner Test
+    - name: GaNDLF Test Pre-Requisites
       run: |
         cd gandlf
         pwd
@@ -68,6 +68,7 @@ jobs:
         cp testing/config_segmentation.yaml /home/runner/work/openfl/openfl/config_segmentation.yaml
         echo "DEBUG display the config file"
         cat /home/runner/work/openfl/openfl/config_segmentation.yaml
+        sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
 
     - name: Run Task Runner E2E tests for GanDLF
       id: run_tests

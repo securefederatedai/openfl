@@ -659,14 +659,6 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
     where download is at collaborator level 
     """
     try:
-        curr_work_dir = os.getcwd()
-        # Check if valid.csv and train.csv are present in openfl folder
-        # This step is done at GitHub workflow level itself.
-        if not os.path.exists(os.path.join(curr_work_dir, "valid.csv")) or not os.path.exists(
-            os.path.join(curr_work_dir, "train.csv")
-        ):
-            raise ex.DataSetupException("Required data files are missing in the openfl folder")
-
         # Get list of all CSV files in openfl_path
         csv_files = glob(os.path.join(curr_work_dir, '*.csv'))
         print(f"CSV files available for GaNDLF: {csv_files}")
