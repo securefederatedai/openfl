@@ -69,6 +69,8 @@ jobs:
         echo "DEBUG display the config file"
         cat /home/runner/work/openfl/openfl/config_segmentation.yaml
         sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        echo "After adding num_channels: 3"
+        cat /home/runner/work/openfl/openfl/config_segmentation.yaml
 
     - name: Run Task Runner E2E tests for GanDLF
       id: run_tests

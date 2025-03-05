@@ -192,6 +192,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     with open(gandlf_seg_file, 'r') as file:
         content = file.read()
     
+    log.info(f"\n\n{content}\n\n")
     if not "num_channels" in content:
         raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} must contain entry for num_channels.")
 
