@@ -194,14 +194,14 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     if request.config.use_tls:
         model_owner.certify_workspace()
     
-    # Export the workspace
-    # By default the workspace will be exported to workspace.zip
-    model_owner.export_workspace()
-    
     # Generate the sign request and certify the aggregator in case of TLS
     if request.config.use_tls:
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
+
+    # Export the workspace
+    # By default the workspace will be exported to workspace.zip
+    model_owner.export_workspace()
     
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
