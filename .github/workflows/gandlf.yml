@@ -39,32 +39,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install typer==0.11.1
         pip install torch==2.3.1+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
-        pip install .
         pip install paramiko
+        pip install .
 
-    - name: Create results and gandlf directories
+    - name: Create gandlf and results directories
       run: |
         mkdir -p gandlf $HOME/results
 
-    - name: Install GaNDLF repo
+    - name: Install GaNDLF repository
       uses: actions/checkout@v4
       with:
-        ref: 0.1.1
+        ref: 0.1.1 # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required in torch to work with a later version.
         repository: 'mlcommons/GaNDLF'
         fetch-depth: 2  # needed for detecting changes
         submodules: 'recursive'
         path: 'gandlf'
-
-    # - name: Install GaNDLF
-    #   run: |
-    #     git clone https://github.com/MLCommons/GaNDLF.git ./gandlf
-    #     cd gandlf
-    #     git fetch --tags
-    #     echo "Checkout the latest GaNDLF tag"
-    #     latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
-    #     # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required
-    #     # in torch to work with a later version.
-    #     git checkout 0.1.1
 
     - name: GaNDLF Test Pre-Requisites
       run: |
@@ -80,7 +69,7 @@ jobs:
         head -n 8 testing/data/train_2d_rad_segmentation.csv > $HOME/results/train.csv
         cp testing/config_segmentation.yaml $HOME/results/config_segmentation.yaml
         sed -i 's/# n_channels: 3/num_channels: 3/g' $HOME/results/config_segmentation.yaml
-  
+
     - name: Run GanDLF Segmentation Test
       id: run_tests
       run: |
