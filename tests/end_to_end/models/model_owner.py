@@ -68,6 +68,13 @@ class ModelOwner():
                 raise_exception=True
             )
 
+            return_code, output, error = fh.run_command(
+                "pip install -r requirements.txt",
+                workspace_path=ws_path,
+                error_msg="Failed to install the requirements",
+                container_id=self.container_id,
+            )
+
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
