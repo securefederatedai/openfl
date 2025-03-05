@@ -7,6 +7,7 @@ import logging
 import os
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
