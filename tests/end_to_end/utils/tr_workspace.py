@@ -35,7 +35,7 @@ def common_workspace_creation(request, eval_scope=False):
         domain name, model owner, plan path, and aggregator workspace path.
     """
 
-    model_name, workspace_path, local_bind_path, agg_domain_name = (
+    workspace_path, local_bind_path, agg_domain_name = (
         fh.federation_env_setup_and_validate(request, eval_scope)
     )
 
@@ -44,7 +44,7 @@ def common_workspace_creation(request, eval_scope=False):
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
     model_owner = mo_model.ModelOwner(
-        model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
+        request.config.model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
     )
 
     # Create workspace for given model name
@@ -91,13 +91,12 @@ def create_tr_workspace(request, eval_scope=False):
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
-    
+
     # Initialize the plan
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
     )
 
-    model_name = request.config.model_name
     # Certify the workspace in case of TLS
     if request.config.use_tls:
         model_owner.certify_workspace()
@@ -140,8 +139,8 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == constants.ModelName.XGB_HIGGS.value:
-        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
+    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
@@ -156,7 +155,7 @@ def create_tr_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
-        model_name=model_name,
+        model_name=request.config.model_name,
     )
 
 
@@ -171,7 +170,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
     model_owner.register_collaborators(plan_path, request.config.num_collaborators)
-    model_name = request.config.model_name
+
     # Create the objects for aggregator and collaborators
     # Workspace path for aggregator is uniform in case of docker or task_runner
     # But, for collaborators, it is different
@@ -189,7 +188,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
 
     # Initialize the plan
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
     )
     # Certify the workspace in case of TLS
     if request.config.use_tls:
@@ -231,7 +230,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
-        model_name=model_name,
+        model_name=request.config.model_name,
     )
 
 
@@ -254,10 +253,8 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Initialize the plan
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
     )
-
-    model_name = request.config.model_name
 
     # Create openfl image
     dh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
@@ -302,14 +299,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == constants.ModelName.XGB_HIGGS.value:
-        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
+    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
+        add_data=True if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -337,5 +334,5 @@ def create_tr_dws_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
-        model_name=model_name,
+        model_name=request.config.model_name,
     )

@@ -434,7 +434,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
     )
-    return request.config.model_name, workspace_path, local_bind_path, agg_domain_name
+    return workspace_path, local_bind_path, agg_domain_name
 
 
 def add_local_workspace_permission(local_bind_path):
