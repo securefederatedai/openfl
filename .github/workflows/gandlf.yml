@@ -50,7 +50,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: 0.1.1
-        repository: https://github.com/MLCommons/GaNDLF.git
+        repository: 'mlcommons/GaNDLF'
         fetch-depth: 2  # needed for detecting changes
         submodules: 'recursive'
         path: 'gandlf'
