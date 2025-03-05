@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.grpc_channel_options import channel_options
+from openfl.transport.grpc.common import channel_options, create_header
 from openfl.utilities import check_equal
 
 logger = logging.getLogger(__name__)
@@ -168,6 +168,49 @@ def _resend_data_on_reconnection(func):
     return wrapper
 
 
+def create_insecure_channel(uri):
+    return grpc.insecure_channel(uri, options=channel_options)
+
+
+def create_tls_channel(uri, root_certificate, require_client_auth, certificate, private_key):
+    """
+    Create a TLS-based gRPC channel.
+
+    Args:
+        uri (str): The uniform resource identifier for the secure channel.
+        root_certificate (str): The Certificate Authority filename.
+        require_client_auth (bool): True enables client-side
+            authentication, i.e. mTLS.
+        certificate (str): The client certificate filename from the
+            collaborator (signed by the certificate authority).
+        private_key (str): The private key filename for the client
+            certificate.
+
+    Returns:
+        grpc.Channel: A secure gRPC channel object
+    """
+    with open(root_certificate, "rb") as f:
+        root_certificate_b = f.read()
+
+    if not require_client_auth:
+        logger.warning("Client-side authentication is disabled.")
+        private_key_b = None
+        certificate_b = None
+    else:
+        with open(private_key, "rb") as f:
+            private_key_b = f.read()
+        with open(certificate, "rb") as f:
+            certificate_b = f.read()
+
+    credentials = grpc.ssl_channel_credentials(
+        root_certificates=root_certificate_b,
+        private_key=private_key_b,
+        certificate_chain=certificate_b,
+    )
+
+    return grpc.secure_channel(uri, credentials, options=channel_options)
+
+
 class AggregatorGRPCClient:
     """Client to the aggregator over gRPC-TLS.
 
@@ -244,9 +287,9 @@ class AggregatorGRPCClient:
 
         if not self.use_tls:
             logger.warning("gRPC is running on insecure channel with TLS disabled.")
-            self.channel = self.create_insecure_channel(self.uri)
+            self.channel = create_insecure_channel(self.uri)
         else:
-            self.channel = self.create_tls_channel(
+            self.channel = create_tls_channel(
                 self.uri,
                 self.root_certificate,
                 self.require_client_auth,
@@ -254,83 +297,11 @@ class AggregatorGRPCClient:
                 self.private_key,
             )
 
-        self.header = None
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.single_col_cert_common_name = single_col_cert_common_name
         self.refetch_server_cert_callback = refetch_server_cert_callback
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
-
-    def create_insecure_channel(self, uri):
-        """Set an insecure gRPC channel (i.e. no TLS) if desired.
-
-        Warns user that this is not recommended.
-
-        Args:
-            uri (str): The uniform resource identifier for the insecure channel
-
-        Returns:
-            grpc.Channel: An insecure gRPC channel object
-        """
-        return grpc.insecure_channel(uri, options=channel_options)
-
-    def create_tls_channel(
-        self,
-        uri,
-        root_certificate,
-        require_client_auth,
-        certificate,
-        private_key,
-    ):
-        """
-        Set an secure gRPC channel (i.e. TLS).
-
-        Args:
-            uri (str): The uniform resource identifier for the secure channel.
-            root_certificate (str): The Certificate Authority filename.
-            require_client_auth (bool): True enables client-side
-                authentication.
-            certificate (str): The client certificate filename from the
-                collaborator (signed by the certificate authority).
-            private_key (str): The private key filename for the client
-                certificate.
-
-        Returns:
-            grpc.Channel: A secure gRPC channel object
-        """
-        with open(root_certificate, "rb") as f:
-            root_certificate_b = f.read()
-
-        if not require_client_auth:
-            logger.warning("Client-side authentication is disabled.")
-            private_key_b = None
-            certificate_b = None
-        else:
-            with open(private_key, "rb") as f:
-                private_key_b = f.read()
-            with open(certificate, "rb") as f:
-                certificate_b = f.read()
-
-        credentials = grpc.ssl_channel_credentials(
-            root_certificates=root_certificate_b,
-            private_key=private_key_b,
-            certificate_chain=certificate_b,
-        )
-
-        return grpc.secure_channel(uri, credentials, options=channel_options)
-
-    def _set_header(self, collaborator_name):
-        """Set the header for gRPC messages.
-
-        Args:
-            collaborator_name (str): The name of the collaborator.
-        """
-        self.header = aggregator_pb2.MessageHeader(
-            sender=collaborator_name,
-            receiver=self.aggregator_uuid,
-            federation_uuid=self.federation_uuid,
-            single_col_cert_common_name=self.single_col_cert_common_name or "",
-        )
 
     def validate_response(self, reply, collaborator_name):
         """Validate the aggregator response.
@@ -364,9 +335,9 @@ class AggregatorGRPCClient:
         self.disconnect()
 
         if not self.use_tls:
-            self.channel = self.create_insecure_channel(self.uri)
+            self.channel = create_insecure_channel(self.uri)
         else:
-            self.channel = self.create_tls_channel(
+            self.channel = create_tls_channel(
                 self.uri,
                 self.root_certificate,
                 self.require_client_auth,
@@ -391,8 +362,13 @@ class AggregatorGRPCClient:
                 tasks, the round number, the sleep time, and a boolean
                 indicating whether to quit.
         """
-        self._set_header(collaborator_name)
-        request = aggregator_pb2.GetTasksRequest(header=self.header)
+        header = create_header(
+            sender=collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
+        request = aggregator_pb2.GetTasksRequest(header=header)
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
@@ -428,10 +404,15 @@ class AggregatorGRPCClient:
         Returns:
             aggregator_pb2.TensorProto: The aggregated tensor.
         """
-        self._set_header(collaborator_name)
+        header = create_header(
+            sender=collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
 
         request = aggregator_pb2.GetAggregatedTensorRequest(
-            header=self.header,
+            header=header,
             tensor_name=tensor_name,
             round_number=round_number,
             report=report,
@@ -465,9 +446,14 @@ class AggregatorGRPCClient:
             named_tensors (List[aggregator_pb2.NamedTensorProto]): The list of
                 named tensors.
         """
-        self._set_header(collaborator_name)
+        header = create_header(
+            sender=collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
         request = aggregator_pb2.TaskResults(
-            header=self.header,
+            header=header,
             round_number=round_number,
             task_name=task_name,
             data_size=data_size,

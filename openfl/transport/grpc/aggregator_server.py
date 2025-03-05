@@ -18,7 +18,7 @@ from grpc import (
 )
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.grpc_channel_options import channel_options
+from openfl.transport.grpc.common import channel_options, create_header
 from openfl.utilities import check_equal, check_is_in
 
 logger = logging.getLogger(__name__)
@@ -123,26 +123,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                     f"collaborator_common_name: |{collaborator_common_name}|",
                 )
 
-    def get_header(self, collaborator_name):
-        """Compose and return MessageHeader.
-
-        This method creates a MessageHeader for a message to the specified
-        collaborator.
-
-        Args:
-            collaborator_name (str): The name of the collaborator to send the
-                message to.
-
-        Returns:
-            aggregator_pb2.MessageHeader: The header for the message.
-        """
-        return aggregator_pb2.MessageHeader(
-            sender=self.aggregator.uuid,
-            receiver=collaborator_name,
-            federation_uuid=self.aggregator.federation_uuid,
-            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
-        )
-
     def check_request(self, request):
         """Validate request header matches expected values.
 
@@ -215,8 +195,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         else:
             tasks_proto = []
 
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
         return aggregator_pb2.GetTasksResponse(
-            header=self.get_header(collaborator_name),
+            header=header,
             round_number=round_number,
             tasks=tasks_proto,
             sleep_time=sleep_time,
@@ -256,8 +243,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             require_lossless,
         )
 
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
         return aggregator_pb2.GetAggregatedTensorResponse(
-            header=self.get_header(collaborator_name),
+            header=header,
             round_number=round_number,
             tensor=named_tensor,
         )
@@ -298,9 +292,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
         # turn data stream into local model update
-        return aggregator_pb2.SendLocalTaskResultsResponse(
-            header=self.get_header(collaborator_name)
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
+        return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
     def get_server(self):
         """
