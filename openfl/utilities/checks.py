@@ -4,8 +4,12 @@
 
 """Generic check functions."""
 
+import logging
 
-def check_type(obj, expected_type, logger):
+logger = logging.getLogger(__name__)
+
+
+def check_type(obj, expected_type):
     """Assert `obj` is of `expected_type` type.
 
     Args:
@@ -22,7 +26,7 @@ def check_type(obj, expected_type, logger):
         raise exception
 
 
-def check_equal(x, y, logger):
+def check_equal(x, y):
     """Assert `x` and `y` are equal.
 
     Args:
@@ -39,7 +43,7 @@ def check_equal(x, y, logger):
         raise exception
 
 
-def check_not_equal(x, y, logger, name="None provided"):
+def check_not_equal(x, y, name="None provided"):
     """
     Assert `x` and `y` are not equal.
 
@@ -59,7 +63,7 @@ def check_not_equal(x, y, logger, name="None provided"):
         raise exception
 
 
-def check_is_in(element, _list, logger):
+def check_is_in(element, _list):
     """Assert `element` is in `_list` collection.
 
     Args:
@@ -76,7 +80,7 @@ def check_is_in(element, _list, logger):
         raise exception
 
 
-def check_not_in(element, _list, logger):
+def check_not_in(element, _list):
     """Assert `element` is not in `_list` collection.
 
     Args:

@@ -4,6 +4,7 @@
 
 """AggregatorGRPCClient module."""
 
+import logging
 import time
 from logging import getLogger
 from typing import Optional, Tuple
@@ -14,6 +15,8 @@ from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.grpc_channel_options import channel_options
 from openfl.utilities import check_equal
 
+logger = logging.getLogger(__name__)
+
 
 class ConstantBackoff:
     """Constant Backoff policy.
@@ -23,11 +26,10 @@ class ConstantBackoff:
 
     Attributes:
         reconnect_interval (int): The interval between connection attempts.
-        logger (Logger): The logger to use for reporting connection attempts.
         uri (str): The URI to connect to.
     """
 
-    def __init__(self, reconnect_interval, logger, uri):
+    def __init__(self, reconnect_interval, uri):
         """Initialize Constant Backoff.
 
         Args:
@@ -37,12 +39,11 @@ class ConstantBackoff:
             uri (str): The URI to connect to.
         """
         self.reconnect_interval = reconnect_interval
-        self.logger = logger
         self.uri = uri
 
     def sleep(self):
         """Sleep for specified interval."""
-        self.logger.info("Attempting to connect to aggregator at %s", self.uri)
+        logger.info("Attempting to connect to aggregator at %s", self.uri)
         time.sleep(self.reconnect_interval)
 
 
@@ -153,14 +154,14 @@ def _resend_data_on_reconnection(func):
                 response = func(self, *args, **kwargs)
                 break
             except grpc.RpcError as e:
-                self.logger.info(
+                logger.info(
                     f"Failed to send data request to aggregator {self.uri}, error code {e.code()}"
                 )
                 if self.refetch_server_cert_callback is not None:
-                    self.logger.info("Refetching server certificate")
+                    logger.info("Refetching server certificate")
                     self.root_certificate = self.refetch_server_cert_callback()
                 if not self.enable_atomic_connections:
-                    self.logger.info("Reconnecting to aggregator")
+                    logger.info("Reconnecting to aggregator")
                     self.reconnect()
                 self.sleeping_policy.sleep()
         return response
@@ -240,12 +241,11 @@ class AggregatorGRPCClient:
             getLogger(__name__),
             self.uri,
         )
-        self.logger = getLogger(__name__)
         self.enable_atomic_connections = enable_atomic_connections
         self.resend_data_on_reconnection = resend_data_on_reconnection
 
         if not self.use_tls:
-            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
+            logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -304,7 +304,7 @@ class AggregatorGRPCClient:
             root_certificate_b = f.read()
 
         if not require_client_auth:
-            self.logger.warning("Client-side authentication is disabled.")
+            logger.warning("Client-side authentication is disabled.")
             private_key_b = None
             certificate_b = None
         else:
@@ -342,22 +342,21 @@ class AggregatorGRPCClient:
             collaborator_name (str): The name of the collaborator.
         """
         # check that the message was intended to go to this collaborator
-        check_equal(reply.header.receiver, collaborator_name, self.logger)
-        check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
+        check_equal(reply.header.receiver, collaborator_name)
+        check_equal(reply.header.sender, self.aggregator_uuid)
 
         # check that federation id matches
-        check_equal(reply.header.federation_uuid, self.federation_uuid, self.logger)
+        check_equal(reply.header.federation_uuid, self.federation_uuid)
 
         # check that there is aggrement on the single_col_cert_common_name
         check_equal(
             reply.header.single_col_cert_common_name,
             self.single_col_cert_common_name or "",
-            self.logger,
         )
 
     def disconnect(self):
         """Close the gRPC channel."""
-        self.logger.info("Disconnecting from gRPC server at %s", self.uri)
+        logger.info("Disconnecting from gRPC server at %s", self.uri)
         self.channel.close()
 
     def reconnect(self):
@@ -377,7 +376,7 @@ class AggregatorGRPCClient:
                 self.private_key,
             )
 
-        self.logger.info("Connecting to gRPC at %s", self.uri)
+        logger.info("Connecting to gRPC at %s", self.uri)
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
@@ -479,7 +478,7 @@ class AggregatorGRPCClient:
 
         # convert (potentially) long list of tensors into stream
         stream = []
-        stream += utils.proto_to_datastream(request, self.logger)
+        stream += utils.proto_to_datastream(request)
         response = self.stub.SendLocalTaskResults(iter(stream))
 
         # also do other validation, like on the round_number

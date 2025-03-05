@@ -88,7 +88,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.server = None
         self.server_credentials = None
 
-        self.logger = logging.getLogger(__name__)
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
     def validate_collaborator(self, request, context):
@@ -158,23 +157,21 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             ValueError: If the request is not valid.
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
+        check_is_in(request.header.sender, self.aggregator.authorized_cols)
 
         # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
+        check_equal(request.header.receiver, self.aggregator.uuid)
 
         # check that the message is for my federation
         check_equal(
             request.header.federation_uuid,
             self.aggregator.federation_uuid,
-            self.logger,
         )
 
         # check that we agree on the single cert common name
         check_equal(
             request.header.single_col_cert_common_name,
             self.aggregator.single_col_cert_common_name,
-            self.logger,
         )
 
     def GetTasks(self, request, context):  # NOQA:N802
@@ -320,9 +317,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
         if not self.use_tls:
-            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
+            logger.warning("gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
-            self.logger.info("Insecure port: %s", port)
+            logger.info("Insecure port: %s", port)
 
         else:
             with open(self.private_key, "rb") as f:
@@ -333,7 +330,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 root_certificate_b = f.read()
 
             if not self.require_client_auth:
-                self.logger.warning("Client-side authentication is disabled.")
+                logger.warning("Client-side authentication is disabled.")
             cert_config = ssl_server_certificate_configuration(
                 ((private_key_b, certificate_b),), root_certificates=root_certificate_b
             )
@@ -363,7 +360,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         """
         self.get_server()
 
-        self.logger.info("Starting Aggregator gRPC Server")
+        logger.info("Starting Aggregator gRPC Server")
         self.server.start()
 
         try:

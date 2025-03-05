@@ -23,6 +23,8 @@ TEMPLATE = "template"
 DEFAULTS = "defaults"
 AUTO = "auto"
 
+logger = getLogger(__name__)
+
 
 class Plan:
     """A class used to represent a Federated Learning plan.
@@ -31,7 +33,6 @@ class Plan:
     plans.
 
     Attributes:
-        logger (Logger): Logger instance for the class.
         config (dict): Dictionary containing patched plan definition.
         authorized_cols (list): Authorized collaborator list.
         cols_data_paths (dict): Collaborator data paths dictionary.
@@ -48,8 +49,6 @@ class Plan:
         name_ (str): Name of the instance.
         serializer_ (SerializerPlugin): Serializer plugin.
     """
-
-    logger = getLogger(__name__)
 
     @staticmethod
     def load(yaml_path: Path, default: dict = None):
@@ -655,5 +654,5 @@ class Plan:
             )
             utils.dump_proto(model_proto=model_proto, fpath=output_path)
         except Exception as e:
-            self.logger.error(f"Failed to create or save model proto: {e}")
+            logger.error(f"Failed to create or save model proto: {e}")
             raise
