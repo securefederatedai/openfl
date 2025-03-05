@@ -207,7 +207,8 @@ class ModelOwner():
             if initial_model_path:
                 cmd += f" -i {initial_model_path}"
             if model_name == constants.ModelName.GANDLF_SEG_TEST.value:
-                cmd += f" --gandlf_config {constants.GANDLF_CONFIG_SEG_FILE.format(os.getcwd())}"
+                gandlf_seg_file = os.path.join(os.getcwd(), "config_segmentation.yaml")
+                cmd += f" --gandlf_config {gandlf_seg_file}"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,

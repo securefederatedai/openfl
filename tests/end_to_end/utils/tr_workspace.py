@@ -185,13 +185,13 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         raise ex.DataSetupException("Required data files for GanDLF are missing in the openfl folder")
 
     # Check if file config_segmentation.yaml is present in openfl folder
-    gandlf_seg_file = constants.GANDLF_CONFIG_SEG_FILE.format(curr_work_dir)
+    gandlf_seg_file = os.path.join(curr_work_dir, "config_segmentation.yaml")
     if not os.path.exists(gandlf_seg_file):
         raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} not available.")
 
     with open(gandlf_seg_file, 'r') as file:
         content = file.read()
-    
+
     log.info(f"\n\n{content}\n\n")
     if not "num_channels" in content:
         raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} must contain entry for num_channels.")
