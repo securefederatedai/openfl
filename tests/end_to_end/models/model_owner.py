@@ -325,8 +325,8 @@ class ModelOwner():
 
             doc["collaborators"] = []  # Create empty list
 
-            for i in range(num_collaborators):
-                col_name = "collaborator" + str(i+1)
+            for i in range(1, num_collaborators+1):
+                col_name = "collaborator" + str(i)
                 doc["collaborators"].append(col_name)
                 with open(cols_file, "w", encoding="utf-8") as f:
                     yaml.dump(doc, f)

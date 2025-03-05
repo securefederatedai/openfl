@@ -655,7 +655,6 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
     """
     Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
     """
-    log.info("Inside download_gandlf_data")
     try:
         curr_work_dir = os.getcwd()
         # Check if valid.csv and train.csv are present in openfl folder
@@ -667,17 +666,15 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
 
         # Get list of all CSV files in openfl_path
         csv_files = glob(os.path.join(curr_work_dir, '*.csv'))
-        print(f"CSV files: {csv_files}")
+        print(f"CSV files available for GaNDLF: {csv_files}")
 
         # Get data.yaml file and remove any entry, if present
         data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
         with open(data_file, "w") as df:
             df.write("")
-        
-        log.info(f"Modified {data_file} to remove any entry")
 
         # Copy the data to the respective workspaces based on the index
-        for col_index in range(num_collaborators+1):
+        for col_index in range(1, num_collaborators+1):
             dst_folder = os.path.join(aggregator.workspace_path, "data", str(col_index))
             os.makedirs(dst_folder, exist_ok=True)
             for csv_file in csv_files:
