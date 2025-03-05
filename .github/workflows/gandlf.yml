@@ -66,12 +66,10 @@ jobs:
         tail -n +9 testing/data/train_2d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
         head -n 8 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
         cp testing/config_segmentation.yaml /home/runner/work/openfl/openfl/config_segmentation.yaml
-        echo "DEBUG display the config file"
+        echo "Display the config file before modification"
         cat /home/runner/work/openfl/openfl/config_segmentation.yaml
         sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
-        echo "After adding num_channels: 3"
-        cat /home/runner/work/openfl/openfl/config_segmentation.yaml
-
+  
     - name: Run Task Runner E2E tests for GanDLF
       id: run_tests
       run: |
