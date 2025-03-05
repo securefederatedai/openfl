@@ -1,0 +1,7 @@
+template : openfl.component.RandomGroupedAssigner
+settings :
+  task_groups  :
+    - name       : analysis
+      percentage : 1.0
+      tasks      :
+        - query
