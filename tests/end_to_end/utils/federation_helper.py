@@ -171,12 +171,11 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
     return True
 
 
-def import_pki_for_collaborators(collaborators, local_bind_path):
+def import_pki_for_collaborators(collaborators):
     """
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
@@ -359,7 +358,7 @@ def _verify_completion_for_participant(
     ):
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-    # Below change is done to incorporate warnings coming in end of runs
+        # Below change is done to incorporate warnings coming in end of runs
         content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
@@ -367,7 +366,7 @@ def _verify_completion_for_participant(
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
-        # In case of Exception thru an error
+        # If in logs Exception is encountered, throw Exception and stop the process
         if constants.EXCEPTION in content:
             log.error(
                 f"Process {participant.name} is throwing Exception. Check the logs for more details"
