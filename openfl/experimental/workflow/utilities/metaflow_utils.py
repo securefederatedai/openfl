@@ -67,7 +67,9 @@ class SystemMutex:
     def __enter__(self):
         lock_id = hashlib.new("sha256", self.name.encode("utf8"), usedforsecurity=False).hexdigest()  # nosec
         # Using SHA-256 to address security warning
-        self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
+        lock_file_path = Path(f"/openfl_tmp/.lock-{lock_id}.lck")
+        lock_file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.fp = lock_file_path.open("wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
 
     def __exit__(self, _type, value, tb):
