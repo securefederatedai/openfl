@@ -176,7 +176,6 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
@@ -656,11 +655,11 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
     """
     Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
     For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
-    where download is at collaborator level 
+    where download is at collaborator level
     """
     try:
         # Get list of all CSV files in openfl_path
-        csv_files = glob(os.path.join(curr_work_dir, '*.csv'))
+        csv_files = glob(os.path.join(os.getcwd(), '*.csv'))
         print(f"CSV files available for GaNDLF: {csv_files}")
 
         # Get data.yaml file and remove any entry, if present
