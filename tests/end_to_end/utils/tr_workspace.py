@@ -72,13 +72,7 @@ def common_workspace_creation(request, eval_scope=False):
             request.config.straggler_policy, plan_path=plan_path
         )
 
-    # Initialize the plan
-    model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, initial_model_path=initial_model_path
-    )
-
-    # Return the federation fixture
-    return workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path
+    return workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path
 
 
 def create_tr_workspace(request, eval_scope=False):
@@ -96,7 +90,13 @@ def create_tr_workspace(request, eval_scope=False):
     """
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
-    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+    
+    # Initialize the plan
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+    )
+
     model_name = request.config.model_name
     # Certify the workspace in case of TLS
     if request.config.use_tls:
@@ -140,7 +140,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == "xgb_higgs":
+    if model_name.lower() == constants.ModelName.XGB_HIGGS.value:
         fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
 
     if request.config.use_tls:
@@ -148,6 +148,81 @@ def create_tr_workspace(request, eval_scope=False):
         fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
     fh.remove_stale_processes(request.config.num_collaborators)
+
+    # Return the federation fixture
+    return federation_details(
+        model_owner=model_owner,
+        aggregator=aggregator,
+        collaborators=collaborators,
+        workspace_path=workspace_path,
+        local_bind_path=local_bind_path,
+        model_name=model_name,
+    )
+
+
+def create_tr_workspace_gandlf(request, eval_scope=False):
+    """
+    Create a task runner workspace for Gandlf model.
+
+    Args:
+        request (object): Pytest request
+    """
+    # get details of model owner, collaborators, and aggregator from common
+    # workspace creation function
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+    model_name = request.config.model_name
+    # Create the objects for aggregator and collaborators
+    # Workspace path for aggregator is uniform in case of docker or task_runner
+    # But, for collaborators, it is different
+    aggregator = agg_model.Aggregator(
+        agg_domain_name=agg_domain_name,
+        workspace_path=agg_workspace_path,
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id,  # None in case of native environment
+    )
+
+    fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators)
+
+    # Modify config_segmentation.yaml
+    model_owner.modify_config_segmentation()
+
+    # Initialize the plan
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+    )
+    # Certify the workspace in case of TLS
+    if request.config.use_tls:
+        model_owner.certify_workspace()
+    
+    # Export the workspace
+    # By default the workspace will be exported to workspace.zip
+    model_owner.export_workspace()
+    
+    # Generate the sign request and certify the aggregator in case of TLS
+    if request.config.use_tls:
+        aggregator.generate_sign_request()
+        model_owner.certify_aggregator(agg_domain_name)
+    
+    collaborators = []
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    futures = [
+        executor.submit(
+            fh.setup_collaborator,
+            index,
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path
+        )
+        for index in range(1, request.config.num_collaborators+1)
+    ]
+    collaborators = [f.result() for f in futures]
+
+    fh.copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path)
+
+    if request.config.use_tls:
+        fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+        fh.import_pki_for_collaborators(collaborators, local_bind_path)
 
     # Return the federation fixture
     return federation_details(
@@ -175,7 +250,13 @@ def create_tr_dws_workspace(request, eval_scope=False):
     """
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
-    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+
+    # Initialize the plan
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, model_name=model_name, initial_model_path=initial_model_path
+    )
+
     model_name = request.config.model_name
 
     # Create openfl image
@@ -221,14 +302,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == "xgb_higgs":
+    if model_name.lower() == constants.ModelName.XGB_HIGGS.value:
         fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if model_name.lower() == "xgb_higgs" else False
+        add_data=True if model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS

@@ -18,11 +18,11 @@ class ModelName(Enum):
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
     XGB_HIGGS = "xgb_higgs"
+    GANDLF_SEG_TEST = "gandlf_seg_test"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
-DEFAULT_MODEL_NAME = "torch/mnist"
 SUCCESS_MARKER = "✔️ OK"
 
 # Docker specific constants
@@ -54,3 +54,5 @@ COL_START_CMD = "fx collaborator start -n {}"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
+
+GANDLF_CONFIG_SEG_FILE = "{}/gandlf/testing/config_segmentation.yaml"
