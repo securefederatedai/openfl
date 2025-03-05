@@ -245,7 +245,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
-        fh.import_pki_for_collaborators(collaborators, local_bind_path)
+        fh.import_pki_for_collaborators(collaborators)
 
     # Return the federation fixture
     return federation_details(
