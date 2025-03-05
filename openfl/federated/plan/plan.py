@@ -88,11 +88,11 @@ class Plan:
             plan.config = config
             frozen_yaml_path = Path(f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
             if frozen_yaml_path.exists():
-                Plan.logger.info("%s is already frozen", yaml_path.name)
+                logger.info("%s is already frozen", yaml_path.name)
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info("%s frozen successfully", yaml_path.name)
+            logger.info("%s frozen successfully", yaml_path.name)
         else:
             yaml_path.write_text(dump(config))
 
@@ -140,17 +140,17 @@ class Plan:
 
             if resolve:
                 plan.resolve()
-                Plan.logger.info(
+                logger.info(
                     f"Parsing Federated Learning Plan : [green]SUCCESS[/] : "
                     f"[blue]{plan_config_path}[/].",
                     extra={"markup": True},
                 )
-                Plan.logger.info(dump(plan.config))
+                logger.info(dump(plan.config))
 
             return plan
 
         except Exception:
-            Plan.logger.exception(
+            logger.exception(
                 f"Parsing Federated Learning Plan : [red]FAILURE[/] : [blue]{plan_config_path}[/].",
                 extra={"markup": True},
             )
@@ -174,7 +174,7 @@ class Plan:
                 plan.files.append(defaults)
 
                 if resolve:
-                    Plan.logger.info(
+                    logger.info(
                         f"Loading DEFAULTS for section [red]{section}[/] "
                         f"from file [red]{defaults}[/].",
                         extra={"markup": True},
@@ -193,7 +193,7 @@ class Plan:
     @staticmethod
     def _import_gandlf_config(plan, gandlf_config_path):
         """Import GaNDLF Config into the plan."""
-        Plan.logger.info(
+        logger.info(
             f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
             extra={"markup": True},
         )
@@ -231,9 +231,9 @@ class Plan:
         class_name = splitext(template)[1].strip(".")
         module_path = splitext(template)[0]
 
-        Plan.logger.info("Building `%s` Module.", template)
-        Plan.logger.debug("Settings %s", settings)
-        Plan.logger.debug("Override %s", override)
+        logger.info("Building `%s` Module.", template)
+        logger.debug("Settings %s", settings)
+        logger.debug("Override %s", override)
 
         settings.update(**override)
 
@@ -255,7 +255,7 @@ class Plan:
         """
         class_name = splitext(template)[1].strip(".")
         module_path = splitext(template)[0]
-        Plan.logger.info(
+        logger.info(
             f"Importing [red]🡆[/] Object [red]{class_name}[/] from [red]{module_path}[/] Module.",
             extra={"markup": True},
         )
@@ -292,7 +292,7 @@ class Plan:
     def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode("utf-8"))
-        Plan.logger.info(
+        logger.info(
             f"FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]",
             extra={"markup": True},
         )
