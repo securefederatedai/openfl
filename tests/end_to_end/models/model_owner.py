@@ -68,6 +68,13 @@ class ModelOwner():
                 raise_exception=True
             )
 
+            return_code, output, error = fh.run_command(
+                "pip install -r requirements.txt",
+                workspace_path=ws_path,
+                error_msg="Failed to install the requirements",
+                container_id=self.container_id,
+            )
+
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
@@ -152,8 +159,8 @@ class ModelOwner():
             data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
             data["network"]["settings"]["use_tls"] = param_config.use_tls
-
-
+            if param_config.secure_agg:
+                data["aggregator"]["settings"]["secure_aggregation"] = True
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)
             log.info(f"Modified the plan with provided parameters.")

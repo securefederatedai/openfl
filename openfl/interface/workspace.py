@@ -12,8 +12,6 @@ import sys
 import tempfile
 from hashlib import sha256
 from pathlib import Path
-from subprocess import check_call  # nosec
-from sys import executable
 from typing import Union
 
 from click import Choice, echo, group, option, pass_context
@@ -23,7 +21,7 @@ from cryptography.hazmat.primitives import serialization
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
 from openfl.federated.plan import Plan
 from openfl.interface import plan
-from openfl.interface.cli_helper import CERT_DIR, OPENFL_USERDIR, SITEPACKS, WORKSPACE, print_tree
+from openfl.interface.cli_helper import CERT_DIR, SITEPACKS, WORKSPACE, print_tree
 
 
 @group()
@@ -129,39 +127,10 @@ def create(prefix, template):
         prefix: The prefix for the directories to be created.
         template: The template to use for creating the workspace.
     """
-
-    if not OPENFL_USERDIR.exists():
-        OPENFL_USERDIR.mkdir()
-
     prefix = Path(prefix).absolute()
 
     create_dirs(prefix)
     create_temp(prefix, template)
-
-    requirements_filename = "requirements.txt"
-
-    if os.path.isfile(f"{str(prefix)}/{requirements_filename}"):
-        check_call(
-            [
-                executable,
-                "-m",
-                "pip",
-                "install",
-                "-r",
-                f"{prefix}/requirements.txt",
-            ],
-            shell=False,
-        )
-        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
-    else:
-        echo("No additional requirements for workspace defined. Skipping...")
-    prefix_hash = _get_dir_hash(str(prefix.absolute()))
-    with open(
-        OPENFL_USERDIR / f"requirements.{prefix_hash}.txt",
-        "w",
-        encoding="utf-8",
-    ) as f:
-        check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
 
     apply_template_plan(prefix, template)
 
