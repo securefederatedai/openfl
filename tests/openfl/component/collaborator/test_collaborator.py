@@ -88,36 +88,8 @@ def test_do_task(collaborator_mock, tensor_key):
     task.name = 'task_name'
     task.task_type = 'validate'
 
-    collaborator_mock.task_runner.TASK_REGISTRY = mock.MagicMock()
-    collaborator_mock.task_runner.TASK_REGISTRY.__getitem__.return_value = mock.Mock(
-        return_value=result)
     collaborator_mock.task_runner.get_required_tensorkeys_for_function = mock.Mock(
         return_value=[tensor_key])
-    collaborator_mock.send_task_results = mock.Mock()
-    collaborator_mock.do_task(task, round_number)
-
-    collaborator_mock.send_task_results.assert_called_with(result[0], round_number, task.name)
-
-
-def test_do_task_no_registry(collaborator_mock, tensor_key):
-    """Test that do_task works correctly when no TASK_REGISTRY in task_runner."""
-    round_number = 0
-    nparray = numpy.array([0, 1, 2, 3, 4])
-    tensor_key = tensor_key._replace(origin='GLOBAL')
-    result = {tensor_key: nparray}, {tensor_key: nparray}
-
-    task = mock.MagicMock()
-    task.function_name = 'func_name'
-    task.name = 'task_name'
-    task.task_type = 'validate'
-    task.__getitem__ = mock.Mock(side_effect=[task.function_name, {}])
-
-    del collaborator_mock.task_runner.TASK_REGISTRY
-    collaborator_mock.task_config = mock.MagicMock()
-    collaborator_mock.task_config.__getitem__ = mock.MagicMock(return_value=task)
-    collaborator_mock.task_runner.get_required_tensorkeys_for_function = mock.Mock(
-        return_value=[tensor_key])
-    collaborator_mock.task_runner.func_name = mock.Mock(return_value=result)
     collaborator_mock.send_task_results = mock.Mock()
     collaborator_mock.do_task(task, round_number)
 
@@ -197,7 +169,7 @@ def test_nparray_to_named_tensor(collaborator_mock, tensor_key, named_tensor):
 def test_nparray_to_named_tensor_trained(collaborator_mock, tensor_key_trained, named_tensor):
     """Test that nparray_to_named_tensor works correctly for trained tensor."""
     named_tensor.tags.append('compressed')
-    collaborator_mock.delta_updates = True
+    collaborator_mock.use_delta_updates = True
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
     collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
         return_value=nparray)
