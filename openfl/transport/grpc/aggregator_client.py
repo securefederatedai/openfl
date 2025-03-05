@@ -6,7 +6,6 @@
 
 import logging
 import time
-from logging import getLogger
 from typing import Optional, Tuple
 
 import grpc
@@ -237,9 +236,8 @@ class AggregatorGRPCClient:
         self.certificate = certificate
         self.private_key = private_key
         self.sleeping_policy = ConstantBackoff(
-            int(kwargs.get("client_reconnect_interval", 1)),
-            getLogger(__name__),
-            self.uri,
+            reconnect_interval=kwargs.get("client_reconnect_interval", 1),
+            uri=self.uri,
         )
         self.enable_atomic_connections = enable_atomic_connections
         self.resend_data_on_reconnection = resend_data_on_reconnection
