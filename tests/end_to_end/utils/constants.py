@@ -54,3 +54,4 @@ COL_START_CMD = "fx collaborator start -n {}"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
+EXCEPTION = "Exception"
