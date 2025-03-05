@@ -8,7 +8,6 @@ import os
 import json
 import re
 import subprocess   # nosec B404
-import papermill as pm
 from pathlib import Path
 import shutil
 from glob import glob
@@ -956,6 +955,7 @@ def run_notebook(notebook_path, output_notebook_path):
     Returns:
         bool: True if successful, else False
     """
+    import papermill as pm
     try:
         log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
         output = pm.execute_notebook(
