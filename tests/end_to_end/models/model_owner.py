@@ -156,9 +156,11 @@ class ModelOwner():
             data["aggregator"]["settings"]["write_logs"] = True
             data["collaborator"]["settings"]["write_logs"] = True
 
-            # Model GaNDLF does not have collaborator_count key.
+            # GaNDLF dataloader neither has collaborator_count nor kwargs to support additional params
+            # Thus skipping below assignment for such scenarios.
             if "collaborator_count" in data["data_loader"]["settings"]:
                 data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
             data["network"]["settings"]["use_tls"] = param_config.use_tls
             if param_config.secure_agg:
@@ -169,7 +171,6 @@ class ModelOwner():
         except Exception as e:
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
-
 
     def modify_straggler_policy(self, straggler_cutoff, plan_path):
         """
@@ -192,23 +193,17 @@ class ModelOwner():
             log.error(f"Failed to modify the plan with straggler cutoff settings: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan with straggler cutoff settings: {e}")
 
-
-    def initialize_plan(self, agg_domain_name, model_name, initial_model_path=None):
+    def initialize_plan(self, agg_domain_name, extra_args=""):
         """
         Initialize the plan
         Args:
             agg_domain_name (str): Aggregator domain name
-            model_name (str): Model name
-            initial_model_path (str, Optional): Path to the initial model
+            extra_args (str): Extra arguments provided based on conditions
+                This will help remove if/else conditions inside this function
         """
         try:
             log.info("Initializing the plan. It will take some time to complete..")
-            cmd = f"fx plan initialize -a {agg_domain_name}"
-            if initial_model_path:
-                cmd += f" -i {initial_model_path}"
-            if model_name == constants.ModelName.GANDLF_SEG_TEST.value:
-                gandlf_seg_file = os.path.join(os.getcwd(), "config_segmentation.yaml")
-                cmd += f" --gandlf_config {gandlf_seg_file}"
+            cmd = f"fx plan initialize -a {agg_domain_name} {extra_args}"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,

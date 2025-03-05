@@ -5,6 +5,7 @@ import collections
 import concurrent.futures
 import logging
 import os
+from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
@@ -96,7 +97,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Initialize the plan
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, extra_args=f"-i {initial_model_path}" if initial_model_path else ""
     )
 
     # Certify the workspace in case of TLS
@@ -168,10 +169,15 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     Args:
         request (object): Pytest request
     """
-    curr_work_dir = os.getcwd()
+    # get details of model owner, collaborators, and aggregator from common
+    # workspace creation function
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+
+    home_dir = Path().home()
+    results_path = os.path.join(home_dir, request.config.results_dir)
 
     # Raise exception if openfl does not contain gandlf folder.
-    if not os.path.isdir(os.path.join(curr_work_dir, "gandlf")):
+    if not os.path.isdir(os.path.join(os.getcwd(), "gandlf")):
         raise Exception(
             "Folder 'gandlf' is not present in the current working directory. "
             "Please ensure that all the pre-requisites are met before running the test. "
@@ -179,13 +185,13 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         )
 
     # Check if valid.csv and train.csv are present in openfl folder
-    if not os.path.exists(os.path.join(curr_work_dir, "valid.csv")) or not os.path.exists(
-        os.path.join(curr_work_dir, "train.csv")
+    if not os.path.exists(os.path.join(results_path, "valid.csv")) or not os.path.exists(
+        os.path.join(results_path, "train.csv")
     ):
         raise ex.DataSetupException("Required data files for GanDLF are missing in the openfl folder")
 
     # Check if file config_segmentation.yaml is present in openfl folder
-    gandlf_seg_file = os.path.join(curr_work_dir, "config_segmentation.yaml")
+    gandlf_seg_file = os.path.join(results_path, "config_segmentation.yaml")
     if not os.path.exists(gandlf_seg_file):
         raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} not available.")
 
@@ -195,14 +201,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     if not "num_channels" in content:
         raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} must contain entry for num_channels.")
 
-    # get details of model owner, collaborators, and aggregator from common
-    # workspace creation function
-    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
-    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
-
-    # Create the objects for aggregator and collaborators
-    # Workspace path for aggregator is uniform in case of docker or task_runner
-    # But, for collaborators, it is different
+    # Create the objects for aggregator
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
@@ -210,13 +209,22 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         container_id=model_owner.container_id,  # None in case of native environment
     )
 
-    # GanDLF data entry must be present in the plan/data.yaml before the plan is initialised.
-    fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators)
+    # Currently plan intialization internally checks data path in data.yaml
+    # So we need to have data and modified data.yaml file in place before initializing the plan
+    # Issue - https://github.com/securefederatedai/openfl/issues/73
+    fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators, results_path)
 
     # Initialize the plan
+    extra_args = f"--gandlf_config {gandlf_seg_file}"
+    extra_args += f" -i {initial_model_path}" if initial_model_path else ""
+
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, extra_args=extra_args
     )
+
+    # Update cols.yaml file with the collaborator names
+    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+
     # Certify the workspace, generate the sign request and certify the aggregator
     if request.config.use_tls:
         model_owner.certify_workspace()
@@ -277,7 +285,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Initialize the plan
     model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, model_name=request.config.model_name, initial_model_path=initial_model_path
+        agg_domain_name=agg_domain_name, extra_args=f"-i {initial_model_path}" if initial_model_path else ""
     )
 
     # Create openfl image

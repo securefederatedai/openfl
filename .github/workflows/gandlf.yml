@@ -42,16 +42,29 @@ jobs:
         pip install .
         pip install paramiko
 
-    - name: Install GaNDLF
+    - name: Create results and gandlf directories
       run: |
-        git clone https://github.com/MLCommons/GaNDLF.git ./gandlf
-        cd gandlf
-        git fetch --tags
-        echo "Checkout the latest GaNDLF tag"
-        latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
-        # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required
-        # in torch to work with a later version.
-        git checkout 0.1.1
+        mkdir -p gandlf $HOME/results
+
+    - name: Install GaNDLF repo
+      uses: actions/checkout@v4
+      with:
+        ref: 0.1.1
+        repository: https://github.com/MLCommons/GaNDLF.git
+        fetch-depth: 2  # needed for detecting changes
+        submodules: 'recursive'
+        path: 'gandlf'
+
+    # - name: Install GaNDLF
+    #   run: |
+    #     git clone https://github.com/MLCommons/GaNDLF.git ./gandlf
+    #     cd gandlf
+    #     git fetch --tags
+    #     echo "Checkout the latest GaNDLF tag"
+    #     latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+    #     # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required
+    #     # in torch to work with a later version.
+    #     git checkout 0.1.1
 
     - name: GaNDLF Test Pre-Requisites
       run: |
@@ -61,20 +74,18 @@ jobs:
         pip uninstall onnx -y
         cat ./GANDLF/version.py
         echo "Download data and Split CSVs into training and validation"
-        pytest --cov=. --cov-report=xml -k "prepare_data_for_ci"
-        head -n 1 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
-        tail -n +9 testing/data/train_2d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
-        head -n 8 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
-        cp testing/config_segmentation.yaml /home/runner/work/openfl/openfl/config_segmentation.yaml
-        echo "Display the config file before modification"
-        cat /home/runner/work/openfl/openfl/config_segmentation.yaml
-        sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        pytest -k "prepare_data_for_ci"
+        head -n 1 testing/data/train_2d_rad_segmentation.csv > $HOME/results/valid.csv
+        tail -n +9 testing/data/train_2d_rad_segmentation.csv >> $HOME/results/valid.csv
+        head -n 8 testing/data/train_2d_rad_segmentation.csv > $HOME/results/train.csv
+        cp testing/config_segmentation.yaml $HOME/results/config_segmentation.yaml
+        sed -i 's/# n_channels: 3/num_channels: 3/g' $HOME/results/config_segmentation.yaml
   
-    - name: Run Task Runner E2E tests for GanDLF
+    - name: Run GanDLF Segmentation Test
       id: run_tests
       run: |
-        python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-        -m task_runner_basic_gandlf --model_name ${{ env.MODEL_NAME }} \
+        python -m pytest -s tests/end_to_end/test_suites/gandlf_seg_tests.py \
+        -k test_gandlf_segmentation --model_name ${{ env.MODEL_NAME }} \
         --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
         echo "Task runner end to end test run completed"
 
@@ -82,7 +93,7 @@ jobs:
       id: tar_files
       if: ${{ always() }}
       run: |
-        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results /home/runner/work/openfl/openfl/config_segmentation.yaml /home/runner/work/openfl/openfl/valid.csv /home/runner/work/openfl/openfl/train.csv
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results
 
     - name: Upload Artifacts
       id: upload_artifacts

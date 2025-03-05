@@ -661,15 +661,20 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
     log.info("Data setup is complete for all the collaborators")
 
 
-def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
+def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results_path):
     """
     Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
     For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
     where download is at collaborator level
+    Args:
+        aggregator: Aggregator object
+        collaborators: List of collaborator objects
+        local_bind_path: Local bind path
+        results_path: Result directory (mostly $HOME/results) where GaNDLF csv and config yaml files are present
     """
     try:
         # Get list of all CSV files in openfl_path
-        csv_files = glob(os.path.join(os.getcwd(), '*.csv'))
+        csv_files = glob(os.path.join(results_path, '*.csv'))
         print(f"CSV files available for GaNDLF: {csv_files}")
 
         # Get data.yaml file and remove any entry, if present
@@ -685,8 +690,6 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
                 shutil.copy(csv_file, dst_folder)
                 log.info(f"Copied data from {csv_file} to {dst_folder}")
 
-            # Though aggregator should not be concerned with collaborator's data
-            # But the plan intialization in case of GaNDLF looks for data.yaml for the entries.
             aggregator.modify_data_file(
                 constants.COL_DATA_FILE.format(local_bind_path, "aggregator"),
                 f"collaborator{col_index}",
