@@ -80,7 +80,7 @@ jobs:
       id: tar_files
       if: ${{ always() }}
       run: |
-        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" /home/runner/work/openfl
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results /home/runner/work/openfl/openfl/config_segmentation.yaml /home/runner/work/openfl/openfl/valid.csv /home/runner/work/openfl/openfl/train.csv
 
     - name: Upload Artifacts
       id: upload_artifacts

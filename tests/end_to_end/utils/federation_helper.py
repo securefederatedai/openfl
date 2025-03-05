@@ -669,10 +669,12 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
         csv_files = glob(os.path.join(curr_work_dir, '*.csv'))
         print(f"CSV files: {csv_files}")
 
-        # Get data.yaml file and make it empty
+        # Get data.yaml file and remove any entry, if present
         data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
         with open(data_file, "w") as df:
             df.write("")
+        
+        log.info(f"Modified {data_file} to remove any entry")
 
         # Copy the data to the respective workspaces based on the index
         for col_index in range(num_collaborators+1):
