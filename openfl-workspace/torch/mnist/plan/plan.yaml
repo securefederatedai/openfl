@@ -16,7 +16,7 @@ assigner :
 collaborator:
   settings:
     db_store_rounds: 1
-    delta_updates: false
+    use_delta_updates: false
     opt_treatment: RESET
   template: openfl.component.collaborator.Collaborator
 compression_pipeline:

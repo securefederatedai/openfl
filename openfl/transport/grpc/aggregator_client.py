@@ -10,7 +10,6 @@ from typing import Optional, Tuple
 
 import grpc
 
-from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.grpc_channel_options import channel_options
 from openfl.utilities import check_equal
@@ -485,24 +484,3 @@ class AggregatorGRPCClient:
 
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
-
-    def _get_trained_model(self, experiment_name, model_type):
-        """Get trained model RPC.
-
-        Args:
-            experiment_name (str): The name of the experiment.
-            model_type (str): The type of the model.
-
-        Returns:
-            Dict[str, numpy.ndarray]: The trained model.
-        """
-        get_model_request = self.stub.GetTrainedModelRequest(
-            experiment_name=experiment_name,
-            model_type=model_type,
-        )
-        model_proto_response = self.stub.GetTrainedModel(get_model_request)
-        tensor_dict, _ = utils.deconstruct_model_proto(
-            model_proto_response.model_proto,
-            NoCompressionPipeline(),
-        )
-        return tensor_dict
