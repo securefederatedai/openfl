@@ -629,14 +629,14 @@ def setup_collaborator(index, workspace_path, local_bind_path):
     return collaborator
 
 
-def setup_collaborator_data(collaborators, local_bind_path, aggregator):
+def setup_collaborator_data(collaborators, model_name, local_bind_path):
     """
     Function to setup the data for collaborators.
     IMP: This function is specific to the model and should be updated as per the model requirements.
     Args:
         collaborators (list): List of collaborator objects
+        model_name (str): Model name
         local_bind_path (str): Local bind path
-        aggregator: Aggregator object
     """
     # Check if data already exists, if yes, skip the download part
     # This is mainly helpful in case of re-runs
@@ -646,7 +646,8 @@ def setup_collaborator_data(collaborators, local_bind_path, aggregator):
     else:
         log.info("Data does not exist for all the collaborators. Proceeding with the download..")
         # Below step will also modify the data.yaml file for all the collaborators
-        download_higgs_data(collaborators, model_name, local_bind_path)
+        if model_name == constants.ModelName.XGB_HIGGS.value:
+            download_higgs_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
@@ -654,6 +655,8 @@ def setup_collaborator_data(collaborators, local_bind_path, aggregator):
 def download_gandlf_data(aggregator, local_bind_path, num_collaborators):
     """
     Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
+    For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
+    where download is at collaborator level 
     """
     try:
         curr_work_dir = os.getcwd()
@@ -718,13 +721,12 @@ def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
 
-def download_higgs_data(collaborators, model_name, local_bind_path):
+def download_higgs_data(collaborators, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
     Also modify the data.yaml file for all the collaborators
     Args:
         collaborators (list): List of collaborator objects
-        model_name (str): Model name
         local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
@@ -743,7 +745,7 @@ def download_higgs_data(collaborators, model_name, local_bind_path):
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
         subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for {model_name}")
+        raise ex.DataSetupException(f"Failed to download data for XGBoost model")
 
     try:
         # Copy the data to the respective workspaces based on the index
