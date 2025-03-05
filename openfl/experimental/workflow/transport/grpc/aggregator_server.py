@@ -107,23 +107,21 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 Request sent from a collaborator that requires validation
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
+        check_is_in(request.header.sender, self.aggregator.authorized_cols)
 
         # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
+        check_equal(request.header.receiver, self.aggregator.uuid)
 
         # check that the message is for my federation
         check_equal(
             request.header.federation_uuid,
             self.aggregator.federation_uuid,
-            self.logger,
         )
 
         # check that we agree on the single cert common name
         check_equal(
             request.header.single_col_cert_common_name,
             self.aggregator.single_col_cert_common_name,
-            self.logger,
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802

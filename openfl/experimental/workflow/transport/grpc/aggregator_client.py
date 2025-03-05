@@ -222,17 +222,16 @@ class AggregatorGRPCClient:
     def validate_response(self, reply, collaborator_name):
         """Validate the aggregator response."""
         # check that the message was intended to go to this collaborator
-        check_equal(reply.header.receiver, collaborator_name, self.logger)
-        check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
+        check_equal(reply.header.receiver, collaborator_name)
+        check_equal(reply.header.sender, self.aggregator_uuid)
 
         # check that federation id matches
-        check_equal(reply.header.federation_uuid, self.federation_uuid, self.logger)
+        check_equal(reply.header.federation_uuid, self.federation_uuid)
 
         # check that there is aggrement on the single_col_cert_common_name
         check_equal(
             reply.header.single_col_cert_common_name,
             self.single_col_cert_common_name or "",
-            self.logger,
         )
 
     def disconnect(self):
