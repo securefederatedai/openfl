@@ -288,20 +288,3 @@ def test_run(collaborator_mock):
     collaborator_mock.do_task = mock.Mock(return_value={'metric': 0.0})
     collaborator_mock.run()
     collaborator_mock.do_task.assert_called_with('task', round_number)
-
-
-def test_run_simulation_time_to_quit(collaborator_mock):
-    """Test that run_simulation works correctly if is time to quit."""
-    round_number = 0
-    collaborator_mock.get_tasks = mock.Mock(return_value=([], round_number, 0, True))
-    collaborator_mock.run_simulation()
-
-
-def test_run_simulation(collaborator_mock):
-    """Test that run_simulation works correctly."""
-    round_number = 0
-    collaborator_mock.get_tasks = mock.Mock(return_value=(['task'], round_number, 0, False))
-
-    collaborator_mock.do_task = mock.Mock()
-    collaborator_mock.run_simulation()
-    collaborator_mock.do_task.assert_called_with('task', round_number)
