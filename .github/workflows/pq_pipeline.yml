@@ -65,6 +65,13 @@ jobs:
     needs: task_runner_e2e
     uses: ./.github/workflows/task_runner_fedeval_e2e.yml
 
+  task_runner_secure_agg_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Secure Aggregation E2E
+    uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
+
   task_runner_straggler_e2e:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
