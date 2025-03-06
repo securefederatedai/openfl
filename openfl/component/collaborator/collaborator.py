@@ -168,15 +168,6 @@ class Collaborator:
             client=self.client,
         )
 
-    def set_available_devices(self, cuda: Tuple[str] = ()):
-        """Set available CUDA devices.
-
-        Args:
-            cuda (Tuple[str]): Tuple containing string indices of available
-                CUDA devices, ('1', '3').
-        """
-        self.cuda_devices = cuda
-
     def run(self):
         """Run the collaborator."""
         # Experiment begin
