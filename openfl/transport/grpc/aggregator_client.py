@@ -33,8 +33,6 @@ class ConstantBackoff:
 
         Args:
             reconnect_interval (int): The interval between connection attempts.
-            logger (Logger): The logger to use for reporting connection
-                attempts.
             uri (str): The URI to connect to.
         """
         self.reconnect_interval = reconnect_interval
@@ -94,7 +92,7 @@ class RetryOnRpcErrorClientInterceptor(
 
             if isinstance(response, grpc.RpcError):
                 # If status code is not in retryable status codes
-                self.sleeping_policy.logger.info("Response code: %s", response.code())
+                logger.info("Response code: %s", response.code())
                 if self.status_for_retry and response.code() not in self.status_for_retry:
                     return response
 
@@ -169,13 +167,11 @@ def _resend_data_on_reconnection(func):
 
 
 class AggregatorGRPCClient:
-    """Client to the aggregator over gRPC-TLS.
-
-    This class implements a gRPC client for communicating with an aggregator
-    over a secure (TLS) connection.
+    """Collaborator-side gRPC client that talks to the aggregator.
 
     Attributes:
-        uri (str): The URI of the aggregator.
+        agg_addr (str): Aggregator address.
+        agg_port (int): Aggregator port.
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
@@ -189,17 +185,22 @@ class AggregatorGRPCClient:
         federation_uuid (str): The UUID of the federation.
         single_col_cert_common_name (str): The common name on the
             collaborator's certificate.
+        refetch_server_cert_callback (function): Callback function to refetch
+            the server certificate.
+        enable_atomic_connections (bool): Whether to use atomic connections (i.e. creates a new
+            gRPC channel for each transaction and closes them immediately).
+        resend_data_on_reconnection (bool): Whether to resend data on reconnection.
     """
 
     def __init__(
         self,
         agg_addr,
         agg_port,
-        root_certificate,
-        certificate,
-        private_key,
         use_tls=True,
         require_client_auth=True,
+        root_certificate=None,
+        certificate=None,
+        private_key=None,
         aggregator_uuid=None,
         federation_uuid=None,
         single_col_cert_common_name=None,
@@ -208,39 +209,24 @@ class AggregatorGRPCClient:
         resend_data_on_reconnection=True,
         **kwargs,
     ):
-        """
-        Initialize.
-
-        Args:
-            agg_addr (str): The address of the aggregator.
-            agg_port (int): The port of the aggregator.
-            use_tls (bool): Whether to use TLS for the connection.
-            require_client_auth (bool): Whether to enable client-side
-                authentication, i.e. mTLS. Ignored if `use_tls=False`.
-            root_certificate (str): The path to the root certificate for the
-                TLS connection.
-            certificate (str): The path to the client's certificate for the
-                TLS connection.
-            private_key (str): The path to the client's private key for the
-                TLS connection.
-            aggregator_uuid (str,optional): The UUID of the aggregator.
-            federation_uuid (str, optional): The UUID of the federation.
-            single_col_cert_common_name (str, optional): The common name on
-                the collaborator's certificate.
-            **kwargs: Additional keyword arguments.
-        """
         self.uri = f"{agg_addr}:{agg_port}"
         self.use_tls = use_tls
         self.require_client_auth = require_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
+        self.aggregator_uuid = aggregator_uuid
+        self.federation_uuid = federation_uuid
+        self.single_col_cert_common_name = single_col_cert_common_name or ""
+        self.refetch_server_cert_callback = refetch_server_cert_callback
+        self.enable_atomic_connections = enable_atomic_connections
+        self.resend_data_on_reconnection = resend_data_on_reconnection
+
+        # Setup
         self.sleeping_policy = ConstantBackoff(
             reconnect_interval=kwargs.get("client_reconnect_interval", 1),
             uri=self.uri,
         )
-        self.enable_atomic_connections = enable_atomic_connections
-        self.resend_data_on_reconnection = resend_data_on_reconnection
 
         if not self.use_tls:
             logger.warning("gRPC is running on insecure channel with TLS disabled.")
@@ -254,10 +240,6 @@ class AggregatorGRPCClient:
                 self.private_key,
             )
 
-        self.aggregator_uuid = aggregator_uuid
-        self.federation_uuid = federation_uuid
-        self.single_col_cert_common_name = single_col_cert_common_name or ""
-        self.refetch_server_cert_callback = refetch_server_cert_callback
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
     def validate_response(self, response, collaborator_name):

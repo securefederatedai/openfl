@@ -18,14 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
-    """GRPC server class for the Aggregator.
-
-    This class implements a gRPC server for the Aggregator, allowing it to
-    communicate with collaborators.
+    """Aggregator gRPC Server.
 
     Attributes:
-        aggregator (Aggregator): The aggregator that this server is serving.
-        uri (str): The URI that the server is serving on.
+        aggregator (Aggregator): An instance of the Aggregator object that this server is serving.
+        agg_port (int): Port to start gRPC server on.
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
@@ -35,8 +32,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             `use_tls=False`.
         private_key (str): The path to the client's private key for the TLS connection, ignored if
             `use_tls=False`.
-        server (grpc.Server): The gRPC server.
-        server_credentials (grpc.ServerCredentials): The server's credentials.
+        root_certificate_refresher_cb (Callable): A callback function that receives no arguments and
+            returns the current root certificate.
     """
 
     def __init__(
@@ -51,26 +48,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         root_certificate_refresher_cb=None,
         **kwargs,
     ):
-        """
-        Initialize the AggregatorGRPCServer.
-
-        Args:
-            aggregator (Aggregator): The aggregator that this server is
-                serving.
-            agg_port (int): The port that the server is serving on.
-            use_tls (bool): Whether to use TLS for the connection.
-            require_client_auth (bool): Whether to enable client-side
-                authentication, i.e. mTLS. Ignored if `use_tls=False`.
-            root_certificate (str): The path to the root certificate for the
-                TLS connection.
-            certificate (str): The path to the server's certificate for the
-                TLS connection.
-            private_key (str): The path to the server's private key for the
-                TLS connection.
-            root_certificate_refresher_cb (Callable): A callback function
-                that receive no arguments and return the current root certificate.
-            **kwargs: Additional keyword arguments.
-        """
         self.aggregator = aggregator
         self.uri = f"[::]:{agg_port}"
         self.use_tls = use_tls
@@ -78,8 +55,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        self.server_credentials = None
-
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
     def validate_collaborator(self, request, context):
@@ -311,4 +286,4 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         while not self.aggregator.all_quit_jobs_sent():
             sleep(5)
 
-        server.stop()
+        server.stop(0)
