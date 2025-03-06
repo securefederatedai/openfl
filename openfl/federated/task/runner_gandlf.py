@@ -16,6 +16,7 @@ from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.config_manager import ConfigManager
 from safetensors import safe_open
+from safetensors.torch import save_file
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import TensorKey
