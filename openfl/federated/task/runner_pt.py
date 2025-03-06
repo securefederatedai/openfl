@@ -240,18 +240,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # simple assignment is better
         # for now, state dict gives us names which is good
         # FIXME: do both and sanity check each time?
-        print("get_tensor_dict")
-        print("with_opt_vars", with_opt_vars)
         state = to_cpu_numpy(self.state_dict())
 
         if with_opt_vars:
             opt_state = _get_optimizer_state(self.optimizer)
             state = {**state, **opt_state}
-            print("opt_state", opt_state)
-            self.save_native("model.pt")
-            self.load_native("model.pt")
 
-        print("state", state)
         return state
 
     def _get_weights_names(self, with_opt_vars=False):
@@ -425,16 +419,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        # here
         pickle_dict = {}
-        print("filepath", filepath)
-        print("model_state_dict_key", model_state_dict_key)
-        print("optimizer_state_dict_key", optimizer_state_dict_key)
-
         with safe_open(filepath, framework="pt", device=0) as f:
             for k in f.keys():
                 pickle_dict[k] = f.get_tensor(k)
-            print("pickle_dict", pickle_dict)
             self.load_state_dict(pickle_dict[model_state_dict_key])
             self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
@@ -460,7 +448,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        print("save_native")
         pickle_dict = {
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
