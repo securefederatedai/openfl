@@ -5,20 +5,13 @@
 """AggregatorGRPCServer module."""
 
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from random import random
 from time import sleep
 
-from grpc import (
-    StatusCode,
-    dynamic_ssl_server_credentials,
-    server,
-    ssl_server_certificate_configuration,
-)
+import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.common import channel_options, create_header
+from openfl.transport.grpc.common import create_grpc_server, create_header
 from openfl.utilities import check_equal, check_is_in
 
 logger = logging.getLogger(__name__)
@@ -85,7 +78,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        self.server = None
         self.server_credentials = None
 
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
@@ -118,7 +110,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 # Random delay in authentication failures
                 sleep(5 * random())  # nosec
                 context.abort(
-                    StatusCode.UNAUTHENTICATED,
+                    grpc.StatusCode.UNAUTHENTICATED,
                     f"Invalid collaborator. CN: |{common_name}| "
                     f"collaborator_common_name: |{collaborator_common_name}|",
                 )
@@ -300,71 +292,23 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
-    def get_server(self):
-        """
-        Return gRPC server.
-
-        This method creates a gRPC server if it does not already exist and
-        returns it.
-
-        Returns:
-            grpc.Server: The gRPC server.
-        """
-        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()), options=channel_options)
-
-        aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
-
-        if not self.use_tls:
-            logger.warning("gRPC is running on insecure channel with TLS disabled.")
-            port = self.server.add_insecure_port(self.uri)
-            logger.info("Insecure port: %s", port)
-
-        else:
-            with open(self.private_key, "rb") as f:
-                private_key_b = f.read()
-            with open(self.certificate, "rb") as f:
-                certificate_b = f.read()
-            with open(self.root_certificate, "rb") as f:
-                root_certificate_b = f.read()
-
-            if not self.require_client_auth:
-                logger.warning("Client-side authentication is disabled.")
-            cert_config = ssl_server_certificate_configuration(
-                ((private_key_b, certificate_b),), root_certificates=root_certificate_b
-            )
-
-            def certificate_configuration_fetcher():
-                root_cert = root_certificate_b
-                if self.root_certificate_refresher_cb is not None:
-                    root_cert = self.root_certificate_refresher_cb()
-                return ssl_server_certificate_configuration(
-                    ((private_key_b, certificate_b),), root_certificates=root_cert
-                )
-
-            self.server_credentials = dynamic_ssl_server_credentials(
-                cert_config,
-                certificate_configuration_fetcher,
-                require_client_authentication=self.require_client_auth,
-            )
-            self.server.add_secure_port(self.uri, self.server_credentials)
-
-        return self.server
-
     def serve(self):
-        """Start an aggregator gRPC service.
-
-        This method starts the gRPC server and handles requests until all quit
-        jobs havebeen sent.
-        """
-        self.get_server()
+        """Starts the aggregator gRPC server."""
+        server = create_grpc_server(
+            self.uri,
+            self.use_tls,
+            self.private_key,
+            self.certificate,
+            self.root_certificate,
+            self.require_client_auth,
+            self.root_certificate_refresher_cb,
+        )
+        aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, server)
 
         logger.info("Starting Aggregator gRPC Server")
-        self.server.start()
+        server.start()
 
-        try:
-            while not self.aggregator.all_quit_jobs_sent():
-                sleep(5)
-        except KeyboardInterrupt:
-            pass
+        while not self.aggregator.all_quit_jobs_sent():
+            sleep(5)
 
-        self.server.stop(0)
+        server.stop()

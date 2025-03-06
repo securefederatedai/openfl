@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.common import channel_options, create_header
+from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 from openfl.utilities import check_equal
 
 logger = logging.getLogger(__name__)
@@ -168,49 +168,6 @@ def _resend_data_on_reconnection(func):
     return wrapper
 
 
-def create_insecure_channel(uri):
-    return grpc.insecure_channel(uri, options=channel_options)
-
-
-def create_tls_channel(uri, root_certificate, require_client_auth, certificate, private_key):
-    """
-    Create a TLS-based gRPC channel.
-
-    Args:
-        uri (str): The uniform resource identifier for the secure channel.
-        root_certificate (str): The Certificate Authority filename.
-        require_client_auth (bool): True enables client-side
-            authentication, i.e. mTLS.
-        certificate (str): The client certificate filename from the
-            collaborator (signed by the certificate authority).
-        private_key (str): The private key filename for the client
-            certificate.
-
-    Returns:
-        grpc.Channel: A secure gRPC channel object
-    """
-    with open(root_certificate, "rb") as f:
-        root_certificate_b = f.read()
-
-    if not require_client_auth:
-        logger.warning("Client-side authentication is disabled.")
-        private_key_b = None
-        certificate_b = None
-    else:
-        with open(private_key, "rb") as f:
-            private_key_b = f.read()
-        with open(certificate, "rb") as f:
-            certificate_b = f.read()
-
-    credentials = grpc.ssl_channel_credentials(
-        root_certificates=root_certificate_b,
-        private_key=private_key_b,
-        certificate_chain=certificate_b,
-    )
-
-    return grpc.secure_channel(uri, credentials, options=channel_options)
-
-
 class AggregatorGRPCClient:
     """Client to the aggregator over gRPC-TLS.
 
@@ -299,29 +256,16 @@ class AggregatorGRPCClient:
 
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
-        self.single_col_cert_common_name = single_col_cert_common_name
+        self.single_col_cert_common_name = single_col_cert_common_name or ""
         self.refetch_server_cert_callback = refetch_server_cert_callback
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
-    def validate_response(self, reply, collaborator_name):
-        """Validate the aggregator response.
-
-        Args:
-            reply (aggregator_pb2.MessageReply): The reply from the aggregator.
-            collaborator_name (str): The name of the collaborator.
-        """
-        # check that the message was intended to go to this collaborator
-        check_equal(reply.header.receiver, collaborator_name)
-        check_equal(reply.header.sender, self.aggregator_uuid)
-
-        # check that federation id matches
-        check_equal(reply.header.federation_uuid, self.federation_uuid)
-
-        # check that there is aggrement on the single_col_cert_common_name
-        check_equal(
-            reply.header.single_col_cert_common_name,
-            self.single_col_cert_common_name or "",
-        )
+    def validate_response(self, response, collaborator_name):
+        """Validate the aggregator response."""
+        check_equal(response.header.receiver, collaborator_name)
+        check_equal(response.header.sender, self.aggregator_uuid)
+        check_equal(response.header.federation_uuid, self.federation_uuid)
+        check_equal(response.header.single_col_cert_common_name, self.single_col_cert_common_name)
 
     def disconnect(self):
         """Close the gRPC channel."""
@@ -420,9 +364,7 @@ class AggregatorGRPCClient:
             require_lossless=require_lossless,
         )
         response = self.stub.GetAggregatedTensor(request)
-        # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
-
         return response.tensor
 
     @_resend_data_on_reconnection
@@ -461,9 +403,5 @@ class AggregatorGRPCClient:
         )
 
         # convert (potentially) long list of tensors into stream
-        stream = []
-        stream += utils.proto_to_datastream(request)
-        response = self.stub.SendLocalTaskResults(iter(stream))
-
-        # also do other validation, like on the round_number
+        response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
