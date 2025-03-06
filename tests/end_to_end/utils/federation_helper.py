@@ -675,7 +675,6 @@ def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results
     try:
         # Get list of all CSV files in openfl_path
         csv_files = glob(os.path.join(results_path, '*.csv'))
-        print(f"CSV files available for GaNDLF: {csv_files}")
 
         # Get data.yaml file and remove any entry, if present
         data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
