@@ -59,9 +59,13 @@ jobs:
     name: TaskRunner E2E
     uses: ./.github/workflows/task_runner_basic_e2e.yml
   
-  task_runner_e2e_resiliency:
+  task_runner_resiliency_e2e:
     name: TaskRunner Resiliency E2E
     uses: ./.github/workflows/task_runner_resiliency_e2e.yml
+
+  task_runner_secure_agg_e2e:
+    name: TaskRunner Secure Aggregation E2E
+    uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
 
   tr_docker_gramine_direct:
     name: TaskRunner (docker/gramine-direct)
