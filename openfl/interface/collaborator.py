@@ -32,12 +32,7 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def collaborator(context):
-    """
-    Manage Federated Learning Collaborators.
-
-    Args:
-        context (click.core.Context): Click context.
-    """
+    """Manage Federated Learning Collaborator."""
     context.obj["group"] = "service"
 
 
@@ -46,26 +41,28 @@ def collaborator(context):
     "-p",
     "--plan",
     required=False,
-    help="Federated learning plan [plan/plan.yaml]",
+    help="Path to an FL plan.",
     default="plan/plan.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-d",
     "--data_config",
     required=False,
-    help="The data set/shard configuration file [plan/data.yaml]",
+    help="The dataset shard configuration file.",
     default="plan/data.yaml",
     type=ClickPath(exists=True),
+    show_default=True,
 )
 @option(
     "-n",
     "--collaborator_name",
     required=True,
-    help="The certified common name of the collaborator",
+    help="The certified common name of the collaborator.",
 )
 def start_(plan, collaborator_name, data_config):
-    """Start a collaborator service."""
+    """Starts a collaborator service."""
 
     if plan and is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
@@ -92,15 +89,16 @@ def start_(plan, collaborator_name, data_config):
     "-n",
     "--collaborator_name",
     required=True,
-    help="The certified common name of the collaborator",
+    help="The certified common name of the collaborator.",
 )
 @option(
     "-d",
     "--data_path",
-    help="The data path to be associated with the collaborator",
+    help="The data path to be associated with the collaborator.",
 )
-@option("-s", "--silent", help="Do not prompt", is_flag=True)
+@option("-s", "--silent", help="If set, skips manual confirmation.", is_flag=True)
 def create_(collaborator_name, data_path, silent):
+    """Registers given dataset path in the ``plan/data.yaml`` file."""
     create(collaborator_name, data_path, silent)
 
 
@@ -176,17 +174,20 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     "-n",
     "--collaborator_name",
     required=True,
-    help="The certified common name of the collaborator",
+    help="The certified common name of the collaborator.",
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 @option(
     "-x",
     "--skip-package",
-    help="Do not package the certificate signing request for export",
+    help="If set, does not package the certificate signing request for export.",
     is_flag=True,
 )
 def generate_cert_request_(collaborator_name, silent, skip_package):
-    """Generate certificate request for the collaborator."""
+    """
+    Generates collaborator certificate key-pair
+    to be sent to aggregator for signing.
+    """
     generate_cert_request(collaborator_name, silent, skip_package)
 
 
@@ -311,28 +312,23 @@ def register_collaborator(file_name):
 
 
 @collaborator.command(name="certify")
-@option(
-    "-n",
-    "--collaborator_name",
-    help="The certified common name of the collaborator. This is only"
-    " needed for single node expiriments",
-)
+@option("-n", "--collaborator_name", help="The certified common name of the collaborator.")
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 @option(
     "-r",
     "--request-pkg",
     type=ClickPath(exists=True),
-    help="The archive containing the certificate signing request (*.zip) for a collaborator",
+    help="Path to a zip containing the certificate signing request for a collaborator.",
 )
 @option(
     "-i",
     "--import",
     "import_",
     type=ClickPath(exists=True),
-    help="Import the archive containing the collaborator's certificate (signed by the CA)",
+    help="Path to an archive containing the collaborator's certificate (signed by the CA).",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
-    """Certify the collaborator."""
+    """Certifies the collaborator certificate key-pair."""
     certify(collaborator_name, silent, request_pkg, import_)
 
 

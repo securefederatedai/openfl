@@ -49,6 +49,7 @@ def main():
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
+    check_call(['pip', 'install', '-r', 'requirements.txt'])
     Path(Path.cwd().resolve() / 'data' / col1).mkdir(exist_ok=True)
     with os.scandir(origin_dir) as iterator:
         for entry in iterator:

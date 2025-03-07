@@ -26,15 +26,31 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 ## Upcoming OpenFL releases
 
-### 1.7 (Q1 2025)
-This release is focused on enabling a great developer experience for OpenFL users:
-1. Introducing the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans) for Workflow API, which allows running FL workflows in a distributed setting (after local simulation with the LocalRuntime).
-2. Adding support for federated XGBoost in OpenFL. See the example [XGBoost workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/xgb_higgs) based on Task Runner API.
-3. Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). The current release contains an initial set of changes that enable OpenFL compatibility with the broader confidential containers ecosystem.
-4. Streamlining the Federated Evaluation experiments with TaskRunner API
-5. Migrating a selection of key OpenFL tutorials from Python Native API to Workflow API. Check out the updated [Tutorials folder](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow)
-6. Deprecating the Python Native API
-7. Deprecating the Interactive API
+The roadmap for the upcoming releases is provided for informational purposes only. It is intended to offer visibility into our current planning and priorities. However, please note that the features and timelines outlined here are not commitments and are subject to change. We are continuously evaluating and adjusting our plans to best meet the needs of our users and the evolving technological landscape.
 
-### 1.8 (TBA)
-Stay tuned for updates!
+### 1.8 (March '2025)
+In this release, we intend to continue streamlining the OpenFL APIs, provide additional security options, and enhance ML/FL framework interoperability:
+- Removing the Python Native API and Interactive API
+- Further decoupling the Runtime from the FLSpec in Workflow API (see the design proposal [here](https://github.com/securefederatedai/openfl/discussions/1317))
+- ML frameworks integration (PyTorch 2.5 support, additional Keras back-ends)
+- Additional enhancements to Federated Evaluation with OpenFL, including:
+  * Dynamic switching from learning to evaluation mode via TaskRunner API within the same federation, without re-distributing the FL plan
+  * Workflow API tutorial for Federated Evaluation
+- PoC for [Secure Aggregation](https://eprint.iacr.org/2017/281.pdf) support
+- Design proposal for a configurable communication layer (enabling REST API support, in addition to gRPC)
+- (TBA) A leap forward in terms of FL framework interoperability (stay tuned for announcements)
+
+### 1.9 (TBA)
+In the upcoming 1.9 release, our focus is going to be on significantly accelerating the API consolidation and enhancing OpenFL's privacy and security features. Key initiatives include:
+- Production readiness of Workflow API (FederatedRuntime):
+  * Provide a plan agreement mechanism for all experiment participants
+  * Improved controls of the types of data that gets sent across the network
+  * Support branching in Workflow API (in line with the Metaflow API)
+  * Streamlined support for TLS in distributed deployments
+  * Enhanced straggler handling
+  * ... and finally, removing the experimental tag on the Workflow API feature!
+- Support data loading from S3
+  * This also includes enhanced DataSet and DataSource abstractions
+- Support for Federated Analytics via TaskRunner API
+- Support for remote attestation of OpenFL nodes running in a TEE
+- Design proposal for a SecureFederatedRuntime for Workflow API

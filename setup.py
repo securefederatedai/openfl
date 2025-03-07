@@ -60,7 +60,7 @@ class BuildPyGRPC(build_py):
 
 setup(
     name='openfl',
-    version='1.7',
+    version='1.8.0.dev0',
     author='OpenFL Team',
     description='Federated Learning for the Edge',
     long_description=open("README.md", encoding="utf-8").read(),
@@ -94,6 +94,7 @@ setup(
         'tensorboardX',
         'protobuf>=4.22,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
+        'pycryptodome'
     ],
     python_requires='>=3.10, <3.13',
     project_urls={

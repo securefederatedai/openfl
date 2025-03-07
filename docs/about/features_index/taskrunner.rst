@@ -52,7 +52,7 @@ Configurable Settings
     `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     Defines the settings for the collaborator which is the data owner in the experiment. The settings for collaborator include:
 
- - :code:`delta_updates`: (boolean) Determines whether the difference in model weights between the current and previous round will be sent (True), or if whole checkpoints will be sent (False). Setting to delta_updates to True leads to higher sparsity in model weights sent across, which may improve compression ratios.
+ - :code:`use_delta_updates`: (boolean) Determines whether the difference in model weights between the current and previous round will be sent (True), or if whole checkpoints will be sent (False). Setting to use_delta_updates to True leads to higher sparsity in model weights sent across, which may improve compression ratios.
  - :code:`opt_treatment`: (str) Defines the optimizer state treatment policy. Valid options are : 'RESET' - reinitialize optimizer for every round (default), 'CONTINUE_LOCAL' - keep local optimizer state for every round, 'CONTINUE_GLOBAL' - aggregate optimizer state for every round.
 
 
@@ -170,7 +170,7 @@ STEP 1: Create a Workspace
 
 .. note::
 
-    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command.
+    Please ensure KERAS_BACKEND is set in the environment where you plan on using OpenFL before executing any fx command. Note that Keras is supported only up to Python 3.11. Therefore, please use Python 3.10 or 3.11 for Keras-related workspaces.
 
   See the complete list of available templates.
 

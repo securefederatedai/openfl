@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from openfl.experimental.workflow.federated import Plan
-from openfl.experimental.workflow.transport.grpc.director_client import DirectorClient
+from openfl.experimental.workflow.transport.grpc.director_client import EnvoyDirectorClient
 from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
 from openfl.utilities.workspace import ExperimentWorkspace
 
@@ -32,7 +32,7 @@ class Envoy:
             for TLS.
         private_key (Optional[Union[Path, str]]): The path to the private key for TLS.
         certificate (Optional[Union[Path, str]]): The path to the certificate for TLS.
-        director_client (DirectorClient): The director client.
+        _envoy_dir_client (EnvoyDirectorClient): The envoy director client.
         install_requirements (bool): A flag indicating if the requirements
             should be installed.
         is_experiment_running (bool): A flag indicating if an experiment is
@@ -80,7 +80,7 @@ class Envoy:
         self.tls = tls
         self._fill_certs(root_certificate, private_key, certificate)
         self.install_requirements = install_requirements
-        self.director_client = self._create_director_client(director_host, director_port)
+        self._envoy_dir_client = self._create_envoy_dir_client(director_host, director_port)
         self.is_experiment_running = False
         self.executor = ThreadPoolExecutor()
         # This plan path ("plan/plan.yaml") originates from the
@@ -88,17 +88,19 @@ class Envoy:
         self.plan = "plan/plan.yaml"
         self._health_check_future = None
 
-    def _create_director_client(self, director_host: str, director_port: int) -> DirectorClient:
-        """Create a DirectorClient instance.
+    def _create_envoy_dir_client(
+        self, director_host: str, director_port: int
+    ) -> EnvoyDirectorClient:
+        """Create a EnvoyDirectorClient instance.
 
         Args:
             director_host (str): The host of the director.
             director_port (int): The port of the director.
 
         Returns:
-            DirectorClient: Instance of the client
+            EnvoyDirectorClient: Instance of the client
         """
-        return DirectorClient(
+        return EnvoyDirectorClient(
             director_host=director_host,
             director_port=director_port,
             envoy_name=self.name,
@@ -134,8 +136,8 @@ class Envoy:
         while True:
             try:
                 # Wait for experiment from Director server
-                experiment_name = self.director_client.wait_experiment()
-                data_stream = self.director_client.get_experiment_data(experiment_name)
+                experiment_name = self._envoy_dir_client.wait_experiment()
+                data_stream = self._envoy_dir_client.get_experiment_data(experiment_name)
             except Exception as exc:
                 logger.exception("Failed to get experiment: %s", exc)
                 time.sleep(self.DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
@@ -180,7 +182,7 @@ class Envoy:
         timeout = self.DEFAULT_RETRY_TIMEOUT_IN_SECONDS
         while True:
             try:
-                timeout = self.director_client.send_health_check(
+                timeout = self._envoy_dir_client.send_health_check(
                     envoy_name=self.name,
                     is_experiment_running=self.is_experiment_running,
                 )
@@ -188,7 +190,7 @@ class Envoy:
                 logger.info(
                     "The director has lost information about current envoy. Reconnecting..."
                 )
-                self.director_client.connect_envoy(envoy_name=self.name)
+                self._envoy_dir_client.connect_envoy(envoy_name=self.name)
             time.sleep(timeout)
 
     def _run_collaborator(self) -> None:
@@ -209,7 +211,7 @@ class Envoy:
     def start(self) -> None:
         """Start the envoy"""
         try:
-            is_accepted = self.director_client.connect_envoy(envoy_name=self.name)
+            is_accepted = self._envoy_dir_client.connect_envoy(envoy_name=self.name)
         except Exception as exc:
             logger.exception("Failed to connect envoy: %s", exc)
             sys.exit(1)

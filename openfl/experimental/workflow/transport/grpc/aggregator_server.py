@@ -15,7 +15,6 @@ from grpc import StatusCode, server, ssl_server_credentials
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
-from openfl.utilities import check_equal, check_is_in
 
 logger = logging.getLogger(__name__)
 
@@ -106,24 +105,27 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request : protobuf
                 Request sent from a collaborator that requires validation
         """
-        # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
-
-        # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
-
-        # check that the message is for my federation
-        check_equal(
-            request.header.federation_uuid,
-            self.aggregator.federation_uuid,
-            self.logger,
+        assert request.header.sender in self.aggregator.authorized_cols, (
+            f"Sender in request header is not authorized. "
+            f"Expected: one of {self.aggregator.authorized_cols}, Actual: {request.header.sender}"
         )
 
-        # check that we agree on the single cert common name
-        check_equal(
-            request.header.single_col_cert_common_name,
-            self.aggregator.single_col_cert_common_name,
-            self.logger,
+        assert request.header.receiver == self.aggregator.uuid, (
+            f"Receiver in request header does not match aggregator UUID. "
+            f"Expected: {self.aggregator.uuid}, Actual: {request.header.receiver}"
+        )
+
+        assert request.header.federation_uuid == self.aggregator.federation_uuid, (
+            f"Federation UUID in request header does not match. "
+            f"Expected: {self.aggregator.federation_uuid}, Actual: {request.header.federation_uuid}"
+        )
+
+        assert (
+            request.header.single_col_cert_common_name
+            == self.aggregator.single_col_cert_common_name
+        ), (
+            f"Single collaborator certificate common name in request header does not match. "
+            f"Expected: {self.aggregator.single_col_cert_common_name}, Actual: {request.header.single_col_cert_common_name}"  # noqa: E501
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802

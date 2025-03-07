@@ -8,9 +8,9 @@ import os
 import json
 import re
 import subprocess   # nosec B404
-import papermill as pm
 from pathlib import Path
 import shutil
+from glob import glob
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.db_helper as db_helper
@@ -171,12 +171,11 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
     return True
 
 
-def import_pki_for_collaborators(collaborators, local_bind_path):
+def import_pki_for_collaborators(collaborators):
     """
     Import and certify the CSR for the collaborators
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
     try:
         results = [
             executor.submit(
@@ -188,28 +187,6 @@ def import_pki_for_collaborators(collaborators, local_bind_path):
         if not all([f.result() for f in results]):
             raise Exception(
                 "Failed to import and certify the CSR for one or more collaborators"
-            )
-    except Exception as e:
-        raise e
-
-    # Copy the cols.yaml file from aggregator to all the collaborators
-    # File cols.yaml is updated after PKI setup
-    try:
-        results = [
-            executor.submit(
-                copy_file_between_participants,
-                local_src_path=os.path.join(local_agg_ws_path, "plan"),
-                local_dest_path=constants.COL_PLAN_PATH.format(
-                    local_bind_path, collaborator.name
-                ),
-                file_name="cols.yaml",
-                run_with_sudo=True,
-            )
-            for collaborator in collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to copy cols.yaml file from aggregator to one or more collaborators"
             )
     except Exception as e:
         raise e
@@ -381,13 +358,22 @@ def _verify_completion_for_participant(
     ):
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-        content = list(filter(str.rstrip, lines))[-1:]
+
+        # Below change is done to handle warnings coming in end of runs
+        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
-        log.info(f"Last line in {participant.name} log: {content}")
+        log.info(f"Last line in {participant.name} log: {lines[-1:]}")
         if constants.SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
+        # If in logs Exception is encountered, throw Exception and stop the process
+        if constants.EXCEPTION in content:
+            log.error(
+                f"Process {participant.name} is throwing Exception. Check the logs for more details"
+            )
+            raise Exception(f"Process failed for {participant.name}")
+
         time.sleep(45)
 
     if constants.SUCCESS_MARKER not in content:
@@ -430,7 +416,6 @@ def federation_env_setup_and_validate(request, eval_scope=False):
 
     if eval_scope:
         local_bind_path = f"{local_bind_path}_eval"
-        num_rounds = 1
         log.info(f"Running evaluation for the model: {request.config.model_name}")
 
     workspace_path = local_bind_path
@@ -453,11 +438,12 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"\tModel name: {request.config.model_name}\n"
         f"\tClient authentication: {request.config.require_client_auth}\n"
         f"\tTLS: {request.config.use_tls}\n"
+        f"\tSecure Aggregation: {request.config.secure_agg}\n"
         f"\tMemory Logs: {request.config.log_memory_usage}\n"
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
     )
-    return request.config.model_name, workspace_path, local_bind_path, agg_domain_name
+    return workspace_path, local_bind_path, agg_domain_name
 
 
 def add_local_workspace_permission(local_bind_path):
@@ -669,18 +655,81 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
     else:
         log.info("Data does not exist for all the collaborators. Proceeding with the download..")
         # Below step will also modify the data.yaml file for all the collaborators
-        download_data(collaborators, model_name, local_bind_path)
+        if model_name == constants.ModelName.XGB_HIGGS.value:
+            download_higgs_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
 
-def download_data(collaborators, model_name, local_bind_path):
+def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results_path):
+    """
+    Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
+    For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
+    where download is at collaborator level
+    Args:
+        aggregator: Aggregator object
+        collaborators: List of collaborator objects
+        local_bind_path: Local bind path
+        results_path: Result directory (mostly $HOME/results) where GaNDLF csv and config yaml files are present
+    """
+    try:
+        # Get list of all CSV files in openfl_path
+        csv_files = glob(os.path.join(results_path, '*.csv'))
+
+        # Get data.yaml file and remove any entry, if present
+        data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
+        with open(data_file, "w") as df:
+            df.write("")
+
+        # Copy the data to the respective workspaces based on the index
+        for col_index in range(1, num_collaborators+1):
+            dst_folder = os.path.join(aggregator.workspace_path, "data", str(col_index))
+            os.makedirs(dst_folder, exist_ok=True)
+            for csv_file in csv_files:
+                shutil.copy(csv_file, dst_folder)
+                log.info(f"Copied data from {csv_file} to {dst_folder}")
+
+            aggregator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, "aggregator"),
+                f"collaborator{col_index}",
+                col_index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+    return True
+
+
+def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path):
+    """
+    Function to copy the GaNDLF data from aggregator to respective collaborators
+    """
+    try:
+        # Copy the data to the respective workspaces based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(aggregator.workspace_path, "data", str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+
+def download_higgs_data(collaborators, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
     Also modify the data.yaml file for all the collaborators
     Args:
         collaborators (list): List of collaborator objects
-        model_name (str): Model name
         local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
@@ -699,7 +748,7 @@ def download_data(collaborators, model_name, local_bind_path):
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
         subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for {model_name}")
+        raise ex.DataSetupException(f"Failed to download data for XGBoost model")
 
     try:
         # Copy the data to the respective workspaces based on the index
@@ -831,7 +880,7 @@ def start_envoy(envoy_name, workspace_path, res_file):
     return True
 
 
-def create_federated_runtime_participant_res_files(results_dir, envoys, model_name="301_mnist_watermarking"):
+def create_federated_runtime_participant_res_files(results_dir, envoys, model_name):
     """
     Create result log files for the director and envoys.
     Args:
@@ -910,6 +959,7 @@ def run_notebook(notebook_path, output_notebook_path):
     Returns:
         bool: True if successful, else False
     """
+    import papermill as pm
     try:
         log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
         output = pm.execute_notebook(
@@ -946,7 +996,7 @@ def verify_federated_runtime_experiment_completion(participant_res_files):
         last_7_lines = list(filter(str.rstrip, lines))[-7:]
         if (
             name == "director"
-            and [1 for content in last_7_lines if "Experiment FederatedFlow_MNIST_Watermarking was finished successfully" in content]
+            and [1 for content in last_7_lines if "was finished successfully" in content]
         ):
             log.debug(f"Process completed for {name}")
             continue
@@ -1002,11 +1052,13 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_round = get_current_round(database_file)
-
-        if current_round > inp_round:
+# Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
+        if current_round > inp_round + 1:
+            log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
         log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
+    log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
     return False
 
 
@@ -1031,3 +1083,48 @@ def set_keras_backend(model_name):
     os.environ["KERAS_BACKEND"] = backend
 
     return [f"KERAS_BACKEND={backend}"]
+
+
+def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
+    """
+    Remove stale processes
+    """
+    if num_collaborators > 0:
+        log.info("Removing stale processes..")
+        # Remove any stale processes
+        try:
+            for i in range(1, num_collaborators + 1):
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                )
+            subprocess.run(
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if director:
+        try:
+            subprocess.run(
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if envoys:
+        for envoy in envoys:
+            try:
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                log.warning(f"Failed to kill processes: {e}")
+    log.info("Stale processes removed successfully")

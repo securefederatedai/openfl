@@ -72,9 +72,9 @@ def get_key_value_from_db(key, database_file, max_retries=10, sleep_interval=5):
             val = db_obj.read_key_value_store().get(key)
             if val:
                 return val
-            print("Value not found in the database. Retrying in 5 seconds...")
+            print(f"Value not found in the database. Retrying in {sleep_interval} seconds...")
         else:
-            print("Database file not found. Retrying in 5 seconds...")
+            print(f"Database file not found. Retrying in {sleep_interval} seconds...")
 
         time.sleep(sleep_interval)
         retries += 1

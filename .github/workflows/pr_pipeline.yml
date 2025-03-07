@@ -3,6 +3,14 @@ name: OpenFL PR Pipeline
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.dockerignore'
+      - '.gitattributes'
+      - '.gitignore'
+      - 'CITATION'
+      - 'CODEOWNERS'
   workflow_dispatch:
 
 concurrency:
@@ -27,16 +35,12 @@ jobs:
     name: Docker Bench for Security
     uses: ./.github/workflows/docker-bench-security.yml
 
-  double_workspace_export:
-    name: Double workspace export
-    uses: ./.github/workflows/double_ws_export.yml
-
   fr_301_watermark_nb_run:
-    name: Federated Runtime 301 MNIST Watermarking
-    uses: ./.github/workflows/federated_runtime.yml
+    name: Federated Runtime Watermarking E2E
+    uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
 
   gandlf_taskrunner:
-    name: GaNDLF TaskRunner
+    name: GaNDLF TaskRunner E2E
     uses: ./.github/workflows/gandlf.yml
 
   hadolint_security_scan:
@@ -47,25 +51,21 @@ jobs:
     name: Pytest and code coverage
     uses: ./.github/workflows/pytest_coverage.yml
 
-  straggler_handling:
-    name: Straggler Handling Test
-    uses: ./.github/workflows/straggler-handling.yml
-
-  task_runner:
-    name: TaskRunner
-    uses: ./.github/workflows/taskrunner.yml
-
+  windows:
+    name: Windows pytest coverage and workspace runs
+    uses: ./.github/workflows/windows.yml
+    
   task_runner_e2e:
     name: TaskRunner E2E
     uses: ./.github/workflows/task_runner_basic_e2e.yml
   
-  task_runner_e2e_resiliency:
-    name: TaskRunner E2E Resiliency
-    uses: ./.github/workflows/task_runner_e2e_resiliency.yml
+  task_runner_resiliency_e2e:
+    name: TaskRunner Resiliency E2E
+    uses: ./.github/workflows/task_runner_resiliency_e2e.yml
 
-  taskrunner_eden_compression:
-    name: TaskRunner (Eden Compression)
-    uses: ./.github/workflows/taskrunner_eden_pipeline.yml
+  task_runner_secure_agg_e2e:
+    name: TaskRunner Secure Aggregation E2E
+    uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
 
   tr_docker_gramine_direct:
     name: TaskRunner (docker/gramine-direct)
@@ -74,15 +74,6 @@ jobs:
   tr_docker_native:
     name: TaskRunner (docker/native)
     uses: ./.github/workflows/tr_docker_native.yml
-
-  trivy_scan:
-    name: Trivy Scan
-    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    uses: ./.github/workflows/trivy.yml
 
   wf_functional_e2e:
     name: Workflow Functional E2E

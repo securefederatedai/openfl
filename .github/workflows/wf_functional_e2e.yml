@@ -5,7 +5,6 @@ name: Workflow_Functional_E2E
 
 on:
   workflow_call:
-
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -30,7 +29,7 @@ env:
 jobs:
   test_wf_functional_local_runtime:
     if: github.event.pull_request.draft == false
-    name: wf_functional_local_runtime
+    name: WF Functional Without TLS
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
@@ -41,7 +40,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -49,7 +48,7 @@ jobs:
 
       - name: Set up Python
         id: setup_python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
 

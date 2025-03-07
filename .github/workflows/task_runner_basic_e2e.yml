@@ -4,11 +4,6 @@
 name: Task_Runner_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Run every day at midnight
-  push:
-    branches: 
-      - develop
   workflow_call:
   workflow_dispatch:
     inputs:
@@ -53,6 +48,8 @@ on:
           - test_without_tls
           - test_without_client_auth
           - test_memory_logs
+          - test_straggler_check
+          - test_eden_compression
         required: false
 
 permissions:
@@ -72,7 +69,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'task_runner_e2e'))
+      (github.event.pull_request.draft == false)
     name: Input value selection
     runs-on: ubuntu-22.04
     outputs:
@@ -95,10 +92,10 @@ jobs:
           # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
           # Thus these models are excluded from the matrix for now.
           # Default combination if no input is provided (i.e. 'all' is selected).
-          # * TLS - models [torch/mnist, keras/mnist] and python versions [3.10, 3.11, 3.12]
-          # * Non-TLS - models [torch/mnist] and python version [3.10]
+          # * TLS - models [keras/torch/mnist, keras/jax/mnist] and python versions [3.10, 3.11]
+          # * Non-TLS - models [torch/mnist] and python version [3.12]
           # * No client auth - models [keras/mnist] and python version [3.10]
-          # * Memory logs - models [torch/mnist] and python version [3.10]
+          # * Memory logs - models [torch/mnist] and python version [3.11]
           # ---------------------------------------------------------------
           echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
 
@@ -115,9 +112,9 @@ jobs:
           fi
           if [ "${{ env.PYTHON_VERSION }}" == "all" ]; then
             echo "python_for_tls=[\"3.10\", \"3.11\", \"3.12\"]" >> "$GITHUB_OUTPUT"
-            echo "python_for_non_tls=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_non_tls=[\"3.12\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_no_client_auth=[\"3.10\"]" >> "$GITHUB_OUTPUT"
-            echo "python_for_memory_logs=[\"3.10\"]" >> "$GITHUB_OUTPUT"
+            echo "python_for_memory_logs=[\"3.11\"]" >> "$GITHUB_OUTPUT"
           else
             echo "python_for_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
             echo "python_for_non_tls=[\"${{env.PYTHON_VERSION}}\"]" >> "$GITHUB_OUTPUT"
@@ -135,6 +132,14 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
+
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -144,7 +149,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -178,6 +183,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_non_tls) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_non_tls) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -187,7 +199,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -221,6 +233,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_no_client_auth) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_no_client_auth) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -230,7 +249,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -264,6 +283,13 @@ jobs:
       matrix:
         model_name: ${{ fromJson(needs.input_selection.outputs.selected_models_for_memory_logs) }}
         python_version: ${{ fromJson(needs.input_selection.outputs.selected_python_for_memory_logs) }}
+        exclude: # Keras does not support Python 3.12
+          - model_name: "keras/mnist"
+            python_version: "3.12"
+          - model_name: "keras/jax/mnist"
+            python_version: "3.12"
+          - model_name: "keras/torch/mnist" 
+            python_version: "3.12"
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -273,7 +299,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -297,3 +323,76 @@ jobs:
         if: ${{ always() }}
         with:
           test_type: "With_Memory_Logs"
+
+  test_straggler_check:
+    name: With TLS (torch/mnist_straggler_check, 3.10)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false) ||
+      (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_straggler_check')
+
+    env:
+      MODEL_NAME: "torch/mnist_straggler_check"
+      PYTHON_VERSION: "3.10"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Straggler Handling Interface Test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Straggler handling test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_TLS"
+
+  test_eden_compression:
+    name: With TLS (torch/mnist_eden_compression, 3.10)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_eden_compression')
+
+    env:
+      MODEL_NAME: "torch/mnist_eden_compression"
+      PYTHON_VERSION: "3.10"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Eden Compression Test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Eden compression test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_TLS"

@@ -10,17 +10,19 @@ class ModelName(Enum):
     """
     # IMP - The model name must be same (and in uppercase) as the model value.
     # This is used to identify the model in the tests.
-    TORCH_MNIST = "torch/mnist"
-    KERAS_MNIST = "keras/mnist"
-    TORCH_HISTOLOGY = "torch/histology"
-    XGB_HIGGS = "xgb_higgs"
-    KERAS_TORCH_MNIST = "keras/torch/mnist"
     KERAS_JAX_MNIST = "keras/jax/mnist"
+    KERAS_MNIST = "keras/mnist"
+    KERAS_TORCH_MNIST = "keras/torch/mnist"
+    TORCH_HISTOLOGY = "torch/histology"
+    TORCH_MNIST = "torch/mnist"
+    TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
+    TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
+    XGB_HIGGS = "xgb_higgs"
+    GANDLF_SEG_TEST = "gandlf_seg_test"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
-DEFAULT_MODEL_NAME = "torch/mnist"
 SUCCESS_MARKER = "✔️ OK"
 
 # Docker specific constants
@@ -28,6 +30,7 @@ CREATE_OPENFL_NW = "docker network create"
 REMOVE_OPENFL_NW = "docker network rm"
 DOCKER_NETWORK_NAME = "openfl"
 DEFAULT_OPENFL_IMAGE = "openfl:latest"
+DEFAULT_OPENFL_DOCKERFILE = "openfl-docker/Dockerfile.base"
 
 AGG_WORKSPACE_PATH = "{}/aggregator/workspace" # example - /tmp/my_federation/aggregator/workspace
 COL_WORKSPACE_PATH = "{}/{}/workspace"  # example - /tmp/my_federation/collaborator1/workspace
@@ -51,3 +54,4 @@ COL_START_CMD = "fx collaborator start -n {}"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
+EXCEPTION = "Exception"
