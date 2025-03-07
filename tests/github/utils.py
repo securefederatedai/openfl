@@ -50,7 +50,7 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
-    check_call(['pip', 'install', '-r', 'requirements.txt'])
+    check_call(['pip', 'install', '-r', 'requirements.txt' , ''])
     # Check installed packages
     check_call(['pip', 'freeze'])
 
