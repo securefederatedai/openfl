@@ -12,7 +12,9 @@ You may copy use this file or the appropriate framework-specific base-class to
 port your own models.
 """
 
-from logging import getLogger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TaskRunner:
@@ -54,15 +56,6 @@ class TaskRunner:
         if tensor_dict_split_fn_kwargs is None:
             tensor_dict_split_fn_kwargs = {}
         self.tensor_dict_split_fn_kwargs = tensor_dict_split_fn_kwargs
-        self.set_logger()
-
-    def set_logger(self):
-        """Set up the log object.
-
-        Returns:
-            None
-        """
-        self.logger = getLogger(__name__)
 
     def set_optimizer_treatment(self, opt_treatment):
         """Change the treatment of current instance optimizer.

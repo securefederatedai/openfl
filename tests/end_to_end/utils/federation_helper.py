@@ -8,9 +8,9 @@ import os
 import json
 import re
 import subprocess   # nosec B404
-import papermill as pm
 from pathlib import Path
 import shutil
+from glob import glob
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.db_helper as db_helper
@@ -358,7 +358,8 @@ def _verify_completion_for_participant(
     ):
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-        # Below change is done to incorporate warnings coming in end of runs
+
+        # Below change is done to handle warnings coming in end of runs
         content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
 
         # Print last line of the log file on screen to track the progress
@@ -442,7 +443,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"\tResults directory: {request.config.results_dir}\n"
         f"\tWorkspace path: {workspace_path}"
     )
-    return request.config.model_name, workspace_path, local_bind_path, agg_domain_name
+    return workspace_path, local_bind_path, agg_domain_name
 
 
 def add_local_workspace_permission(local_bind_path):
@@ -654,18 +655,81 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
     else:
         log.info("Data does not exist for all the collaborators. Proceeding with the download..")
         # Below step will also modify the data.yaml file for all the collaborators
-        download_data(collaborators, model_name, local_bind_path)
+        if model_name == constants.ModelName.XGB_HIGGS.value:
+            download_higgs_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
 
-def download_data(collaborators, model_name, local_bind_path):
+def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results_path):
+    """
+    Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
+    For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
+    where download is at collaborator level
+    Args:
+        aggregator: Aggregator object
+        collaborators: List of collaborator objects
+        local_bind_path: Local bind path
+        results_path: Result directory (mostly $HOME/results) where GaNDLF csv and config yaml files are present
+    """
+    try:
+        # Get list of all CSV files in openfl_path
+        csv_files = glob(os.path.join(results_path, '*.csv'))
+
+        # Get data.yaml file and remove any entry, if present
+        data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
+        with open(data_file, "w") as df:
+            df.write("")
+
+        # Copy the data to the respective workspaces based on the index
+        for col_index in range(1, num_collaborators+1):
+            dst_folder = os.path.join(aggregator.workspace_path, "data", str(col_index))
+            os.makedirs(dst_folder, exist_ok=True)
+            for csv_file in csv_files:
+                shutil.copy(csv_file, dst_folder)
+                log.info(f"Copied data from {csv_file} to {dst_folder}")
+
+            aggregator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, "aggregator"),
+                f"collaborator{col_index}",
+                col_index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+    return True
+
+
+def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path):
+    """
+    Function to copy the GaNDLF data from aggregator to respective collaborators
+    """
+    try:
+        # Copy the data to the respective workspaces based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(aggregator.workspace_path, "data", str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+
+def download_higgs_data(collaborators, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
     Also modify the data.yaml file for all the collaborators
     Args:
         collaborators (list): List of collaborator objects
-        model_name (str): Model name
         local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
@@ -684,7 +748,7 @@ def download_data(collaborators, model_name, local_bind_path):
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
         subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for {model_name}")
+        raise ex.DataSetupException(f"Failed to download data for XGBoost model")
 
     try:
         # Copy the data to the respective workspaces based on the index
@@ -895,6 +959,7 @@ def run_notebook(notebook_path, output_notebook_path):
     Returns:
         bool: True if successful, else False
     """
+    import papermill as pm
     try:
         log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
         output = pm.execute_notebook(

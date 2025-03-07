@@ -14,7 +14,7 @@ collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
-    delta_updates    : false
+    use_delta_updates    : false
     opt_treatment    : RESET
 
 data_loader :

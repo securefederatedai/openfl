@@ -6,7 +6,7 @@
 This file contains utility functions for Secure Aggregation for key operations.
 """
 
-from Crypto.PublicKey import ECC
+from Crypto.PublicKey import ECC  # nosec B413
 
 
 def generate_key_pair(curve: str = "ed25519") -> tuple[str, str]:
@@ -44,13 +44,13 @@ def generate_agreed_key(
     Returns:
         bytes: Agreed key between the two keys shared in args.
     """
-    from Crypto.Hash import SHAKE128
+    from Crypto.Hash import SHAKE128  # nosec B413
 
     # Key derivation function.
     def kdf(x):
         return SHAKE128.new(x).read(32)
 
-    from Crypto.Protocol.DH import key_agreement
+    from Crypto.Protocol.DH import key_agreement  # nosec B413
 
     # Using Diffie-Hellman key agreement.
     key = key_agreement(

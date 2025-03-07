@@ -8,6 +8,8 @@ import keras
 
 from openfl.federated import KerasTaskRunner
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Keras2DUNet(KerasTaskRunner):
     """Initialize.
@@ -27,7 +29,7 @@ class Keras2DUNet(KerasTaskRunner):
         super().__init__(**kwargs)
 
         self.model = self.build_model(self.data_loader.get_feature_shape(), use_upsampling=True, **kwargs)
-        self.model.summary(print_fn=self.logger.info, line_length=120)
+        self.model.summary(print_fn=logger.info, line_length=120)
         self.initialize_tensorkeys_for_functions()
 
 

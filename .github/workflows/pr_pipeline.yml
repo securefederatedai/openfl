@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
 
   gandlf_taskrunner:
-    name: GaNDLF TaskRunner
+    name: GaNDLF TaskRunner E2E
     uses: ./.github/workflows/gandlf.yml
 
   hadolint_security_scan:
