@@ -85,3 +85,23 @@ class Aggregator():
             log.error(f"{error_msg}: {e}")
             raise e
         return res_file
+
+    def modify_data_file(self, data_file, col_name, index):
+        """
+        Modify the data.yaml file for the model
+        Args:
+            data_file (str): Path to the data file including the file name
+        Returns:
+            bool: True if successful, else False
+        """
+        try:
+            log.info("Data setup completed successfully. Modifying the data.yaml file..")
+
+            with open(data_file, "a") as file:
+                file.write(f"{col_name},data/{index}\n")
+
+        except Exception as e:
+            log.error(f"Failed to modify the data file: {e}")
+            raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+        return True
