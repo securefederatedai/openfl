@@ -3,6 +3,8 @@
 
 import logging
 
+from rich.console import Console
+from rich.logging import RichHandler
 # Get the logger instance configured in conftest.py
 logger = logging.getLogger()
 
@@ -29,6 +31,9 @@ def configure_logging(log_file, log_level):
     handler.setFormatter(formatter)
     handler.setLevel(log_level)
 
+    console = Console(width=160)
+    rich_handler = RichHandler(console=console)
+
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     console_handler.setLevel(log_level)
@@ -36,3 +41,4 @@ def configure_logging(log_file, log_level):
     logger.setLevel(log_level)
     logger.addHandler(handler)
     logger.addHandler(console_handler)
+    logger.addHandler(rich_handler)
