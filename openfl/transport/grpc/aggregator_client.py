@@ -299,6 +299,7 @@ class AggregatorGRPCClient:
                 tasks, the round number, the sleep time, and a boolean
                 indicating whether to quit.
         """
+        logger.info("Requesting tasks...")
         header = create_header(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,

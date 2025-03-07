@@ -7,12 +7,13 @@
 import logging
 from enum import Enum
 from time import sleep
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
+from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
 from openfl.utilities import TensorKey
 
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ class Collaborator:
         collaborator_name,
         aggregator_uuid,
         federation_uuid,
-        client,
+        client: AggregatorGRPCClient,
         task_runner,
         task_config,
         opt_treatment="RESET",
@@ -174,7 +175,9 @@ class Collaborator:
         self.callbacks.on_experiment_begin()
 
         while True:
-            tasks, round_num, sleep_time, time_to_quit = self.get_tasks()
+            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks(
+                self.collaborator_name
+            )
 
             if time_to_quit:
                 break
@@ -200,23 +203,6 @@ class Collaborator:
         # Experiment end
         self.callbacks.on_experiment_end()
         logger.info("Received shutdown signal. Exiting...")
-
-    def get_tasks(self):
-        """Get tasks from the aggregator.
-
-        Returns:
-             tasks (list_of_str): List of tasks.
-             round_number (int): Actual round number.
-             sleep_time (int): Sleep time.
-             time_to_quit (bool): bool value for quit.
-        """
-        # logging wait time to analyze training process
-        logger.info("Waiting for tasks...")
-        tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
-            self.collaborator_name
-        )
-
-        return tasks, round_number, sleep_time, time_to_quit
 
     def do_task(self, task, round_number) -> dict:
         """Perform the specified task.
@@ -265,7 +251,9 @@ class Collaborator:
 
         # print('Required tensorkeys = {}'.format(
         # [tk[0] for tk in required_tensorkeys]))
-        input_tensor_dict = self.get_numpy_dict_for_tensorkeys(required_tensorkeys)
+        input_tensor_dict = {
+            k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
+        }
 
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
@@ -296,15 +284,6 @@ class Collaborator:
         # Add unmasked metrics to the metrics that are logged, if any.
         metrics.update(unmasked_metrics)
         return metrics
-
-    def get_numpy_dict_for_tensorkeys(self, tensor_keys):
-        """Get tensor dictionary for specified tensorkey set.
-
-        Args:
-            tensor_keys (namedtuple): Tensorkeys that will be resolved locally
-                or remotely. May be the product of other tensors.
-        """
-        return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
     def get_data_for_tensorkey(self, tensor_key):
         """Resolve the tensor corresponding to the requested tensorkey.
