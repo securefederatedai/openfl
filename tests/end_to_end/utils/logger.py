@@ -31,7 +31,10 @@ def configure_logging(log_file, log_level):
     handler.setFormatter(formatter)
     handler.setLevel(log_level)
 
-    console = Console(width=160)
+    # Rich strips colors if it detects its not writing to a terminal
+    # That includes logging during GitHub workflow runs
+    # Thus force_terminal is set to True to ensure colors are displayed
+    console = Console(width=160, force_terminal=True)
     rich_handler = RichHandler(console=console)
 
     console_handler = logging.StreamHandler()
