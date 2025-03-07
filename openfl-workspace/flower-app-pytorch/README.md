@@ -265,7 +265,6 @@ connector :
       serverappio-api-address : 127.0.0.1:9091 
       fleet-api-address :  127.0.0.1:9092 
       exec-api-address : 127.0.0.1:9093
-      patch : True
     flwr_run_params :
       flwr_app_name : "app-pytorch"
       federation_name : "local-poc"
