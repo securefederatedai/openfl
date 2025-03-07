@@ -330,7 +330,6 @@ if __name__ == "__main__":
     model = None
     optimizer = None
     flflow = TestFlowDatastoreAndCli(model, optimizer, num_rounds, checkpoint=True)
-    flflow.runtime = local_runtime
     local_runtime.run(flflow)
 
     expected_flow_steps = [
