@@ -19,19 +19,6 @@ from openfl.utilities import TensorKey
 logger = logging.getLogger(__name__)
 
 
-class DevicePolicy(Enum):
-    """Device assignment policy.
-
-    Attributes:
-        CPU_ONLY (int): Assigns tasks to CPU only.
-        CUDA_PREFERRED (int): Prefers CUDA for task assignment if available.
-    """
-
-    CPU_ONLY = 1
-
-    CUDA_PREFERRED = 2
-
-
 class OptTreatment(Enum):
     """Optimizer Methods.
 
@@ -59,7 +46,7 @@ class Collaborator:
         task_runner (object): The task runner object.
         task_config (dict): The task configuration.
         opt_treatment (str)*: The optimizer state treatment.
-        device_assignment_policy (str): The device assignment policy.
+        device_assignment_policy (str): [Deprecated] The device assignment policy.
         use_delta_updates (bool)*: If True, only model delta gets sent. If False,
             whole model gets sent to collaborator.
         compression_pipeline (object): The compression pipeline.
@@ -136,15 +123,12 @@ class Collaborator:
         else:
             logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
             raise NotImplementedError(f"Unknown opt_treatment: {opt_treatment}.")
-
-        if hasattr(DevicePolicy, device_assignment_policy):
-            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
-        else:
-            logger.error(f"Unknown device_assignment_policy: {device_assignment_policy.name}.")
-            raise NotImplementedError(
-                f"Unknown device_assignment_policy: {device_assignment_policy}."
-            )
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+
+        logger.warning(
+            "Argument `device_assignment_policy` is deprecated and will be removed in the future."
+        )
+        del device_assignment_policy
 
         # Secure aggregation
         self._secure_aggregation_enabled = secure_aggregation

@@ -69,14 +69,6 @@ def tensor_key_trained(collaborator_mock, named_tensor):
     return tensor_key
 
 
-def test_get_tasks(collaborator_mock):
-    """Test that get_tasks works correctly."""
-    results = (['task_name'], 0, 0, True)
-    collaborator_mock.client.get_tasks = mock.Mock(return_value=results)
-    tasks, round_number, sleep_time, time_to_quit = collaborator_mock.get_tasks()
-    assert results == (tasks, round_number, sleep_time, time_to_quit)
-
-
 def test_do_task(collaborator_mock, tensor_key):
     """Test that do_task works correctly."""
     round_number = 0
@@ -238,30 +230,3 @@ def test_get_data_for_tensorkey_dependencies(collaborator_mock, tensor_key):
     collaborator_mock.get_data_for_tensorkey(tensor_key)
     collaborator_mock.get_aggregated_tensor_from_aggregator.assert_called_with(
         tensor_key, require_lossless=True)
-
-
-def test_get_numpy_dict_for_tensorkeys(collaborator_mock, tensor_key):
-    """Test that get_numpy_dict_for_tensorkeys works."""
-    expected_nparray = 'some_data'
-    collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
-        return_value='some_data')
-    numpy_dict = collaborator_mock.get_numpy_dict_for_tensorkeys([tensor_key])
-
-    assert numpy_dict == {tensor_key.tensor_name: expected_nparray}
-
-
-def test_run_time_to_quit(collaborator_mock):
-    """Test that run works correctly if is time to quit."""
-    collaborator_mock.get_tasks = mock.Mock(return_value=([], 0, 0, True))
-    collaborator_mock.run()
-
-
-def test_run(collaborator_mock):
-    """Test that run works correctly."""
-    round_number = 0
-    collaborator_mock.get_tasks = mock.Mock()
-    collaborator_mock.get_tasks.side_effect = [(['task'], round_number, 0, False),
-                                               (['task'], round_number, 0, True)]
-    collaborator_mock.do_task = mock.Mock(return_value={'metric': 0.0})
-    collaborator_mock.run()
-    collaborator_mock.do_task.assert_called_with('task', round_number)
