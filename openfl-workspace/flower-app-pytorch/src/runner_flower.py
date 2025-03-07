@@ -152,6 +152,7 @@ class FlowerTaskRunner(TaskRunner):
 def install_flower_FAB(flwr_app_name):
     """Build and install the patch for the Flower application."""
     flwr_dir = os.environ["FLWR_HOME"]
+    os.environ["TMPDIR"] = flwr_dir
     
     # Run the build command
     subprocess.check_call([

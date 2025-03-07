@@ -27,6 +27,12 @@ def build(
 
     ``flwr build --app ./apps/flower-hello-world``.
     """
+    ### PATCH ###
+    # # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
+    # # This is useful for running in an SGX enclave with Gramine since we need to strictly control allowed/trusted files
+    flwr_home = os.getenv("FLWR_HOME")
+    #################################
+    
     if app is None:
         app = Path.cwd()
 
@@ -82,13 +88,7 @@ def build(
 
     toml_contents = tomli_w.dumps(conf)
 
-    ### PATCH ###
-    # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
-    # This is useful for running in an SGX enclave with Gramine since we need to strictly control allowed/trusted files
-    flwr_home = os.getenv("FLWR_HOME")
-    with tempfile.NamedTemporaryFile(suffix=".zip", dir=flwr_home, delete=False) as temp_file:
-    #############
-
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_file:
         temp_filename = temp_file.name
 
         with zipfile.ZipFile(temp_filename, "w", zipfile.ZIP_DEFLATED) as fab_file:
@@ -132,18 +132,19 @@ def build(
     fab_filename = get_fab_filename(conf, fab_hash)
 
     ### PATCH ###
-    # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
-    # Also, return final_path
+    # # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
     final_path = os.path.join(flwr_home, fab_filename)
-    #############
-
     shutil.move(temp_filename, final_path)
+    #################################
 
     typer.secho(
         f"🎊 Successfully built {fab_filename}", fg=typer.colors.GREEN, bold=True
     )
 
+    ### PATCH ###
+    # return final_path
     return final_path, fab_hash
+    ################
 
 
 flwr.cli.build.build = build

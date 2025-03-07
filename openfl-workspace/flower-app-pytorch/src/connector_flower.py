@@ -145,6 +145,8 @@ class ConnectorFlower(Connector):
         federation_name = self.flwr_run_params.get("federation_name")
         flwr_app_name = self.flwr_run_params.get("flwr_app_name")
 
+        os.environ["TMPDIR"] = os.environ["FLWR_HOME"]
+
         if self.flwr_run_params.get("patch"):
             command = ["python", "src/patch/flwr_run_patch.py", "run", f"./src/{flwr_app_name}"]
         else:
