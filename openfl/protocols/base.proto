@@ -29,39 +29,3 @@ message DataStream {
   uint32 size = 1; // size, in bytes, of the data sent in npbytes
   bytes npbytes = 2; // actual data
 }
-
-message CollaboratorDescription {
-  string name = 1;
-  string status = 2;
-  float progress = 3;
-  uint32 round = 4;
-  string current_task = 5;
-  string next_task = 6;
-}
-
-// The same with director.proto
-message TaskDescription {
-  string name = 1;
-  string description = 2;
-}
-
-message DownloadStatus {
-  string name = 1;
-  string status = 2;
-}
-
-message DownloadStatuses {
-  repeated DownloadStatus models = 1;
-  repeated DownloadStatus logs = 2;
-}
-
-message ExperimentDescription {
-  string name = 1;
-  string status = 2;
-  float progress = 3;
-  uint32 total_rounds = 4;
-  uint32 current_round = 5;
-  DownloadStatuses download_statuses = 6;
-  repeated CollaboratorDescription collaborators = 7;
-  repeated TaskDescription tasks = 8;
-}

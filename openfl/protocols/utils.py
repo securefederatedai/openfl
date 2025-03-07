@@ -3,8 +3,12 @@
 
 """Proto utils."""
 
+import logging
+
 from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
+
+logger = logging.getLogger(__name__)
 
 
 def model_proto_to_bytes_and_metadata(model_proto):
@@ -293,7 +297,7 @@ def dump_proto(model_proto, fpath):
         f.write(s)
 
 
-def datastream_to_proto(proto, stream, logger=None):
+def datastream_to_proto(proto, stream):
     """Convert the datastream to the protobuf.
 
     Args:
@@ -317,7 +321,7 @@ def datastream_to_proto(proto, stream, logger=None):
         raise RuntimeError(f"Received empty stream message of type {type(proto)}")
 
 
-def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
+def proto_to_datastream(proto, max_buffer_size=(2 * 1024 * 1024)):
     """Convert the protobuf to the datastream for the remote connection.
 
     Args:

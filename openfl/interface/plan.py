@@ -143,7 +143,6 @@ def initialize(
     )
 
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
         init_tensor_dict,
         **task_runner.tensor_dict_split_fn_kwargs,
     )

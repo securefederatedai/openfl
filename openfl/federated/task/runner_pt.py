@@ -4,6 +4,7 @@
 
 """PyTorchTaskRunner module."""
 
+import logging
 from copy import deepcopy
 from typing import Iterator, Tuple
 
@@ -15,6 +16,8 @@ import tqdm
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
+
+logger = logging.getLogger(__name__)
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -158,7 +161,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.train()
         self.to(self.device)
         for epoch in range(epochs):
-            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            logger.info(f"Run {epoch} epoch of {round_num} round")
             loader = self.data_loader.get_train_loader()
             if use_tqdm:
                 loader = tqdm.tqdm(loader, desc="train epoch")
@@ -173,7 +176,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
@@ -348,7 +351,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
@@ -356,7 +359,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
                 output_model_dict,
                 **self.tensor_dict_split_fn_kwargs,
             )
