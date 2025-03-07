@@ -16,6 +16,7 @@ from openfl.transport.grpc.common import create_header, create_insecure_channel,
 logger = logging.getLogger(__name__)
 
 
+
 class ConstantBackoff:
     """Constant Backoff policy.
 
@@ -371,8 +372,8 @@ class AggregatorGRPCClient:
         collaborator_name,
         round_number,
         task_name,
-        data_size,
-        named_tensors,
+        data_size=None,
+        named_tensors=None,
     ):
         """
         Send task results to the aggregator.
@@ -402,3 +403,27 @@ class AggregatorGRPCClient:
         # convert (potentially) long list of tensors into stream
         response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
+
+    @_atomic_connection
+    @_resend_data_on_reconnection
+    def send_message_to_server(self, openfl_message, collaborator_name):
+        """
+        Forwards a converted message from the local GRPC server (LGS) to the OpenFL server and returns the response.
+
+        Args:
+            openfl_message: The converted message from the LGS to be sent to the OpenFL server.
+            collaborator_name: The name of the collaborator.
+
+        Returns:
+            The response from the OpenFL server
+        """
+        header = create_header(
+            sender=collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
+        openfl_message.header.CopyFrom(header)
+        openfl_response = self.stub.PelicanDrop(openfl_message)
+        self.validate_response(openfl_response, collaborator_name)
+        return openfl_response

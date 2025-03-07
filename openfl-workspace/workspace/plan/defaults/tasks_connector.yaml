@@ -1,0 +1,4 @@
+start_client_adapter:
+  function : start_client_adapter
+  kwargs   :
+    local_server_port : 0 # local grpc server, 0 to dynamically allocate
