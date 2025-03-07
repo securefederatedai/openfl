@@ -12,7 +12,6 @@ import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
-from openfl.utilities import check_equal
 
 logger = logging.getLogger(__name__)
 
@@ -244,10 +243,22 @@ class AggregatorGRPCClient:
 
     def validate_response(self, response, collaborator_name):
         """Validate the aggregator response."""
-        check_equal(response.header.receiver, collaborator_name)
-        check_equal(response.header.sender, self.aggregator_uuid)
-        check_equal(response.header.federation_uuid, self.federation_uuid)
-        check_equal(response.header.single_col_cert_common_name, self.single_col_cert_common_name)
+        assert response.header.receiver == collaborator_name, (
+            f"Receiver in response header does not match collaborator name. "
+            f"Expected: {collaborator_name}, Actual: {response.header.receiver}"
+        )
+        assert response.header.sender == self.aggregator_uuid, (
+            f"Sender in response header does not match aggregator UUID. "
+            f"Expected: {self.aggregator_uuid}, Actual: {response.header.sender}"
+        )
+        assert response.header.federation_uuid == self.federation_uuid, (
+            f"Federation UUID in response header does not match. "
+            f"Expected: {self.federation_uuid}, Actual: {response.header.federation_uuid}"
+        )
+        assert response.header.single_col_cert_common_name == self.single_col_cert_common_name, (
+            f"Single collaborator certificate common name in response header does not match. "
+            f"Expected: {self.single_col_cert_common_name}, Actual: {response.header.single_col_cert_common_name}"  # noqa: E501
+        )
 
     def disconnect(self):
         """Close the gRPC channel."""
@@ -347,6 +358,9 @@ class AggregatorGRPCClient:
         )
         response = self.stub.GetAggregatedTensor(request)
         self.validate_response(response, collaborator_name)
+
+        # Deserialize Tensor.
+
         return response.tensor
 
     @_resend_data_on_reconnection
