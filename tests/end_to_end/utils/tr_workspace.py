@@ -4,8 +4,11 @@
 import collections
 import concurrent.futures
 import logging
+import os
+from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
@@ -35,7 +38,7 @@ def common_workspace_creation(request, eval_scope=False):
         domain name, model owner, plan path, and aggregator workspace path.
     """
 
-    model_name, workspace_path, local_bind_path, agg_domain_name = (
+    workspace_path, local_bind_path, agg_domain_name = (
         fh.federation_env_setup_and_validate(request, eval_scope)
     )
 
@@ -44,7 +47,7 @@ def common_workspace_creation(request, eval_scope=False):
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
     model_owner = mo_model.ModelOwner(
-        model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
+        request.config.model_name, request.config.log_memory_usage, workspace_path=agg_workspace_path
     )
 
     # Create workspace for given model name
@@ -72,13 +75,7 @@ def common_workspace_creation(request, eval_scope=False):
             request.config.straggler_policy, plan_path=plan_path
         )
 
-    # Initialize the plan
-    model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, initial_model_path=initial_model_path
-    )
-
-    # Return the federation fixture
-    return workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path
+    return workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path
 
 
 def create_tr_workspace(request, eval_scope=False):
@@ -96,8 +93,13 @@ def create_tr_workspace(request, eval_scope=False):
     """
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
-    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
-    model_name = request.config.model_name
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+
+    # Initialize the plan
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, extra_args=f"-i {initial_model_path}" if initial_model_path else ""
+    )
+
     # Certify the workspace in case of TLS
     if request.config.use_tls:
         model_owner.certify_workspace()
@@ -140,8 +142,8 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == "xgb_higgs":
-        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
+    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
@@ -156,7 +158,111 @@ def create_tr_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
-        model_name=model_name,
+        model_name=request.config.model_name,
+    )
+
+
+def create_tr_workspace_gandlf(request, eval_scope=False):
+    """
+    Create a task runner workspace for Gandlf model.
+
+    Args:
+        request (object): Pytest request
+    """
+    # get details of model owner, collaborators, and aggregator from common
+    # workspace creation function
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+
+    home_dir = Path().home()
+    results_path = os.path.join(home_dir, request.config.results_dir)
+
+    # Raise exception if openfl does not contain gandlf folder.
+    if not os.path.isdir(os.path.join(os.getcwd(), "gandlf")):
+        raise Exception(
+            "Folder 'gandlf' is not present in the current working directory. "
+            "Please ensure that all the pre-requisites are met before running the test. "
+            "Refer file .github/workflows/gandlf.yaml for the same."
+        )
+
+    # Check if valid.csv and train.csv are present in openfl folder
+    if not os.path.exists(os.path.join(results_path, "valid.csv")) or not os.path.exists(
+        os.path.join(results_path, "train.csv")
+    ):
+        raise ex.DataSetupException("Required data files for GanDLF are missing in the openfl folder")
+
+    # Check if file config_segmentation.yaml is present in openfl folder
+    gandlf_seg_file = os.path.join(results_path, "config_segmentation.yaml")
+    if not os.path.exists(gandlf_seg_file):
+        raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} not available.")
+
+    with open(gandlf_seg_file, 'r') as file:
+        content = file.read()
+
+    if not "num_channels" in content:
+        raise ex.GaNDLFConfigSegException(f"File {gandlf_seg_file} must contain entry for num_channels.")
+
+    # Create the objects for aggregator
+    aggregator = agg_model.Aggregator(
+        agg_domain_name=agg_domain_name,
+        workspace_path=agg_workspace_path,
+        eval_scope=eval_scope,
+        container_id=model_owner.container_id,  # None in case of native environment
+    )
+
+    # Currently plan intialization internally checks data path in data.yaml
+    # So we need to have data and modified data.yaml file in place before initializing the plan
+    # Issue - https://github.com/securefederatedai/openfl/issues/73
+    fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators, results_path)
+
+    # Initialize the plan
+    extra_args = f"--gandlf_config {gandlf_seg_file}"
+    extra_args += f" -i {initial_model_path}" if initial_model_path else ""
+
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, extra_args=extra_args
+    )
+
+    # Update cols.yaml file with the collaborator names
+    model_owner.register_collaborators(plan_path, request.config.num_collaborators)
+
+    # Certify the workspace, generate the sign request and certify the aggregator
+    if request.config.use_tls:
+        model_owner.certify_workspace()
+        aggregator.generate_sign_request()
+        model_owner.certify_aggregator(agg_domain_name)
+
+    # Export the workspace
+    # By default the workspace will be exported to workspace.zip
+    model_owner.export_workspace()
+
+    collaborators = []
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    futures = [
+        executor.submit(
+            fh.setup_collaborator,
+            index,
+            workspace_path=workspace_path,
+            local_bind_path=local_bind_path
+        )
+        for index in range(1, request.config.num_collaborators+1)
+    ]
+    collaborators = [f.result() for f in futures]
+
+    fh.copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path)
+
+    if request.config.use_tls:
+        fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
+        fh.import_pki_for_collaborators(collaborators)
+
+    # Return the federation fixture
+    return federation_details(
+        model_owner=model_owner,
+        aggregator=aggregator,
+        collaborators=collaborators,
+        workspace_path=workspace_path,
+        local_bind_path=local_bind_path,
+        model_name=request.config.model_name,
     )
 
 
@@ -175,8 +281,12 @@ def create_tr_dws_workspace(request, eval_scope=False):
     """
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
-    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path = common_workspace_creation(request, eval_scope)
-    model_name = request.config.model_name
+    workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
+
+    # Initialize the plan
+    model_owner.initialize_plan(
+        agg_domain_name=agg_domain_name, extra_args=f"-i {initial_model_path}" if initial_model_path else ""
+    )
 
     # Create openfl image
     dh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
@@ -221,14 +331,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if model_name.lower() == "xgb_higgs":
-        fh.setup_collaborator_data(collaborators, model_name, local_bind_path)
+    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if model_name.lower() == "xgb_higgs" else False
+        add_data=True if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -256,5 +366,5 @@ def create_tr_dws_workspace(request, eval_scope=False):
         collaborators=collaborators,
         workspace_path=workspace_path,
         local_bind_path=local_bind_path,
-        model_name=model_name,
+        model_name=request.config.model_name,
     )
