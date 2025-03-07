@@ -16,8 +16,6 @@ from GANDLF.compute.forward_pass import validate_network
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.config_manager import ConfigManager
-from safetensors import safe_open
-from safetensors.torch import save_file
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import TensorKey
@@ -421,12 +419,9 @@ class GaNDLFTaskRunner(TaskRunner):
                 dict in picked file. Defaults to 'optimizer_state_dict'.
             **kwargs: Additional keyword arguments.
         """
-        pickle_dict = {}
-        with safe_open(filepath, framework="pt", device=0) as f:
-            for k in f.keys():
-                pickle_dict[k] = f.get_tensor(k)
-            self.load_state_dict(pickle_dict[model_state_dict_key])
-            self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        pickle_dict = pt.load(filepath)
+        self.model.load_state_dict(pickle_dict[model_state_dict_key])
+        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
     def save_native(
         self,
@@ -449,10 +444,10 @@ class GaNDLFTaskRunner(TaskRunner):
             **kwargs: Additional keyword arguments.
         """
         pickle_dict = {
-            model_state_dict_key: self.state_dict(),
+            model_state_dict_key: self.model.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
-        save_file(pickle_dict, filepath)
+        pt.save(pickle_dict, filepath)
 
     def reset_opt_vars(self):
         """Reset optimizer variables."""

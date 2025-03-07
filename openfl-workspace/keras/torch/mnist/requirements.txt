@@ -3,4 +3,3 @@ torch==2.6.0
 torch-xla==2.6.0
 torchvision==0.21.0
 tensorflow==2.18.0
-safetensors==0.5.3
