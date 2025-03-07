@@ -433,15 +433,15 @@ def federation_env_setup_and_validate(request, eval_scope=False):
 
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {request.config.num_collaborators}\n"
-        f"\tNumber of rounds: {num_rounds}\n"
-        f"\tModel name: {request.config.model_name}\n"
-        f"\tClient authentication: {request.config.require_client_auth}\n"
-        f"\tTLS: {request.config.use_tls}\n"
-        f"\tSecure Aggregation: {request.config.secure_agg}\n"
-        f"\tMemory Logs: {request.config.log_memory_usage}\n"
-        f"\tResults directory: {request.config.results_dir}\n"
-        f"\tWorkspace path: {workspace_path}"
+        f"Number of collaborators: {request.config.num_collaborators}\n"
+        f"Number of rounds: {num_rounds}\n"
+        f"Model name: {request.config.model_name}\n"
+        f"Client authentication: {request.config.require_client_auth}\n"
+        f"TLS: {request.config.use_tls}\n"
+        f"Secure Aggregation: {request.config.secure_agg}\n"
+        f"Memory Logs: {request.config.log_memory_usage}\n"
+        f"Results directory: {request.config.results_dir}\n"
+        f"Workspace path: {workspace_path}"
     )
     return workspace_path, local_bind_path, agg_domain_name
 

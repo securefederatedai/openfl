@@ -35,7 +35,11 @@ def configure_logging(log_file, log_level):
     # That includes logging during GitHub workflow runs
     # Thus force_terminal is set to True to ensure colors are displayed
     console = Console(width=160, force_terminal=True)
-    rich_handler = RichHandler(console=console)
+    rich_handler = RichHandler(
+        rich_tracebacks=True,
+        markup=True,
+        console=console,
+    )
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -43,5 +47,5 @@ def configure_logging(log_file, log_level):
     logger = logging.getLogger()
     logger.setLevel(log_level)
     logger.addHandler(handler)
-    logger.addHandler(console_handler)
+    # logger.addHandler(console_handler)
     logger.addHandler(rich_handler)
