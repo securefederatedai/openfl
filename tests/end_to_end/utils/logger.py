@@ -31,7 +31,7 @@ def configure_logging(log_file, log_level):
         fmt="\n%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
-    
+
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)
     handler.setLevel(log_level)
@@ -45,7 +45,6 @@ def configure_logging(log_file, log_level):
         markup=True,
         console=console,
     )
-    rich_handler.setFormatter(formatter)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -53,5 +52,5 @@ def configure_logging(log_file, log_level):
     logger = logging.getLogger()
     logger.setLevel(log_level)
     logger.addHandler(handler)
-    # logger.addHandler(console_handler)
+    # # logger.addHandler(console_handler)
     logger.addHandler(rich_handler)
