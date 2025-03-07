@@ -73,6 +73,7 @@ class ModelOwner():
                 workspace_path=ws_path,
                 error_msg="Failed to install the requirements",
                 container_id=self.container_id,
+                print_output=True,
             )
 
         except Exception as e:
