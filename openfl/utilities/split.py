@@ -4,7 +4,11 @@
 
 """split tensors module."""
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
@@ -55,7 +59,6 @@ def split_tensor_dict_by_types(tensor_dict, keep_types):
 
 
 def split_tensor_dict_for_holdouts(
-    logger,
     tensor_dict,
     keep_types=(np.floating, np.integer),
     holdout_tensor_names=(),
@@ -68,7 +71,6 @@ def split_tensor_dict_for_holdouts(
     tensors.
 
     Args:
-        logger (Logger): The logger to use for reporting warnings.
         tensor_dict (dict): A dictionary of tensors.
         keep_types (Tuple[type, ...], optional): A tuple of types to keep in
             the dictionary of tensors. Defaults to (np.floating, np.integer).
