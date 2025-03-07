@@ -38,7 +38,7 @@ class SaveModelStrategy(FedAvg):
                 aggregated_parameters
             )
 
-            np.savez(f"last.npz", *self.aggregated_ndarrays)
+            np.savez(f"./save/last.npz", *self.aggregated_ndarrays)
 
         return aggregated_parameters, aggregated_metrics
 
@@ -74,7 +74,7 @@ class SaveModelStrategy(FedAvg):
 
         if loss_aggregated < self.largest_loss:
             self.largest_loss = loss_aggregated
-            np.savez(f"best.npz", *self.aggregated_ndarrays)
+            np.savez(f"./save/best.npz", *self.aggregated_ndarrays)
 
         return loss_aggregated, metrics_aggregated
 
