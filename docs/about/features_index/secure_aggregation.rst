@@ -46,7 +46,7 @@ The following plan shows secure aggregation being enabled on `keras/mnist <https
     collaborator:
         settings:
             db_store_rounds: 1
-            delta_updates: false
+            use_delta_updates: false
             opt_treatment: RESET
         template: openfl.component.Collaborator
     compression_pipeline:

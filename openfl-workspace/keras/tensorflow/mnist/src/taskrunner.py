@@ -8,6 +8,9 @@ import keras
 from .model import CNNModel
 from openfl.federated import KerasTaskRunner
 
+import logging
+logger = logging.getLogger(__name__)
+
 class CNNTaskruner(KerasTaskRunner):
     """A basic convolutional neural network model."""
 
@@ -35,10 +38,10 @@ class CNNTaskruner(KerasTaskRunner):
 
         self.initialize_tensorkeys_for_functions()
 
-        self.model.summary(print_fn=self.logger.info)
+        self.model.summary(print_fn=logger.info)
 
-        self.logger.info(f'Train Set Size : {self.get_train_data_size()}')
-        self.logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
+        logger.info(f'Train Set Size : {self.get_train_data_size()}')
+        logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
 
     def build_model(self,
                     input_shape,

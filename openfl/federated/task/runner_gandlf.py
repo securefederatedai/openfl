@@ -4,6 +4,7 @@
 
 """GaNDLFTaskRunner module."""
 
+import logging
 import os
 from copy import deepcopy
 from typing import Union
@@ -19,6 +20,8 @@ from GANDLF.config_manager import ConfigManager
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import TensorKey
 from openfl.utilities.split import split_tensor_dict_for_holdouts
+
+logger = logging.getLogger(__name__)
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -159,8 +162,8 @@ class GaNDLFTaskRunner(TaskRunner):
             mode="validation",
         )
 
-        self.logger.info(epoch_valid_loss)
-        self.logger.info(epoch_valid_metric)
+        logger.info(epoch_valid_loss)
+        logger.info(epoch_valid_metric)
 
         origin = col_name
         suffix = "validate"
@@ -209,7 +212,7 @@ class GaNDLFTaskRunner(TaskRunner):
         # set to "training" mode
         self.model.train()
         for epoch in range(epochs):
-            self.logger.info("Run %s epoch of %s round", epoch, round_num)
+            logger.info("Run %s epoch of %s round", epoch, round_num)
             # FIXME: do we want to capture these in an array
             # rather than simply taking the last value?
             epoch_train_loss, epoch_train_metric = train_network(
@@ -233,7 +236,6 @@ class GaNDLFTaskRunner(TaskRunner):
             metric_dict,
             col_name,
             round_num,
-            self.logger,
             self.tensor_dict_split_fn_kwargs,
         )
 
@@ -359,7 +361,7 @@ class GaNDLFTaskRunner(TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
@@ -367,7 +369,6 @@ class GaNDLFTaskRunner(TaskRunner):
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
                 output_model_dict,
                 **self.tensor_dict_split_fn_kwargs,
             )
@@ -458,7 +459,6 @@ def create_tensorkey_dicts(
     metric_dict,
     col_name,
     round_num,
-    logger,
     tensor_dict_split_fn_kwargs,
 ):
     """Create dictionaries of TensorKeys for global and local tensors.
@@ -468,7 +468,6 @@ def create_tensorkey_dicts(
         metric_dict (dict): Dictionary of metrics.
         col_name (str): Name of the collaborator.
         round_num (int): Current round number.
-        logger (Logger): Logger instance.
         tensor_dict_split_fn_kwargs (dict): Keyword arguments for the tensor
             dict split function.
 
@@ -484,7 +483,7 @@ def create_tensorkey_dicts(
         output_metric_dict[tk] = np.array(v)
 
     global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-        logger, tensor_dict, **tensor_dict_split_fn_kwargs
+        tensor_dict, **tensor_dict_split_fn_kwargs
     )
 
     # Create global tensorkeys
