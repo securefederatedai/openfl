@@ -23,12 +23,8 @@ class FlowerDataLoader(DataLoader):
 
         Args:
             data_path (str or int): The directory of the dataset.
-            collaborator_count (int): The number of partitions to divide the dataset into.
             **kwargs: Additional keyword arguments to pass to the parent DataLoader class.
-
-        Raises:
-            ValueError: If collaborator_count is not provided or if data_path is not a number.
-        """
+         """
         super().__init__(**kwargs)
         self.data_path = data_path
     
@@ -40,7 +36,7 @@ class FlowerDataLoader(DataLoader):
         which can be used by each node to access the dataset.
 
         Returns:
-            tuple: A tuple containing the number of partitions and the data shard.
+            str: data path
         """
         return self.data_path
     
