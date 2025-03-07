@@ -13,21 +13,21 @@ os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class FlowerTaskRunner(TaskRunner):
     """
-    FlowerTaskRunner is a task runner that executes Flower SuperNode
-    to initialize the experiment from the client side.
+    FlowerTaskRunner is a task runner that executes the Flower SuperNode
+    to initialize and manage experiments from the client side.
 
     This class is responsible for starting a local gRPC server and a Flower SuperNode
-    in a subprocess. It also provides options for automatic shutdown based on subprocess
-    activity.
+    in a subprocess. It provides options for both manual and automatic shutdown based on
+    subprocess activity.
 
     Shutdown Options:
     - Manual Shutdown: The server and supernode process can be manually stopped by pressing CTRL+C.
-    - Automatic Shutdown: If enabled, the system will monitor the activity of subprocesses and 
-      automatically shut down if no new subprocess starts within a certain time frame.
+    - Automatic Shutdown: If enabled, the system will monitor subprocess activity and 
+      automatically shut down if no new subprocess starts within a specified time frame.
     """
     def __init__(self, **kwargs):
         """
-        Initializes the FlowerTaskRunner.
+        Initialize the FlowerTaskRunner.
 
         Args:
             auto_shutdown (bool): Whether to enable automatic shutdown based on subprocess activity.
@@ -52,42 +52,35 @@ class FlowerTaskRunner(TaskRunner):
         if self.client_port is None:
             self.client_port = get_dynamic_port()
 
-        self.shutdown_requested = False # Flag signal shutdown
+        self.shutdown_requested = False  # Flag to signal shutdown
 
     def start_client_adapter(self, local_grpc_server, **kwargs):
         """
-        Starts the local gRPC server and the Flower SuperNode.
+        Start the local gRPC server and the Flower SuperNode.
+
+        Args:
+            local_grpc_server: The local gRPC server instance.
+            **kwargs: Additional parameters, including 'local_server_port'.
         """
         local_server_port = kwargs.get('local_server_port')
 
         def message_callback():
             self.shutdown_requested = True
 
-        # TODO: Can we isolate the local_grpc_server from the task runner?
+        # Set the callback for ending the experiment
         local_grpc_server.set_end_experiment_callback(message_callback)
         local_grpc_server.start_server(local_server_port)
 
         local_server_port = local_grpc_server.get_port()
 
-        if self.patch:
-            command = [
-                "python",
-                "src/patch/flower_supernode_patch.py",
-                "--insecure",
-                "--grpc-adapter",
-                "--superlink", f"127.0.0.1:{local_server_port}",
-                "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
-                "--node-config", f"data-path='{self.data_path}'"
-            ]
-        else:
-            command = [
-                "flower-supernode",
-                "--insecure",
-                "--grpc-adapter",
-                "--superlink", f"127.0.0.1:{local_server_port}",
-                "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
-                "--node-config", f"data-path='{self.data_path}'"
-            ]
+        command = [
+            "flower-supernode",
+            "--insecure",
+            "--grpc-adapter",
+            "--superlink", f"127.0.0.1:{local_server_port}",
+            "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
+            "--node-config", f"data-path='{self.data_path}'"
+        ]
 
         supernode_process = subprocess.Popen(command, shell=False)
         local_grpc_server.handle_signals(supernode_process)
@@ -105,9 +98,11 @@ class FlowerTaskRunner(TaskRunner):
             local_grpc_server.stop_server()
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
-        """Set the tensor dictionary.
-        To be framework agnostic, this method will not attempt to load the weights into the model
-        and save out the native format. Instead, it will load and save the dictionary directly
+        """
+        Set the tensor dictionary for the task runner.
+
+        This method is framework agnostic and does not attempt to load the weights into the model
+        or save out the native format. Instead, it directly loads and saves the dictionary.
 
         Args:
             tensor_dict (dict): The tensor dictionary.
@@ -116,14 +111,11 @@ class FlowerTaskRunner(TaskRunner):
         """
         self.tensor_dict = tensor_dict
 
-    def save_native(
-        self,
-        filepath,
-        **kwargs,
-    ):
+    def save_native(self, filepath, **kwargs):
         """
-        Save model weights in a .npz file specified by the filepath.
-        The model weights are stored as a dictionary of np.ndarray
+        Save model weights to a .npz file specified by the filepath.
+
+        The model weights are stored as a dictionary of np.ndarray.
 
         Args:
             filepath (str): Path to the .npz file to be created by np.savez().
@@ -139,18 +131,23 @@ class FlowerTaskRunner(TaskRunner):
         if isinstance(filepath, Path):
             filepath = str(filepath)
 
-        # Ensure the file extension is .npz
         assert filepath.endswith('.npz'), "Currently, only '.npz' file type is supported."
 
         # Save the tensor dictionary to a .npz file
         np.savez(filepath, **self.tensor_dict)
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
+        """Initialize tensor keys for functions. Currently not implemented."""
         pass
 
 
 def install_flower_FAB(flwr_app_name):
-    """Build and install the patch for the Flower application."""
+    """
+    Build and install the patch for the Flower application.
+
+    Args:
+        flwr_app_name (str): The name of the Flower application to patch.
+    """
     flwr_dir = os.environ["FLWR_HOME"]
     os.environ["TMPDIR"] = flwr_dir
     
@@ -178,6 +175,12 @@ def install_flower_FAB(flwr_app_name):
     ])
 
 def get_dynamic_port():
+    """
+    Get a dynamically assigned port number.
+
+    Returns:
+        int: An available port number assigned by the operating system.
+    """
     # Create a socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind to port 0 to let the OS assign an available port
@@ -185,4 +188,3 @@ def get_dynamic_port():
         # Get the assigned port number
         port = s.getsockname()[1]
     return port
-    

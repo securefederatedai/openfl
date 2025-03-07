@@ -11,8 +11,8 @@ os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class ConnectorFlower(Connector):
     """
-    Connector subclass for the Flower framework.
-    Responsible for generating the Flower server command.
+    A Connector subclass specifically designed for integrating with the Flower framework.
+    This class is responsible for constructing and managing the execution of Flower server commands.
     """
 
     def __init__(self, 
@@ -21,11 +21,13 @@ class ConnectorFlower(Connector):
                  automatic_shutdown: bool = True, 
                  **kwargs):
         """
-        Initialize ConnectorFlower by building the server command.
+        Initialize the ConnectorFlower instance by setting up the necessary server commands.
         
         Args:
-            superlink_params (dict): A dictionary of Flower server settings.
-            flwr_run_params (dict): A dictionary containing the Flower run parameters.
+            superlink_params (dict): Configuration settings for the Flower server.
+            flwr_run_params (dict, optional): Parameters for running the Flower application.
+            automatic_shutdown (bool, optional): Flag to enable automatic shutdown of the server. Defaults to True.
+            **kwargs: Additional keyword arguments.
         """
         super().__init__(component_name="Flower")
         self._process = None
@@ -43,27 +45,23 @@ class ConnectorFlower(Connector):
 
     def _get_local_grpc_client(self):
         """
-        Create and return a LocalGRPCClient instance based on superlink_params
-        and the number of server rounds from the pyproject.toml file.
-
+        Create and return a LocalGRPCClient instance using the superlink parameters.
+        
         Returns:
-            LocalGRPCClient: An instance of LocalGRPCClient initialized with the
-                             connector address and number of server rounds.
+            LocalGRPCClient: An instance configured with the connector address and server rounds.
         """
         connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
         return LocalGRPCClient(connector_address, self.automatic_shutdown)
 
     def _build_flwr_superlink_command(self) -> list[str]:
         """
-        Build the command to start the Flower SuperLink based on superlink_params.
+        Construct the command to initiate the Flower SuperLink based on provided parameters.
 
         Returns:
-            list[str]: A list representing the Flower server start command.
+            list[str]: A list of command-line arguments for starting the Flower server.
         """
-        if self.superlink_params.get("patch"):
-            command = ["python", "src/patch/flower_superlink_patch.py", "--fleet-api-type", "grpc-adapter"]
-        else:
-            command = ["flower-superlink", "--fleet-api-type", "grpc-adapter"]
+
+        command = ["flower-superlink", "--fleet-api-type", "grpc-adapter"]
 
         if "insecure" in self.superlink_params and self.superlink_params["insecure"]:
             command += ["--insecure"]
@@ -89,10 +87,10 @@ class ConnectorFlower(Connector):
 
     def _build_flwr_serverapp_command(self) -> list[str]:
         """
-        Build the command to start the Flower ServerApp based on superlink_params.
+        Construct the command to start the Flower ServerApp based on superlink parameters.
 
         Returns:
-            list[str]: A list representing the Flower server start command.
+            list[str]: A list of command-line arguments for starting the Flower ServerApp.
         """
         command = ["flwr-serverapp", "--run-once"]
 
@@ -106,7 +104,7 @@ class ConnectorFlower(Connector):
 
     def is_flwr_serverapp_running(self):
         """
-        Check if the flwr_serverapp subprocess is still running.
+        Determine if the Flower ServerApp subprocess is currently active.
 
         Returns:
             bool: True if the ServerApp is running, False otherwise.
@@ -126,7 +124,7 @@ class ConnectorFlower(Connector):
         return False
     
     def _stop_flwr_serverapp(self):
-        """Stop the `flwr_serverapp` subprocess if it is still running."""
+        """Terminate the `flwr_serverapp` subprocess if it is still active."""
         if hasattr(self, 'flwr_serverapp_subprocess') and self.flwr_serverapp_subprocess.poll() is None:
             self.logger.debug("[OpenFL Connector] ServerApp still running. Stopping...")
             self.flwr_serverapp_subprocess.terminate()
@@ -137,10 +135,10 @@ class ConnectorFlower(Connector):
 
     def _build_flwr_run_command(self) -> list[str]:
         """
-        Build the `flwr run` command to run the Flower application.
+        Construct the `flwr run` command to execute the Flower application.
         
         Returns:
-            list[str]: A list representing the flwr_run command.
+            list[str]: A list of command-line arguments for running the Flower application.
         """
         federation_name = self.flwr_run_params.get("federation_name")
         flwr_app_name = self.flwr_run_params.get("flwr_app_name")
@@ -158,7 +156,7 @@ class ConnectorFlower(Connector):
         return command
 
     def start(self):
-        """Start the `flower-superlink` and `flwr run` subprocesses with the provided commands."""
+        """Launch the `flower-superlink` and `flwr run` subprocesses using the constructed commands."""
         if self._process is None:
             self.logger.info(f"[OpenFL Connector] Starting server process: {' '.join(self.flwr_superlink_command)}")
             self._process = subprocess.Popen(self.flwr_superlink_command)
@@ -175,7 +173,7 @@ class ConnectorFlower(Connector):
             self.flwr_serverapp_subprocess = subprocess.Popen(self.flwr_serverapp_command)
 
     def stop(self):
-        """Stop the `flower-superlink` subprocess."""
+        """Terminate the `flower-superlink` subprocess and any associated processes."""
         self._stop_flwr_serverapp()
         if self._process:
             try:
