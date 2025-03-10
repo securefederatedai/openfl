@@ -25,6 +25,7 @@ ignore = [
     "E731",  # do not assign a `lambda` expression, use a `def`
     "B904",  # ignore exception distinguishing
     "B006",  # mutable data structures as default args
+    "B614",  # Test for unsafe PyTorch load or save
 ]
 
 [tool.ruff.lint.per-file-ignores]
