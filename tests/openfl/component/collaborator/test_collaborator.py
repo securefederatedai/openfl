@@ -105,7 +105,7 @@ def test_send_task_results(collaborator_mock, tensor_key):
     collaborator_mock.send_task_results(tensor_dict, round_number, task_name)
 
     collaborator_mock.client.send_local_task_results.assert_called_with(
-        collaborator_mock.collaborator_name, round_number, task_name, data_size, [None])
+        round_number, task_name, data_size, [None])
 
 
 def test_send_task_results_train(collaborator_mock):
@@ -120,7 +120,7 @@ def test_send_task_results_train(collaborator_mock):
     collaborator_mock.send_task_results(tensor_dict, round_number, task_name)
 
     collaborator_mock.client.send_local_task_results.assert_called_with(
-        collaborator_mock.collaborator_name, round_number, task_name, data_size, [])
+        round_number, task_name, data_size, [])
 
 
 def test_send_task_results_valid(collaborator_mock):
@@ -135,7 +135,7 @@ def test_send_task_results_valid(collaborator_mock):
     collaborator_mock.send_task_results(tensor_dict, round_number, task_name)
 
     collaborator_mock.client.send_local_task_results.assert_called_with(
-        collaborator_mock.collaborator_name, round_number, task_name, data_size, [])
+        round_number, task_name, data_size, [])
 
 
 def test_named_tensor_to_nparray_without_tags(collaborator_mock, named_tensor):
@@ -184,7 +184,7 @@ def test_get_aggregated_tensor_from_aggregator(collaborator_mock, tensor_key,
     nparray = collaborator_mock.get_aggregated_tensor_from_aggregator(tensor_key, require_lossless)
 
     collaborator_mock.client.get_aggregated_tensor.assert_called_with(
-        collaborator_mock.collaborator_name, tensor_key.tensor_name, tensor_key.round_number,
+        tensor_key.tensor_name, tensor_key.round_number,
         tensor_key.report, tensor_key.tags, require_lossless)
     assert nparray == named_tensor.data_bytes
 
