@@ -62,7 +62,12 @@ class FLSpec:
 
     @classmethod
     def get_clones(cls) -> dict:
-        """Returns the _clones dictionary."""
+        """Returns the _clones dictionary.
+
+        Returns:
+            dict: A dictionary mapping collaborator names to their respective
+        cloned FLSpec instances.
+        """
         return cls._clones
 
     @classmethod
