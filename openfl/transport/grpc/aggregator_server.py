@@ -5,34 +5,23 @@
 """AggregatorGRPCServer module."""
 
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from random import random
 from time import sleep
 
-from grpc import (
-    StatusCode,
-    dynamic_ssl_server_credentials,
-    server,
-    ssl_server_certificate_configuration,
-)
+import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.grpc_channel_options import channel_options
-from openfl.utilities import check_equal, check_is_in
+from openfl.transport.grpc.common import create_grpc_server, create_header
 
 logger = logging.getLogger(__name__)
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
-    """GRPC server class for the Aggregator.
-
-    This class implements a gRPC server for the Aggregator, allowing it to
-    communicate with collaborators.
+    """Aggregator gRPC Server.
 
     Attributes:
-        aggregator (Aggregator): The aggregator that this server is serving.
-        uri (str): The URI that the server is serving on.
+        aggregator (Aggregator): An instance of the Aggregator object that this server is serving.
+        agg_port (int): Port to start gRPC server on.
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
@@ -42,8 +31,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             `use_tls=False`.
         private_key (str): The path to the client's private key for the TLS connection, ignored if
             `use_tls=False`.
-        server (grpc.Server): The gRPC server.
-        server_credentials (grpc.ServerCredentials): The server's credentials.
+        root_certificate_refresher_cb (Callable): A callback function that receives no arguments and
+            returns the current root certificate.
     """
 
     def __init__(
@@ -58,26 +47,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         root_certificate_refresher_cb=None,
         **kwargs,
     ):
-        """
-        Initialize the AggregatorGRPCServer.
-
-        Args:
-            aggregator (Aggregator): The aggregator that this server is
-                serving.
-            agg_port (int): The port that the server is serving on.
-            use_tls (bool): Whether to use TLS for the connection.
-            require_client_auth (bool): Whether to enable client-side
-                authentication, i.e. mTLS. Ignored if `use_tls=False`.
-            root_certificate (str): The path to the root certificate for the
-                TLS connection.
-            certificate (str): The path to the server's certificate for the
-                TLS connection.
-            private_key (str): The path to the server's private key for the
-                TLS connection.
-            root_certificate_refresher_cb (Callable): A callback function
-                that receive no arguments and return the current root certificate.
-            **kwargs: Additional keyword arguments.
-        """
         self.aggregator = aggregator
         self.uri = f"[::]:{agg_port}"
         self.use_tls = use_tls
@@ -85,10 +54,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        self.server = None
-        self.server_credentials = None
-
-        self.logger = logging.getLogger(__name__)
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
     def validate_collaborator(self, request, context):
@@ -119,30 +84,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 # Random delay in authentication failures
                 sleep(5 * random())  # nosec
                 context.abort(
-                    StatusCode.UNAUTHENTICATED,
+                    grpc.StatusCode.UNAUTHENTICATED,
                     f"Invalid collaborator. CN: |{common_name}| "
                     f"collaborator_common_name: |{collaborator_common_name}|",
                 )
-
-    def get_header(self, collaborator_name):
-        """Compose and return MessageHeader.
-
-        This method creates a MessageHeader for a message to the specified
-        collaborator.
-
-        Args:
-            collaborator_name (str): The name of the collaborator to send the
-                message to.
-
-        Returns:
-            aggregator_pb2.MessageHeader: The header for the message.
-        """
-        return aggregator_pb2.MessageHeader(
-            sender=self.aggregator.uuid,
-            receiver=collaborator_name,
-            federation_uuid=self.aggregator.federation_uuid,
-            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
-        )
 
     def check_request(self, request):
         """Validate request header matches expected values.
@@ -157,24 +102,27 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         Raises:
             ValueError: If the request is not valid.
         """
-        # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
-
-        # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
-
-        # check that the message is for my federation
-        check_equal(
-            request.header.federation_uuid,
-            self.aggregator.federation_uuid,
-            self.logger,
+        assert request.header.sender in self.aggregator.authorized_cols, (
+            f"Sender in request header is not authorized. "
+            f"Expected: one of {self.aggregator.authorized_cols}, Actual: {request.header.sender}"
         )
 
-        # check that we agree on the single cert common name
-        check_equal(
-            request.header.single_col_cert_common_name,
-            self.aggregator.single_col_cert_common_name,
-            self.logger,
+        assert request.header.receiver == self.aggregator.uuid, (
+            f"Receiver in request header does not match aggregator UUID. "
+            f"Expected: {self.aggregator.uuid}, Actual: {request.header.receiver}"
+        )
+
+        assert request.header.federation_uuid == self.aggregator.federation_uuid, (
+            f"Federation UUID in request header does not match. "
+            f"Expected: {self.aggregator.federation_uuid}, Actual: {request.header.federation_uuid}"
+        )
+
+        assert (
+            request.header.single_col_cert_common_name
+            == self.aggregator.single_col_cert_common_name
+        ), (
+            f"Single collaborator certificate common name in request header does not match. "
+            f"Expected: {self.aggregator.single_col_cert_common_name}, Actual: {request.header.single_col_cert_common_name}"  # noqa: E501
         )
 
     def GetTasks(self, request, context):  # NOQA:N802
@@ -218,8 +166,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         else:
             tasks_proto = []
 
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
         return aggregator_pb2.GetTasksResponse(
-            header=self.get_header(collaborator_name),
+            header=header,
             round_number=round_number,
             tasks=tasks_proto,
             sleep_time=sleep_time,
@@ -259,8 +214,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             require_lossless,
         )
 
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
         return aggregator_pb2.GetAggregatedTensorResponse(
-            header=self.get_header(collaborator_name),
+            header=header,
             round_number=round_number,
             tensor=named_tensor,
         )
@@ -301,75 +263,31 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
         # turn data stream into local model update
-        return aggregator_pb2.SendLocalTaskResultsResponse(
-            header=self.get_header(collaborator_name)
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
-
-    def get_server(self):
-        """
-        Return gRPC server.
-
-        This method creates a gRPC server if it does not already exist and
-        returns it.
-
-        Returns:
-            grpc.Server: The gRPC server.
-        """
-        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()), options=channel_options)
-
-        aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
-
-        if not self.use_tls:
-            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
-            port = self.server.add_insecure_port(self.uri)
-            self.logger.info("Insecure port: %s", port)
-
-        else:
-            with open(self.private_key, "rb") as f:
-                private_key_b = f.read()
-            with open(self.certificate, "rb") as f:
-                certificate_b = f.read()
-            with open(self.root_certificate, "rb") as f:
-                root_certificate_b = f.read()
-
-            if not self.require_client_auth:
-                self.logger.warning("Client-side authentication is disabled.")
-            cert_config = ssl_server_certificate_configuration(
-                ((private_key_b, certificate_b),), root_certificates=root_certificate_b
-            )
-
-            def certificate_configuration_fetcher():
-                root_cert = root_certificate_b
-                if self.root_certificate_refresher_cb is not None:
-                    root_cert = self.root_certificate_refresher_cb()
-                return ssl_server_certificate_configuration(
-                    ((private_key_b, certificate_b),), root_certificates=root_cert
-                )
-
-            self.server_credentials = dynamic_ssl_server_credentials(
-                cert_config,
-                certificate_configuration_fetcher,
-                require_client_authentication=self.require_client_auth,
-            )
-            self.server.add_secure_port(self.uri, self.server_credentials)
-
-        return self.server
+        return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
     def serve(self):
-        """Start an aggregator gRPC service.
+        """Starts the aggregator gRPC server."""
+        server = create_grpc_server(
+            self.uri,
+            self.use_tls,
+            self.private_key,
+            self.certificate,
+            self.root_certificate,
+            self.require_client_auth,
+            self.root_certificate_refresher_cb,
+        )
+        aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, server)
 
-        This method starts the gRPC server and handles requests until all quit
-        jobs havebeen sent.
-        """
-        self.get_server()
+        logger.info("Starting Aggregator gRPC Server")
+        server.start()
 
-        self.logger.info("Starting Aggregator gRPC Server")
-        self.server.start()
+        while not self.aggregator.all_quit_jobs_sent():
+            sleep(5)
 
-        try:
-            while not self.aggregator.all_quit_jobs_sent():
-                sleep(5)
-        except KeyboardInterrupt:
-            pass
-
-        self.server.stop(0)
+        server.stop(0)

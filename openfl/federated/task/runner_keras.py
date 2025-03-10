@@ -21,6 +21,10 @@ with catch_warnings():
     simplefilter(action="ignore")
     import keras
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class KerasTaskRunner(TaskRunner):
     """The base model for Keras models in the federation.
@@ -100,7 +104,7 @@ class KerasTaskRunner(TaskRunner):
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
-            self.logger.info("Run %s epoch of %s round", epoch, round_num)
+            logger.info("Run %s epoch of %s round", epoch, round_num)
             results = self.train_(
                 self.data_loader.get_train_loader(batch_size),
                 metrics=metrics,
@@ -118,7 +122,7 @@ class KerasTaskRunner(TaskRunner):
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # create global tensorkeys
@@ -356,7 +360,7 @@ class KerasTaskRunner(TaskRunner):
 
             model_weights.update(opt_weights)
             if len(opt_weights) == 0:
-                self.logger.debug("WARNING: We didn't find variables for the optimizer.")
+                logger.debug("WARNING: We didn't find variables for the optimizer.")
         return model_weights
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
@@ -417,7 +421,7 @@ class KerasTaskRunner(TaskRunner):
         model_layer_names = self._get_weights_names(self.model)
         opt_names = self._get_weights_names(self.model.optimizer)
         tensor_names = model_layer_names + opt_names
-        self.logger.debug("Updating model tensor names: %s", tensor_names)
+        logger.debug("Updating model tensor names: %s", tensor_names)
         self.required_tensorkeys_for_function["train_task"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
         ]
@@ -449,7 +453,7 @@ class KerasTaskRunner(TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
@@ -457,7 +461,6 @@ class KerasTaskRunner(TaskRunner):
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
                 output_model_dict,
                 **self.tensor_dict_split_fn_kwargs,
             )

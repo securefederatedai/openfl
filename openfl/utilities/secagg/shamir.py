@@ -7,7 +7,7 @@ This file contains utility functions for Secure Aggregation Shamir's secret
 sharing related operations.
 """
 
-from Crypto.Protocol.SecretSharing import Shamir
+from Crypto.Protocol.SecretSharing import Shamir  # nosec B413
 
 # The length of each chunk of secret used for creation of shares.
 SECRET_CHUNK_LENGTH = 16
@@ -42,7 +42,7 @@ def create_secret_shares(
     """
     shares = {}
 
-    from Crypto.Util.Padding import pad
+    from Crypto.Util.Padding import pad  # nosec B413
 
     # Pad the secret to create a byte string of a length which is a multiple
     # of SECRET_CHUNK_LENGTH.
@@ -87,7 +87,7 @@ def reconstruct_secret(shares: dict) -> bytes:
         # Concatenate the chunk to the secret.
         secret += secret_chunk
 
-    from Crypto.Util.Padding import unpad
+    from Crypto.Util.Padding import unpad  # nosec B413
 
     # Remove the padding from the secret.
     secret = unpad(secret, SECRET_CHUNK_LENGTH)
