@@ -9,19 +9,25 @@ import json
 import logging
 import struct
 
+import pkg_resources
+
 from openfl.utilities import TensorKey
 
 try:
+    _required_package = "pycryptodome"
+    pkg_resources.get_distribution(_required_package)
+    # Import packages, if installed.
     from openfl.utilities.secagg import (
         calculate_shared_mask,
         generate_agreed_key,
         reconstruct_secret,
     )
-except Exception as error:
+except pkg_resources.DistributionNotFound:
     raise Exception(
-        "'pycryptodome' not installed."
-        f"This package is necessary when secure aggregation is enabled: {error}"
+        f"'{_required_package}' not installed."
+        "This package is necessary when secure aggregation is enabled."
     )
+
 
 logger = logging.getLogger(__name__)
 
