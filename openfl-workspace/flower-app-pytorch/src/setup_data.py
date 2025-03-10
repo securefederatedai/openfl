@@ -15,7 +15,6 @@ EXPECTED_HASHES = {
 def verify_data_hash(partition_train_test, expected_hash):
     """Verify the hash of data in memory."""
     calculated_hash = hash_dataset_dict(partition_train_test)
-    import pdb; pdb.set_trace()
     if calculated_hash != expected_hash:
         raise ValueError(f'Hash mismatch: {calculated_hash} != {expected_hash}')
     print(f"Partition hash verification successful.")
