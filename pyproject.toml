@@ -1,9 +1,6 @@
 [tool.bandit]
 # Exclude specific directories or files from the scan
 # exclude = ["tests/", "docs/"]
-skips = [
-    "B614",  # Test for unsafe PyTorch load or save
-]
 
 
 # Set the severity and confidence levels
