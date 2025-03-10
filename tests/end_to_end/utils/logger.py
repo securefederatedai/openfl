@@ -24,11 +24,7 @@ def configure_logging(log_file, log_level):
     Raises:
         OSError: If there is an issue with creating the log file handler.
     """
-    formatter = logging.Formatter(
-        fmt="\n%(asctime)s %(levelname)s [%(filename)s:%(lineno)d]: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-
+    formatter = logging.Formatter("%(message)s")
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)
     handler.setLevel(log_level)
