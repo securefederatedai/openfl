@@ -1,10 +1,10 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-
 from rich.console import Console
 from rich.logging import RichHandler
+
 # Get the logger instance configured in conftest.py
 logger = logging.getLogger()
 
@@ -24,11 +24,8 @@ def configure_logging(log_file, log_level):
     Raises:
         OSError: If there is an issue with creating the log file handler.
     """
-    # formatter = logging.Formatter(
-    #     "\n%(asctime)s - %(levelname)s: [%(filename)s - %(funcName)s - %(lineno)d]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    # )
     formatter = logging.Formatter(
-        fmt="\n%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d",
+        fmt="\n%(asctime)s %(levelname)s [%(filename)s:%(lineno)d]: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 
@@ -45,12 +42,16 @@ def configure_logging(log_file, log_level):
         markup=True,
         console=console,
     )
+    rich_handler.setFormatter(formatter)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     console_handler.setLevel(log_level)
     logger = logging.getLogger()
     logger.setLevel(log_level)
+    
+    # Remove any existing handlers
+    logger.handlers = []
+
     logger.addHandler(handler)
-    # # logger.addHandler(console_handler)
     logger.addHandler(rich_handler)
