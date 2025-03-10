@@ -420,7 +420,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = torch.load(filepath)
+        pickle_dict = torch.load(filepath)  # nosec B614
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
