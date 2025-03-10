@@ -12,7 +12,6 @@ from pathlib import Path
 import yaml
 from click import Path as ClickPath
 from click import confirm, echo, group, option, pass_context, style
-from yaml.loader import SafeLoader
 
 from openfl.cryptography.ca import sign_certificate
 from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
@@ -80,7 +79,7 @@ def start_(plan, authorized_cols, secure):
         )
     else:
         with open("plan/data.yaml", "r") as f:
-            data = yaml.load(f, Loader=SafeLoader)
+            data = yaml.safe_load(f)
             if data.get("aggregator", None) is None:
                 logger.warning(
                     "Aggregator private attributes are set to None as no aggregator"
