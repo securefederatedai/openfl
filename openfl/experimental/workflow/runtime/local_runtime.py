@@ -635,7 +635,7 @@ class LocalRuntime(Runtime):
         while not_at_transition_point:
             f()
             checkpoint(ctx, f)
-            f, parent_func = ctx.execute_task_args[1:3]
+            f, parent_func = ctx.execute_task_args[:2]
             if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
                 not_at_transition_point = False
             f_name = f.__name__
@@ -652,7 +652,7 @@ class LocalRuntime(Runtime):
         while not_at_transition_point:
             f()
             checkpoint(ctx, f)
-            f, parent_func = ctx.execute_task_args[1:3]
+            f, parent_func = ctx.execute_task_args[:2]
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
             f_name = f.__name__
@@ -681,7 +681,7 @@ class LocalRuntime(Runtime):
                 )
             else:
                 flspec_obj = self._execute_agg_task(flspec_obj, f)
-            _, f, parent_func, _, instance_snapshot, kwargs = flspec_obj.execute_task_args
+            f, parent_func, instance_snapshot, kwargs = flspec_obj.execute_task_args
         else:
             flspec_obj = self._execute_agg_task(flspec_obj, f)
 
@@ -799,7 +799,7 @@ class LocalRuntime(Runtime):
         """
 
         for col in selected_collaborators:
-            clone = FLSpec._clones[col]
+            clone = FLSpec.get_clones()[col]
             clone.input = col
             if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
                 "include" in kwargs and hasattr(clone, kwargs["include"][0])

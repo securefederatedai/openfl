@@ -61,6 +61,11 @@ class FLSpec:
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
+    def get_clones(cls) -> dict:
+        """Returns the _clones dictionary."""
+        return cls._clones
+
+    @classmethod
     def save_initial_state(cls, instance: Type[FLSpec]) -> None:
         """Saves the initial state of an instance before executing the flow.
 
@@ -260,10 +265,8 @@ class FLSpec:
 
         # update parameters required to execute next steps
         self.execute_task_args = (
-            self,
             f,
             parent_func,
-            FLSpec._clones,
             agg_to_collab_ss,
             kwargs,
         )

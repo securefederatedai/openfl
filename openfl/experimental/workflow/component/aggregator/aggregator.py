@@ -402,7 +402,7 @@ class Aggregator:
             self.__set_private_attrs_to_clone(self.flow)
 
             # Next function in the flow
-            _, f, parent_func = self.flow.execute_task_args[:3]
+            f, parent_func = self.flow.execute_task_args[:2]
             f_name = f.__name__
 
             self.flow._display_transition_logs(f, parent_func)
@@ -414,8 +414,9 @@ class Aggregator:
         # Delete aggregator private attribute from flow object
         self.__delete_private_attrs_from_clone(self.flow)
 
-        # Unpack execute_task_args - clones_dict, instance snapshot and kwargs
-        self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[3:]
+        self.clones_dict = FLSpec.get_clones()
+        # Unpack execute_task_args - instance snapshot and kwargs
+        self.instance_snapshot, self.kwargs = self.flow.execute_task_args[2:]
         if "foreach" in self.kwargs:
             self.flow.filter_exclude_include(f, **self.kwargs)
             self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])

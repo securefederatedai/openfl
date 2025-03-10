@@ -207,7 +207,7 @@ class Collaborator:
             self.call_checkpoint(ctx, f, f._stream_buffer)
             self.__set_private_attrs_to_clone(ctx)
 
-            _, f, parent_func = ctx.execute_task_args[:3]
+            f, parent_func = ctx.execute_task_args[:2]
             # Display transition logs if transition
             ctx._display_transition_logs(f, parent_func)
 
