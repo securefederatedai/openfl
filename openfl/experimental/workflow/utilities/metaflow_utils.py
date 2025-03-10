@@ -9,6 +9,8 @@ from __future__ import annotations
 import ast
 import fcntl
 import hashlib
+import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -67,7 +69,7 @@ class SystemMutex:
     def __enter__(self):
         lock_id = hashlib.new("sha256", self.name.encode("utf8"), usedforsecurity=False).hexdigest()  # nosec
         # Using SHA-256 to address security warning
-        self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
+        self.fp = open(os.path.join(tempfile.mkdtemp(), f".lock-{lock_id}.lck"), "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
 
     def __exit__(self, _type, value, tb):
