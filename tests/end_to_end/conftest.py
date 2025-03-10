@@ -9,8 +9,8 @@ import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
-from tests.end_to_end.utils.logger import configure_logging
-from tests.end_to_end.utils.logger import logger as log
+from openfl.utilities.logs import logger as log
+from openfl.utilities.logs import setup_loggers
 from tests.end_to_end.utils.conftest_helper import parse_arguments
 import tests.end_to_end.utils.docker_helper as dh
 
@@ -68,7 +68,7 @@ def setup_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(f"{results_dir}/deployment.log", log_level)
+    setup_loggers(log_level=log_level, log_file=f"{results_dir}/deployment.log")
     return logging.getLogger()
 
 
