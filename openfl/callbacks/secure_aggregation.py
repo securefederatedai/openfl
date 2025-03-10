@@ -262,7 +262,7 @@ class SecAggBootstrapping(Callback):
             )
             named_tensors.append(named_tensor)
 
-        self.client.send_local_task_results(self.name, -1, f"secagg_{stage}", -1, named_tensors)
+        self.client.send_local_task_results(-1, f"secagg_{stage}", -1, named_tensors)
 
     def _fetch_from_aggregator(self, key_name):
         """
@@ -274,7 +274,5 @@ class SecAggBootstrapping(Callback):
         Returns:
             bytes: The aggregated tensor data in bytes.
         """
-        tensor = self.client.get_aggregated_tensor(
-            self.name, key_name, -1, False, ("secagg",), True
-        )
+        tensor = self.client.get_aggregated_tensor(key_name, -1, False, ("secagg",), True)
         return json.loads(tensor.data_bytes)
