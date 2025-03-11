@@ -64,9 +64,10 @@ class Aggregator():
             str: Path to the log file
         """
         try:
-            log.info(f"Starting {self.name}")
+            log.info(f"Starting {self.name} {res_file}")
             error_msg = "Failed to start the aggregator"
-            command = constants.AGG_START_CMD
+            log_file = os.path.join("logs", "aggregator.log")
+            command = f"LOG_FILE={log_file}  {constants.AGG_START_CMD}"
             if self.eval_scope:
                 command = f"{command} --task_group evaluation"
             fh.run_command(
@@ -75,13 +76,14 @@ class Aggregator():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
-                bg_file=res_file,
+                bg_file=None,
             )
+            log_file = os.path.join(self.workspace_path, self.name, "workspace", log_file)
+            self.res_file = log_file
             log.info(
-                f"Started {self.name} and tracking the logs in {res_file}."
+                f"Started {self.name} and tracking the logs in {log_file}."
             )
-            self.res_file = res_file
         except Exception as e:
-            log.error(f"{error_msg}: {e}")
+            log.error(f"Command - {command} Error - {error_msg}: {e}")
             raise e
-        return res_file
+        return log_file
