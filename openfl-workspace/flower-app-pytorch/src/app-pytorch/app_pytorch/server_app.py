@@ -6,8 +6,8 @@ from flwr.server.strategy import FedAvg
 from app_pytorch.task import Net, get_weights
 
 from flwr.server.client_proxy import ClientProxy
-from flwr.common import FitRes, EvaluateRes, Scalar, Parameters, parameters_to_ndarrays, Metrics
-from typing import Optional, Union, List, Tuple
+from flwr.common import FitRes, EvaluateRes, Scalar, Parameters, parameters_to_ndarrays
+from typing import Optional, Union
 import numpy as np
 from flwr.server.strategy.aggregate import weighted_loss_avg
 from flwr.common.logger import log

@@ -54,10 +54,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        
+
         if hasattr(self.aggregator, 'is_connector_available'):
             self.use_connector = self.aggregator.is_connector_available()
-        else:    
+        else:
             self.use_connector = False
 
         if self.use_connector:
