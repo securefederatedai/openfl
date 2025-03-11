@@ -55,7 +55,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.certificate = certificate
         self.private_key = private_key
 
-        if hasattr(self.aggregator, 'is_connector_available'):
+        if hasattr(self.aggregator, "is_connector_available"):
             self.use_connector = self.aggregator.is_connector_available()
         else:
             self.use_connector = False
