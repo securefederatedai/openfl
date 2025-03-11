@@ -22,7 +22,7 @@ class FlowerTaskRunner(TaskRunner):
 
     Shutdown Options:
     - Manual Shutdown: The server and supernode process can be manually stopped by pressing CTRL+C.
-    - Automatic Shutdown: If enabled, the system will monitor subprocess activity and 
+    - Automatic Shutdown: If enabled, the system will monitor subprocess activity and
       automatically shut down if no new subprocess starts within a specified time frame.
     """
     def __init__(self, **kwargs):
@@ -86,7 +86,7 @@ class FlowerTaskRunner(TaskRunner):
         local_grpc_server.handle_signals(supernode_process)
 
         self.logger.info("Press CTRL+C to stop the server and SuperNode process.")
-        
+
         try:
             while not local_grpc_server.termination_event.is_set():
                 if self.shutdown_requested:
@@ -150,22 +150,22 @@ def install_flower_FAB(flwr_app_name):
     """
     flwr_dir = os.environ["FLWR_HOME"]
     os.environ["TMPDIR"] = flwr_dir
-    
+
     # Run the build command
     subprocess.check_call([
-        sys.executable, 
-        "src/patch/flwr_run_patch.py", 
-        "build", 
-        "--app", 
+        sys.executable,
+        "src/patch/flwr_run_patch.py",
+        "build",
+        "--app",
         f"./src/{flwr_app_name}"
     ])
-    
+
     # List .fab files after running the build command
     fab_files = list(Path(flwr_dir).glob("*.fab"))
-    
+
     # Determine the newest .fab file
     newest_fab_file = max(fab_files, key=os.path.getmtime)
-    
+
     # Run the install command using the newest .fab file
     subprocess.check_call([
         sys.executable,

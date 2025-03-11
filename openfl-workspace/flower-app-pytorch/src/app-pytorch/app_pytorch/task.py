@@ -31,27 +31,27 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return self.fc3(x)
-    
+
 def load_partition_data(data_path):
     train_data_path = os.path.join(data_path, "train")
     test_data_path = os.path.join(data_path, "test")
-    
+
     # Use ImageFolder to load images from directories
     train_data = ImageFolder(root=train_data_path, transform=None)
     test_data = ImageFolder(root=test_data_path, transform=None)
-    
+
     return train_data, test_data
 
 def load_data(data_path):
     """Load partition CIFAR10 data."""
     train_data, test_data = load_partition_data(data_path)
-    
+
     # Define PyTorch transforms
     pytorch_transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    
+
     # Apply transforms to the datasets
     train_data.transform = pytorch_transforms
     test_data.transform = pytorch_transforms
@@ -59,7 +59,7 @@ def load_data(data_path):
     # Create DataLoaders
     trainloader = DataLoader(train_data, batch_size=32, shuffle=True)
     testloader = DataLoader(test_data, batch_size=32)
-    
+
     return trainloader, testloader
 
 

@@ -3,8 +3,6 @@
 
 """OpenFL Component Module."""
 
-from importlib import util
-
 from openfl.component.aggregator.aggregator import Aggregator
 from openfl.component.aggregator.straggler_handling import (
     CutoffTimePolicy,

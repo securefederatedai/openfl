@@ -27,7 +27,7 @@ class FlowerDataLoader(DataLoader):
          """
         super().__init__(**kwargs)
         self.data_path = data_path
-    
+
     def get_node_configs(self):
         """
         Get the configuration for each node.
@@ -39,7 +39,7 @@ class FlowerDataLoader(DataLoader):
             str: data path
         """
         return self.data_path
-    
+
     def get_feature_shape(self):
         """
         Override the parent method to return None.

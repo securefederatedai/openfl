@@ -59,17 +59,17 @@ def main(num_partitions):
         # Save partition data
         partition_dir = os.path.join(save_dir, f"{partition_id+1}")
         os.makedirs(partition_dir, exist_ok=True)
-        
+
         for split, dataset in partition_train_test.items():
             split_dir = os.path.join(partition_dir, split)
             os.makedirs(split_dir, exist_ok=True)
-            
+
             for idx, example in enumerate(tqdm(dataset, desc=f"Processing partition {partition_id+1}, {split}")):
                 img_array = np.array(example['img'])
                 label = example['label']
                 label_dir = os.path.join(split_dir, str(label))
                 os.makedirs(label_dir, exist_ok=True)
-                
+
                 # Save the image
                 img = Image.fromarray(img_array)
                 img_path = os.path.join(label_dir, f"{idx}.png")
@@ -81,6 +81,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python setup_data.py <num_partitions>")
         sys.exit(1)
-    
+
     num_partitions = int(sys.argv[1])
     main(num_partitions)

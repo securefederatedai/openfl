@@ -12,7 +12,7 @@ class Connector(ABC):
     def __init__(self, component_name: str = "Base", **kwargs):
         """
         Initialize the BaseConnector.
-        
+
         Args:
             command (list[str]): The command to run the server process.
             component_name (str): The name of the specific Connector component being used.
@@ -37,7 +37,7 @@ class Connector(ABC):
     def get_local_grpc_client(self):
         """Get the local gRPC client."""
         return self.local_grpc_client
-    
+
     def print_connector_info(self):
         """Print information indicating which Connector component is being used."""
         self.logger.info(f"OpenFL Connector Enabled: {self.component_name}")

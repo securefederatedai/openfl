@@ -41,7 +41,7 @@ class TaskRunner:
         self.data_loader = data_loader
         if self.data_loader:
             self.feature_shape = self.data_loader.get_feature_shape()
-        else: 
+        else:
             self.feature_shape = None
         # TODO: Should this comment a path of the doc string?
         # key word arguments for determining which parameters to hold out from

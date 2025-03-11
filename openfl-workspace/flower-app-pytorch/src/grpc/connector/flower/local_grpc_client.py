@@ -47,8 +47,8 @@ class LocalGRPCClient:
             # then the experiment has completed
             self.end_experiment = not self.is_flwr_serverapp_running_callback()
 
-        openfl_response = flower_to_openfl_message(flower_response, 
-                                                   header=header, 
+        openfl_response = flower_to_openfl_message(flower_response,
+                                                   header=header,
                                                    end_experiment=self.end_experiment)
 
         return openfl_response

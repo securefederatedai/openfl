@@ -1,8 +1,8 @@
 from flwr.proto import grpcadapter_pb2
 from openfl.protocols import aggregator_pb2
 
-def flower_to_openfl_message(flower_message, 
-                             header=None, 
+def flower_to_openfl_message(flower_message,
+                             header=None,
                              end_experiment=False):
     """
     Convert a Flower MessageContainer to an OpenFL DropPod.
@@ -11,11 +11,11 @@ def flower_to_openfl_message(flower_message,
     If the input is already an OpenFL DropPod, it returns the input as-is.
 
     Args:
-        flower_message (grpcadapter_pb2.MessageContainer or aggregator_pb2.DropPod): 
-            The Flower message to be converted. It can either be a Flower MessageContainer 
+        flower_message (grpcadapter_pb2.MessageContainer or aggregator_pb2.DropPod):
+            The Flower message to be converted. It can either be a Flower MessageContainer
             or an OpenFL DropPod.
-        header (aggregator_pb2.MessageHeader, optional): 
-            An optional header to be included in the OpenFL DropPod. If provided, 
+        header (aggregator_pb2.MessageHeader, optional):
+            An optional header to be included in the OpenFL DropPod. If provided,
             it will be copied to the DropPod's header field.
 
     Returns:
@@ -30,7 +30,7 @@ def flower_to_openfl_message(flower_message,
         # Set the MessageHeader fields based on the provided sender and receiver
         if header:
             openfl_message.header.CopyFrom(header)
-        
+
         # Serialize the Flower message and set it in the OpenFL message
         serialized_flower_message = flower_message.SerializeToString()
         openfl_message.message.npbytes = serialized_flower_message
@@ -48,8 +48,8 @@ def openfl_to_flower_message(openfl_message):
     If the input is already a Flower MessageContainer, it returns the input as-is.
 
     Args:
-        openfl_message (aggregator_pb2.DropPod or grpcadapter_pb2.MessageContainer): 
-            The OpenFL message to be converted. It can either be an OpenFL DropPod 
+        openfl_message (aggregator_pb2.DropPod or grpcadapter_pb2.MessageContainer):
+            The OpenFL message to be converted. It can either be an OpenFL DropPod
             or a Flower MessageContainer.
 
     Returns:

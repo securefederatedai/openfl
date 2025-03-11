@@ -15,14 +15,14 @@ class ConnectorFlower(Connector):
     This class is responsible for constructing and managing the execution of Flower server commands.
     """
 
-    def __init__(self, 
-                 superlink_params: dict, 
-                 flwr_run_params: dict = None, 
-                 automatic_shutdown: bool = True, 
+    def __init__(self,
+                 superlink_params: dict,
+                 flwr_run_params: dict = None,
+                 automatic_shutdown: bool = True,
                  **kwargs):
         """
         Initialize the ConnectorFlower instance by setting up the necessary server commands.
-        
+
         Args:
             superlink_params (dict): Configuration settings for the Flower server.
             flwr_run_params (dict, optional): Parameters for running the Flower application.
@@ -31,7 +31,7 @@ class ConnectorFlower(Connector):
         """
         super().__init__(component_name="Flower")
         self._process = None
-        
+
         self.automatic_shutdown = automatic_shutdown
         self.signal_shutdown_sent = False
 
@@ -46,7 +46,7 @@ class ConnectorFlower(Connector):
     def _get_local_grpc_client(self):
         """
         Create and return a LocalGRPCClient instance using the superlink parameters.
-        
+
         Returns:
             LocalGRPCClient: An instance configured with the connector address and server rounds.
         """
@@ -122,7 +122,7 @@ class ConnectorFlower(Connector):
             self.logger.info("[OpenFL Connector] Experiment has ended. Sending signal to shut down Flower components.")
 
         return False
-    
+
     def _stop_flwr_serverapp(self):
         """Terminate the `flwr_serverapp` subprocess if it is still active."""
         if hasattr(self, 'flwr_serverapp_subprocess') and self.flwr_serverapp_subprocess.poll() is None:
@@ -136,7 +136,7 @@ class ConnectorFlower(Connector):
     def _build_flwr_run_command(self) -> list[str]:
         """
         Construct the `flwr run` command to execute the Flower application.
-        
+
         Returns:
             list[str]: A list of command-line arguments for running the Flower application.
         """
@@ -163,7 +163,7 @@ class ConnectorFlower(Connector):
             self.logger.info(f"[OpenFL Connector] Server process started with PID: {self._process.pid}")
         else:
             self.logger.info("[OpenFL Connector] Server process is already running.")
-        
+
         if hasattr(self, 'flwr_run_command') and self.flwr_run_command:
             self.logger.info(f"[OpenFL Connector] Starting `flwr run` subprocess: {' '.join(self.flwr_run_command)}")
             subprocess.run(self.flwr_run_command)

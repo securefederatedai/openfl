@@ -32,7 +32,7 @@ def build(
     # # This is useful for running in an SGX enclave with Gramine since we need to strictly control allowed/trusted files
     flwr_home = os.getenv("FLWR_HOME")
     #################################
-    
+
     if app is None:
         app = Path.cwd()
 

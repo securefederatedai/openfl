@@ -57,7 +57,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.use_connector = self.aggregator.is_connector_available()
 
         if self.use_connector:
-            self.local_grpc_client =  self.aggregator.get_local_grpc_client()  # Initialize the local gRPC client
+            self.local_grpc_client = (
+                self.aggregator.get_local_grpc_client()
+            )  # Initialize the local gRPC client
         else:
             self.local_grpc_client = None
 
@@ -204,7 +206,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 request.
         """
         if self.use_connector:
-            context.abort(StatusCode.UNIMPLEMENTED, "This method is not available in framework interopability mode.")
+            context.abort(
+                grpc.StatusCode.UNIMPLEMENTED,
+                "This method is not available in framework interopability mode.",
+            )
 
         self.validate_collaborator(request, context)
         self.check_request(request)
@@ -252,9 +257,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.SendLocalTaskResultsResponse: The response to the
                 request.
         """
-        # if self.use_connector:
-        #     context.abort(StatusCode.UNIMPLEMENTED, "This method is not available in framework interopability mode.")
-
         try:
             proto = aggregator_pb2.TaskResults()
             proto = utils.datastream_to_proto(proto, request)
@@ -282,7 +284,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
-        
+
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
     def PelicanDrop(self, request, context):
@@ -297,7 +299,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request.
         """
         if not self.use_connector:
-            context.abort(StatusCode.UNIMPLEMENTED, "PelicanDrop is only available in federated interopability mode.")
+            context.abort(
+                grpc.StatusCode.UNIMPLEMENTED,
+                "PelicanDrop is only available in federated interopability mode.",
+            )
 
         self.validate_collaborator(request, context)
         self.check_request(request)
@@ -315,7 +320,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
     def serve(self):
         """Starts the aggregator gRPC server."""
-      
+
         if self.use_connector:
             self.aggregator.start_connector()
 

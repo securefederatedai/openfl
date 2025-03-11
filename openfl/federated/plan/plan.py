@@ -330,7 +330,7 @@ class Plan:
             self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
-    
+
     def get_connector(self):
         """Get OpenFL Connector object."""
         defaults = self.config.get("connector")

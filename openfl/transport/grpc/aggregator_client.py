@@ -16,7 +16,6 @@ from openfl.transport.grpc.common import create_header, create_insecure_channel,
 logger = logging.getLogger(__name__)
 
 
-
 class ConstantBackoff:
     """Constant Backoff policy.
 
@@ -406,7 +405,8 @@ class AggregatorGRPCClient:
     @_resend_data_on_reconnection
     def send_message_to_server(self, openfl_message, collaborator_name):
         """
-        Forwards a converted message from the local GRPC server (LGS) to the OpenFL server and returns the response.
+        Forwards a converted message from the local GRPC server (LGS) to the OpenFL server and
+        returns the response.
 
         Args:
             openfl_message: The converted message from the LGS to be sent to the OpenFL server.

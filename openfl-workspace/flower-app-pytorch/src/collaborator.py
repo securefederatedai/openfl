@@ -100,10 +100,8 @@ class CollaboratorFlower(Collaborator):
                     framework = self.task_config['settings']["connect_to"]
                     LocalGRPCServer = connector.get_local_grpc_server(framework)
                     local_grpc_server = LocalGRPCServer(self.client, self.collaborator_name)
-                    method(local_grpc_server, **kwargs) 
-                    # TODO: better to use self.send_task_results(global_output_tensor_dict, round_number, task_name)
-                    # maybe set global_output_tensor to empty
-                    self.client.send_local_task_results(self.collaborator_name, round_number, task_name)
+                    method(local_grpc_server, **kwargs)
+                    self.client.send_local_task_results(round_number, task_name)
                     metrics = {f'{self.collaborator_name}/start_client_adapter': 'Completed'}
                     return metrics
                 else:

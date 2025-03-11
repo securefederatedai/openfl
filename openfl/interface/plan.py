@@ -111,7 +111,7 @@ def initialize(
     Initializes a Data Science plan and generates a protobuf file of the
     initial model weights for the federation.
     """
-        
+
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
             echo(f"{p} is out of the openfl workspace scope.")
@@ -130,8 +130,8 @@ def initialize(
         gandlf_config_path=gandlf_config,
     )
 
-    if 'connector' in plan.config:
-        logger.info("OpenFL Connector enabled: %s", plan.config['connector'])
+    if "connector" in plan.config:
+        logger.info("OpenFL Connector enabled: %s", plan.config["connector"])
         # Only need to initialize task runner to install apps/packages
         # that were not installable via requirements.txt
         plan.get_task_runner(data_loader=None)
@@ -140,7 +140,8 @@ def initialize(
         # This is needed to bypass data being locally available
         if input_shape is not None:
             logger.info(
-                f"Attempting to generate initial model weights with custom input shape {input_shape}"
+                "Attempting to generate initial model weights with custom input shape "
+                f"{input_shape}"
             )
 
         # Initialize tensor dictionary
