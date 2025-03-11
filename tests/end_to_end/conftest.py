@@ -9,10 +9,11 @@ import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
-from openfl.utilities.logs import logger as log
-from openfl.utilities.logs import setup_loggers
+from openfl.utilities.logging import setup_logger
 from tests.end_to_end.utils.conftest_helper import parse_arguments
 import tests.end_to_end.utils.docker_helper as dh
+
+log = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -68,7 +69,7 @@ def setup_e2e_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    setup_loggers(log_level=log_level, log_file=f"{results_dir}/deployment.log")
+    setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
     return logging.getLogger()
 
 

@@ -26,7 +26,7 @@ from click import (
 )
 
 import openfl
-from openfl.utilities.logs import setup_loggers
+from openfl.utilities.logging import setup_logger
 
 
 def disable_warnings():
@@ -164,7 +164,7 @@ def cli(context, log_level, no_warnings, version):
         full_path = (allowed_directory / log_file).resolve()
         if not str(full_path).startswith(str(allowed_directory)):
             raise ValueError("Log file path is not allowed")
-    setup_loggers(log_level, log_file)
+    setup_logger(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
 
