@@ -12,9 +12,6 @@ class FlowerDataLoader(DataLoader):
     This class extends the OpenFL DataLoader to provide functionality for
     loading and partitioning data for a Flower workload.
 
-    Attributes:
-        data_shard (int): The shard number of the dataset.
-        num_partitions (int): The number of partitions to divide the dataset into.
     """
 
     def __init__(self, data_path, **kwargs):
