@@ -423,5 +423,5 @@ class AggregatorGRPCClient:
         )
         openfl_message.header.CopyFrom(header)
         openfl_response = self.stub.PelicanDrop(openfl_message)
-        self.validate_response(openfl_response, collaborator_name)
+        self.validate_response(openfl_response)
         return openfl_response
