@@ -238,9 +238,7 @@ def run_federation(fed_obj, install_dependencies=True):
     futures = [
         executor.submit(
             participant.start,
-            constants.AGG_COL_RESULT_FILE.format(
-                fed_obj.workspace_path, participant.name
-            ),
+                fed_obj.workspace_path,
         )
         for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
@@ -344,7 +342,12 @@ def _verify_completion_for_participant(
     Returns:
         bool: True if successful, else False
     """
-    time.sleep(20)  # Wait for some time before checking the log file
+    # Check for 1 min so that log file starts writing
+    start_time = time.time()
+    while not os.path.exists(participant.res_file):
+        if time.time() - start_time > 60:
+            raise Exception(f"Log file {participant.res_file} not found after 60 seconds")
+        time.sleep(10)
     # Set timeout based on the number of rounds and time for each round
     timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
 
@@ -353,9 +356,7 @@ def _verify_completion_for_participant(
     content = [""]
 
     start_time = time.time()
-    while (
-        constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
-    ):
+    while time.time() - start_time < timeout:
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
         # Below change is done to incorporate warnings coming in end of runs
@@ -363,9 +364,7 @@ def _verify_completion_for_participant(
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
-        if constants.SUCCESS_MARKER in content:
-            break
-        log.info(f"Process is yet to complete for {participant.name}")
+
         # If in logs Exception is encountered, throw Exception and stop the process
         if constants.EXCEPTION in content:
             log.error(
@@ -375,16 +374,33 @@ def _verify_completion_for_participant(
 
         time.sleep(45)
 
-    if constants.SUCCESS_MARKER not in content:
-        log.error(
-            f"Process failed/is incomplete for {participant.name} after timeout of {timeout} seconds"
-        )
-        return False
+        # Verify that the process is completed successfully
+        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
+        # Find the process ID
+        pids = []
+        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
+            fields = line.split()
+            pids.append(fields[0])
+
+        if not pids:
+            log.info(f"No processes found for participant {get_process_id}")
+            break
+        else:
+            log.info(f"Process is yet to complete for {participant.name}")
+
+    # read tensor.db file for aggregator to check if the process is completed
+    if participant.name == "aggregator":
+        current_round = get_current_round(participant.tensor_db_file)
+        if (current_round + 1) == num_rounds:
+            return True
+        else:
+            raise Exception(f"Process completed but only till round {current_round}")
     else:
-        log.info(
-            f"Process completed for {participant.name} in {time.time() - start_time} seconds"
-        )
-        return True
+    # Check if the process is completed for collaborator
+        if constants.COLLABORATORS_EXIT_MSG in content:
+            return True
+        else:
+            raise Exception(f"Process is not completed for {participant.name}")
 
 
 def federation_env_setup_and_validate(request, eval_scope=False):
@@ -549,7 +565,8 @@ def run_command(
         log.info(f"Running command: {command}")
 
     if run_in_background and not with_docker:
-        bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
+        if bg_file:
+            bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
             command,
             work_dir=workspace_path,
@@ -1030,12 +1047,12 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
         try:
             for i in range(1, num_collaborators + 1):
                 subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}') > /dev/null 2>&1",
                     shell=True,
                     check=True,
                 )
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}') > /dev/null 2>&1",
                 shell=True,
                 check=True,
             )
@@ -1045,7 +1062,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
     if director:
         try:
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}} > /dev/null 2>&1",
                 shell=True,
                 check=True,
             )
