@@ -29,7 +29,7 @@ class ConnectorFlower(Connector):
             automatic_shutdown (bool, optional): Flag to enable automatic shutdown of the server. Defaults to True.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(component_name="Flower")
+        super().__init__()
         self._process = None
 
         self.automatic_shutdown = automatic_shutdown
