@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-import logging
 import os
 import re
 import sys
 import time
 import warnings
 from importlib import import_module
-from logging import basicConfig
 from pathlib import Path
 from sys import argv, path
 
@@ -26,12 +24,8 @@ from click import (
     pass_context,
     style,
 )
-from rich.console import Console
-from rich.logging import RichHandler
 
 import openfl
-from openfl.utilities import add_log_level
-from openfl.utilities.logs import logger as log
 from openfl.utilities.logs import setup_loggers
 
 
