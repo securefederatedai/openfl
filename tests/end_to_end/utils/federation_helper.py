@@ -1098,11 +1098,15 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
                     f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
                     shell=True,
                     check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
                 )
             subprocess.run(
                 "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
             )
         except subprocess.CalledProcessError as e:
             log.warning(f"Failed to kill processes: {e}")

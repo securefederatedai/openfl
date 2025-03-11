@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 
 from openfl.utilities.logs import logger as log
-from openfl.utilities.logs import setup_loggers
+from openfl.utilities.logs import configure_logging
 from tests.end_to_end.utils.conftest_helper import parse_arguments
 import tests.end_to_end.utils.docker_helper as dh
 
@@ -60,6 +60,7 @@ def setup_logging(pytestconfig):
     Returns:
         logger: logger object
     """
+    print("hello user")
     tmp_results_dir = pytestconfig.getini("results_dir")
     log_level = pytestconfig.getini("log_level")
 
@@ -68,7 +69,7 @@ def setup_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    setup_loggers(log_level=log_level, log_file=f"{results_dir}/deployment.log")
+    configure_logging(log_level=log_level, log_file=f"{results_dir}/deployment.log")
     return logging.getLogger()
 
 
