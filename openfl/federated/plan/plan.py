@@ -392,7 +392,10 @@ class Plan:
         defaults[SETTINGS]["assigner"] = self.get_assigner()
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
-        defaults[SETTINGS]["connector"] = self.get_connector()
+
+        connector = self.get_connector()
+        if connector is not None:
+            defaults[SETTINGS]["connector"] = connector
 
         # TODO: Load callbacks from plan.
 
