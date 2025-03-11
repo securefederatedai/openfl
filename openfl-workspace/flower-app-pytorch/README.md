@@ -89,6 +89,18 @@ task_runner:
 
 **IMPORTANT NOTE**: `aggregator.settings.rounds_to_train` is set to 1. __Do not edit this__. The actual number of rounds for the experiment is controlled by Flower logic inside of `./app-pytorch/pyproject.toml`. The entirety of the Flower experiment will run in a single OpenFL round. The aggregator round is there to stop the OpenFL components at the completion of the experiment.
 
+4. `Task` - we introduce a `tasks_connector.yaml` that will allow the collaborator to connect to Flower framework via the local gRPC server. It also handles the task runner's `start_client_adapter` method, which actually starts the Flower component and local gRPC server. By setting `local_server_port` to 0, the port is dynamically allocated. This is mainly for local experiments to avoid overlapping the ports.
+
+```yaml
+tasks:
+  settings:
+    connect_to: Flower
+  start_client_adapter:
+    function: start_client_adapter
+    kwargs:
+      local_server_port: 0
+```
+
 ## Running the Workspace
 Run the workspace as normal (certify the workspace, initialize the plan, register the collaborators, etc.):
 
@@ -107,7 +119,7 @@ fx plan initialize
 ################################
 
 # Create a collaborator named "collaborator1" that will use shard "0"
-fx collaborator create -n collaborator1 -d 0
+fx collaborator create -n collaborator1 -d data/1
 
 # Generate a CSR for collaborator1
 fx collaborator generate-cert-request -n collaborator1
@@ -120,7 +132,7 @@ fx collaborator certify -n collaborator1 --silent
 ################################
 
 # Create a collaborator named "collaborator2" that will use shard "1"
-fx collaborator create -n collaborator2 -d 1
+fx collaborator create -n collaborator2 -d data/2
 
 # Generate a CSR for collaborator2
 fx collaborator generate-cert-request -n collaborator2
@@ -251,7 +263,7 @@ flwr run ./src/app-pytorch
 It will run another experiment. Once you are done, you can manually shut down OpenFL's `collaborator` and Flower's `SuperNode` with `CTRL+C`. This will trigger a task-completion by the task runner that'll subsequently begin the graceful shutdown process of the OpenFL and Flower components.
 
 ### Running in SGX Enclave
-Gramine does not support all Linux system calls. Flower FAB is built and installed at runtime. During this, `utime()` is called, which is an [unsupported call](https://gramine.readthedocs.io/en/latest/devel/features.html#list-of-system-calls), resulting in error or unexpected behavior. To navigate this, when running in an SGX enclave, we opt to build and install the FAB during initialization and package it alongside the OpenFL workspace. To make this work, we introduce some patches to Flower's build command. In addition, since secure enclaves have strict read/write permissions, dictate by a set of trusted/allowed files, we also patch Flower's telemetry command in order to consolidate written file locations.
+Gramine does not support all Linux system calls. Flower FAB is built and installed at runtime. During this, `utime()` is called, which is an [unsupported call](https://gramine.readthedocs.io/en/latest/devel/features.html#list-of-system-calls), resulting in error or unexpected behavior. To navigate this, when running in an SGX enclave, we opt to build and install the FAB during initialization and package it alongside the OpenFL workspace. To make this work, we introduce some patches to Flower's build command. In addition, since secure enclaves have strict read/write permissions, dictate by a set of trusted/allowed files
 
 To run these patches, simply add `patch: True` to the `Connector` and `Task Runner` settings. For the `Task Runner` also include the name of the Flower app for building and installation.
 
