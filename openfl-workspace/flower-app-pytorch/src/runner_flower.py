@@ -19,19 +19,12 @@ class FlowerTaskRunner(TaskRunner):
     This class is responsible for starting a local gRPC server and a Flower SuperNode
     in a subprocess. It provides options for both manual and automatic shutdown based on
     subprocess activity.
-
-    Shutdown Options:
-    - Manual Shutdown: The server and supernode process can be manually stopped by pressing CTRL+C.
-    - Automatic Shutdown: If enabled, the system will monitor subprocess activity and
-      automatically shut down if no new subprocess starts within a specified time frame.
     """
     def __init__(self, **kwargs):
         """
         Initialize the FlowerTaskRunner.
 
         Args:
-            auto_shutdown (bool): Whether to enable automatic shutdown based on subprocess activity.
-                Default is True. Set to False for long-lived components.
             **kwargs: Additional parameters to pass to the functions.
         """
         super().__init__(**kwargs)
