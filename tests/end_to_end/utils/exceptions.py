@@ -111,3 +111,8 @@ class ParticipantRestartException(Exception):
 class TensorDBException(Exception):
     """Exception for tensor database"""
     pass
+
+
+class GaNDLFConfigSegException(Exception):
+    """Exception for GaNDLF config segmentation file"""
+    pass

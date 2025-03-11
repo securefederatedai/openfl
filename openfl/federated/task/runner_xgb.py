@@ -5,6 +5,7 @@
 """XGBoostTaskRunner module."""
 
 import json
+import logging
 
 import numpy as np
 import xgboost as xgb
@@ -14,13 +15,14 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
+logger = logging.getLogger(__name__)
 
-def check_precision_loss(logger, converted_data, original_data):
+
+def check_precision_loss(converted_data, original_data):
     """
     Checks for precision loss during conversion to float32 and back.
 
     Parameters:
-    logger (Logger): The logger object to log warnings.
     converted_data (np.ndarray): The data that has been converted to float32.
     original_data (list): The original data to be checked for precision loss.
     """
@@ -157,7 +159,7 @@ class XGBoostTaskRunner(TaskRunner):
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict()
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
@@ -243,7 +245,7 @@ class XGBoostTaskRunner(TaskRunner):
             np.float32
         )
 
-        check_precision_loss(self.logger, latest_trees_float32_array, original_data=latest_trees)
+        check_precision_loss(latest_trees_float32_array, original_data=latest_trees)
 
         return {"local_tree": latest_trees_float32_array}
 
@@ -278,7 +280,7 @@ class XGBoostTaskRunner(TaskRunner):
         """
         output_model_dict = self.get_tensor_dict()
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         global_model_dict_val = global_model_dict
         local_model_dict_val = local_model_dict
