@@ -171,6 +171,9 @@ class AggregatorGRPCClient:
     Attributes:
         agg_addr (str): Aggregator address.
         agg_port (int): Aggregator port.
+        aggregator_uuid (str): The UUID of the aggregator.
+        federation_uuid (str): The UUID of the federation.
+        collaborator_name (str): The common name of this collaborator.
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
@@ -180,8 +183,6 @@ class AggregatorGRPCClient:
             `use_tls=False`.
         private_key (str): The path to the client's private key for the TLS connection, ignored if
             `use_tls=False`.
-        aggregator_uuid (str): The UUID of the aggregator.
-        federation_uuid (str): The UUID of the federation.
         single_col_cert_common_name (str): The common name on the
             collaborator's certificate.
         refetch_server_cert_callback (function): Callback function to refetch
@@ -195,13 +196,14 @@ class AggregatorGRPCClient:
         self,
         agg_addr,
         agg_port,
+        aggregator_uuid: str,
+        federation_uuid: str,
+        collaborator_name: str,
         use_tls=True,
         require_client_auth=True,
         root_certificate=None,
         certificate=None,
         private_key=None,
-        aggregator_uuid=None,
-        federation_uuid=None,
         single_col_cert_common_name=None,
         refetch_server_cert_callback=None,
         enable_atomic_connections=False,
@@ -209,13 +211,14 @@ class AggregatorGRPCClient:
         **kwargs,
     ):
         self.uri = f"{agg_addr}:{agg_port}"
+        self.aggregator_uuid = aggregator_uuid
+        self.federation_uuid = federation_uuid
+        self.collaborator_name = collaborator_name
         self.use_tls = use_tls
         self.require_client_auth = require_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        self.aggregator_uuid = aggregator_uuid
-        self.federation_uuid = federation_uuid
         self.single_col_cert_common_name = single_col_cert_common_name or ""
         self.refetch_server_cert_callback = refetch_server_cert_callback
         self.enable_atomic_connections = enable_atomic_connections
@@ -241,11 +244,11 @@ class AggregatorGRPCClient:
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(self.channel)
 
-    def validate_response(self, response, collaborator_name):
+    def validate_response(self, response):
         """Validate the aggregator response."""
-        assert response.header.receiver == collaborator_name, (
+        assert response.header.receiver == self.collaborator_name, (
             f"Receiver in response header does not match collaborator name. "
-            f"Expected: {collaborator_name}, Actual: {response.header.receiver}"
+            f"Expected: {self.collaborator_name}, Actual: {response.header.receiver}"
         )
         assert response.header.sender == self.aggregator_uuid, (
             f"Sender in response header does not match aggregator UUID. "
@@ -288,7 +291,7 @@ class AggregatorGRPCClient:
 
     @_resend_data_on_reconnection
     @_atomic_connection
-    def get_tasks(self, collaborator_name):
+    def get_tasks(self):
         """Get tasks from the aggregator.
 
         Args:
@@ -301,14 +304,14 @@ class AggregatorGRPCClient:
         """
         logger.info("Requesting tasks...")
         header = create_header(
-            sender=collaborator_name,
+            sender=self.collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
             single_col_cert_common_name=self.single_col_cert_common_name,
         )
         request = aggregator_pb2.GetTasksRequest(header=header)
         response = self.stub.GetTasks(request)
-        self.validate_response(response, collaborator_name)
+        self.validate_response(response)
 
         return (
             response.tasks,
@@ -321,7 +324,6 @@ class AggregatorGRPCClient:
     @_atomic_connection
     def get_aggregated_tensor(
         self,
-        collaborator_name,
         tensor_name,
         round_number,
         report,
@@ -343,7 +345,7 @@ class AggregatorGRPCClient:
             aggregator_pb2.TensorProto: The aggregated tensor.
         """
         header = create_header(
-            sender=collaborator_name,
+            sender=self.collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
             single_col_cert_common_name=self.single_col_cert_common_name,
@@ -358,17 +360,13 @@ class AggregatorGRPCClient:
             require_lossless=require_lossless,
         )
         response = self.stub.GetAggregatedTensor(request)
-        self.validate_response(response, collaborator_name)
-
-        # Deserialize Tensor.
-
+        self.validate_response(response)
         return response.tensor
 
     @_resend_data_on_reconnection
     @_atomic_connection
     def send_local_task_results(
         self,
-        collaborator_name,
         round_number,
         task_name,
         data_size,
@@ -386,7 +384,7 @@ class AggregatorGRPCClient:
                 named tensors.
         """
         header = create_header(
-            sender=collaborator_name,
+            sender=self.collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
             single_col_cert_common_name=self.single_col_cert_common_name,
@@ -401,4 +399,4 @@ class AggregatorGRPCClient:
 
         # convert (potentially) long list of tensors into stream
         response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
-        self.validate_response(response, collaborator_name)
+        self.validate_response(response)
