@@ -32,7 +32,7 @@ from rich.logging import RichHandler
 import openfl
 from openfl.utilities import add_log_level
 from openfl.utilities.logs import logger as log
-from openfl.utilities.logs import configure_logging
+from openfl.utilities.logs import setup_loggers
 
 
 def disable_warnings():
@@ -170,7 +170,7 @@ def cli(context, log_level, no_warnings, version):
         full_path = (allowed_directory / log_file).resolve()
         if not str(full_path).startswith(str(allowed_directory)):
             raise ValueError("Log file path is not allowed")
-    configure_logging(log_level, log_file)
+    setup_loggers(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
 

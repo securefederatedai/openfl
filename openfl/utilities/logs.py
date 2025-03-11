@@ -13,7 +13,7 @@ from openfl.utilities import add_log_level
 logger = logging.getLogger()
 
 
-def configure_logging(log_level=logging.INFO, log_file=None):
+def setup_loggers(log_level=logging.INFO, log_file=None):
     """Configure loggers.
 
     This function sets up the root logger to log messages with a certain
