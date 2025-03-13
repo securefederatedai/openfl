@@ -755,9 +755,7 @@ class Aggregator:
         """
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
-            secagg_setup = self.secagg.process_secagg_setup_tensors(
-                collaborator_name, named_tensors
-            )
+            secagg_setup = self.secagg.process_secagg_setup_tensors(named_tensors)
             # Task results processing is not required if the tensors belong to
             # secure aggregation setup stage.
             if secagg_setup:
@@ -1099,11 +1097,11 @@ class Aggregator:
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             # Check if secure aggregation is enabled, set aggregation function.
             agg_function = (
-                task_agg_function
-                if "metric" not in tags
+                WeightedAverage()
+                if "metric" in tags
                 else SecureWeightedAverage()
                 if self._secure_aggregation_enabled
-                else WeightedAverage()
+                else task_agg_function
             )
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
