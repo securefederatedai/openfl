@@ -159,9 +159,7 @@ class Collaborator:
         self.callbacks.on_experiment_begin()
 
         while True:
-            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks(
-                self.collaborator_name
-            )
+            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
 
             if time_to_quit:
                 break
@@ -382,7 +380,6 @@ class Collaborator:
 
         logger.debug("Requesting aggregated tensor %s", tensor_key)
         tensor = self.client.get_aggregated_tensor(
-            self.collaborator_name,
             tensor_name,
             round_number,
             report,
@@ -435,7 +432,6 @@ class Collaborator:
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
 
         self.client.send_local_task_results(
-            self.collaborator_name,
             round_number,
             task_name,
             data_size,
