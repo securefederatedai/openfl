@@ -252,20 +252,8 @@ class Collaborator:
         )
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
-        unmasked_metrics = {}
         if self._secure_aggregation_enabled:
-            from openfl.utilities.secagg import calulcate_masked_input_vectors
-
-            self._private_mask, self._shared_mask, unmasked_metrics = (
-                calulcate_masked_input_vectors(
-                    self.collaborator_name,
-                    self.tensor_db,
-                    task_name,
-                    global_output_tensor_dict,
-                    private_mask=self._private_mask,
-                    shared_mask=self._shared_mask,
-                )
-            )
+            self._calulcate_masked_input_vectors(global_output_tensor_dict)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -274,8 +262,7 @@ class Collaborator:
         # send the results for this tasks; delta and compression will occur in
         # this function
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
-        # Add unmasked metrics to the metrics that are logged, if any.
-        metrics.update(unmasked_metrics)
+
         return metrics
 
     def get_data_for_tensorkey(self, tensor_key):
@@ -561,3 +548,36 @@ class Collaborator:
         self.tensor_db.cache_tensor({decompressed_tensor_key: decompressed_nparray})
 
         return decompressed_nparray
+
+    def _calulcate_masked_input_vectors(
+        self,
+        tensor_dict,
+    ):
+        """
+        Calculate masked input vectors for secure aggregation.
+
+        This function fetches private and shared masks from the tensor database if
+        they are not provided, and applies these masks to the input tensors.
+
+        Args:
+            tensor_dict (dict): A dictionary of tensors to be masked.
+        """
+        import numpy as np
+
+        # Fetch private mask from tensor db if not already fetched.
+        if not self._private_mask:
+            self._private_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
+            )[0]
+        # Fetch shared mask from tensor db if not alreday fetched.
+        if not self._shared_mask:
+            self._shared_mask = self.tensor_db.get_tensor_from_cache(
+                TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
+            )[0]
+
+        for tensor_key in tensor_dict:
+            _, _, _, _, tags = tensor_key
+            if "metric" in tags:
+                continue
+            masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
+            tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)

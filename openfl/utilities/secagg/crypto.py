@@ -14,8 +14,6 @@ import numpy as np
 from Crypto.Cipher import AES  # nosec B413
 from Crypto.Util.Padding import pad  # nosec B413
 
-from openfl.utilities import TensorKey
-
 
 def create_ciphertext(
     secret_key: bytes,
@@ -197,59 +195,3 @@ def calculate_mask(collaborator_index, agreed_keys, private_seed) -> float:
     total_mask += random.random()
 
     return total_mask
-
-
-def calulcate_masked_input_vectors(
-    collaborator_name,
-    tensor_db,
-    task_name,
-    tensor_dict,
-    private_mask=None,
-    shared_mask=None,
-    mask_metrics=True,
-):
-    """
-    Calculate masked input vectors for secure aggregation.
-
-    This function fetches private and shared masks from the tensor database if
-    they are not provided, and applies these masks to the input tensors.
-
-    Args:
-        collaborator_name (str): The name of the collaborator.
-        tensor_db (object): The tensor database object to fetch masks from.
-        task_name (str): The name of the task.
-        tensor_dict (dict): A dictionary of tensors to be masked.
-        private_mask (optional): The private mask to be applied.
-            Defaults to None.
-        shared_mask (optional): The shared mask to be applied.
-            Defaults to None.
-
-    Returns:
-        tuple: A tuple containing:
-            - private_mask (np.ndarray): The private mask used.
-            - shared_mask (np.ndarray): The shared mask used.
-            - metrics (dict): A dictionary of calculated metrics.
-    """
-    # Fetch private mask from tensor db if not already fetched.
-    if not private_mask:
-        private_mask = tensor_db.get_tensor_from_cache(
-            TensorKey("private_mask", collaborator_name, -1, False, ("secagg",))
-        )[0]
-    # Fetch shared mask from tensor db if not alreday fetched.
-    if not shared_mask:
-        shared_mask = tensor_db.get_tensor_from_cache(
-            TensorKey("shared_mask", collaborator_name, -1, False, ("secagg",))
-        )[0]
-
-    metrics = {}
-    for tensor_key in tensor_dict:
-        tensor_name, _, _, report, tags = tensor_key
-        if "metric" in tags and mask_metrics:
-            if report:
-                # Reportable metric must be a scalar
-                value = float(tensor_dict[tensor_key])
-                metrics.update({f"{collaborator_name}/{task_name}/{tensor_name}/unmasked": value})
-        masked_metric = np.add(private_mask, tensor_dict[tensor_key])
-        tensor_dict[tensor_key] = np.add(masked_metric, shared_mask)
-
-    return private_mask, shared_mask, metrics
