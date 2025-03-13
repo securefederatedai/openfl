@@ -144,7 +144,7 @@ class Keras2DUNet(KerasTaskRunner):
             y_pred: Prediction array from model
             smooth (float): Laplace smoothing factor (Default=1.0)
         Returns:
-            float: -log(Dice cofficient) metric
+            float: -log(Dice coefficient) metric
         """
         intersection = tf.reduce_sum(y_true * y_pred, axis=(1, 2, 3))
 

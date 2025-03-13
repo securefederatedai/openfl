@@ -209,7 +209,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         container_id=model_owner.container_id,  # None in case of native environment
     )
 
-    # Currently plan intialization internally checks data path in data.yaml
+    # Currently plan initialization internally checks data path in data.yaml
     # So we need to have data and modified data.yaml file in place before initializing the plan
     # Issue - https://github.com/securefederatedai/openfl/issues/73
     fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators, results_path)

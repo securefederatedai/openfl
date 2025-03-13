@@ -183,7 +183,7 @@ class AggregatorGRPCClient:
             root_certificate: The Certificate Authority filename
             disable_client_auth (boolean): True disabled client-side
              authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
+            certificate: The client certificate filename from the collaborator
              (signed by the certificate authority)
 
         Returns:

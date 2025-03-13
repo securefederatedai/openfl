@@ -107,7 +107,7 @@ The plan initialize command supports the optional `--init_model_path` (shortform
     -p, --plan_config PATH         Path to an FL plan.  [default: plan/plan.yaml]
     -c, --cols_config PATH         Path to an authorized collaborator list.  [default: plan/cols.yaml]
     -d, --data_config PATH         The dataset shard configuration file.  [default: plan/data.yaml]
-    -a, --aggregator_address TEXT  The FQDN of the federation agregator
+    -a, --aggregator_address TEXT  The FQDN of the federation aggregator
     -f, --input_shape TEXT         The input spec of the model.
 
                                     May be provided as a list for single input head: ``--input-shape [3,32,32]``,
