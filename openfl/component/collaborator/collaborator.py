@@ -251,7 +251,7 @@ class Collaborator:
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
         if self._secure_aggregation_enabled:
-            self._calulcate_masked_input_vectors(global_output_tensor_dict)
+            self._apply_masks(global_output_tensor_dict)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -545,7 +545,7 @@ class Collaborator:
 
         return decompressed_nparray
 
-    def _calulcate_masked_input_vectors(
+    def _apply_masks(
         self,
         tensor_dict,
     ):

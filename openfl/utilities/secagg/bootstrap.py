@@ -57,9 +57,8 @@ class SecAggSetup:
             named_tensors (list): A list of named tensors to be processed.
 
         Returns:
-            bool: True if the setup is complete or if the tensor does not
-                belong to secure aggregation setup, otherwise waits for all
-                collaborators.
+            bool: True if the received tensors belong to secagg setup stage,
+                False otherwise.
         """
         secagg_setup = False
         for named_tensor in named_tensors:
@@ -70,7 +69,7 @@ class SecAggSetup:
             else:
                 secagg_setup = True
                 # Process and save tensor to local tensor db.
-                self._named_tensor_to_nparray(named_tensor)
+                self._save_secagg_tensor(named_tensor)
                 tensor_name = named_tensor.name
                 # Check if all collaborators have sent their data for the
                 # current key.
@@ -324,9 +323,10 @@ class SecAggSetup:
         self._tensor_db.cache_tensor(local_tensor_dict)
         logger.info("SecAgg: setup completed, saved required tensors to db.")
 
-    def _named_tensor_to_nparray(self, named_tensor):
+    def _save_secagg_tensor(self, named_tensor):
         """
-        Converts secure aggregation setup related named tensor to nparray.
+        Converts secure aggregation setup related named tensor to nparray
+        and saves them to tensordb.
         """
         # The tensor has already been transfered to aggregator,
         # so the newly constructed tensor should have the aggregator origin
