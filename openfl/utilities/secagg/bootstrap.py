@@ -43,7 +43,7 @@ class SecAggSetup:
         self._tensor_db = tensor_db
         self._results = {}
 
-    def process_secagg_setup_tensors(self, collaborator_name, named_tensors) -> bool:
+    def process_secagg_setup_tensors(self, named_tensors) -> bool:
         """
         Set up secure aggregation for the given collaborator and named tensors.
 
@@ -54,8 +54,6 @@ class SecAggSetup:
         proceeds with aggregation for the key.
 
         Args:
-            collaborator_name (str): The name of the collaborator sending the
-                tensors.
             named_tensors (list): A list of named tensors to be processed.
 
         Returns:
@@ -72,7 +70,7 @@ class SecAggSetup:
             else:
                 secagg_setup = True
                 # Process and save tensor to local tensor db.
-                self._named_tensor_to_nparray(named_tensor, collaborator_name)
+                self._named_tensor_to_nparray(named_tensor)
                 tensor_name = named_tensor.name
                 # Check if all collaborators have sent their data for the
                 # current key.
@@ -334,7 +332,7 @@ class SecAggSetup:
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
             named_tensor.name,
-            self.uuid,
+            self._aggregator_uuid,
             named_tensor.round_number,
             named_tensor.report,
             tuple(named_tensor.tags),
@@ -343,5 +341,5 @@ class SecAggSetup:
         # Secure aggregation setup stage key
         if "secagg" in tags:
             nparray = json.loads(named_tensor.data_bytes)
-            self.tensor_db.cache_tensor({tensor_key: nparray})
+            self._tensor_db.cache_tensor({tensor_key: nparray})
             logger.debug("Created TensorKey: %s", tensor_key)
