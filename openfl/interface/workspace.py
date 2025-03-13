@@ -426,7 +426,7 @@ def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, base_image:
         os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.workspace"),
         ".",
     ]
-    _execute(ws_image_build_cmd, env_var={"DOCKER_BUILDKIT": 1})
+    _execute(ws_image_build_cmd, env_var={"DOCKER_BUILDKIT": "1"})
 
     # Export workspace as tarball (optional)
     if save:
