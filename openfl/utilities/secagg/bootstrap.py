@@ -64,9 +64,7 @@ class SecAggSetup:
         for named_tensor in named_tensors:
             # Check if the tensor belongs to one from secure aggregation
             # setup stages.
-            if "secagg" not in tuple(named_tensor.tags):
-                continue
-            else:
+            if "secagg" in tuple(named_tensor.tags):
                 secagg_setup = True
                 # Process and save tensor to local tensor db.
                 self._save_secagg_tensor(named_tensor)
