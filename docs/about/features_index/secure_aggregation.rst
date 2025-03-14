@@ -15,7 +15,7 @@ OpenFL treats SecAgg as a core security feature and can be enabled for any exper
 **NOTE**: 
 - `pycryptodome <https://pypi.org/project/pycryptodome/>`_ is a required dependency that must be installed on the participant nodes before starting the experiment.
 - The `straggler_handling_policy` is not yet supported with secure aggregation and will be addressed in future enhancements.
-- The impact of secure aggregation on the aggregator and/or collaborator will be assessed, and additional resiliency features will be introduced in subsequent updates.
+- The impact of secure aggregation on the aggregator and/or collaborator restart will be assessed, and additional resiliency features will be introduced in subsequent updates.
 
 The following plan shows secure aggregation being enabled on `keras/mnist <https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras/mnist>`_ workspace by simply modifying the plan.
 
