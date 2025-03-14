@@ -6,7 +6,7 @@ import subprocess
 import psutil
 
 import os
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "src/.flwr")
+os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class ConnectorFlower(Connector):
