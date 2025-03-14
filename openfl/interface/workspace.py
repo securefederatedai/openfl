@@ -404,7 +404,7 @@ def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, base_image:
     options = " ".join(options)
     logging.info(f"Using base image: {base_image}")
     if enclave_key is None:
-        _execute("openssl genrsa -out key.pem -3 3072")
+        _execute(["openssl", "genrsa", "-out", "key.pem", "-3", "3072"])
         enclave_key = os.path.abspath("key.pem")
         logging.info(f"Generated new enclave key: {enclave_key}")
     else:
@@ -414,28 +414,27 @@ def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, base_image:
         logging.info(f"Using enclave key: {enclave_key}")
 
     logging.info("Building workspace image")
-    ws_image_build_cmd = (
-        "DOCKER_BUILDKIT=1 docker build {options} "
-        "--build-arg WORKSPACE_NAME={workspace_name} "
-        "--secret id=signer-key,src={enclave_key} "
-        "-t {image_name} "
-        "-f {dockerfile} "
-        "{build_context}"
-    ).format(
-        options=options,
-        image_name=workspace_name,
-        workspace_name=workspace_name,
-        enclave_key=enclave_key,
-        dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.workspace"),
-        build_context=".",
-    )
-    _execute(ws_image_build_cmd)
+    ws_image_build_cmd = [
+        "docker",
+        "build",
+        *options.split(),
+        "--build-arg",
+        f"WORKSPACE_NAME={workspace_name}",
+        "--secret",
+        f"id=signer-key,src={enclave_key}",
+        "-t",
+        workspace_name,
+        "-f",
+        os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.workspace"),
+        ".",
+    ]
+    _execute(ws_image_build_cmd, env_var={"DOCKER_BUILDKIT": "1"})
 
     # Export workspace as tarball (optional)
     if save:
         logging.info("Saving workspace docker image...")
-        save_image_cmd = "docker save {image_name} -o {image_name}.tar"
-        _execute(save_image_cmd.format(image_name=workspace_name))
+        save_image_cmd = ["docker", "save", workspace_name, "-o", f"{workspace_name}.tar"]
+        _execute(save_image_cmd)
         logging.info(f"Docker image saved to file: {workspace_name}.tar")
 
 
@@ -455,7 +454,7 @@ def apply_template_plan(prefix, template):
     Plan.dump(prefix / "plan" / "plan.yaml", template_plan.config)
 
 
-def _execute(cmd: str, verbose=True) -> None:
+def _execute(cmd: str, env_var: dict = {}, verbose=True) -> None:
     """Executes `cmd` as a subprocess
 
     Args:
@@ -468,7 +467,7 @@ def _execute(cmd: str, verbose=True) -> None:
         `stdout` of the command as list of messages
     """
     logging.info(f"Executing: {cmd}")
-    process = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    process = subprocess.Popen(cmd, env=env_var, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     stdout_log = []
     for line in process.stdout:
         msg = line.rstrip().decode("utf-8")
