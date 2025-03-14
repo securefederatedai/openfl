@@ -5,10 +5,6 @@
 """Collaborator module."""
 
 import logging
-from typing import List, Optional
-
-from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
-from openfl.utilities import TensorKey
 from src.grpc import connector
 
 from openfl.component import Collaborator
@@ -37,42 +33,6 @@ class CollaboratorFlower(Collaborator):
     .. note::
         \* - Plan setting.
     """
-
-    def __init__(
-        self,
-        collaborator_name,
-        aggregator_uuid,
-        federation_uuid,
-        client: AggregatorGRPCClient,
-        task_runner,
-        task_config,
-        opt_treatment="RESET",
-        device_assignment_policy="CPU_ONLY",
-        use_delta_updates=False,
-        compression_pipeline=None,
-        db_store_rounds=1,
-        log_memory_usage=False,
-        write_logs=False,
-        callbacks: Optional[List] = [],
-        secure_aggregation=False,
-    ):
-        super().__init__(
-            collaborator_name,
-            aggregator_uuid,
-            federation_uuid,
-            client,
-            task_runner,
-            task_config,
-            opt_treatment,
-            device_assignment_policy,
-            use_delta_updates,
-            compression_pipeline,
-            db_store_rounds,
-            log_memory_usage,
-            write_logs,
-            callbacks,
-            secure_aggregation
-        )
 
     def do_task(self, task, round_number) -> dict:
         """Perform the specified task.
