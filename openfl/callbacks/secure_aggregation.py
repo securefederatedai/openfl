@@ -36,7 +36,7 @@ class SecAggBootstrapping(Callback):
         from importlib import util
 
         # Check if pycryptodome is installed.
-        if util.find_spec("pycryptodome") is None:
+        if util.find_spec("Crypto") is None:
             raise Exception(
                 "'pycryptodome' not installed."
                 "This package is necessary when secure aggregation is enabled."

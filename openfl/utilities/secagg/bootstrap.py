@@ -13,7 +13,7 @@ from importlib import util
 from openfl.utilities import TensorKey
 
 # Check if pycryptodome is installed.
-if util.find_spec("pycryptodome") is None:
+if util.find_spec("Crypto") is None:
     raise Exception(
         "'pycryptodome' not installed.This package is necessary when secure aggregation is enabled."
     )
