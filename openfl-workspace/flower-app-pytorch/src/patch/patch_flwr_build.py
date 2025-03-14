@@ -22,7 +22,7 @@ def build(
     """Build a Flower App into a Flower App Bundle (FAB).
 
     You can run ``flwr build`` without any arguments to bundle the app located in the
-    current directory. Alternatively, you can you can specify a path using the ``--app``
+    current directory. Alternatively, you can specify a path using the ``--app``
     option to bundle an app located at the provided path. For example:
 
     ``flwr build --app ./apps/flower-hello-world``.
