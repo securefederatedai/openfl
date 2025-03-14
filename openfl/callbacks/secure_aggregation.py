@@ -16,7 +16,6 @@ from openfl.protocols import utils
 from openfl.utilities import TensorKey
 
 logger = logging.getLogger(__name__)
-_required_package = "pycryptodome"
 
 
 class SecAggBootstrapping(Callback):
@@ -33,14 +32,13 @@ class SecAggBootstrapping(Callback):
 
     def __init__(self):
         super().__init__()
-        # Check if pycryptodome is installed.
-        import pkg_resources
 
-        try:
-            pkg_resources.get_distribution(_required_package)
-        except pkg_resources.DistributionNotFound:
+        from importlib import util
+
+        # Check if pycryptodome is installed.
+        if util.find_spec("pycryptodome") is None:
             raise Exception(
-                f"'{_required_package}' not installed."
+                "'pycryptodome' not installed."
                 "This package is necessary when secure aggregation is enabled."
             )
 

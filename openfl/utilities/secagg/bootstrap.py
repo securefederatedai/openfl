@@ -8,26 +8,22 @@ aggregation setup.
 import json
 import logging
 import struct
-
-import pkg_resources
+from importlib import util
 
 from openfl.utilities import TensorKey
 
-try:
-    _required_package = "pycryptodome"
-    pkg_resources.get_distribution(_required_package)
-    # Import packages, if installed.
-    from openfl.utilities.secagg import (
-        calculate_shared_mask,
-        generate_agreed_key,
-        reconstruct_secret,
-    )
-except pkg_resources.DistributionNotFound:
+# Check if pycryptodome is installed.
+if util.find_spec("pycryptodome") is None:
     raise Exception(
-        f"'{_required_package}' not installed."
-        "This package is necessary when secure aggregation is enabled."
+        "'pycryptodome' not installed.This package is necessary when secure aggregation is enabled."
     )
 
+# Import packages, if installed.
+from openfl.utilities.secagg import (
+    calculate_shared_mask,
+    generate_agreed_key,
+    reconstruct_secret,
+)
 
 logger = logging.getLogger(__name__)
 
