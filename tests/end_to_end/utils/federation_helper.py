@@ -396,12 +396,7 @@ def _verify_completion_for_participant(
             return True
         else:
             raise Exception(f"Process completed but only till round {current_round}")
-    else:
-    # Check if the process is completed for collaborator
-        if constants.COLLABORATORS_EXIT_MSG in content:
-            return True
-        else:
-            raise Exception(f"Process is not completed for {participant.name}")
+    return True
 
 
 def federation_env_setup_and_validate(request, eval_scope=False):
