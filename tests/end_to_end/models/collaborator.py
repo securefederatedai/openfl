@@ -135,7 +135,6 @@ class Collaborator():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
-                # bg_file=res_file,
             )
             log_file = os.path.join(workspace_path, self.name, "workspace", log_file)
             self.res_file = log_file

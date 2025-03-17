@@ -78,7 +78,7 @@ class Aggregator():
                 run_in_background=True,
                 bg_file=None,
             )
-            log_file = os.path.join(self.workspace_path, self.name, "workspace", log_file)
+            log_file = os.path.join(self.workspace_path, log_file)
             self.res_file = log_file
             log.info(
                 f"Started {self.name} and tracking the logs in {log_file}."
@@ -86,7 +86,7 @@ class Aggregator():
         except Exception as e:
             log.error(f"Command - {command} Error - {error_msg}: {e}")
             raise e
-        
+
         return log_file
 
 
