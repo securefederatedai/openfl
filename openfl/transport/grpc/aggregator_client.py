@@ -422,6 +422,6 @@ class AggregatorGRPCClient:
             single_col_cert_common_name=self.single_col_cert_common_name,
         )
         openfl_message.header.CopyFrom(header)
-        openfl_response = self.stub.PelicanDrop(openfl_message)
+        openfl_response = self.stub.InteropRelay(openfl_message)
         self.validate_response(openfl_response)
         return openfl_response

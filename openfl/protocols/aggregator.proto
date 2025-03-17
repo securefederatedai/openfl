@@ -12,7 +12,7 @@ service Aggregator {
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
   rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
   rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
-  rpc PelicanDrop(DropPod) returns (DropPod) {}
+  rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
 
 message MessageHeader {
@@ -71,7 +71,7 @@ message SendLocalTaskResultsResponse {
   MessageHeader header = 1;
 }
 
-message DropPod {
+message InteropMessage {
   MessageHeader header = 1;
   DataStream message = 2;
   map<string, string> metadata = 3;

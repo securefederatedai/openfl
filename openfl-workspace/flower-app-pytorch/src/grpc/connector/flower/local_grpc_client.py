@@ -3,9 +3,9 @@ from flwr.proto import grpcadapter_pb2_grpc
 from src.grpc.connector.flower.message_conversion import flower_to_openfl_message, openfl_to_flower_message
 from logging import getLogger
 
-class LocalGRPCClient:
+class FlowerInteropClient:
     """
-    LocalGRPCClient facilitates communication between the Flower SuperLink
+    FlowerInteropClient facilitates communication between the Flower SuperLink
     and the OpenFL Server. It converts messages between OpenFL and Flower formats
     and handles the send-receive communication with the Flower SuperNode using gRPC.
     """

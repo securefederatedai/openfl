@@ -13,9 +13,9 @@ import time
 logger = logging.getLogger(__name__)
 
 
-class LocalGRPCServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
+class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
     """
-    LocalGRPCServer is a gRPC server that handles requests from the Flower SuperNode
+    FlowerInteropServer is a gRPC server that handles requests from the Flower SuperNode
     and forwards them to the OpenFL Client. It uses a queue-based system to
     ensure that requests are processed sequentially, preventing concurrent
     request handling issues.

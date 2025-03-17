@@ -1,6 +1,6 @@
 import subprocess
 from src.connector import Connector
-from src.grpc.connector.flower.local_grpc_client import LocalGRPCClient
+from src.grpc.connector.flower.local_grpc_client import FlowerInteropClient
 
 import subprocess
 import psutil
@@ -51,7 +51,7 @@ class ConnectorFlower(Connector):
             LocalGRPCClient: An instance configured with the connector address and server rounds.
         """
         connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
-        return LocalGRPCClient(connector_address, self.automatic_shutdown)
+        return FlowerInteropClient(connector_address, self.automatic_shutdown)
 
     def _build_flwr_superlink_command(self) -> list[str]:
         """

@@ -291,7 +291,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
-    def PelicanDrop(self, request, context):
+    def InteropRelay(self, request, context):
         """
         Args:
             request (aggregator_pb2.PelicanDrop): The request
