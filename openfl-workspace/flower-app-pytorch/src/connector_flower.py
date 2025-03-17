@@ -1,5 +1,9 @@
+import signal
+import sys
+from logging import getLogger
+logger = getLogger(__name__)
+
 import subprocess
-from src.connector import Connector
 from src.grpc.connector.flower.local_grpc_client import FlowerInteropClient
 
 import subprocess
@@ -9,7 +13,7 @@ import os
 os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
-class ConnectorFlower(Connector):
+class ConnectorFlower:
     """
     A Connector subclass specifically designed for integrating with the Flower framework.
     This class is responsible for constructing and managing the execution of Flower server commands.
@@ -41,9 +45,10 @@ class ConnectorFlower(Connector):
         self.flwr_run_params = flwr_run_params
         self.flwr_run_command = self._build_flwr_run_command() if self.flwr_run_params else None
 
-        self.local_grpc_client = self._get_local_grpc_client()
+        self.local_grpc_client = None
+        signal.signal(signal.SIGINT, self._handle_sigint)
 
-    def _get_local_grpc_client(self):
+    def get_local_grpc_client(self):
         """
         Create and return a LocalGRPCClient instance using the superlink parameters.
 
@@ -51,7 +56,8 @@ class ConnectorFlower(Connector):
             LocalGRPCClient: An instance configured with the connector address and server rounds.
         """
         connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
-        return FlowerInteropClient(connector_address, self.automatic_shutdown)
+        self.local_grpc_client = FlowerInteropClient(connector_address, self.automatic_shutdown)
+        return self.local_grpc_client 
 
     def _build_flwr_superlink_command(self) -> list[str]:
         """
@@ -110,23 +116,23 @@ class ConnectorFlower(Connector):
             bool: True if the ServerApp is running, False otherwise.
         """
         if not hasattr(self, 'flwr_serverapp_subprocess'):
-            self.logger.debug("[OpenFL Connector] ServerApp was never started.")
+            logger.debug("[OpenFL Connector] ServerApp was never started.")
             return False
 
         if self.flwr_serverapp_subprocess.poll() is None:
-            self.logger.debug("[OpenFL Connector] ServerApp is still running.")
+            logger.debug("[OpenFL Connector] ServerApp is still running.")
             return True
 
         if not self.signal_shutdown_sent:
             self.signal_shutdown_sent = True
-            self.logger.info("[OpenFL Connector] Experiment has ended. Sending signal to shut down Flower components.")
+            logger.info("[OpenFL Connector] Experiment has ended. Sending signal to shut down Flower components.")
 
         return False
 
     def _stop_flwr_serverapp(self):
         """Terminate the `flwr_serverapp` subprocess if it is still active."""
         if hasattr(self, 'flwr_serverapp_subprocess') and self.flwr_serverapp_subprocess.poll() is None:
-            self.logger.debug("[OpenFL Connector] ServerApp still running. Stopping...")
+            logger.debug("[OpenFL Connector] ServerApp still running. Stopping...")
             self.flwr_serverapp_subprocess.terminate()
             try:
                 self.flwr_serverapp_subprocess.wait(timeout=5)
@@ -158,14 +164,14 @@ class ConnectorFlower(Connector):
     def start(self):
         """Launch the `flower-superlink` and `flwr run` subprocesses using the constructed commands."""
         if self._process is None:
-            self.logger.info(f"[OpenFL Connector] Starting server process: {' '.join(self.flwr_superlink_command)}")
+            logger.info(f"[OpenFL Connector] Starting server process: {' '.join(self.flwr_superlink_command)}")
             self._process = subprocess.Popen(self.flwr_superlink_command)
-            self.logger.info(f"[OpenFL Connector] Server process started with PID: {self._process.pid}")
+            logger.info(f"[OpenFL Connector] Server process started with PID: {self._process.pid}")
         else:
-            self.logger.info("[OpenFL Connector] Server process is already running.")
+            logger.info("[OpenFL Connector] Server process is already running.")
 
         if hasattr(self, 'flwr_run_command') and self.flwr_run_command:
-            self.logger.info(f"[OpenFL Connector] Starting `flwr run` subprocess: {' '.join(self.flwr_run_command)}")
+            logger.info(f"[OpenFL Connector] Starting `flwr run` subprocess: {' '.join(self.flwr_run_command)}")
             subprocess.run(self.flwr_run_command)
 
         if hasattr(self, 'flwr_serverapp_command') and self.flwr_serverapp_command:
@@ -177,11 +183,11 @@ class ConnectorFlower(Connector):
         self._stop_flwr_serverapp()
         if self._process:
             try:
-                self.logger.info(f"[OpenFL Connector] Stopping server process with PID: {self._process.pid}...")
+                logger.info(f"[OpenFL Connector] Stopping server process with PID: {self._process.pid}...")
                 main_process = psutil.Process(self._process.pid)
                 sub_processes = main_process.children(recursive=True)
                 for sub_process in sub_processes:
-                    self.logger.info(f"[OpenFL Connector] Stopping server subprocess with PID: {sub_process.pid}...")
+                    logger.info(f"[OpenFL Connector] Stopping server subprocess with PID: {sub_process.pid}...")
                     sub_process.terminate()
                 _, still_alive = psutil.wait_procs(sub_processes, timeout=1)
                 for p in still_alive:
@@ -192,10 +198,16 @@ class ConnectorFlower(Connector):
                 except subprocess.TimeoutExpired:
                     self._process.kill()
                 self._process = None
-                self.logger.info("[OpenFL Connector] Server process stopped.")
+                logger.info("[OpenFL Connector] Server process stopped.")
             except Exception as e:
-                self.logger.debug(f"[OpenFL Connector] Error during graceful shutdown: {e}")
+                logger.debug(f"[OpenFL Connector] Error during graceful shutdown: {e}")
                 self._process.kill()
-                self.logger.info("[OpenFL Connector] Server process forcefully terminated.")
+                logger.info("[OpenFL Connector] Server process forcefully terminated.")
         else:
-            self.logger.info("[OpenFL Connector] No server process is currently running.")
+            logger.info("[OpenFL Connector] No server process is currently running.")
+
+    def _handle_sigint(self, signum, frame):
+        """Handle the SIGINT signal (Ctrl+C) to cleanly stop the server process and its children."""
+        logger.info("[OpenFL Connector] SIGINT received. Terminating server process...")
+        self.stop()
+        sys.exit(0)
