@@ -569,7 +569,7 @@ def run_command(
         if bg_file:
             bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
-            command,
+            command=f"{command} &", # run in background using &
             work_dir=workspace_path,
             redirect_to_file=bg_file,
             check_sleep=60,
