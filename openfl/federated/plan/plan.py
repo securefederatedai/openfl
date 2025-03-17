@@ -574,6 +574,7 @@ class Plan:
 
         client_args["aggregator_uuid"] = aggregator_uuid
         client_args["federation_uuid"] = federation_uuid
+        client_args["collaborator_name"] = collaborator_name
 
         if self.client_ is None:
             self.client_ = AggregatorGRPCClient(**client_args)
