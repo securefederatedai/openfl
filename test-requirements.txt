@@ -9,3 +9,4 @@ matplotlib==3.10.1
 fpdf2==2.8.2
 papermill==2.6.0
 pyfakefs
+torch
