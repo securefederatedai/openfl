@@ -51,7 +51,7 @@ def setup_logger(log_level=logging.INFO, log_file=None):
     if log_file:
         file_formatter = logging.Formatter(
             "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            datefmt="%H:%M:%S",
         )
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(file_formatter)
