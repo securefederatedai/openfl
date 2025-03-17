@@ -103,11 +103,9 @@ def build(
                 and f.suffix in FAB_ALLOWED_EXTENSIONS
                 and f.name != "pyproject.toml"  # Exclude the original pyproject.toml
             ]
-            ### PATCH ###
-            # REASONING: order matters for creating a hash. This will force consistent ordering of files
-            # For SGX, to distribute the FAB pre-experiment, the hash must be consistent on all systems
+
             all_files.sort()
-            #############
+
             for file_path in all_files:
                 # Read the file content manually
                 with open(file_path, "rb") as f:
