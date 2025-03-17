@@ -55,36 +55,36 @@ class Aggregator():
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")
 
-    def start(self, res_file):
+    def start(self):
         """
         Start the aggregator
-        Args:
-            res_file (str): Result file to track the logs
         Returns:
             str: Path to the log file
         """
         try:
             log.info(f"Starting {self.name}")
             error_msg = "Failed to start the aggregator"
-            command = constants.AGG_START_CMD
+            # Note: LOG_FILE does not take absolute path, hence using relative path
+            log_file = os.path.join("logs", "aggregator.log")
+            command = f"LOG_FILE={log_file} {constants.AGG_START_CMD}"
             if self.eval_scope:
                 command = f"{command} --task_group evaluation"
+            
             fh.run_command(
                 command=command,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
-                bg_file=res_file,
             )
             log.info(
-                f"Started {self.name} and tracking the logs in {res_file}."
+                f"Started {self.name} and tracking the logs in {log_file}."
             )
-            self.res_file = res_file
+            self.res_file = os.path.join(self.workspace_path, log_file)
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-        return res_file
+        return self.res_file
 
     def modify_data_file(self, data_file, col_name, index):
         """
