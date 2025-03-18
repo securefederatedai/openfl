@@ -198,7 +198,7 @@ def FedAvg(models, global_model_tools, previous_global_state, dp_params):  # NOQ
     )
     global_model_tools.global_optimizer.step()
 
-    # removing the '_module.' from the beggining of all keys coming from
+    # removing the '_module.' from the beginning of all keys coming from
     # global_model_tools.global_model state dict
     new_model.load_state_dict(
         {

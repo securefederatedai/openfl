@@ -54,7 +54,7 @@ def plan(context):
     "-a",
     "--aggregator_address",
     required=False,
-    help="The FQDN of the federation agregator",
+    help="The FQDN of the federation aggregator",
 )
 def initialize(context, plan_config, cols_config, data_config, aggregator_address):
     """

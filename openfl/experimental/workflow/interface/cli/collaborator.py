@@ -225,7 +225,7 @@ def register_collaborator(file_name):
     "-n",
     "--collaborator_name",
     help="The certified common name of the collaborator. This is only"
-    " needed for single node expiriments",
+    " needed for single node experiments",
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 @option(

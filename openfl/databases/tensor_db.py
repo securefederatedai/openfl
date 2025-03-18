@@ -19,7 +19,7 @@ from openfl.utilities import LocalTensor, TensorKey, change_tags
 class TensorDB:
     """The TensorDB stores a tensor key and the data that it corresponds to.
 
-    It is built on top of a pandas dataframe for it's easy insertion, retreival
+    It is built on top of a pandas dataframe for it's easy insertion, retrieval
     and aggregation capabilities. Each collaborator and aggregator has its own
     TensorDB.
 
