@@ -271,7 +271,7 @@ def run_federation_for_dws(fed_obj, use_tls):
             raise e
 
         participant.container_id = container.id
-        participant.res_file = os.path.join(participant.workspace_path, f"{participant.name}.log")
+        participant.res_file = os.path.join(participant.workspace_path, "logs", f"{participant.name}.log")
 
     return True
 
@@ -437,7 +437,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
 
     # if path exists delete it
     if os.path.exists(workspace_path):
-        shutil.rmtree(workspace_path)
+        remove_workspace(workspace_path)
 
     if test_env == "task_runner_dockerized_ws":
         agg_domain_name = "aggregator"
@@ -1148,3 +1148,18 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
             except subprocess.CalledProcessError as e:
                 log.warning(f"Failed to kill processes: {e}")
     log.info("Stale processes (if any) removed successfully")
+
+
+def remove_workspace(path):
+    """
+    Recursively delete given workspace and its contents, including symbolic links.
+
+    Args:
+        path (str): The path to the workspace to be deleted.
+    """
+    if os.path.islink(path) or os.path.isfile(path):
+        subprocess.run(['sudo', 'rm', '-f', path], check=True)
+    elif os.path.isdir(path):
+        for entry in os.scandir(path):
+            remove_workspace(entry.path)
+        subprocess.run(['sudo', 'rmdir', path], check=True)
