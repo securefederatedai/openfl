@@ -148,16 +148,6 @@ class AggregatorFlower(Aggregator):
         if self._secure_aggregation_enabled:
             self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
 
-        # Callbacks
-        self.callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_memory_profiler=log_memory_usage,
-            add_metric_writer=write_logs,
-            tensor_db=self.tensor_db,
-            origin="aggregator",
-            collaborators=self.authorized_cols,
-            aggregator_uuid=self.uuid,
-        )
         if self.persistent_db and self._recover():
             logger.info("Recovered state of aggregator")
 
