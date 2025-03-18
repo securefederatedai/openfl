@@ -4,7 +4,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 import subprocess
-from src.grpc.connector.flower.local_grpc_client import FlowerInteropClient
+from src.grpc.connector.flower.interop_client import FlowerInteropClient
 
 import subprocess
 import psutil
@@ -45,10 +45,10 @@ class ConnectorFlower:
         self.flwr_run_params = flwr_run_params
         self.flwr_run_command = self._build_flwr_run_command() if self.flwr_run_params else None
 
-        self.local_grpc_client = None
+        self.interop_client = None
         signal.signal(signal.SIGINT, self._handle_sigint)
 
-    def get_local_grpc_client(self):
+    def get_interop_client(self):
         """
         Create and return a LocalGRPCClient instance using the superlink parameters.
 
@@ -56,8 +56,8 @@ class ConnectorFlower:
             LocalGRPCClient: An instance configured with the connector address and server rounds.
         """
         connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
-        self.local_grpc_client = FlowerInteropClient(connector_address, self.automatic_shutdown)
-        return self.local_grpc_client 
+        self.interop_client = FlowerInteropClient(connector_address, self.automatic_shutdown)
+        return self.interop_client 
 
     def _build_flwr_superlink_command(self) -> list[str]:
         """
@@ -175,7 +175,7 @@ class ConnectorFlower:
             subprocess.run(self.flwr_run_command)
 
         if hasattr(self, 'flwr_serverapp_command') and self.flwr_serverapp_command:
-            self.local_grpc_client.set_is_flwr_serverapp_running_callback(self.is_flwr_serverapp_running)
+            self.interop_client.set_is_flwr_serverapp_running_callback(self.is_flwr_serverapp_running)
             self.flwr_serverapp_subprocess = subprocess.Popen(self.flwr_serverapp_command)
 
     def stop(self):

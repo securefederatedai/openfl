@@ -56,9 +56,9 @@ class CollaboratorFlower(Collaborator):
                 method = getattr(self.task_runner, func_name)
                 if callable(method):
                     framework = self.task_config['settings']["connect_to"]
-                    LocalGRPCServer = connector.get_local_grpc_server(framework)
-                    local_grpc_server = LocalGRPCServer(self.client, self.collaborator_name)
-                    method(local_grpc_server, **kwargs)
+                    LocalGRPCServer = connector.get_interop_server(framework)
+                    interop_server = LocalGRPCServer(self.client, self.collaborator_name)
+                    method(interop_server, **kwargs)
                     self.client.send_local_task_results(round_number, task_name)
                     metrics = {f'{self.collaborator_name}/start_client_adapter': 'Completed'}
                     return metrics

@@ -271,7 +271,7 @@ class AggregatorFlower(Aggregator):
             raise RuntimeError("OpenFL Connector has not been enabled.")
         return self.connector.stop()
 
-    def get_local_grpc_client(self):
+    def get_interop_client(self):
         """
         Get the local gRPC client for the OpenFL Connector.
 
@@ -280,7 +280,7 @@ class AggregatorFlower(Aggregator):
         """
         if not self.is_connector_available():
             raise RuntimeError("OpenFL Connector has not been enabled.")
-        return self.connector.get_local_grpc_client()
+        return self.connector.get_interop_client()
 
     def _end_of_round_check(self):
         """Check if the round complete.

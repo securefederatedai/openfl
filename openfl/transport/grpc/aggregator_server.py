@@ -61,11 +61,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             self.use_connector = False
 
         if self.use_connector:
-            self.local_grpc_client = (
-                self.aggregator.get_local_grpc_client()
-            )  # Initialize the local gRPC client
+            self.interop_client = (
+                self.aggregator.get_interop_client()
+            )  # Initialize the interoperability client
         else:
-            self.local_grpc_client = None
+            self.interop_client = None
 
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
@@ -294,18 +294,18 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
     def InteropRelay(self, request, context):
         """
         Args:
-            request (aggregator_pb2.PelicanDrop): The request
+            request (aggregator_pb2.InteropRelay): The request
                 from the collaborator.
             context (grpc.ServicerContext): The context of the request.
 
         Returns:
-            aggregator_pb2.PelicanDrop: The response to the
+            aggregator_pb2.InteropRelay: The response to the
             request.
         """
         if not self.use_connector:
             context.abort(
                 grpc.StatusCode.UNIMPLEMENTED,
-                "PelicanDrop is only available in federated interopability mode.",
+                "InteropRelay is only available in federated interopability mode.",
             )
 
         self.validate_collaborator(request, context)
@@ -320,7 +320,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
         # Forward the incoming OpenFL message to the local gRPC client
-        return self.local_grpc_client.send_receive(request, header=header)
+        return self.interop_client.send_receive(request, header=header)
 
     def serve(self):
         """Starts the aggregator gRPC server."""
