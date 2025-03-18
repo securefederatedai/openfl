@@ -9,6 +9,9 @@ import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 from openfl.utilities.logging import setup_logger
 from tests.end_to_end.utils.conftest_helper import parse_arguments
 import tests.end_to_end.utils.docker_helper as dh
@@ -70,6 +73,15 @@ def setup_e2e_logging(pytestconfig):
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
     logger = setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
+    
+    # Enable rich logging for console output specifically during GitHub workflow run
+    console = Console(width=160, force_terminal=True)
+    console_handler = RichHandler(
+        rich_tracebacks=True,
+        markup=True,
+        console=console,
+    )
+    logger.addHandler(console_handler)
     return logger
 
 
