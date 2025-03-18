@@ -74,7 +74,7 @@ Flow of execution
 
       inside the sync_wrapper: the decorated function `some_sync_function` and `timeout` variables are stored as a closure variable.
         
-      **Aynchronous Example:**
+      **Asynchronous Example:**
 
       .. code-block:: shell
 
@@ -108,7 +108,7 @@ Flow of execution
     
     Delegates the decorated sync or async function to be executed synchronously or asynchronously using `CustomThread` or `asyncio`.
     
-    Contains the defination for the function `sync_execute` and `async_execute`.
+    Contains the definition for the function `sync_execute` and `async_execute`.
 
 #. [Step E] Execution of delegated methods:
 

@@ -82,7 +82,7 @@ class KerasTaskRunner(TaskRunner):
     ):
         """
         Perform the training. Is expected to perform draws randomly, without
-        replacement until data is exausted. Then data is replaced and shuffled
+        replacement until data is exhausted. Then data is replaced and shuffled
         and draws continue.
 
         Args:

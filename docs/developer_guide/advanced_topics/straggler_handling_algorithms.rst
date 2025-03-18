@@ -16,11 +16,11 @@ The following are the straggler handling algorithms supported in OpenFL:
         - *Cutoff Time* (straggler_cutoff_time), specifies the cutoff time by which the aggregator should end the round early.
         - *Minimum Reporting* (minimum_reporting), specifies the minimum number of collaborators needed to aggregate the model.
 
-    For example, in a federation of 5 collaborators, if :code:`straggler_cutoff_time` (in seconds) is set to 20 and :code:`minimum_reporting` is set to 2, atleast 2 collaborators (or more) would be included in the round, provided that the time limit of 20 seconds is not exceeded.
+    For example, in a federation of 5 collaborators, if :code:`straggler_cutoff_time` (in seconds) is set to 20 and :code:`minimum_reporting` is set to 2, at least 2 collaborators (or more) would be included in the round, provided that the time limit of 20 seconds is not exceeded.
     In an event where :code:`minimum_reporting` collaborators don't make it within the :code:`straggler_cutoff_time`, the straggler handling policy is disregarded. 
 
 ``PercentagePolicy``
-    Identifies stragglers based on the percetage specified. Arguments to the function are:
+    Identifies stragglers based on the percentage specified. Arguments to the function are:
         - *Percentage of collaborators* (percent_collaborators_needed), specifies a percentage of collaborators enough to end the round early.
         - *Minimum Reporting* (minimum_reporting), specifies the minimum number of collaborators needed to aggregate the model.
 

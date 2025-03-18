@@ -55,7 +55,7 @@ class SecureWeightedAverage(WeightedAverage):
         Returns:
             np.ndarray: aggregated tensor
         """
-        # Generate masks for the collaborators if not laready done.
+        # Generate masks for the collaborators if not already done.
         self._generate_masks(db_iterator)
         # Calaculate the weighted avreage of collaborator masks.
         weighted_mask = self._calculcate_weighted_mask_average(self._private_masks, local_tensors)

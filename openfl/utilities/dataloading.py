@@ -57,7 +57,7 @@ def get_dataloader(
                 setattr(data_loader, key, value)
             return data_loader
 
-    # Fallback; try to get a dataloader by contructing it from the collaborator
+    # Fallback; try to get a dataloader by constructing it from the collaborator
     # data directory path present in the the current workspace
 
     collaborator_names = list(plan.cols_data_paths)
