@@ -328,6 +328,18 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
     results = [f.result() for f in futures]
     log.debug(f"Results from all the participants: {results}")
 
+    # Do not fail the test run if any of the participant log file cleanup fails
+    try:
+        futures = [
+            executor.submit(
+                _cleanup_participant_log_file,
+                participant,
+            )
+            for participant in fed_obj.collaborators + [fed_obj.aggregator]
+        ]
+    except Exception as e:
+        log.warning("Failed to cleanup the participant log files. Continuing with the test run.")
+
     # If any of the participant failed, return False, else return True
     return all(results)
 
@@ -1132,3 +1144,61 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
             except subprocess.CalledProcessError as e:
                 log.warning(f"Failed to kill processes: {e}")
     log.info("Stale processes removed successfully")
+
+
+def _cleanup_participant_log_file(participant):
+    """
+    Function to remove ANSI escape codes and unwanted patterns from the participant log file.
+    Args:
+        participant (object): Participant object
+    """
+    log_file = participant.res_file
+    
+    log.info(f"Cleaning up the log file {log_file} for {participant.name}")
+
+    # Regular expression pattern to match ANSI escape codes
+    ansi_escape_pattern = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+    # Regular expression pattern to match unwanted patterns like ]8;;
+    unwanted_pattern = re.compile(r'\]8;;')
+    # Regular expression pattern to match the specified pattern for file paths and line numbers
+    file_info_pattern = re.compile(r'd=\d+;file:///.+?/([^/]+)#(\d+)')
+
+    cleaned_lines = []
+    line_length = 120  # Adjust this value as needed to set the desired line length
+
+    with open(log_file, "r") as file:
+        for line in file:
+            # Strip ANSI escape codes
+            line = ansi_escape_pattern.sub('', line)
+            # Remove unwanted patterns like ]8;;
+            line = unwanted_pattern.sub('', line)
+    
+            # Find all file info matches
+            file_info_matches = file_info_pattern.findall(line)
+
+            # Extract file names and line numbers
+            file_info = []
+            for match in file_info_matches:
+                if isinstance(match, tuple) and len(match) == 2:
+                    file_name, line_number = match
+                    file_info.append(f"{file_name}:{line_number}")
+
+            # Remove the specified pattern for file paths and line numbers
+            line = file_info_pattern.sub('', line)
+
+            # Remove the number at the end
+            line = line.rsplit(' ', 1)[0]
+
+            # Append file names and line numbers to the cleaned text
+            if file_info:
+                file_info_str = ' '.join(file_info)
+                line = f"{line:<{line_length - len(file_info_str)}}{file_info_str}\n"
+            else:
+                line = f"{line.rstrip()}\n"
+
+            cleaned_lines.append(line)
+
+    with open(log_file, "w") as file:
+        file.writelines(cleaned_lines)
+
+    log.info(f"Log file cleaned up successfully: {log_file}")  # nosec B101
