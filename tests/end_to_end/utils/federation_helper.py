@@ -341,6 +341,7 @@ def _verify_completion_for_participant(
     Returns:
         bool: True if successful, else False
     """
+    start_time = time.time()
     # Wait for a min so that log files are available
     while not os.path.exists(participant.res_file):
         if time.time() - start_time > 60:
@@ -354,7 +355,6 @@ def _verify_completion_for_participant(
     # Also it takes time for the federation run to start and write the logs
     content = [""]
 
-    start_time = time.time()
     while time.time() - start_time < timeout:
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
