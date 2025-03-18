@@ -50,7 +50,6 @@ def run_command_background(
     )
     time.sleep(check_sleep)
     return_code = process.poll()
-    log.info(f"Return code for background process [{cmd}] is: {return_code}")
     if return_code is None:
         return process
     elif return_code != 0:
