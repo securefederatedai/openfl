@@ -397,7 +397,6 @@ def _verify_completion_for_participant(
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator":
         current_round = get_current_round(participant.tensor_db_file)
-        log.info(f"Current round for {participant.name}: {current_round}")
         if (current_round + 1) != num_rounds:
             raise Exception(f"Process completed but only till round {current_round}")
 
