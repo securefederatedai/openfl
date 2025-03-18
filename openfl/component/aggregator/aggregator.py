@@ -893,7 +893,7 @@ class Aggregator:
             }
             for proto in named_tensor.transformer_metadata
         ]
-        # The tensor has already been transfered to aggregator,
+        # The tensor has already been transferred to aggregator,
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
             named_tensor.name,
@@ -1066,7 +1066,7 @@ class Aggregator:
         all_collaborators_for_task = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
-        # Leave out straggler for the round even if they've paritally
+        # Leave out straggler for the round even if they've partially
         # completed given tasks
         collaborators_for_task = []
         collaborators_for_task = [

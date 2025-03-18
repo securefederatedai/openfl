@@ -517,7 +517,7 @@ class Collaborator:
             }
             for proto in named_tensor.transformer_metadata
         ]
-        # The tensor has already been transfered to collaborator, so
+        # The tensor has already been transferred to collaborator, so
         # the newly constructed tensor should have the collaborator origin
         tensor_key = TensorKey(
             named_tensor.name,
@@ -576,7 +576,7 @@ class Collaborator:
             self._private_mask = self.tensor_db.get_tensor_from_cache(
                 TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
-        # Fetch shared mask from tensor db if not alreday fetched.
+        # Fetch shared mask from tensor db if not already fetched.
         if not self._shared_mask:
             self._shared_mask = self.tensor_db.get_tensor_from_cache(
                 TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))

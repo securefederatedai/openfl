@@ -136,7 +136,7 @@ class TransformationPipeline:
         # "layer2": np.array()}
         # output::meta data::numpy::int array
         # (data, transformer_metadata)::(float32, dictionary o
-        # key+float32 vlues)
+        # key+float32 values)
         # input:: numpy_data (float32)
         # input:: (data(bytes), transformer_metadata_list::a list of dictionary
         # from int to float)

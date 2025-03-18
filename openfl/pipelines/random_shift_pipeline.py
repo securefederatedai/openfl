@@ -56,7 +56,7 @@ class RandomShiftTransformer(Transformer):
         """
         shape = tuple(metadata["int_list"])
         # this is an awkward use of the metadata into to float dict, usually
-        # it will trully be treated as a dict. Here (and in 'forward' above)
+        # it will truly be treated as a dict. Here (and in 'forward' above)
         # we use it essentially as an array.
         shift = np.reshape(
             np.array(
