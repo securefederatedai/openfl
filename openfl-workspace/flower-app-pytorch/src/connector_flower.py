@@ -1,13 +1,12 @@
-import signal
-import sys
 from logging import getLogger
 logger = getLogger(__name__)
 
-import subprocess
-from src.grpc.connector.flower.interop_client import FlowerInteropClient
-
-import subprocess
 import psutil
+import subprocess
+import sys
+import signal
+
+from src.grpc.connector.flower.interop_client import FlowerInteropClient
 
 import os
 os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
