@@ -390,7 +390,7 @@ def _verify_completion_for_participant(
             log.info(f"No processes found for participant {participant.name}")
             break
         else:
-            log.info(f"Process is yet to complete for {participant.name}. PIDs are {pids}")
+            log.info(f"Process is yet to complete for {participant.name}")
 
         time.sleep(45)
 

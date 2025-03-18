@@ -3,6 +3,7 @@
 
 import logging
 import os
+import tempfile
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
@@ -73,11 +74,12 @@ class Aggregator():
             if self.eval_scope:
                 command += " --task_group evaluation"
             fh.run_command(
-                command=f"{command} &",
+                command,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
+                bg_file=os.path.join(tempfile.mkdtemp(), "tmp.log"), # this file is simply to keep the process running
             )
 
             log.info(

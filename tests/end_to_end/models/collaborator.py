@@ -3,6 +3,7 @@
 
 import os
 import logging
+import tempfile
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
@@ -130,11 +131,12 @@ class Collaborator():
             self.res_file = os.path.join(self.workspace_path, log_file)
 
             fh.run_command(
-                command=f"LOG_FILE={log_file} {constants.COL_START_CMD.format(self.collaborator_name)} &",
+                command=f"LOG_FILE={log_file} {constants.COL_START_CMD.format(self.collaborator_name)}",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
+                bg_file=os.path.join(tempfile.mkdtemp(), "tmp.log"), # this file is simply to keep the process running
             )
 
             log.info(

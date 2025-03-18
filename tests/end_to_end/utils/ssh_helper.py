@@ -64,7 +64,15 @@ def run_command_background(
             log.error(f"Error Traceback: {traceback.print_exc()}")
             raise subprocess.CalledProcessError(returncode=return_code, cmd=cmd)
     else:
-        log.info("Process triggered successfully in background.")
+        log.warning("Process for Command completed instantly.")
+        if redirect_to_file:
+            log.info(
+                "The background process has been writing STDERR and STDOUT to a file passed in as 'redirect_to_file' arg"
+            )
+        else:
+            output = process.stdout.read().rstrip("\n").split("\n")
+            if print_stdout and output is not None:
+                log.info(f"Command to run - {cmd}  output - {output}")
         return None
 
 
