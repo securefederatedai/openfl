@@ -87,6 +87,7 @@ class Aggregator():
         
         return log_file
 
+
     def modify_data_file(self, data_file, col_name, index):
         """
         Modify the data.yaml file for the model
