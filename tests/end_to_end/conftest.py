@@ -74,6 +74,9 @@ def setup_e2e_logging(pytestconfig):
     # Setup a global logger to ensure logging works before any test-specific logs are set
     logger = setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
     
+    # Remove any existing RichHandler instances
+    logger.handlers = [h for h in logger.handlers if not isinstance(h, RichHandler)]
+
     # Enable rich logging for console output specifically during GitHub workflow run
     console = Console(width=160, force_terminal=True)
     console_handler = RichHandler(
