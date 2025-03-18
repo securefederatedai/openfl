@@ -97,7 +97,7 @@ def stop_start_native_participant(participant, action):
     else:
         try:
             log.info(f"Starting participant {participant.name}")
-            participant.start(res_file=participant.res_file)
+            participant.start()
         except Exception as e:
             raise ex.ParticipantStartException(f"Error starting participant: {e}")
 

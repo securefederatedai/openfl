@@ -29,7 +29,7 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Secure Aggregation dependies
+      - name: Install Secure Aggregation dependencies
         run: |
           python -m pip install pycryptodome
           
