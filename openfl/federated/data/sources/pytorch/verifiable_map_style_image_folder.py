@@ -1,10 +1,10 @@
 # Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from openfl.utilities.verifdataset.data_source import DataSourceType
-from openfl.utilities.verifdataset.pytorch.local_folder import LabelMapper
-from openfl.utilities.verifdataset.pytorch.local_image_folder import LocalImageFolder
-from openfl.utilities.verifdataset.pytorch.verifiable_map_style_dataset import (
+from openfl.federated.data.sources.data_source import DataSourceType
+from openfl.federated.data.sources.pytorch.local_folder import LabelMapper
+from openfl.federated.data.sources.pytorch.local_image_folder import LocalImageFolder
+from openfl.federated.data.sources.pytorch.verifiable_map_style_dataset import (
     VerifiableMapStyleDataset,
 )
 

@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import List, Tuple
 import pytest
 
-from openfl.utilities.verifdataset.data_source import DataSourceType
-from openfl.utilities.verifdataset.local_data_source import LocalDataSource
-from openfl.utilities.verifdataset.pytorch.local_folder import LabelMapper, LocalFolder
-from openfl.utilities.verifdataset.pytorch.verifiable_map_style_dataset import VerifiableMapStyleDataset
+from openfl.federated.data.sources.data_source import DataSourceType
+from openfl.federated.data.sources.local_data_source import LocalDataSource
+from openfl.federated.data.sources.pytorch.local_folder import LabelMapper, LocalFolder
+from openfl.federated.data.sources.pytorch.verifiable_map_style_dataset import VerifiableMapStyleDataset
 
-from openfl.utilities.verifdataset.pytorch.verifiable_map_style_image_folder import VerifiableImageFolder
-from openfl.utilities.verifdataset.verifiable_dataset_info import DatasetFormat, VerifiableDatasetInfo
+from openfl.federated.data.sources.pytorch.verifiable_map_style_image_folder import VerifiableImageFolder
+from openfl.federated.data.sources.verifiable_dataset_info import DatasetFormat, VerifiableDatasetInfo
 
 from PIL import Image
 

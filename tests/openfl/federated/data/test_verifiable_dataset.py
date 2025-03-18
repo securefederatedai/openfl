@@ -1,6 +1,6 @@
 import json
-from openfl.utilities.verifdataset.local_data_source import LocalDataSource
-from openfl.utilities.verifdataset.verifiable_dataset_info import DatasetFormat, VerifiableDatasetInfo
+from openfl.federated.data.sources.local_data_source import LocalDataSource
+from openfl.federated.data.sources.verifiable_dataset_info import DatasetFormat, VerifiableDatasetInfo
 import pytest
 import os
 

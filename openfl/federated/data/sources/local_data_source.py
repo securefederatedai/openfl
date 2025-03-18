@@ -5,7 +5,7 @@
 from hashlib import sha384
 from pathlib import Path
 
-from openfl.utilities.verifdataset.data_source import DataSource, DataSourceType
+from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 
 
 class LocalDataSource(DataSource):

@@ -7,7 +7,7 @@ from itertools import chain
 import numpy as np
 import torch
 
-from openfl.utilities.verifdataset.verifiable_dataset_info import (
+from openfl.federated.data.sources.verifiable_dataset_info import (
     DatasetFormat,
     VerifiableDatasetInfo,
 )
