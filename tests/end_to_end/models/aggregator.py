@@ -71,9 +71,9 @@ class Aggregator():
 
             command = f"LOG_FILE={log_file} {constants.AGG_START_CMD}"
             if self.eval_scope:
-                command = f"{command} --task_group evaluation"
+                command += " --task_group evaluation"
             fh.run_command(
-                command=command,
+                command=f"{command} &",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
