@@ -377,6 +377,8 @@ def _verify_completion_for_participant(
             log.info(f"Process completed for {participant.name}")
             break
 
+        time.sleep(45)
+
         # Verify that the process is completed successfully
         get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
 
@@ -391,8 +393,6 @@ def _verify_completion_for_participant(
             break
         else:
             log.info(f"Process is yet to complete for {participant.name}")
-
-        time.sleep(45)
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator":
