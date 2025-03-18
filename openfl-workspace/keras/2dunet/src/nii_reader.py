@@ -148,7 +148,7 @@ def nii_reader(brain_path, task, channels_last=True,
     the name of the subdirectory and <type> is one of ["t1", "t2","flair","t1ce"],
     as well as a segmentation label file "<subdir>_<suffix>", where suffix is:
     'seg_binary.nii.gz', 'seg_binarized.nii.gz', or 'SegBinarized.nii.gz'.
-    These files provide all modes and segmenation label for a single patient
+    These files provide all modes and segmentation label for a single patient
     brain scan consisting of 155 axial slice images. The reader returns the whole
     brain (all 155 slices).
     Note: Much of the logic here is included in order to allow for the reader
@@ -216,7 +216,7 @@ def nii_reader(brain_path, task, channels_last=True,
     extensions = ['.nii.gz', '.nii']
 
     # record files needed
-    # needed mask files are currntly independent of task
+    # needed mask files are currently independent of task
     need_files_oneof = None
     need_files_all = None
     for extension in extensions:

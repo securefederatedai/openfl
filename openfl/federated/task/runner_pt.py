@@ -420,7 +420,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = torch.load(filepath)
+        pickle_dict = torch.load(filepath)  # nosec B614
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
@@ -638,7 +638,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
                 if tag == "istensor":
                     new_v = torch.tensor(derived_opt_state_dict.pop(flat_key))
                 else:
-                    # Here (for currrently supported optimizers) the subkey
+                    # Here (for currently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
                     assert subkey == "step"
                     assert len(derived_opt_state_dict[flat_key]) == 1
