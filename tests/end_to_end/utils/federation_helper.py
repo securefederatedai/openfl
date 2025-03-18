@@ -569,7 +569,7 @@ def run_command(
         if bg_file:
             bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
-            cmd=f"{command} &", # run in background using &
+            command,
             work_dir=workspace_path,
             redirect_to_file=bg_file,
             check_sleep=60,
@@ -1069,7 +1069,7 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_round = get_current_round(database_file)
-# Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
+        # Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
         if current_round > inp_round + 1:
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
