@@ -115,16 +115,14 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, workspace_path):
+    def start(self):
         """
         Start the collaborator
-        Args:
-            res_file (str): Result file to track the logs
         Returns:
             str: Path to the log file
         """
         try:
-            log.info(f"Starting {self.collaborator_name}")
+            log.info(f"Starting {self.collaborator_name} and workspace path is {self.workspace_path}")
             error_msg = f"Failed to start {self.collaborator_name}"
             log_file = os.path.join("logs", f"{self.collaborator_name}.log")
             command = f"LOG_FILE={log_file} {constants.COL_START_CMD.format(self.collaborator_name)}"
@@ -135,8 +133,9 @@ class Collaborator():
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
+                bg_file=os.path.join(self.workspace_path, f"{self.collaborator_name}.log"),
             )
-            log_file = os.path.join(workspace_path, self.name, "workspace", log_file)
+            log_file = os.path.join(self.workspace_path, log_file)
             self.res_file = log_file
             log.info(
                 f"Started {self.name} and tracking the logs in {log_file}."

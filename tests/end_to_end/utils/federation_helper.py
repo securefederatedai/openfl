@@ -238,7 +238,6 @@ def run_federation(fed_obj, install_dependencies=True):
     futures = [
         executor.submit(
             participant.start,
-                fed_obj.workspace_path,
         )
         for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
