@@ -245,7 +245,7 @@ class SecAggBootstrapping(Callback):
             stage (str): The current stage of the secure aggregation process.
         """
         named_tensors = []
-        # Covert python dict to tensor dict.
+        # Convert python dict to tensor dict.
         for key, nparray in tensor_dict.items():
             tensor_key = TensorKey(
                 key,

@@ -86,7 +86,7 @@ class Participant:
     def private_attributes(self, attrs: Dict[str, Any]) -> None:
         """Set the private attributes of the participant. These attributes will
         only be available within the tasks performed by the participants and
-        will be filtered out prior to the task's state being transfered.
+        will be filtered out prior to the task's state being transferred.
 
         Args:
             attrs (Dict[str, Any]): dictionary of ATTRIBUTE_NAME (str) ->
