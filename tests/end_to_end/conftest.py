@@ -69,8 +69,8 @@ def setup_e2e_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
-    return logging.getLogger()
+    logger = setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
+    return logger
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

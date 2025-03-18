@@ -36,13 +36,9 @@ def setup_logger(log_level=logging.INFO, log_file=None):
     # Set the log level for the logger
     logger.setLevel(log_level)
 
-    # Create a console handler with a specific format
-    console = Console(width=160, force_terminal=True)
-    console_handler = RichHandler(
-        rich_tracebacks=True,
-        markup=True,
-        console=console,
-    )
+    console = Console(width=160)
+    console_handler = RichHandler(console=console)
+
     # Console handler includes date and log level, do not add it again
     console_handler.setFormatter(logging.Formatter("%(message)s"))
     logger.addHandler(console_handler)
