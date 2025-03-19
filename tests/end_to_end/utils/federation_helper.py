@@ -237,10 +237,7 @@ def run_federation(fed_obj, install_dependencies=True):
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
     futures = [
         executor.submit(
-            participant.start,
-            constants.AGG_COL_RESULT_FILE.format(
-                fed_obj.workspace_path, participant.name
-            ),
+            participant.start
         )
         for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
@@ -274,7 +271,7 @@ def run_federation_for_dws(fed_obj, use_tls):
             raise e
 
         participant.container_id = container.id
-        participant.res_file = os.path.join(participant.workspace_path, f"{participant.name}.log")
+        participant.res_file = os.path.join(participant.workspace_path, "logs", f"{participant.name}.log")
 
     return True
 
@@ -344,7 +341,13 @@ def _verify_completion_for_participant(
     Returns:
         bool: True if successful, else False
     """
-    time.sleep(20)  # Wait for some time before checking the log file
+    start_time = time.time()
+    # Wait for a min so that log files are available
+    while not os.path.exists(participant.res_file):
+        if time.time() - start_time > 60:
+            raise Exception(f"Log file {participant.res_file} not found after 60 seconds")
+        time.sleep(10)
+
     # Set timeout based on the number of rounds and time for each round
     timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
 
@@ -352,10 +355,7 @@ def _verify_completion_for_participant(
     # Also it takes time for the federation run to start and write the logs
     content = [""]
 
-    start_time = time.time()
-    while (
-        constants.SUCCESS_MARKER not in content and time.time() - start_time < timeout
-    ):
+    while time.time() - start_time < timeout:
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
 
@@ -364,9 +364,7 @@ def _verify_completion_for_participant(
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
-        if constants.SUCCESS_MARKER in content:
-            break
-        log.info(f"Process is yet to complete for {participant.name}")
+
         # If in logs Exception is encountered, throw Exception and stop the process
         if constants.EXCEPTION in content:
             log.error(
@@ -374,18 +372,35 @@ def _verify_completion_for_participant(
             )
             raise Exception(f"Process failed for {participant.name}")
 
+        msg_received = [line for line in content if constants.AGG_END_MSG in line or constants.COL_END_MSG in line]
+        if msg_received:
+            log.info(f"Process completed for {participant.name}")
+            break
+
         time.sleep(45)
 
-    if constants.SUCCESS_MARKER not in content:
-        log.error(
-            f"Process failed/is incomplete for {participant.name} after timeout of {timeout} seconds"
-        )
-        return False
-    else:
-        log.info(
-            f"Process completed for {participant.name} in {time.time() - start_time} seconds"
-        )
-        return True
+        # Verify that the process is completed successfully
+        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
+
+        # Find the process ID
+        pids = []
+        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
+            fields = line.split()
+            pids.append(fields[0])
+
+        if not pids:
+            log.info(f"No processes found for participant {participant.name}")
+            break
+        else:
+            log.info(f"Process is yet to complete for {participant.name}")
+
+    # Read tensor.db file for aggregator to check if the process is completed
+    if participant.name == "aggregator":
+        current_round = get_current_round(participant.tensor_db_file)
+        if (current_round + 1) != num_rounds:
+            raise Exception(f"Process completed but only till round {current_round}")
+
+    return True
 
 
 def federation_env_setup_and_validate(request, eval_scope=False):
@@ -422,7 +437,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
 
     # if path exists delete it
     if os.path.exists(workspace_path):
-        shutil.rmtree(workspace_path)
+        remove_workspace(workspace_path)
 
     if test_env == "task_runner_dockerized_ws":
         agg_domain_name = "aggregator"
@@ -550,7 +565,8 @@ def run_command(
         log.info(f"Running command: {command}")
 
     if run_in_background and not with_docker:
-        bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
+        if bg_file:
+            bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
         ssh.run_command_background(
             command,
             work_dir=workspace_path,
@@ -1052,7 +1068,7 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
     start_time = time.time()
     while time.time() - start_time < timeout:
         current_round = get_current_round(database_file)
-# Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
+        # Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
         if current_round > inp_round + 1:
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
@@ -1131,4 +1147,19 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
                 )
             except subprocess.CalledProcessError as e:
                 log.warning(f"Failed to kill processes: {e}")
-    log.info("Stale processes removed successfully")
+    log.info("Stale processes (if any) removed successfully")
+
+
+def remove_workspace(path):
+    """
+    Recursively delete given workspace and its contents, including symbolic links.
+
+    Args:
+        path (str): The path to the workspace to be deleted.
+    """
+    if os.path.islink(path) or os.path.isfile(path):
+        subprocess.run(['sudo', 'rm', '-f', path], check=True)
+    elif os.path.isdir(path):
+        for entry in os.scandir(path):
+            remove_workspace(entry.path)
+        subprocess.run(['sudo', 'rmdir', path], check=True)
