@@ -3,6 +3,10 @@ Installation
 
 This document provides instructions for installing OpenFL; either in a Python virtual environment or as a docker container.
 
+Requirements
+-----------
+For a list of Python supported versions see `Python version support policy <deprecation.html>`_. Docker images are only supported on ``linux/x86_64`` platforms.
+
 Using ``pip``
 -----------
 
@@ -64,6 +68,9 @@ This method can be used to run federated learning experiments in an isolated env
   .. code-block:: bash
 
     docker pull ghcr.io/securefederatedai/openfl:latest
+
+  .. note::
+    This command works only from ``linux/x86_64`` platforms since the image is built for this platform.
 
 * Build from source:
 

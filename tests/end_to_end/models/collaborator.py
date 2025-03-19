@@ -3,6 +3,7 @@
 
 import os
 import logging
+import tempfile
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
@@ -115,33 +116,36 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, res_file):
+    def start(self):
         """
         Start the collaborator
-        Args:
-            res_file (str): Result file to track the logs
         Returns:
-            str: Path to the log file
+            bool: True if successful, else raise exception
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
             error_msg = f"Failed to start {self.collaborator_name}"
+
+            # Note: LOG_FILE does not take absolute path, hence using relative path
+            log_file = os.path.join("logs", f"{self.collaborator_name}.log")
+            self.res_file = os.path.join(self.workspace_path, log_file)
+
             fh.run_command(
-                constants.COL_START_CMD.format(self.collaborator_name),
+                command=f"LOG_FILE={log_file} {constants.COL_START_CMD.format(self.collaborator_name)}",
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
                 run_in_background=True,
-                bg_file=res_file,
+                bg_file=os.path.join(tempfile.mkdtemp(), "tmp.log"), # this file is simply to keep the process running
             )
+
             log.info(
-                f"Started {self.name} and tracking the logs in {res_file}."
+                f"Started {self.name} and tracking the logs in {self.res_file}."
             )
-            self.res_file = res_file
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
-        return res_file
+        return True
 
     def install_dependencies(self):
         """

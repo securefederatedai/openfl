@@ -29,7 +29,7 @@ class TaskRunner:
     """
 
     def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
-        """Intializes the TaskRunner object.
+        """Initializes the TaskRunner object.
 
         Args:
             data_loader: The data_loader object
@@ -116,7 +116,7 @@ class TaskRunner:
         """Perform the training for a specified number of batches.
 
         Is expected to perform draws randomly, without
-        replacement until data is exausted. Then data is replaced and
+        replacement until data is exhausted. Then data is replaced and
         shuffled and draws continue.
 
         Args:

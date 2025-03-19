@@ -37,7 +37,7 @@ def create_ciphertext(
             the encryption.
         source_id (int): Unique integer ID of the creating collaborator of the
             cipher text.
-        destination_id (int): Unique integer ID of the recepient collaborator
+        destination_id (int): Unique integer ID of the recipient collaborator
             of the cipher text.
         seed_share (bytes): Share of source_id collaborator's private seed for
             destination_id collaborator.
@@ -97,7 +97,7 @@ def decipher_ciphertext(
 
     Returns:
         int: Unique integer ID of the creating collaborator of the ciphertext.
-        int: Unique integer ID of the recepient collaborator of the ciphertext.
+        int: Unique integer ID of the recipient collaborator of the ciphertext.
         bytes: Share of source_id collaborator's private seed for
             destination_id collaborator.
         bytes: Share of source_id collaborator's private key for

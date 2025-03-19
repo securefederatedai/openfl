@@ -82,7 +82,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         shapes for feature and kernels.
         In order that all of the input and activation components are
         used (not cut off), we rely on a criterion: appropriate integers
-        are divisible so that all casting to int perfomed below does no
+        are divisible so that all casting to int performed below does no
         rounding (i.e. all int casting simply converts a float with '0'
         in the decimal part to an int.)
 

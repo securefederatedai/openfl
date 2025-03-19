@@ -15,7 +15,7 @@ This tutorial introduces the API to get up and running with your first horizonta
 
 - Designed to maintain data privacy
 
-- Aims for syntatic consistency with the Netflix MetaFlow project. Infrastructure reuse where possible.
+- Aims for syntactic consistency with the Netflix MetaFlow project. Infrastructure reuse where possible.
 
 See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/101_MNIST.ipynb>`_.
 
@@ -237,9 +237,9 @@ function on the aggregator to the `aggregated_model_validation` task on the coll
             print(f'This is the end of the flow') 
 
 
-You'll notice in the `FederatedFlow` definition above that there were certain attributes that the flow was not initialized with, namely the `train_loader` and `test_loader` for each of the collaborators. These are **private_attributes** that are exposed only throught he runtime. Each participant has it's own set of private attributes: a dictionary where the key is the attribute name, and the value is the object that will be made accessible through that participant's task.
+You'll notice in the `FederatedFlow` definition above that there were certain attributes that the flow was not initialized with, namely the `train_loader` and `test_loader` for each of the collaborators. These are **private_attributes** that are exposed only throughout he runtime. Each participant has it's own set of private attributes: a dictionary where the key is the attribute name, and the value is the object that will be made accessible through that participant's task.
 
-Below, we segment shards of the MNIST dataset for **four collaborators**: Portland, Seattle, Chandler, and Portland. Each has their own slice of the dataset that's accessible via the `train_loader` or `test_loader` attribute. Note that the private attributes are flexible, and you can choose to pass in a completely different type of object to any of the collaborators or aggregator (with an arbitrary name). These private attributes will always be filtered out of the current state when transfering from collaborator to aggregator, or vice versa.
+Below, we segment shards of the MNIST dataset for **four collaborators**: Portland, Seattle, Chandler, and Portland. Each has their own slice of the dataset that's accessible via the `train_loader` or `test_loader` attribute. Note that the private attributes are flexible, and you can choose to pass in a completely different type of object to any of the collaborators or aggregator (with an arbitrary name). These private attributes will always be filtered out of the current state when transferring from collaborator to aggregator, or vice versa.
 
 
 .. code-block:: python

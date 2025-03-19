@@ -82,7 +82,7 @@ class TestFlowReferenceWithIncludeExclude(FLSpec):
     @collaborator
     def test_create_collab_attr(self):
         """
-        Modify the attirbutes of aggregator to validate the references.
+        Modify the attributes of aggregator to validate the references.
         Create different types of objects.
         """
 
