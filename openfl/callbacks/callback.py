@@ -1,6 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from openfl.utilities import TensorKey
 
 class Callback:
     """Base class for callbacks.
@@ -51,6 +51,24 @@ class Callback:
 
     def on_experiment_end(self, logs=None):
         """Callback function to be executed at the end of an experiment.
+
+        Subclasses need to implement actions to be taken here.
+        """
+
+    def on_task_begin(
+        self,
+        updated_tensor_dict: dict,
+        required_tensorkeys: TensorKey,
+        round_num: int,
+        logs=None,
+    ):
+        """Callback function to be executed at the beginning of a task.
+
+        Subclasses need to implement actions to be taken here.
+        """
+
+    def on_task_end(self, round_num: int, logs=None):
+        """Callback function to be executed at the end of a task.
 
         Subclasses need to implement actions to be taken here.
         """
