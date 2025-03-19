@@ -12,7 +12,7 @@ from openfl.federated.data.sources.pytorch.local_folder import LabelMapper, Loca
 from openfl.federated.data.sources.pytorch.verifiable_map_style_dataset import VerifiableMapStyleDataset
 
 from openfl.federated.data.sources.pytorch.verifiable_map_style_image_folder import VerifiableImageFolder
-from openfl.federated.data.sources.verifiable_dataset_info import DatasetFormat, VerifiableDatasetInfo
+from openfl.federated.data.sources.verifiable_dataset_info import VerifiableDatasetInfo
 
 from PIL import Image
 
@@ -75,7 +75,6 @@ def test_local_map_style_datasource_verbose(data_sources):
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
         metadata={"test": "test"},
-        dataset_format=DatasetFormat.VERBOSE,
         base_path=base_path
     )
     verifiable_map_style = MockVerifiableMapStyle(verifiable_dataset_info, verify_dataset=False)
@@ -94,7 +93,6 @@ def test_local_map_style_datasource_verbose_verify(data_sources):
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
         metadata={"test": "test"},
-        dataset_format=DatasetFormat.VERBOSE,
         base_path=base_path
     )
     verifiable_dataset_info.create_dataset_hash()
@@ -144,7 +142,6 @@ def test_local_image_folder_map_style_datasource_verbose(fake_image_datasources)
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
         metadata={"test": "test"},
-        dataset_format=DatasetFormat.VERBOSE,
         base_path=base_path
     )
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=False)
@@ -167,7 +164,6 @@ def test_local_image_folder_map_style_datasource_verbose_verify(fake_image_datas
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
         metadata={"test": "test"},
-        dataset_format=DatasetFormat.VERBOSE,
         base_path=base_path
     )
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=True)
@@ -192,7 +188,6 @@ def test_local_image_folder_map_style_datasource_verbose_labels(fake_image_datas
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
         metadata={"test": "test"},
-        dataset_format=DatasetFormat.VERBOSE,
         base_path=base_path
     )
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=True)

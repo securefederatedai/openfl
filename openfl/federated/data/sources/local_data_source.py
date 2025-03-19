@@ -4,6 +4,7 @@
 
 from hashlib import sha384
 from pathlib import Path
+from typing import Generator
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 
@@ -17,7 +18,7 @@ class LocalDataSource(DataSource):
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size
 
-    def enumerate_objects(self, base_path: str):
+    def enumerate_objects(self, base_path: str) -> Generator[str, None, None]:
         """Enumerate all files in the data source."""
         total_size_bytes = 0
         full_path = Path(base_path) / self.source_path

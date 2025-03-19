@@ -8,8 +8,6 @@ from PIL import Image
 
 from openfl.federated.data.sources.pytorch.local_folder import LocalFolder
 
-# from openfl.federated.data.sources.pytorch.local_folder import LocalFolder
-
 
 class LocalImageFolder(LocalFolder):
     """Custom dataset that loads all images from a local directory tree and assigns labels

@@ -47,82 +47,63 @@ class VerifiableDatasetInfo:
         base_path: Path,
         label: str,
         metadata,
-        dataset_format: DatasetFormat,
-        hash=None,
+        root_hash=None,
     ):
         self.data_sources = data_sources
         self.label = label
         self.metadata = metadata
         self.base_path = Path(base_path)
-        self.dataset_format = dataset_format
-        self.hash = hash
-        if self.hash is None:
-            self.hash = self.create_dataset_hash()
+        self.root_hash = root_hash
+        self.all_hashes = None
+        if self.root_hash is None:
+            self.root_hash = self.create_dataset_hash()
 
     def _create_verbose_dataset_hash(self):
-        all_file_hashes = {
+        self.all_hashes = {
             str(file_path.relative_to(self.base_path)): ds.compute_object_hash(
                 str(self.base_path / file_path)
             )
             for ds in self.data_sources
             for file_path in ds.enumerate_objects(str(self.base_path))
         }
-        return all_file_hashes
+        return self.all_hashes
 
     def _create_concise_dataset_hash(self):
-        all_file_hashes = (
-            ds.compute_object_hash(file)
-            for ds in self.data_sources
-            for file in ds.enumerate_objects(str(self.base_path))
-        )
-        sorted_file_hashes = sorted(all_file_hashes)
+        all_file_hashes = self._create_verbose_dataset_hash()
+        sorted_file_hashes = sorted(all_file_hashes.values())
         joined_hashes = "".join(sorted_file_hashes)
-        return sha384(joined_hashes.encode()).hexdigest()
+        self.root_hash = sha384(joined_hashes.encode()).hexdigest()
+        return self.root_hash
 
     def create_dataset_hash(self):
-        """Create the hash of the dataset according to dataset format."""
-        if self.dataset_format == DatasetFormat.VERBOSE:
-            return self._create_verbose_dataset_hash()
-        if self.dataset_format == DatasetFormat.CONCISE:
-            return self._create_concise_dataset_hash()
-        raise ValueError("Unknown dataset format")
+        """Create and return the root_hash of all files hashes."""
+        return self._create_concise_dataset_hash()
 
     def _validate_verbose_dataset_info(self):
         hashes = self._create_verbose_dataset_hash()
-        return sorted(hashes.values()) == sorted(self.hash.values())
+        return sorted(hashes.values()) == sorted(self.all_hashes.values())
 
     def _validate_concise_dataset_info(self):
         concise_hash = self._create_concise_dataset_hash()
-        return concise_hash == self.hash
+        return concise_hash == self.root_hash
 
     def verify_dataset(self, dataset_info=None):
-        """Verify the dataset hash."""
-        if dataset_info is None and self.hash is None:
+        """Verify the dataset root_hash."""
+        if dataset_info is None and self.root_hash is None:
             raise ValueError("No dataset info provided")
         if dataset_info:
-            self.hash = dataset_info["hash"]
-
-        if self.dataset_format == DatasetFormat.VERBOSE:
-            return self._validate_verbose_dataset_info()
-        if self.dataset_format == DatasetFormat.CONCISE:
-            return self._validate_concise_dataset_info()
-        raise ValueError("Unknown dataset format")
+            self.root_hash = dataset_info["root_hash"]
+        return self._validate_concise_dataset_info()
 
     def _verify_file_verbose(self, file_path, file_hash):
-        if self.dataset_format != DatasetFormat.VERBOSE:
-            raise ValueError("This method is only valid for verbose datasets")
         rel_file_path = Path(file_path).relative_to(Path(self.base_path))
-        return self.hash[str(rel_file_path)] == file_hash
+        return self.all_hashes[str(rel_file_path)] == file_hash
 
     def verify_single_file(self, file_path, file_hash):
         """Verify the hash of a single file."""
-        if self.hash is None:
-            raise ValueError("Hash not found in the dataset")
-        if self.dataset_format == DatasetFormat.VERBOSE:
-            return self._verify_file_verbose(file_path, file_hash)
-        if self.dataset_format == DatasetFormat.CONCISE:
-            raise ValueError("verify_single_file is only valid for verbose datasets")
-        raise ValueError("Unknown dataset format")
+        if self.all_hashes is None:
+            raise ValueError("Files hashes not found in the dataset")
+        return self._verify_file_verbose(file_path, file_hash)
 
     def to_json(self):
         """Serialize the VerifiableDatasetInfo to JSON"""
@@ -130,9 +111,8 @@ class VerifiableDatasetInfo:
             "data_sources": [filter_non_serializable(ds) for ds in self.data_sources],
             "label": self.label,
             "metadata": self.metadata,
-            "format": self.dataset_format.value,
         }
-        dataset_dict["hash"] = self.create_dataset_hash()
+        dataset_dict["root_hash"] = self.create_dataset_hash()
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
     @staticmethod
@@ -155,8 +135,7 @@ class VerifiableDatasetInfo:
             base_path=base_path,
             label=data_dict["label"],
             metadata=data_dict["metadata"],
-            dataset_format=DatasetFormat(data_dict["format"]),
-            hash=data_dict["hash"],
+            root_hash=data_dict["root_hash"],
         )
 
     @staticmethod

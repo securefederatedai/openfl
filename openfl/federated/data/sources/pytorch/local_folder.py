@@ -30,6 +30,7 @@ class LocalFolder(Dataset):
         """
         Args:
             base_path (str or Path): Root directory containing labeled image subdirectories.
+            label_mapper (LabelMapper): LabelMapper object to map class names to indices.
             transform (callable, optional): Transformations to apply to images.
         """
         self.base_path = Path(base_path).resolve()
@@ -43,7 +44,7 @@ class LocalFolder(Dataset):
     def _load_samples(self):
         """Recursively find all image files and assign labels based on the directory name."""
         for file_path in self.base_path.rglob("*.*"):  # Search for all files in subdirectories
-            if file_path.is_file():  # Ensure it's a file
+            if file_path.is_file():
                 # Get parent directory as label
                 label_name = file_path.parent.name
                 label_idx = self.label_mapper.get_label_index(label_name)  # Use common mapping

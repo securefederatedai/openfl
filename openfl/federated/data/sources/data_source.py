@@ -5,6 +5,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Generator
 
 
 class DataSourceType(Enum):
@@ -45,7 +46,7 @@ class DataSource(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def enumerate_objects(self, base_path: str):
+    def enumerate_objects(self, base_path: str) -> Generator[str, None, None]:
         """
         Enumerate all files in the data source.
 
@@ -53,7 +54,7 @@ class DataSource(ABC):
             base_path (str): the base path of the data source.
 
         Returns:
-            list: A list of objects and labels
+            list: A list of objects
         """
         yield
 

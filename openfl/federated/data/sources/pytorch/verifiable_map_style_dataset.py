@@ -8,7 +8,6 @@ import numpy as np
 import torch
 
 from openfl.federated.data.sources.verifiable_dataset_info import (
-    DatasetFormat,
     VerifiableDatasetInfo,
 )
 
@@ -36,7 +35,7 @@ class VerifiableMapStyleDataset(torch.utils.data.Dataset):
 
         if (
             self.verify_dataset
-            and self.verifiable_dataset_info.dataset_format == DatasetFormat.VERBOSE
+            # and self.verifiable_dataset_info.dataset_format == DatasetFormat.VERBOSE
         ):
             item_hash = self.verifiable_dataset_info.data_sources[dataset_idx].compute_object_hash(
                 data_path
