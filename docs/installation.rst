@@ -5,7 +5,7 @@ This document provides instructions for installing OpenFL; either in a Python vi
 
 Requirements
 -----------
-Only some Python versions are supported. See `Python version support policy <deprecation.html>`_. Docker images are only supported on ``linux/x86_64`` platforms.
+For a list of Python supported versions see `Python version support policy <deprecation.html>`_. Docker images are only supported on ``linux/x86_64`` platforms.
 
 Using ``pip``
 -----------
