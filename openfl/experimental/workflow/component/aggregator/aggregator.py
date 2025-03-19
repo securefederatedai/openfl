@@ -198,6 +198,10 @@ class Aggregator:
         Returns:
             flow (FLSpec): Updated instance.
         """
+        # As an aggregator is created before a runtime, set prohibited/allowed data types for the
+        # runtime before running the flow.
+        self.flow.runtime.prohibited_data_types = FederatedRuntime.prohibited_data_types
+        self.flow.runtime.allowed_data_types = FederatedRuntime.allowed_data_types
         # Start function will be the first step if any flow
         f_name = "start"
         # Creating a clones from the flow object
@@ -394,7 +398,7 @@ class Aggregator:
                     # Create list of selected collaborator clones
                     selected_clones = ([],)
                     for name, clone in self.clones_dict.items():
-                        # Check if collaboraotr is in the list of selected
+                        # Check if collaborator is in the list of selected
                         # collaborators
                         if name in self.selected_collaborators:
                             selected_clones[0].append(clone)

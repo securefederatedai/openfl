@@ -7,6 +7,7 @@
 import inspect
 import itertools
 from types import MethodType
+from typing import List
 
 import numpy as np
 
@@ -96,6 +97,54 @@ def filter_attributes(ctx, f, **kwargs):
         _process_exclusion(ctx, cls_attrs, kwargs["exclude"], f)
 
 
+def validate_data_types(
+    prohibited_data_types: List[str] = None,
+    allowed_data_types: List[str] = None,
+    reserved_words=["collaborators"],
+    **kwargs,
+):
+    """Validates that the types of attributes in kwargs are not among the prohibited data types
+    and are among the allowed data types if specified.
+    Raises a TypeError if any prohibited data type is found or if a type is not allowed.
+
+    Args:
+        prohibited_data_types (List[str], optional): A list of prohibited data type names
+            (e.g., ['int', 'float']).
+        allowed_data_types (List[str], optional): A list of allowed data type names.
+        reserved_words: A list of strings that should be allowed as attribute values, even if 'str'
+            is included in prohibited_data_types.
+        kwargs (dict): Arbitrary keyword arguments representing attribute names and their values.
+
+    Raises:
+        TypeError: If any prohibited data types are found in kwargs or if a type is not allowed.
+        ValueError: If both prohibited_data_types and allowed_data_types are set simultaneously.
+    """
+    if prohibited_data_types is None:
+        prohibited_data_types = []
+    if allowed_data_types is None:
+        allowed_data_types = []
+
+    if prohibited_data_types and allowed_data_types:
+        raise ValueError("Cannot set both 'prohibited_data_types' and 'allowed_data_types'.")
+
+    for attr_name, attr_value in kwargs.items():
+        attr_type = type(attr_value).__name__
+        if (
+            prohibited_data_types
+            and attr_type in prohibited_data_types
+            and attr_value not in reserved_words
+        ):
+            raise TypeError(
+                f"The attribute '{attr_name}' = '{attr_value}' "
+                f"has a prohibited value type: {attr_type}"
+            )
+        if allowed_data_types and attr_type not in allowed_data_types:
+            raise TypeError(
+                f"The attribute '{attr_name}' = '{attr_value}' "
+                f"has a type that is not allowed: {attr_type}"
+            )
+
+
 def _validate_include_exclude(kwargs, cls_attrs):
     """Validates that 'include' and 'exclude' are not both present, and that
     attributes in 'include' or 'exclude' exist in the context.
@@ -152,13 +201,13 @@ def _process_exclusion(ctx, cls_attrs, exclude_list, f):
             delattr(ctx, attr)
 
 
-def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
+def checkpoint(ctx, parent_func, checkpoint_reserved_words=["next", "runtime"]):
     """Optionally saves the current state for the task just executed.
 
     Args:
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
-        chkpnt_reserved_words (list, optional): A list of reserved words to
+        checkpoint_reserved_words (list, optional): A list of reserved words to
             exclude from checkpointing. Defaults to ["next", "runtime"].
 
     Returns:
@@ -173,7 +222,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
     if ctx._checkpoint:
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
-        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=chkpnt_reserved_words)
+        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=checkpoint_reserved_words)
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -195,7 +244,7 @@ def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     # But at this point the function will raise an error because
     # remaining_gpu_memory is never cleared.
     # The participant list should remove the participant if it fits in the gpu
-    # and save the partipant if it doesn't and continue to the next GPU to see
+    # and save the participant if it doesn't and continue to the next GPU to see
     # if it fits in that one, only if we run out of GPUs should this function
     # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
@@ -230,7 +279,7 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
-                # participant doesn't fitm break to next GPU
+                # participant doesn't fit, break to next GPU
                 break
             else:
                 # if participant fits remove from need_assigned

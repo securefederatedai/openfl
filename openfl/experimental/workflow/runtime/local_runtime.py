@@ -738,6 +738,8 @@ class LocalRuntime(Runtime):
             # new runtime object will not contain private attributes of
             # aggregator or other collaborators
             clone.runtime = LocalRuntime(backend="single_process")
+            clone.runtime.prohibited_data_types = self.prohibited_data_types
+            clone.runtime.allowed_data_types = self.allowed_data_types
 
             # write the clone to the object store
             # ensure clone is getting latest _metaflow_interface
