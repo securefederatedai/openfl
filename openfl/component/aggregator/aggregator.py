@@ -761,11 +761,9 @@ class Aggregator:
             f"for {task_name}, round {round_number}"
         )
 
-        # FIXME: Concurrent calls to this function increases memory pressure.
-        with self.lock:
-            self.process_task_results(
-                collaborator_name, round_number, task_name, data_size, named_tensors
-            )
+        self.process_task_results(
+            collaborator_name, round_number, task_name, data_size, named_tensors
+        )
 
     def process_task_results(
         self,

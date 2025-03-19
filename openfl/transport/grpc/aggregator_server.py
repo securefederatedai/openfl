@@ -5,6 +5,7 @@
 """AggregatorGRPCServer module."""
 
 import logging
+import threading
 from random import random
 from time import sleep
 
@@ -14,6 +15,17 @@ from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.common import create_grpc_server, create_header
 
 logger = logging.getLogger(__name__)
+
+
+def synchronized(func):
+    """Executes `func` synchronously in a threading lock."""
+    _lock = threading.Lock()
+
+    def wrapper(self, *args, **kwargs):
+        with _lock:
+            return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
@@ -220,6 +232,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             tensor=named_tensor,
         )
 
+    @synchronized
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """Request a model download from aggregator.
 
