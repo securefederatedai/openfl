@@ -130,13 +130,18 @@ def initialize(
         gandlf_config_path=gandlf_config,
     )
 
-    aggregator_mode = plan.config["aggregator"]["settings"].get("mode", "learning")
-    if aggregator_mode == "learning":
+    if "connector" in plan.config:
+        logger.info("OpenFL Connector enabled: %s", plan.config["connector"])
+        # Only need to initialize task runner to install apps/packages
+        # that were not installable via requirements.txt
+        plan.get_task_runner(data_loader=None)
+    else:
         init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
         # This is needed to bypass data being locally available
         if input_shape is not None:
             logger.info(
-                f"Attempting to generate initial model weights with custom shape {input_shape}"
+                "Attempting to generate initial model weights with custom input shape "
+                f"{input_shape}"
             )
 
         # Initialize tensor dictionary
