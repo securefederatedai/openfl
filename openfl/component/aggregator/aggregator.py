@@ -205,7 +205,6 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
             from openfl.utilities.secagg.bootstrap import SecAggSetup
