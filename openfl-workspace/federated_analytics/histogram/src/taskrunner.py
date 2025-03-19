@@ -26,7 +26,7 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
         return query_tensorkey_dict
     
     def compute_hist(self, df, col_name):
-        histogram, vals = np.histogram(df[col_name])
+        _, histogram = np.histogram(df[col_name])
         return histogram
 
     def save_native(self):
