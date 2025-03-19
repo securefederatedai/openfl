@@ -1175,7 +1175,7 @@ def get_agg_addr_port(plan_file):
     try:
         with open(plan_file) as fp:
             data = yaml.safe_load(fp)
-        
+
         agg_addr = data["network"]["settings"]["agg_addr"]
         agg_port = data["network"]["settings"]["agg_port"]
         return agg_addr, agg_port

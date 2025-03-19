@@ -33,7 +33,7 @@ def test_federation_via_native(request, fx_federation_tr):
     plan_file = os.path.join(plan_dir, "plan.yaml")
     aggreagtor_addr, aggregator_port = fed_helper.get_agg_addr_port(plan_file)
     run_testssl_sh(aggreagtor_addr, aggregator_port, output_path)
-    
+
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
         fx_federation_tr,
@@ -45,7 +45,7 @@ def test_federation_via_native(request, fx_federation_tr):
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
     # Verify the testssl.sh report
     verify_testssl_report(output_path)
-    
+
 
 def run_testssl_sh(aggregator_host, aggregator_port, output_path):
     """
@@ -58,7 +58,7 @@ def run_testssl_sh(aggregator_host, aggregator_port, output_path):
     command = f"testssl --full --jsonfile {output_path} {aggregator_host}:{aggregator_port}"
     subprocess.run(command, shell=True)
     log.info(f"Testssl.sh output is stored in {output_path}")
-    
+
 
 def verify_testssl_report(output_path):
     """
@@ -68,16 +68,16 @@ def verify_testssl_report(output_path):
     """
     # Verify the testssl.sh report
     log.info("Verifying testssl.sh report")
-    
+
     # Check if the testssl.sh output file exists
     assert os.path.exists(output_path), "Testssl.sh output file not found"
-    
+
     # Load the JSON output file
     with open(output_path, "r") as file:
         testssl_output = json.load(file)
-    
+
     security_risk = False
-    
+
     # Iterate through the testssl output items
     for item in testssl_output:
         # Check for high severity issues
@@ -89,6 +89,6 @@ def verify_testssl_report(output_path):
                 # Mark as security risk and log the issue
                 security_risk = True
                 log.error(f"Security risk found in testssl.sh report: {item}")
-    
+
     # Assert that no security risks were found
     assert not security_risk, "Testssl.sh report shows security risk"
