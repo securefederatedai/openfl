@@ -33,6 +33,7 @@ def parse_arguments():
         parser.add_argument("--disable_client_auth", action="store_true", help="Disable client authentication. Default is False")
         parser.add_argument("--disable_tls", action="store_true", help="Disable TLS for communication. Default is False")
         parser.add_argument("--log_memory_usage", action="store_true", help="Enable Memory leak logs. Default is False")
+        parser.add_argument("--secure_agg", action="store_true", help="Enable secure aggregation. Default is False")
         args = parser.parse_known_args()[0]
         return args
 

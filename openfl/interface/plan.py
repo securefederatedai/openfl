@@ -67,7 +67,7 @@ def plan(context):
     "-a",
     "--aggregator_address",
     required=False,
-    help="The FQDN of the federation agregator",
+    help="The FQDN of the federation aggregator",
 )
 @option(
     "-f",
@@ -143,7 +143,6 @@ def initialize(
     )
 
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
         init_tensor_dict,
         **task_runner.tensor_dict_split_fn_kwargs,
     )
@@ -327,7 +326,7 @@ def save_(name):
     makedirs(f"plan/plans/{name}", exist_ok=True)
     copyfile("plan/plan.yaml", f"plan/plans/{name}/plan.yaml")
 
-    switch_plan(name)  # Swtich the context
+    switch_plan(name)  # Switch the context
 
 
 @plan.command(name="remove")
@@ -350,7 +349,7 @@ def remove_(name):
 
         rmtree(f"plan/plans/{name}")
 
-        switch_plan("default")  # Swtich the context back to the default
+        switch_plan("default")  # Switch the context back to the default
 
     else:
         echo("ERROR: Can't remove default plan")

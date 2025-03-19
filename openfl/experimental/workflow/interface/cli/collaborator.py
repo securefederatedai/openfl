@@ -18,7 +18,6 @@ import yaml
 from click import Path as ClickPath
 from click import confirm, echo, group, option, pass_context, style
 from yaml import FullLoader, dump, load
-from yaml.loader import SafeLoader
 
 from openfl.cryptography.ca import sign_certificate
 from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
@@ -83,7 +82,7 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
         )
     else:
         with open(data_config, "r") as f:
-            data = yaml.load(f, Loader=SafeLoader)
+            data = yaml.safe_load(f)
             if data.get(collaborator_name, None) is None:
                 logger.warning(
                     f"Collaborator private attributes are set to None as no attributes"
@@ -226,7 +225,7 @@ def register_collaborator(file_name):
     "-n",
     "--collaborator_name",
     help="The certified common name of the collaborator. This is only"
-    " needed for single node expiriments",
+    " needed for single node experiments",
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 @option(

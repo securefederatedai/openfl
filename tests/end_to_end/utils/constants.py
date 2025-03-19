@@ -18,11 +18,11 @@ class ModelName(Enum):
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
     XGB_HIGGS = "xgb_higgs"
+    GANDLF_SEG_TEST = "gandlf_seg_test"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
-DEFAULT_MODEL_NAME = "torch/mnist"
 SUCCESS_MARKER = "✔️ OK"
 
 # Docker specific constants
@@ -50,7 +50,10 @@ AGG_MEM_USAGE_JSON = "{}/aggregator/workspace/logs/aggregator_memory_usage.json"
 COL_MEM_USAGE_JSON = "{0}/{1}/workspace/logs/{1}_memory_usage.json"  # example - /tmp/my_federation/collaborator1/workspace/logs/collaborator1_memory_usage.json
 
 AGG_START_CMD = "fx aggregator start"
+AGG_END_MSG = "Experiment Completed"
 COL_START_CMD = "fx collaborator start -n {}"
+COL_END_MSG = "Received shutdown signal"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
+EXCEPTION = "Exception"

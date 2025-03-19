@@ -53,11 +53,20 @@ def get_token(name, ca_url, ca_path="."):
     root_crt = step_config_dir / "certs" / "root_ca.crt"
     try:
         token = subprocess.check_output(
-            f"{step_path} ca token {name} "
-            f"--key {priv_json} --root {root_crt} "
-            f"--password-file {pass_file} "
-            f"--ca-url {ca_url}",
-            shell=True,
+            [
+                step_path,
+                "ca",
+                "token",
+                name,
+                "--key",
+                priv_json,
+                "--root",
+                root_crt,
+                "--password-file",
+                pass_file,
+                "--ca-url",
+                ca_url,
+            ]
         )
     except subprocess.CalledProcessError as exc:
         logger.error("Error code %s: %s", exc.returncode, exc.output)
@@ -131,9 +140,21 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     with open(f"{cert_path}/root_ca.crt", mode="wb") as file:
         file.write(root_certificate)
     check_call(
-        f"{step_path} ca certificate {name} {cert_path}/{name}.crt "
-        f"{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}",
-        shell=True,
+        [
+            step_path,
+            "ca",
+            "certificate",
+            name,
+            f"{cert_path}/{name}.crt",
+            f"{cert_path}/{name}.key",
+            "--kty",
+            "EC",
+            "--curve",
+            "P-384",
+            "-f",
+            "--token",
+            token,
+        ]
     )
 
 
@@ -186,7 +207,7 @@ def run_ca(step_ca, pass_file, ca_json):
     """
     if _check_kill_process("step-ca", confirmation=True):
         logger.info("Up CA server")
-        check_call(f"{step_ca} --password-file {pass_file} {ca_json}", shell=True)
+        check_call([step_ca, "--password-file", pass_file, ca_json])
 
 
 def _check_kill_process(pstring, confirmation=False):
@@ -202,11 +223,22 @@ def _check_kill_process(pstring, confirmation=False):
     """
     pids = []
     proc = subprocess.Popen(
-        f"ps ax | grep {pstring} | grep -v grep",
-        shell=True,
+        ["ps", "ax"],
         stdout=subprocess.PIPE,
     )
-    text = proc.communicate()[0].decode("utf-8")
+    grep_proc = subprocess.Popen(
+        ["grep", pstring],
+        stdin=proc.stdout,
+        stdout=subprocess.PIPE,
+    )
+    proc.stdout.close()
+    grep_proc_2 = subprocess.Popen(
+        ["grep", "-v", "grep"],
+        stdin=grep_proc.stdout,
+        stdout=subprocess.PIPE,
+    )
+    grep_proc.stdout.close()
+    text = grep_proc_2.communicate()[0].decode("utf-8")
 
     for line in text.splitlines():
         fields = line.split()
@@ -249,21 +281,38 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(":")[0]
     check_call(
-        f"{step_path} ca init --name name --dns {name} "
-        f"--address {ca_url}  --provisioner prov "
-        f"--password-file {pki_dir}/pass_file",
-        shell=True,
+        [
+            step_path,
+            "ca",
+            "init",
+            "--name",
+            "name",
+            "--dns",
+            name,
+            "--address",
+            ca_url,
+            "--provisioner",
+            "prov",
+            "--password-file",
+            f"{pki_dir}/pass_file",
+        ]
     )
 
-    check_call(f"{step_path} ca provisioner remove prov --all", shell=True)
+    check_call([step_path, "ca", "provisioner", "remove", "prov", "--all"])
+
     check_call(
-        f"{step_path} crypto jwk create {step_config_dir}/certs/pub.json "
-        f"{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file",
-        shell=True,
+        [
+            step_path,
+            "crypto",
+            "jwk",
+            "create",
+            f"{step_config_dir}/certs/pub.json",
+            f"{step_config_dir}/secrets/priv.json",
+            f"--password-file={pki_dir}/pass_file",
+        ]
     )
     check_call(
-        f"{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json",
-        shell=True,
+        [step_path, "ca", "provisioner", "add", "provisioner", f"{step_config_dir}/certs/pub.json"]
     )
 
 

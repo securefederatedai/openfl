@@ -188,15 +188,15 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
-    # TODO for each GPU the funtion tries see if all participant usages fit
+    # TODO for each GPU the function tries see if all participant usages fit
     # into a GPU, it it doesn't it removes that participant from the
     # participant list, and adds it to the remaining_gpu_memory dict. So any
     # sum of GPU requirements above 1 triggers this.
-    # But at this point the funtion will raise an error because
+    # But at this point the function will raise an error because
     # remaining_gpu_memory is never cleared.
     # The participant list should remove the participant if it fits in the gpu
     # and save the partipant if it doesn't and continue to the next GPU to see
-    # if it fits in that one, only if we run out of GPUs should this funtion
+    # if it fits in that one, only if we run out of GPUs should this function
     # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
