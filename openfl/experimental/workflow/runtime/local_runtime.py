@@ -128,9 +128,9 @@ def ray_group_assign(collaborators, num_actors=1):
         """
 
         # once ray_grouped replaces the current ray runtime this class can be
-        # replaced with a funtion that returns the lambda funtion, using a
-        # funtion is necesary because this is used in setting multiple
-        # funtions in a loop and lambda takes the reference to self.f_name and
+        # replaced with a function that returns the lambda function, using a
+        # function is necessary because this is used in setting multiple
+        # functions in a loop and lambda takes the reference to self.f_name and
         # not the value so we need to change scope to avoid self.f_name from
         # changing as the loop  progresses
         def __init__(self, collaborator_actor, collaborator, f_name) -> None:
@@ -324,7 +324,7 @@ class LocalRuntime(Runtime):
                   The RayGroups run concurrently while participants in the
                   group run serially.
                   The default is 1 RayGroup and can be changed by using the
-                  num_actors=1 kwarg. By using more RayGroups more concurency
+                  num_actors=1 kwarg. By using more RayGroups more concurrency
                   is allowed with the trade off being that each RayGroup has
                   extra memory overhead in the form of extra CUDA CONTEXTS.
 

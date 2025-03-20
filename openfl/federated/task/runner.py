@@ -12,7 +12,9 @@ You may copy use this file or the appropriate framework-specific base-class to
 port your own models.
 """
 
-from logging import getLogger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TaskRunner:
@@ -27,7 +29,7 @@ class TaskRunner:
     """
 
     def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
-        """Intializes the TaskRunner object.
+        """Initializes the TaskRunner object.
 
         Args:
             data_loader: The data_loader object
@@ -37,7 +39,10 @@ class TaskRunner:
             **kwargs: Additional parameters to pass to the function.
         """
         self.data_loader = data_loader
-        self.feature_shape = self.data_loader.get_feature_shape()
+        if self.data_loader:
+            self.feature_shape = self.data_loader.get_feature_shape()
+        else:
+            self.feature_shape = None
         # TODO: Should this comment a path of the doc string?
         # key word arguments for determining which parameters to hold out from
         # aggregation.
@@ -54,15 +59,6 @@ class TaskRunner:
         if tensor_dict_split_fn_kwargs is None:
             tensor_dict_split_fn_kwargs = {}
         self.tensor_dict_split_fn_kwargs = tensor_dict_split_fn_kwargs
-        self.set_logger()
-
-    def set_logger(self):
-        """Set up the log object.
-
-        Returns:
-            None
-        """
-        self.logger = getLogger(__name__)
 
     def set_optimizer_treatment(self, opt_treatment):
         """Change the treatment of current instance optimizer.
@@ -123,7 +119,7 @@ class TaskRunner:
         """Perform the training for a specified number of batches.
 
         Is expected to perform draws randomly, without
-        replacement until data is exausted. Then data is replaced and
+        replacement until data is exhausted. Then data is replaced and
         shuffled and draws continue.
 
         Args:

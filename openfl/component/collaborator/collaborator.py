@@ -7,28 +7,16 @@
 import logging
 from enum import Enum
 from time import sleep
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
+from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
 from openfl.utilities import TensorKey
 
 logger = logging.getLogger(__name__)
-
-
-class DevicePolicy(Enum):
-    """Device assignment policy.
-
-    Attributes:
-        CPU_ONLY (int): Assigns tasks to CPU only.
-        CUDA_PREFERRED (int): Prefers CUDA for task assignment if available.
-    """
-
-    CPU_ONLY = 1
-
-    CUDA_PREFERRED = 2
 
 
 class OptTreatment(Enum):
@@ -58,8 +46,8 @@ class Collaborator:
         task_runner (object): The task runner object.
         task_config (dict): The task configuration.
         opt_treatment (str)*: The optimizer state treatment.
-        device_assignment_policy (str): The device assignment policy.
-        delta_updates (bool)*: If True, only model delta gets sent. If False,
+        device_assignment_policy (str): [Deprecated] The device assignment policy.
+        use_delta_updates (bool)*: If True, only model delta gets sent. If False,
             whole model gets sent to collaborator.
         compression_pipeline (object): The compression pipeline.
         db_store_rounds (int): The number of rounds to store in the database.
@@ -75,12 +63,12 @@ class Collaborator:
         collaborator_name,
         aggregator_uuid,
         federation_uuid,
-        client,
+        client: AggregatorGRPCClient,
         task_runner,
         task_config,
         opt_treatment="RESET",
         device_assignment_policy="CPU_ONLY",
-        delta_updates=False,
+        use_delta_updates=False,
         compression_pipeline=None,
         db_store_rounds=1,
         log_memory_usage=False,
@@ -101,7 +89,7 @@ class Collaborator:
                 Defaults to 'RESET'.
             device_assignment_policy (str, optional): The device assignment
                 policy. Defaults to 'CPU_ONLY'.
-            delta_updates (bool, optional): If True, only model delta gets
+            use_delta_updates (bool, optional): If True, only model delta gets
                 sent. If False, whole model gets sent to collaborator.
                 Defaults to False.
             compression_pipeline (object, optional): The compression pipeline.
@@ -110,11 +98,8 @@ class Collaborator:
                 the database. Defaults to 1.
             callbacks (list, optional): List of callbacks. Defaults to None.
         """
-        self.single_col_cert_common_name = None
-
-        if self.single_col_cert_common_name is None:
-            self.single_col_cert_common_name = ""  # for protobuf compatibility
-        # we would really want this as an object
+        # for protobuf compatibility we would really want this as an object
+        self.single_col_cert_common_name = ""
 
         self.collaborator_name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
@@ -126,7 +111,7 @@ class Collaborator:
         self.db_store_rounds = db_store_rounds
 
         self.task_runner = task_runner
-        self.delta_updates = delta_updates
+        self.use_delta_updates = use_delta_updates
 
         self.client = client
 
@@ -138,17 +123,14 @@ class Collaborator:
         else:
             logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
             raise NotImplementedError(f"Unknown opt_treatment: {opt_treatment}.")
-
-        if hasattr(DevicePolicy, device_assignment_policy):
-            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
-        else:
-            logger.error(f"Unknown device_assignment_policy: {device_assignment_policy.name}.")
-            raise NotImplementedError(
-                f"Unknown device_assignment_policy: {device_assignment_policy}."
-            )
-
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
+        logger.warning(
+            "Argument `device_assignment_policy` is deprecated and will be removed in the future."
+        )
+        del device_assignment_policy
+
+        # Secure aggregation
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
             self._private_mask = None
@@ -171,22 +153,13 @@ class Collaborator:
             client=self.client,
         )
 
-    def set_available_devices(self, cuda: Tuple[str] = ()):
-        """Set available CUDA devices.
-
-        Args:
-            cuda (Tuple[str]): Tuple containing string indices of available
-                CUDA devices, ('1', '3').
-        """
-        self.cuda_devices = cuda
-
     def run(self):
         """Run the collaborator."""
         # Experiment begin
         self.callbacks.on_experiment_begin()
 
         while True:
-            tasks, round_num, sleep_time, time_to_quit = self.get_tasks()
+            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
 
             if time_to_quit:
                 break
@@ -213,45 +186,6 @@ class Collaborator:
         self.callbacks.on_experiment_end()
         logger.info("Received shutdown signal. Exiting...")
 
-    def run_simulation(self):
-        """Specific function for the simulation.
-
-        After the tasks have been performed for a roundquit, and then the
-        collaborator object will be reinitialized after the next round.
-        """
-        while True:
-            tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
-            if time_to_quit:
-                logger.info("End of Federation reached. Exiting...")
-                break
-            elif sleep_time > 0:
-                sleep(sleep_time)  # some sleep function
-            else:
-                logger.info("Received the following tasks: %s", tasks)
-                for task in tasks:
-                    self.do_task(task, round_number)
-                logger.info(
-                    f"All tasks completed on {self.collaborator_name} for round {round_number}..."
-                )
-                break
-
-    def get_tasks(self):
-        """Get tasks from the aggregator.
-
-        Returns:
-             tasks (list_of_str): List of tasks.
-             round_number (int): Actual round number.
-             sleep_time (int): Sleep time.
-             time_to_quit (bool): bool value for quit.
-        """
-        # logging wait time to analyze training process
-        logger.info("Waiting for tasks...")
-        tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
-            self.collaborator_name
-        )
-
-        return tasks, round_number, sleep_time, time_to_quit
-
     def do_task(self, task, round_number) -> dict:
         """Perform the specified task.
 
@@ -263,22 +197,12 @@ class Collaborator:
             A dictionary of reportable metrics of the current collaborator for the task.
         """
         # map this task to an actual function name and kwargs
-        if hasattr(self.task_runner, "TASK_REGISTRY"):
-            func_name = task.function_name
-            task_name = task.name
-            kwargs = {}
-            if task.task_type == "validate":
-                if task.apply_local:
-                    kwargs["apply"] = "local"
-                else:
-                    kwargs["apply"] = "global"
+        if isinstance(task, str):
+            task_name = task
         else:
-            if isinstance(task, str):
-                task_name = task
-            else:
-                task_name = task.name
-            func_name = self.task_config[task_name]["function"]
-            kwargs = self.task_config[task_name]["kwargs"]
+            task_name = task.name
+        func_name = self.task_config[task_name]["function"]
+        kwargs = self.task_config[task_name]["kwargs"]
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
@@ -309,32 +233,14 @@ class Collaborator:
 
         # print('Required tensorkeys = {}'.format(
         # [tk[0] for tk in required_tensorkeys]))
-        input_tensor_dict = self.get_numpy_dict_for_tensorkeys(required_tensorkeys)
+        input_tensor_dict = {
+            k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
+        }
 
         # now we have whatever the model needs to do the task
-        if hasattr(self.task_runner, "TASK_REGISTRY"):
-            # New interactive python API
-            # New `Core` TaskRunner contains registry of tasks
-            func = self.task_runner.TASK_REGISTRY[func_name]
-            logger.debug("Using Interactive Python API")
-
-            # So far 'kwargs' contained parameters read from the plan
-            # those are parameters that the eperiment owner registered for
-            # the task.
-            # There is another set of parameters that created on the
-            # collaborator side, for instance, local processing unit identifier:s
-            if (
-                self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
-                and len(self.cuda_devices) > 0
-            ):
-                kwargs["device"] = f"cuda:{self.cuda_devices[0]}"
-            else:
-                kwargs["device"] = "cpu"
-        else:
-            # TaskRunner subclassing API
-            # Tasks are defined as methods of TaskRunner
-            func = getattr(self.task_runner, func_name)
-            logger.debug("Using TaskRunner subclassing API")
+        # Tasks are defined as methods of TaskRunner
+        func = getattr(self.task_runner, func_name)
+        logger.debug("Using TaskRunner subclassing API")
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -344,11 +250,8 @@ class Collaborator:
         )
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
-        unmasked_metrics = {}
         if self._secure_aggregation_enabled:
-            unmasked_metrics = self._secure_aggregation_masking(
-                global_output_tensor_dict, task_name
-            )
+            self._apply_masks(global_output_tensor_dict)
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -357,18 +260,8 @@ class Collaborator:
         # send the results for this tasks; delta and compression will occur in
         # this function
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
-        # Add unmasked metrics to the metrics that are logged, if any.
-        metrics.update(unmasked_metrics)
+
         return metrics
-
-    def get_numpy_dict_for_tensorkeys(self, tensor_keys):
-        """Get tensor dictionary for specified tensorkey set.
-
-        Args:
-            tensor_keys (namedtuple): Tensorkeys that will be resolved locally
-                or remotely. May be the product of other tensors.
-        """
-        return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
     def get_data_for_tensorkey(self, tensor_key):
         """Resolve the tensor corresponding to the requested tensorkey.
@@ -408,7 +301,7 @@ class Collaborator:
             # dependencies.
             # Typically, dependencies are only relevant to model layers
             tensor_dependencies = self.tensor_codec.find_dependencies(
-                tensor_key, self.delta_updates
+                tensor_key, self.use_delta_updates
             )
             logger.debug(
                 "Unable to get tensor from local store..."
@@ -487,7 +380,6 @@ class Collaborator:
 
         logger.debug("Requesting aggregated tensor %s", tensor_key)
         tensor = self.client.get_aggregated_tensor(
-            self.collaborator_name,
             tensor_name,
             round_number,
             report,
@@ -540,7 +432,6 @@ class Collaborator:
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
 
         self.client.send_local_task_results(
-            self.collaborator_name,
             round_number,
             task_name,
             data_size,
@@ -566,7 +457,7 @@ class Collaborator:
         """
         # if we have an aggregated tensor, we can make a delta
         tensor_name, origin, round_number, report, tags = tensor_key
-        if "trained" in tags and self.delta_updates:
+        if "trained" in tags and self.use_delta_updates:
             # Should get the pretrained model to create the delta. If training
             # has happened,
             # Model should already be stored in the TensorDB
@@ -622,7 +513,7 @@ class Collaborator:
             }
             for proto in named_tensor.transformer_metadata
         ]
-        # The tensor has already been transfered to collaborator, so
+        # The tensor has already been transferred to collaborator, so
         # the newly constructed tensor should have the collaborator origin
         tensor_key = TensorKey(
             named_tensor.name,
@@ -654,50 +545,35 @@ class Collaborator:
 
         return decompressed_nparray
 
-    def _secure_aggregation_masking(self, global_output_tensor_dict, task_name):
+    def _apply_masks(
+        self,
+        tensor_dict,
+    ):
         """
-        Apply secure aggregation masking to the global output tensor
-        dictionary.
+        Calculate masked input vectors for secure aggregation.
 
-        This method modifies the provided global output tensor dictionary by
-        applying secure aggregation masking if secure aggregation is enabled.
-        It fetches the private and shared masks from the tensor database and
-        applies them to the tensors in the global output tensor dictionary
-        that have the "metric" tag.
+        This function fetches private and shared masks from the tensor database if
+        they are not provided, and applies these masks to the input tensors.
 
         Args:
-            global_output_tensor_dict (dict): A dictionary where keys are
-                tensor keys and values are the corresponding tensors.
-
-        Returns:
-            None: The method modifies the global_output_tensor_dict in place.
+            tensor_dict (dict): A dictionary of tensors to be masked.
         """
         import numpy as np
 
-        # Storing the masks as class attributes to reduce the number of
-        # lookups in the database.
         # Fetch private mask from tensor db if not already fetched.
         if not self._private_mask:
             self._private_mask = self.tensor_db.get_tensor_from_cache(
                 TensorKey("private_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
-        # Fetch shared mask from tensor db if not alreday fetched.
+        # Fetch shared mask from tensor db if not already fetched.
         if not self._shared_mask:
             self._shared_mask = self.tensor_db.get_tensor_from_cache(
                 TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
 
-        metrics = {}
-        for tensor_key in global_output_tensor_dict:
-            tensor_name, _, _, report, tags = tensor_key
+        for tensor_key in tensor_dict:
+            _, _, _, _, tags = tensor_key
             if "metric" in tags:
-                if report:
-                    # Reportable metric must be a scalar
-                    value = float(global_output_tensor_dict[tensor_key])
-                    metrics.update(
-                        {f"{self.collaborator_name}/{task_name}/{tensor_name}/unmasked": value}
-                    )
-                masked_metric = np.add(self._private_mask, global_output_tensor_dict[tensor_key])
-                global_output_tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
-
-        return metrics
+                continue
+            masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
+            tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)

@@ -23,6 +23,8 @@ TEMPLATE = "template"
 DEFAULTS = "defaults"
 AUTO = "auto"
 
+logger = getLogger(__name__)
+
 
 class Plan:
     """A class used to represent a Federated Learning plan.
@@ -31,7 +33,6 @@ class Plan:
     plans.
 
     Attributes:
-        logger (Logger): Logger instance for the class.
         config (dict): Dictionary containing patched plan definition.
         authorized_cols (list): Authorized collaborator list.
         cols_data_paths (dict): Collaborator data paths dictionary.
@@ -48,8 +49,6 @@ class Plan:
         name_ (str): Name of the instance.
         serializer_ (SerializerPlugin): Serializer plugin.
     """
-
-    logger = getLogger(__name__)
 
     @staticmethod
     def load(yaml_path: Path, default: dict = None):
@@ -89,11 +88,11 @@ class Plan:
             plan.config = config
             frozen_yaml_path = Path(f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
             if frozen_yaml_path.exists():
-                Plan.logger.info("%s is already frozen", yaml_path.name)
+                logger.info("%s is already frozen", yaml_path.name)
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info("%s frozen successfully", yaml_path.name)
+            logger.info("%s frozen successfully", yaml_path.name)
         else:
             yaml_path.write_text(dump(config))
 
@@ -138,20 +137,21 @@ class Plan:
             plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
             Plan._load_collaborator_data_paths(plan, data_config_path)
+            plan.verify()
 
             if resolve:
                 plan.resolve()
-                Plan.logger.info(
+                logger.info(
                     f"Parsing Federated Learning Plan : [green]SUCCESS[/] : "
                     f"[blue]{plan_config_path}[/].",
                     extra={"markup": True},
                 )
-                Plan.logger.info(dump(plan.config))
+                logger.info(dump(plan.config))
 
             return plan
 
         except Exception:
-            Plan.logger.exception(
+            logger.exception(
                 f"Parsing Federated Learning Plan : [red]FAILURE[/] : [blue]{plan_config_path}[/].",
                 extra={"markup": True},
             )
@@ -175,7 +175,7 @@ class Plan:
                 plan.files.append(defaults)
 
                 if resolve:
-                    Plan.logger.info(
+                    logger.info(
                         f"Loading DEFAULTS for section [red]{section}[/] "
                         f"from file [red]{defaults}[/].",
                         extra={"markup": True},
@@ -194,7 +194,7 @@ class Plan:
     @staticmethod
     def _import_gandlf_config(plan, gandlf_config_path):
         """Import GaNDLF Config into the plan."""
-        Plan.logger.info(
+        logger.info(
             f"Importing GaNDLF Config into plan from file [red]{gandlf_config_path}[/].",
             extra={"markup": True},
         )
@@ -232,9 +232,9 @@ class Plan:
         class_name = splitext(template)[1].strip(".")
         module_path = splitext(template)[0]
 
-        Plan.logger.info("Building `%s` Module.", template)
-        Plan.logger.debug("Settings %s", settings)
-        Plan.logger.debug("Override %s", override)
+        logger.info("Building `%s` Module.", template)
+        logger.debug("Settings %s", settings)
+        logger.debug("Override %s", override)
 
         settings.update(**override)
 
@@ -256,7 +256,7 @@ class Plan:
         """
         class_name = splitext(template)[1].strip(".")
         module_path = splitext(template)[0]
-        Plan.logger.info(
+        logger.info(
             f"Importing [red]🡆[/] Object [red]{class_name}[/] from [red]{module_path}[/] Module.",
             extra={"markup": True},
         )
@@ -274,6 +274,7 @@ class Plan:
         self.collaborator_ = None  # collaborator object
         self.aggregator_ = None  # aggregator object
         self.assigner_ = None  # assigner object
+        self.connector_ = None  # OpenFL Connector object
 
         self.loader_ = None  # data loader object
         self.runner_ = None  # task runner object
@@ -293,7 +294,7 @@ class Plan:
     def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode("utf-8"))
-        Plan.logger.info(
+        logger.info(
             f"FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]",
             extra={"markup": True},
         )
@@ -330,6 +331,16 @@ class Plan:
             self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
+
+    def get_connector(self):
+        """Get OpenFL Connector object."""
+        defaults = self.config.get("connector")
+        logger.info("Connector defaults: %s", defaults)
+
+        if self.connector_ is None and defaults:
+            self.connector_ = Plan.build(**defaults)
+
+        return self.connector_
 
     def get_tasks(self):
         """Get federation tasks."""
@@ -383,6 +394,10 @@ class Plan:
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
 
+        connector = self.get_connector()
+        if connector is not None:
+            defaults[SETTINGS]["connector"] = connector
+
         # TODO: Load callbacks from plan.
 
         if self.aggregator_ is None:
@@ -404,8 +419,13 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
-        template = "openfl.component.aggregator.straggler_handling.CutoffTimePolicy"
-        defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
+        defaults = self.config.get(
+            "straggler_handling_policy",
+            {
+                TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                SETTINGS: {},
+            },
+        )
 
         if self.straggler_policy_ is None:
             # Prepare a partial function for the straggler policy
@@ -575,6 +595,7 @@ class Plan:
 
         client_args["aggregator_uuid"] = aggregator_uuid
         client_args["federation_uuid"] = federation_uuid
+        client_args["collaborator_name"] = collaborator_name
 
         if self.client_ is None:
             self.client_ = AggregatorGRPCClient(**client_args)
@@ -655,5 +676,31 @@ class Plan:
             )
             utils.dump_proto(model_proto=model_proto, fpath=output_path)
         except Exception as e:
-            self.logger.error(f"Failed to create or save model proto: {e}")
+            logger.error(f"Failed to create or save model proto: {e}")
             raise
+
+    def verify(self):
+        """
+        This function checks for inconsistencies in the plan config, for example, checks if two
+        non-compatible features are enabled at the same time.
+        """
+        if self.config["aggregator"][SETTINGS].get("secure_aggregation"):
+            # TODO: Secure aggregation requires all collaborators to participate in all rounds and
+            # can not tolerate dropouts. Hence, if `secure_aggregation: true` in aggregator, there
+            # should be no `straggler_handling_policy` defined or use `WaitForAllPolicy` (default
+            # straggler handling policy).
+            straggler_handling_policy = self.config.get(
+                "straggler_handling_policy",
+                {
+                    TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                    SETTINGS: {},
+                },
+            )
+            if straggler_handling_policy.get(TEMPLATE) not in [
+                "openfl.component.WaitForAllPolicy",
+                "openfl.component.aggregator.WaitForAllPolicy",
+                "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+            ]:
+                raise Exception(
+                    "Only WaitForAllPolicy straggler handling is supported with secure aggregation."
+                )

@@ -58,7 +58,7 @@ workspace "OpenFL" "An open framework for Federated Learning." {
 
 
         # relationships to/from components
-        envoy -> taskRunner "Provides tasks' defenitions"
+        envoy -> taskRunner "Provides tasks' definitions"
         grpcClient -> taskRunner "Invokes some tasks for the round"
         aggregator -> grpcClient "Communicates"
     }

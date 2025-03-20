@@ -17,6 +17,9 @@ class PlanModificationException(Exception):
     """Exception for plan modification"""
     pass
 
+class PlanReadException(Exception):
+    """Exception for plan read"""
+    pass
 
 class WorkspaceCertificationException(Exception):
     """Exception for workspace certification"""
@@ -110,4 +113,9 @@ class ParticipantRestartException(Exception):
 
 class TensorDBException(Exception):
     """Exception for tensor database"""
+    pass
+
+
+class GaNDLFConfigSegException(Exception):
+    """Exception for GaNDLF config segmentation file"""
     pass

@@ -11,8 +11,8 @@ import random
 from typing import Union
 
 import numpy as np
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
+from Crypto.Cipher import AES  # nosec B413
+from Crypto.Util.Padding import pad  # nosec B413
 
 
 def create_ciphertext(
@@ -37,7 +37,7 @@ def create_ciphertext(
             the encryption.
         source_id (int): Unique integer ID of the creating collaborator of the
             cipher text.
-        destination_id (int): Unique integer ID of the recepient collaborator
+        destination_id (int): Unique integer ID of the recipient collaborator
             of the cipher text.
         seed_share (bytes): Share of source_id collaborator's private seed for
             destination_id collaborator.
@@ -66,7 +66,7 @@ def create_ciphertext(
     # We use 64 bytes as it is the maximum length available.
     padded_secret_key = pad(secret_key, 64)
 
-    from Crypto.Random import get_random_bytes
+    from Crypto.Random import get_random_bytes  # nosec B413
 
     # Generate a random nonce to make the encryption non-deterministic.
     nonce = get_random_bytes(len(padded_secret_key) // 2)
@@ -97,7 +97,7 @@ def decipher_ciphertext(
 
     Returns:
         int: Unique integer ID of the creating collaborator of the ciphertext.
-        int: Unique integer ID of the recepient collaborator of the ciphertext.
+        int: Unique integer ID of the recipient collaborator of the ciphertext.
         bytes: Share of source_id collaborator's private seed for
             destination_id collaborator.
         bytes: Share of source_id collaborator's private key for
