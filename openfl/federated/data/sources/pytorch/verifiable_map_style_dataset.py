@@ -31,19 +31,17 @@ class VerifiableMapStyleDataset(torch.utils.data.Dataset):
         dataset_idx = self.cumulative_sizes.searchsorted(idx, side="right")
         # find the data in that sub-dataset
         data_idx = idx - self.cumulative_sizes[dataset_idx - 1] if dataset_idx > 0 else idx
-        item_data, label, data_path = self.datasources[dataset_idx][data_idx]
+        item = self.datasources[dataset_idx][data_idx]
+        data_path = item["path"]
 
-        if (
-            self.verify_dataset
-            # and self.verifiable_dataset_info.dataset_format == DatasetFormat.VERBOSE
-        ):
-            item_hash = self.verifiable_dataset_info.data_sources[dataset_idx].compute_object_hash(
+        if self.verify_dataset:
+            item_hash = self.verifiable_dataset_info.data_sources[dataset_idx].compute_file_hash(
                 data_path
             )
             if not self.verifiable_dataset_info.verify_single_file(data_path, item_hash):
                 raise ValueError(f"Data integrity check failed for {data_path}")
 
-        return item_data, label
+        return item["data"], item["label"]
 
     def __len__(self):
         return self.cumulative_sizes[-1] if len(self.cumulative_sizes) > 0 else 0

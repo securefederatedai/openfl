@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """This module contains the LocalDataSource class."""
 
+import os
 from hashlib import sha384
 from pathlib import Path
 from typing import Generator
@@ -18,21 +19,23 @@ class LocalDataSource(DataSource):
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size
 
-    def enumerate_objects(self, base_path: str) -> Generator[str, None, None]:
+    def enumerate_files(self, base_path: str) -> Generator[str, None, None]:
         """Enumerate all files in the data source."""
         total_size_bytes = 0
         full_path = Path(base_path) / self.source_path
         if full_path.is_dir():
-            for file_path in full_path.glob("**/*.*"):
-                if self.max_dataset_size > 0:
-                    total_size_bytes += file_path.stat().st_size
-                    total_size_gb = total_size_bytes / (1024**3)
-                    if total_size_gb > self.max_dataset_size:
-                        raise ValueError(
-                            f"Total dataset size: {total_size_gb:.2f} GB exceeds "
-                            f"{self.max_dataset_size} GB"
-                        )
-                yield file_path
+            for root, _, files in os.walk(full_path):
+                for file in files:
+                    file_path = Path(root) / file
+                    if self.max_dataset_size > 0:
+                        total_size_bytes += file_path.stat().st_size
+                        total_size_gb = total_size_bytes / (1024**3)
+                        if total_size_gb > self.max_dataset_size:
+                            raise ValueError(
+                                f"Total dataset size: {total_size_gb:.2f} GB exceeds "
+                                f"{self.max_dataset_size} GB"
+                            )
+                    yield file_path
 
         elif full_path.is_file():
             if self.max_dataset_size > 0:
@@ -45,13 +48,13 @@ class LocalDataSource(DataSource):
                     )
             yield full_path
 
-    def compute_object_hash(self, path: str) -> str:
+    def compute_file_hash(self, path: str) -> str:
         """Compute the hash of the file. Return hash on hexstring format."""
         hash_obj = self.hash_func()
         with open(path, "rb") as file:
             for byte_block in iter(lambda: file.read(65536), b""):
                 hash_obj.update(byte_block)
-            return hash_obj.hexdigest()
+        return hash_obj.hexdigest()
 
     @classmethod
     def from_dict(cls, ds_dict: dict):

@@ -1,5 +1,7 @@
+# Copyright 2020-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-pass
+import json
 import os
 
 from pathlib import Path
@@ -59,11 +61,11 @@ class MockVerifiableMapStyle(VerifiableMapStyleDataset):
     def create_datasets(self):
         datasources = []
         for data_source in self.verifiable_dataset_info.data_sources:
-            if data_source.datasource_type == DataSourceType.LOCAL:
+            if data_source.type == DataSourceType.LOCAL:
                 datasource_full_path = self.verifiable_dataset_info.base_path / data_source.source_path
                 datasources.append(LocalTextFolder(base_path=datasource_full_path, label_mapper=self.label_mapper, transform=self.transform))
             else:
-                raise ValueError(f"Unknown or unsupported storage type: {data_source.datasource_type}")
+                raise ValueError(f"Unknown or unsupported storage type: {data_source.type}")
         return datasources
 
 
@@ -95,7 +97,9 @@ def test_local_map_style_datasource_verbose_verify(data_sources):
         metadata={"test": "test"},
         base_path=base_path
     )
-    verifiable_dataset_info.create_dataset_hash()
+    dataset_info_json = verifiable_dataset_info.to_json()
+    verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json))
+    verifiable_dataset_info.verify_dataset()
     verifiable_map_style = MockVerifiableMapStyle(verifiable_dataset_info, verify_dataset=True)
     assert len(verifiable_map_style) == 12
 
@@ -150,11 +154,11 @@ def test_local_image_folder_map_style_datasource_verbose(fake_image_datasources)
 
     for i in range(len(verifiable_map_style)):
         if i < 6:
-            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[0][i][0]
-            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[0][i][1]
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[0][i]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[0][i]["label"]
         else:
-            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[1][i - 6][0]
-            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[1][i - 6][1]
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[1][i - 6]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[1][i - 6]["label"]
 
 def test_local_image_folder_map_style_datasource_verbose_verify(fake_image_datasources):
     ds1, ds2, _ = fake_image_datasources
@@ -166,17 +170,19 @@ def test_local_image_folder_map_style_datasource_verbose_verify(fake_image_datas
         metadata={"test": "test"},
         base_path=base_path
     )
+    dataset_info_json = verifiable_dataset_info.to_json()
+    verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json))
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=True)
     assert len(verifiable_map_style) == 12
     assert len(verifiable_map_style.datasources) == len(datasources)
 
     for i in range(len(verifiable_map_style)):
         if i < 6:
-            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[0][i][0]
-            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[0][i][1]
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[0][i]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[0][i]["label"]
         else:
-            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[1][i - 6][0]
-            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[1][i - 6][1]
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasources[1][i - 6]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasources[1][i - 6]["label"]
 
 
 def test_local_image_folder_map_style_datasource_verbose_labels(fake_image_datasources):

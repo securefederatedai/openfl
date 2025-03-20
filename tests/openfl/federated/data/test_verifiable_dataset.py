@@ -1,3 +1,6 @@
+# Copyright 2020-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 from openfl.federated.data.sources.local_data_source import LocalDataSource
 from openfl.federated.data.sources.verifiable_dataset_info import VerifiableDatasetInfo
@@ -184,8 +187,11 @@ def test_one_local_datasource_verify_single_file(data_sources):
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
-    verifiable1 = VerifiableDatasetInfo.from_dict(json.loads(verifaible_json), base_path)
-    verifiable1.create_dataset_hash()  # Create & save in memory the hashes for all files
+    dataset_info_dict = json.loads(verifaible_json)
+    verifiable1 = VerifiableDatasetInfo.from_dict(dataset_info_dict, base_path)
+    # Create & save in memory the hashes for all files
+    verifiable.verify_dataset(dataset_info_dict)
+    verifiable1.verify_dataset(dataset_info_dict)
     for file_path, hash in verifiable.all_hashes.items():
         file_full_path = Path(base_path) / Path(file_path)
         assert verifiable1.verify_single_file(file_full_path, hash)

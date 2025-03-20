@@ -13,25 +13,11 @@ from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 from openfl.federated.data.sources.local_data_source import LocalDataSource
 
 
-class DatasetFormat(Enum):
+class DatasetCommitment(Enum):
     """Enum for the different dataset commitment formats."""
 
-    VERBOSE = "verbose_dataset"
-    CONCISE = "concise_dataset"
-
-
-def filter_non_serializable(obj):
-    """Filter out methods and non-serializable objects."""
-    serializable_dict = {}
-    for key, val in obj.__dict__.items():
-        if callable(val):
-            continue  # Skip methods
-        if isinstance(val, Enum):
-            val = val.value  # Convert Enum to its value
-        elif isinstance(val, Path):
-            val = str(val)  # Convert Path to string
-        serializable_dict[key] = val
-    return serializable_dict
+    VERBOSE = "verbose"
+    CONCISE = "concise"
 
 
 class VerifiableDatasetInfo:
@@ -46,7 +32,7 @@ class VerifiableDatasetInfo:
         data_sources: List[DataSource],
         base_path: Path,
         label: str,
-        metadata,
+        metadata=None,
         root_hash=None,
     ):
         self.data_sources = data_sources
@@ -55,42 +41,47 @@ class VerifiableDatasetInfo:
         self.base_path = Path(base_path)
         self.root_hash = root_hash
         self.all_hashes = None
-        if self.root_hash is None:
-            self.root_hash = self.create_dataset_hash()
 
     def _create_verbose_dataset_hash(self):
-        self.all_hashes = {
-            str(file_path.relative_to(self.base_path)): ds.compute_object_hash(
+        all_hashes = {
+            str(file_path.relative_to(self.base_path)): ds.compute_file_hash(
                 str(self.base_path / file_path)
             )
             for ds in self.data_sources
-            for file_path in ds.enumerate_objects(str(self.base_path))
+            for file_path in ds.enumerate_files(str(self.base_path))
         }
-        return self.all_hashes
+        return all_hashes
 
     def _create_concise_dataset_hash(self):
         all_file_hashes = self._create_verbose_dataset_hash()
         sorted_file_hashes = sorted(all_file_hashes.values())
         joined_hashes = "".join(sorted_file_hashes)
-        self.root_hash = sha384(joined_hashes.encode()).hexdigest()
-        return self.root_hash
+        root_hash = sha384(joined_hashes.encode()).hexdigest()
+        return root_hash, all_file_hashes
 
     def create_dataset_hash(self):
         """Create and return the root_hash of all files hashes."""
-        return self._create_concise_dataset_hash()
+        root_hash, _ = self._create_concise_dataset_hash()
+        return root_hash
 
     def _validate_verbose_dataset_info(self):
         hashes = self._create_verbose_dataset_hash()
         return sorted(hashes.values()) == sorted(self.all_hashes.values())
 
     def _validate_concise_dataset_info(self):
-        concise_hash = self._create_concise_dataset_hash()
-        return concise_hash == self.root_hash
+        concise_hash, all_hashes = self._create_concise_dataset_hash()
+        valid = concise_hash == self.root_hash
+        if valid:
+            if self.all_hashes is None:
+                self.all_hashes = all_hashes
+            if self.root_hash is None:
+                self.root_hash = concise_hash
+        return valid
 
     def verify_dataset(self, dataset_info=None):
-        """Verify the dataset root_hash."""
+        """Verify the dataset against root_hash."""
         if dataset_info is None and self.root_hash is None:
-            raise ValueError("No dataset info provided")
+            raise ValueError("No saved root hash found. Please provide 'dataset_info'.")
         if dataset_info:
             self.root_hash = dataset_info["root_hash"]
         return self._validate_concise_dataset_info()
@@ -108,7 +99,7 @@ class VerifiableDatasetInfo:
     def to_json(self):
         """Serialize the VerifiableDatasetInfo to JSON"""
         dataset_dict = {
-            "data_sources": [filter_non_serializable(ds) for ds in self.data_sources],
+            "data_sources": [ds.to_dict() for ds in self.data_sources],
             "label": self.label,
             "metadata": self.metadata,
         }
@@ -122,12 +113,10 @@ class VerifiableDatasetInfo:
         # Create appropriate data source based on dictionary information
         data_sources = []
         for datasource in data_dict["data_sources"]:
-            if datasource["datasource_type"] == DataSourceType.LOCAL.value:
+            if datasource["type"] == DataSourceType.LOCAL.value:
                 data_source = LocalDataSource.from_dict(ds_dict=datasource)
-            # elif datasource['datasource_type'] == DataSourceType.S3.value:
-            #     data_source = S3DataSource.from_dict(ds_dict=datasource)
             else:
-                raise ValueError(f"Unknown storage type: {datasource['datasource_type']}")
+                raise ValueError(f"Unknown storage type: {datasource['type']}")
             data_sources.append(data_source)
 
         return VerifiableDatasetInfo(

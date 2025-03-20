@@ -3,6 +3,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
+from typing import Any, Dict
 
 from torch.utils.data import Dataset
 
@@ -22,7 +23,7 @@ class LabelMapper:
 
     def get_label_name(self, index: int) -> str:
         """Retrieves the original label name from an index."""
-        return self.idx_to_label.get(index, "Unknown")
+        return self.idx_to_label.get(index, None)
 
 
 class LocalFolder(Dataset):
@@ -55,14 +56,14 @@ class LocalFolder(Dataset):
         """Load a file from the dataset."""
         return NotImplementedError
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Dict[str, Any]:
         file_path, label = self.samples[index]
         file_data = self.load_file(str(file_path))
 
         if self.transform:
             file_data = self.transform(file_data)
 
-        return file_data, label, str(file_path)  # Convert Path to str for compatibility
+        return {"data": file_data, "label": label, "path": str(file_path)}
 
     def __len__(self):
         return len(self.samples)
