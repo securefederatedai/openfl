@@ -1,6 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from openfl.utilities import TensorKey
+
 
 class Callback:
     """Base class for callbacks.
@@ -57,8 +57,6 @@ class Callback:
 
     def on_task_begin(
         self,
-        updated_tensor_dict: dict,
-        required_tensorkeys: TensorKey,
         round_num: int,
         logs=None,
     ):

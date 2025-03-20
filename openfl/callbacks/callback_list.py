@@ -3,7 +3,7 @@
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 from openfl.callbacks.metric_writer import MetricWriter
-from openfl.utilities import TensorKey
+
 
 class CallbackList(Callback):
     """An ensemble of callbacks.
@@ -85,15 +85,11 @@ class CallbackList(Callback):
 
     def on_task_begin(
         self,
-        updated_tensor_dict: dict,
-        required_tensorkeys: TensorKey,
         round_num: int,
         logs=None,
     ):
         for callback in self.callbacks:
-            callback.on_task_begin(
-                updated_tensor_dict, required_tensorkeys, round_num, logs
-            )
+            callback.on_task_begin(round_num, logs)
 
     def on_task_end(self, round_num: int, logs=None):
         for callback in self.callbacks:

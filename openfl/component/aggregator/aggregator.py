@@ -237,8 +237,8 @@ class Aggregator:
                 to_proto_tensor_dict, committed_round_number, self.compression_pipeline
             )
             # round number is the current round which is still in process
-            #  i.e. committed_round_number + 1
-            self.round_number = committed_round_number + 1
+            #  i.e. committed_round_number
+            self.round_number = committed_round_number
             logger.info(
                 "Recovery - loaded round number %s and best score %s",
                 self.round_number,
@@ -1139,9 +1139,8 @@ class Aggregator:
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        logger.info("Saving round %s model...", self.round_number)
-        self._save_model(self.round_number, self.last_state_path)
-
+        logger.info("Saving round %s model...", self.round_number + 1)
+        self._save_model(self.round_number + 1, self.last_state_path)
         self.round_number += 1
 
         # End of round callbacks.
