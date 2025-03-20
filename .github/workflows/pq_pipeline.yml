@@ -88,3 +88,11 @@ jobs:
     name: TaskRunner Dockerized E2E
     needs: task_runner_straggler_e2e
     uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
+
+  # run testssl for task runner
+  task_runner_secret_ssl_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Secret SSL E2E
+    uses: ./.github/workflows/task_runner_secret_tls_e2e.yml

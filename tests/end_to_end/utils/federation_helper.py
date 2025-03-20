@@ -4,6 +4,7 @@
 import time
 import concurrent.futures
 import logging
+import yaml
 import os
 import json
 import re
@@ -1163,3 +1164,20 @@ def remove_workspace(path):
         for entry in os.scandir(path):
             remove_workspace(entry.path)
         subprocess.run(['sudo', 'rmdir', path], check=True)
+
+
+def get_agg_addr_port(plan_file):
+    """
+    Get the aggregator address and port
+    Returns:
+        tuple: Aggregator address and port
+    """
+    try:
+        with open(plan_file) as fp:
+            data = yaml.safe_load(fp)
+
+        agg_addr = data["network"]["settings"]["agg_addr"]
+        agg_port = data["network"]["settings"]["agg_port"]
+        return agg_addr, agg_port
+    except Exception as e:
+        raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
