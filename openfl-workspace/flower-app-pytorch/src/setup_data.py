@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 from tqdm import tqdm
 
-EXPECTED_DATASET_HASH = 'ee5342b063299eda95304b0e0388e403a3c65ce5a07cabea4c62a3efdb419a5983c7bb204e55d771ae643642ed440182'  
+EXPECTED_DATASET_HASH = 'ee5342b063299eda95304b0e0388e403a3c65ce5a07cabea4c62a3efdb419a5983c7bb204e55d771ae643642ed440182'
 
 def verify_data_hash(dataset, expected_hash):
     """Verify the hash of the entire dataset."""
