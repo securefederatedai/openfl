@@ -11,7 +11,7 @@ from threading import Lock
 from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
-from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
+from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -75,7 +75,7 @@ class Aggregator:
         last_state_path,
         assigner,
         use_delta_updates=True,
-        straggler_handling_policy: StragglerPolicy = CutoffTimePolicy,
+        straggler_handling_policy: StragglerPolicy = WaitForAllPolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,

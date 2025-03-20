@@ -7,4 +7,5 @@ from openfl.component.aggregator.straggler_handling import (
     CutoffTimePolicy,
     PercentagePolicy,
     StragglerPolicy,
+    WaitForAllPolicy,
 )
