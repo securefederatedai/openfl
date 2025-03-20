@@ -258,13 +258,16 @@ class Collaborator:
                     global_output_tensor_dict, task_name
                 )
 
-            # Save global and local output_tensor_dicts to TensorDB
-            self.tensor_db.cache_tensor(global_output_tensor_dict)
-            self.tensor_db.cache_tensor(local_output_tensor_dict)
-        else:
-            metrics = func(
-                **kwargs,
-            )
+        global_output_tensor_dict, local_output_tensor_dict = func(
+            col_name=self.collaborator_name,
+            round_num=round_number,
+            input_tensor_dict=input_tensor_dict,
+            **kwargs,
+        )
+        # If secure aggregation is enabled, add masks to the dict to be shared
+        # with the aggregator.
+        if self._secure_aggregation_enabled:
+            self._apply_masks(global_output_tensor_dict)
 
             global_output_tensor_dict = {}
             tags = ("analysis",)
@@ -278,8 +281,7 @@ class Collaborator:
         # send the results for this tasks; delta and compression will occur in
         # this function
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
-        # Add unmasked metrics to the metrics that are logged, if any.
-        metrics.update(unmasked_metrics)
+
         return metrics
 
     def get_data_for_tensorkey(self, tensor_key):
@@ -564,28 +566,21 @@ class Collaborator:
 
         return decompressed_nparray
 
-    def _secure_aggregation_masking(self, global_output_tensor_dict, task_name):
+    def _apply_masks(
+        self,
+        tensor_dict,
+    ):
         """
-        Apply secure aggregation masking to the global output tensor
-        dictionary.
+        Calculate masked input vectors for secure aggregation.
 
-        This method modifies the provided global output tensor dictionary by
-        applying secure aggregation masking if secure aggregation is enabled.
-        It fetches the private and shared masks from the tensor database and
-        applies them to the tensors in the global output tensor dictionary
-        that have the "metric" tag.
+        This function fetches private and shared masks from the tensor database if
+        they are not provided, and applies these masks to the input tensors.
 
         Args:
-            global_output_tensor_dict (dict): A dictionary where keys are
-                tensor keys and values are the corresponding tensors.
-
-        Returns:
-            None: The method modifies the global_output_tensor_dict in place.
+            tensor_dict (dict): A dictionary of tensors to be masked.
         """
         import numpy as np
 
-        # Storing the masks as class attributes to reduce the number of
-        # lookups in the database.
         # Fetch private mask from tensor db if not already fetched.
         if not self._private_mask:
             self._private_mask = self.tensor_db.get_tensor_from_cache(
@@ -597,17 +592,9 @@ class Collaborator:
                 TensorKey("shared_mask", self.collaborator_name, -1, False, ("secagg",))
             )[0]
 
-        metrics = {}
-        for tensor_key in global_output_tensor_dict:
-            tensor_name, _, _, report, tags = tensor_key
+        for tensor_key in tensor_dict:
+            _, _, _, _, tags = tensor_key
             if "metric" in tags:
-                if report:
-                    # Reportable metric must be a scalar
-                    value = float(global_output_tensor_dict[tensor_key])
-                    metrics.update(
-                        {f"{self.collaborator_name}/{task_name}/{tensor_name}/unmasked": value}
-                    )
-                masked_metric = np.add(self._private_mask, global_output_tensor_dict[tensor_key])
-                global_output_tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
-
-        return metrics
+                continue
+            masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
+            tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
