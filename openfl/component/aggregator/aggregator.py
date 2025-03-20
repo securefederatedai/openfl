@@ -70,10 +70,11 @@ class Aggregator:
         aggregator_uuid,
         federation_uuid,
         authorized_cols,
-        init_state_path,
-        best_state_path,
-        last_state_path,
         assigner,
+        save_path=None,
+        init_state_path=None,
+        best_state_path=None,
+        last_state_path=None,
         use_delta_updates=True,
         straggler_handling_policy: StragglerPolicy = CutoffTimePolicy,
         rounds_to_train=256,
@@ -87,6 +88,7 @@ class Aggregator:
         persist_checkpoint=True,
         persistent_db_path=None,
         secure_aggregation=False,
+        mode="learning",
     ):
         """Initializes the Aggregator.
 
@@ -115,7 +117,7 @@ class Aggregator:
         """
         self.round_number = 0
         self.next_model_round_number = 0
-
+        self.mode = mode
         if single_col_cert_common_name:
             logger.warning(
                 "You are running in single collaborator certificate mode. "
@@ -133,6 +135,44 @@ class Aggregator:
         if self.assigner.is_task_group_evaluation():
             self.rounds_to_train = 1
             logger.info(f"For evaluation tasks setting rounds_to_train = {self.rounds_to_train}")
+        # these enable getting all tensors for a task
+        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
+        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
+        self._secure_aggregation_enabled = secure_aggregation
+        if self.mode == "learning":
+            self.model = None  # Initialize the model attribute to None
+            self.best_model_score = None
+
+            self.init_state_path = init_state_path
+            self.best_state_path = best_state_path
+            self.last_state_path = last_state_path
+
+            if initial_tensor_dict:
+                self._load_initial_tensors_from_dict(initial_tensor_dict)
+                self.model = utils.construct_model_proto(
+                    tensor_dict=initial_tensor_dict,
+                    round_number=0,
+                    tensor_pipe=self.compression_pipeline,
+                )
+            else:
+                self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
+                self._load_initial_tensors()  # keys are TensorKeys
+
+            self.use_delta_updates = use_delta_updates
+
+            # TODO: Remove. Used in deprecated interactive and native APIs
+            self.best_tensor_dict: dict = {}
+            self.last_tensor_dict: dict = {}
+
+            self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
+            if self._secure_aggregation_enabled:
+                self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
+        else:
+            self.rounds_to_train = 1
+            self.save_path = save_path
+            logger.info(
+                f"For federated analytics tasks setting rounds_to_train = {self.rounds_to_train}"
+            )
 
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
@@ -159,31 +199,16 @@ class Aggregator:
         # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
 
-        self.best_model_score = None
         self.metric_queue = queue.Queue()
 
         self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
-
-        self.init_state_path = init_state_path
-        self.best_state_path = best_state_path
-        self.last_state_path = last_state_path
-
-        # TODO: Remove. Used in deprecated interactive and native APIs
-        self.best_tensor_dict: dict = {}
-        self.last_tensor_dict: dict = {}
-        # these enable getting all tensors for a task
-        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
-        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
         # maintain a list of collaborators that have completed task and
         # reported results in a given round
         self.collaborators_done = []
         # Initialize a lock for thread safety
         self.lock = Lock()
-        self.use_delta_updates = use_delta_updates
-
-        self.model = None  # Initialize the model attribute to None
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -193,34 +218,6 @@ class Aggregator:
             origin="aggregator",
         )
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
-
-        if initial_tensor_dict:
-            self._load_initial_tensors_from_dict(initial_tensor_dict)
-            self.model = utils.construct_model_proto(
-                tensor_dict=initial_tensor_dict,
-                round_number=0,
-                tensor_pipe=self.compression_pipeline,
-            )
-        else:
-            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
-            self._load_initial_tensors()  # keys are TensorKeys
-
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
-        self._secure_aggregation_enabled = secure_aggregation
-        if self._secure_aggregation_enabled:
-            self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
-
-        # Callbacks
-        self.callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_memory_profiler=log_memory_usage,
-            add_metric_writer=write_logs,
-            tensor_db=self.tensor_db,
-            origin="aggregator",
-            collaborators=self.authorized_cols,
-            aggregator_uuid=self.uuid,
-        )
         if self.persistent_db and self._recover():
             logger.info("Recovered state of aggregator")
 
@@ -400,6 +397,10 @@ class Aggregator:
             tensor_dict, round_number, self.compression_pipeline
         )
         utils.dump_proto(self.model, file_path)
+
+    def _save_analysis(self, round_number):
+        tensors = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analysis",))
+        utils.save_analysis_result(tensors, self.save_path)
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """
@@ -1073,16 +1074,17 @@ class Aggregator:
             c for c in all_collaborators_for_task if c in self.collaborators_done
         ]
 
-        # The collaborator data sizes for that task
-        collaborator_weights_unnormalized = {
-            c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
-            for c in collaborators_for_task
-        }
-        weight_total = sum(collaborator_weights_unnormalized.values())
-        collaborator_weight_dict = {
-            k: v / weight_total for k, v in collaborator_weights_unnormalized.items()
-        }
-
+        collaborator_weight_dict = {}
+        if self.mode == "learning":
+            # The collaborator data sizes for that task
+            collaborator_weights_unnormalized = {
+                c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
+                for c in collaborators_for_task
+            }
+            weight_total = sum(collaborator_weights_unnormalized.values())
+            collaborator_weight_dict = {
+                k: v / weight_total for k, v in collaborator_weights_unnormalized.items()
+            }
         # The validation task should have just a couple tensors (i.e.
         # metrics) associated with it. Because each collaborator should
         # have sent the same tensor list, we can use the first
@@ -1112,7 +1114,9 @@ class Aggregator:
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
                 collaborator_weight_dict,
+                collaborators_for_task,
                 aggregation_function=agg_function,
+                mode=self.mode,
             )
 
             if report:
@@ -1174,7 +1178,10 @@ class Aggregator:
 
         # Save the latest model
         logger.info("Saving round %s model...", self.round_number)
-        self._save_model(self.round_number, self.last_state_path)
+        if self.mode == "learning":
+            self._save_model(self.round_number, self.last_state_path)
+        else:
+            self._save_analysis(self.round_number)
 
         self.round_number += 1
         # resetting stragglers for task for a new round

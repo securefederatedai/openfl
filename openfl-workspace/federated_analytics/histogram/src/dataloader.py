@@ -42,7 +42,7 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
         print(shard_num)
         print(collaborator_count)
         return self._load_raw_datashards().iloc[shard_num::collaborator_count]
-        
+
     def get_data(self, **kwargs):
         print('IRISInMemory.get_data')
         for key, value in kwargs.items():

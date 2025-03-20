@@ -7,6 +7,7 @@
 from importlib import util
 
 from openfl.federated.data.loader import DataLoader  # NOQA
+from openfl.federated.data.loader_fa import FederatedAnalyticsDataLoader  # NOQA
 
 if util.find_spec("keras") is not None:
     from openfl.federated.data.loader_keras import KerasDataLoader  # NOQA

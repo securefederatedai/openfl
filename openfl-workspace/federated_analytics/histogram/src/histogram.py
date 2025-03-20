@@ -13,26 +13,19 @@ class Histogram(AggregationFunction):
     """Histogram aggregation."""
 
     def call(self, local_tensors, *_) -> np.ndarray:
-        print("Histogram called")
-        agg_hist = {}
-        for local_tensor_key, local_tensor in local_tensors.items():
-            tensor_name, origin, fl_round, report, tags = local_tensor_key.split(':')
-            # if tensor_name not in agg_hist:
-            #     agg_hist[tensor_name] = np.zeros_like(local_tensor)
-            # agg_hist[tensor_name] += local_tensor
+        """
+        Aggregates a list of local tensors into a single histogram.
+        Args:
+            local_tensors (list): A list of objects, each containing a tensor attribute which is a numpy array.
+            *_: Additional arguments (unused).
+        Returns:
+            np.ndarray: The aggregated histogram as a numpy array. If the input list is empty, returns an empty numpy array.
+        """
 
-            if tensor_name not in agg_hist:
-                agg_hist[tensor_name] = np.zeros_like(local_tensor)
-            agg_hist[tensor_name] += local_tensor
+        if not local_tensors:
+            return np.array([])
 
-        return agg_hist
-
-
-        # print("local_tensor_key", local_tensor_key)
-        #     print(local_tensor)
-        #     if 'sepal length (cm)' in local_tensor_key:
-        #         length_agg_hist += local_tensor
-        #     elif 'sepal width (cm)' in local_tensor_key:
-        #         width_agg_hist += local_tensor
-        # return np.concatenate((["Length:"], length_agg_hist, ["Width:"], width_agg_hist))
-    
+        agg_histogram = np.zeros_like(local_tensors[0].tensor)
+        for local_tensor in local_tensors:
+            agg_histogram += local_tensor.tensor
+        return agg_histogram

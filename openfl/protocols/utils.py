@@ -3,7 +3,10 @@
 
 """Proto utils."""
 
+import csv
 import logging
+
+import numpy as np
 
 from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
@@ -295,6 +298,26 @@ def dump_proto(model_proto, fpath):
     s = model_proto.SerializeToString()
     with open(fpath, "wb") as f:
         f.write(s)
+
+
+def save_analysis_result(result, fpath):
+    """
+    Save the analysis result to a CSV file.
+    Args:
+        result (dict): result tensors to be written to the CSV file.
+        fpath (str): The file path where the CSV file will be saved.
+    Raises:
+        IOError: If the file cannot be opened or written to.
+    """
+    with open(fpath, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        for tensorkey, values in result.items():
+            if isinstance(values, list):
+                writer.writerow([tensorkey.tensor_name] + values)
+            elif isinstance(values, np.ndarray):
+                writer.writerow([tensorkey.tensor_name] + values.tolist())
+            else:
+                writer.writerow([tensorkey.tensor_name, values])
 
 
 def datastream_to_proto(proto, stream):

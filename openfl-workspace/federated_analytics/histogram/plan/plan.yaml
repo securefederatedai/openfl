@@ -6,13 +6,13 @@ aggregator :
   template : openfl.component.Aggregator
   settings :
     save_path : save/result.csv
-    rounds_to_train     : 1 # results in error if removed
+    mode: analysis
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
-    type: analysis
+    mode: analysis
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
@@ -30,13 +30,17 @@ network :
   defaults : plan/defaults/network.yaml
 
 assigner :
-  defaults : plan/defaults/assigner_fa.yaml
+  template : openfl.component.RandomGroupedAssigner
   settings :
-    selected_task_group : analysis
+    task_groups  :
+      - name       : analysis
+        percentage : 1.0
+        tasks      :
+          - analysis
 
 tasks :
-  query:
-    function : query
+  analysis:
+    function : analysis
     aggregation_type: 
       template: src.histogram.Histogram
       

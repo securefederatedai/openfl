@@ -130,38 +130,40 @@ def initialize(
         gandlf_config_path=gandlf_config,
     )
 
-    init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
-    # This is needed to bypass data being locally available
-    if input_shape is not None:
-        logger.info(
-            f"Attempting to generate initial model weights with custom input shape {input_shape}"
+    aggregator_mode = plan.config["aggregator"]["settings"]["mode"]
+    if aggregator_mode == "learning":
+        init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
+        # This is needed to bypass data being locally available
+        if input_shape is not None:
+            logger.info(
+                f"Attempting to generate initial model weights with custom shape {input_shape}"
+            )
+
+        # Initialize tensor dictionary
+        init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
+            plan, input_shape, init_model_path
         )
 
-    # Initialize tensor dictionary
-    init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
-        plan, input_shape, init_model_path
-    )
-
-    tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        init_tensor_dict,
-        **task_runner.tensor_dict_split_fn_kwargs,
-    )
-
-    logger.warning(
-        f"Following parameters omitted from global initial model, "
-        f"local initialization will determine"
-        f" values: {list(holdout_params.keys())}"
-    )
-
-    # Save the model state
-    try:
-        logger.info(f"Saving model state to {init_state_path}")
-        plan.save_model_to_state_file(
-            tensor_dict=tensor_dict, round_number=round_number, output_path=init_state_path
+        tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
+            init_tensor_dict,
+            **task_runner.tensor_dict_split_fn_kwargs,
         )
-    except Exception as e:
-        logger.error(f"Failed to save model state: {e}")
-        raise
+
+        logger.warning(
+            f"Following parameters omitted from global initial model, "
+            f"local initialization will determine"
+            f" values: {list(holdout_params.keys())}"
+        )
+
+        # Save the model state
+        try:
+            logger.info(f"Saving model state to {init_state_path}")
+            plan.save_model_to_state_file(
+                tensor_dict=tensor_dict, round_number=round_number, output_path=init_state_path
+            )
+        except Exception as e:
+            logger.error(f"Failed to save model state: {e}")
+            raise
 
     plan_origin = Plan.parse(
         plan_config_path=plan_config,
@@ -226,9 +228,10 @@ def freeze_plan(plan_config):
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config
 
-    init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
+    init_state_path = plan.config["aggregator"]["settings"].get("init_state_path")
+    save_path = plan.config["aggregator"]["settings"].get("save_path")
 
-    if not Path(init_state_path).exists():
+    if any(path is not None and not Path(path).exists() for path in [init_state_path, save_path]):
         logger.info("Plan has not been initialized! Run 'fx plan initialize' before proceeding")
         return
 
