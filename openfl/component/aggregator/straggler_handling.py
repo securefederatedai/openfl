@@ -56,6 +56,32 @@ class StragglerPolicy(ABC):
         raise NotImplementedError
 
 
+class WaitForAllPolicy(StragglerPolicy):
+    """
+    This policy waits for all collaborators.
+    """
+
+    def start_policy(self, **kwargs) -> None:
+        """
+        Nothing needed.
+        """
+        pass
+
+    def reset_policy_for_round(self) -> None:
+        """
+        Nothing needed.
+        """
+        pass
+
+    def straggler_cutoff_check(
+        self, num_collaborators_done: int, num_all_collaborators: int, **kwargs
+    ) -> bool:
+        """
+        Checks if all collaborators have sent task results for the round.
+        """
+        return num_all_collaborators == num_collaborators_done
+
+
 class CutoffTimePolicy(StragglerPolicy):
     """Cutoff time based Straggler Handling function."""
 

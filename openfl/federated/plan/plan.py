@@ -418,8 +418,13 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
-        template = "openfl.component.aggregator.straggler_handling.CutoffTimePolicy"
-        defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
+        defaults = self.config.get(
+            "straggler_handling_policy",
+            {
+                TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                SETTINGS: {},
+            },
+        )
 
         if self.straggler_policy_ is None:
             # Prepare a partial function for the straggler policy
