@@ -56,8 +56,8 @@ def run_testssl_sh(aggregator_host, aggregator_port, output_path):
     """
     # Use testssl.sh to scan the aggregator port using subprocess and store the output in json file
     command = f"testssl --full --jsonfile {output_path} {aggregator_host}:{aggregator_port}"
+    log.info(f"============== TestSSL.sh output for Aggregator - {aggregator_host}:{aggregator_port} ==============")
     subprocess.run(command, shell=True)
-    log.info(f"Testssl.sh output is stored in {output_path}")
 
 
 def verify_testssl_report(output_path):
