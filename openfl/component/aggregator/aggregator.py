@@ -1135,9 +1135,6 @@ class Aggregator:
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
 
-        # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
-
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -1146,6 +1143,11 @@ class Aggregator:
         self._save_model(self.round_number, self.last_state_path)
 
         self.round_number += 1
+
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
+
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
