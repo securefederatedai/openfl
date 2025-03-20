@@ -5,10 +5,20 @@ This file contains the Setup class used on the server side for secure
 aggregation setup.
 """
 
+import json
 import logging
 import struct
+from importlib import util
 
 from openfl.utilities import TensorKey
+
+# Check if pycryptodome is installed.
+if util.find_spec("Crypto") is None:
+    raise Exception(
+        "'pycryptodome' not installed.This package is necessary when secure aggregation is enabled."
+    )
+
+# Import packages, if installed.
 from openfl.utilities.secagg import (
     calculate_shared_mask,
     generate_agreed_key,
@@ -18,7 +28,7 @@ from openfl.utilities.secagg import (
 logger = logging.getLogger(__name__)
 
 
-class Setup:
+class SecAggSetup:
     """
     Used by the aggregator for the setup stage of secure aggregation.
     """
@@ -29,7 +39,44 @@ class Setup:
         self._tensor_db = tensor_db
         self._results = {}
 
-    def check_tensors_received(self, tensor_name):
+    def process_secagg_setup_tensors(self, named_tensors) -> bool:
+        """
+        Set up secure aggregation for the given collaborator and named tensors.
+
+        This method processes named tensors that are part of the secure
+        aggregation setup stages. It saves the processed tensors to the local
+        tensor database and checks if all collaborators have sent their data
+        for the current key. If all collaborators have sent their data, it
+        proceeds with aggregation for the key.
+
+        Args:
+            named_tensors (list): A list of named tensors to be processed.
+
+        Returns:
+            bool: True if the received tensors belong to secagg setup stage,
+                False otherwise.
+        """
+        secagg_setup = False
+        for named_tensor in named_tensors:
+            # Check if the tensor belongs to one from secure aggregation
+            # setup stages.
+            if "secagg" in tuple(named_tensor.tags):
+                secagg_setup = True
+                # Process and save tensor to local tensor db.
+                self._save_secagg_tensor(named_tensor)
+                tensor_name = named_tensor.name
+                # Check if all collaborators have sent their data for the
+                # current key.
+                all_collaborators_sent = self._check_tensors_received(tensor_name)
+                if not all_collaborators_sent:
+                    continue
+                # If all collaborators have sent their data, proceed with
+                # aggregation for the key.
+                self._aggregate_tensor(tensor_name)
+
+        return secagg_setup
+
+    def _check_tensors_received(self, tensor_name):
         """
         Checks if the tensor with the given name has been received from all
         collaborators.
@@ -61,7 +108,7 @@ class Setup:
 
         return all_received
 
-    def aggregate_tensor(self, tensor_name):
+    def _aggregate_tensor(self, tensor_name):
         """
         Aggregates the specified tensor based on its name and performs
         subsequent operations if necessary.
@@ -269,3 +316,24 @@ class Setup:
         }
         self._tensor_db.cache_tensor(local_tensor_dict)
         logger.info("SecAgg: setup completed, saved required tensors to db.")
+
+    def _save_secagg_tensor(self, named_tensor):
+        """
+        Converts secure aggregation setup related named tensor to nparray
+        and saves them to tensordb.
+        """
+        # The tensor has already been transfered to aggregator,
+        # so the newly constructed tensor should have the aggregator origin
+        tensor_key = TensorKey(
+            named_tensor.name,
+            self._aggregator_uuid,
+            named_tensor.round_number,
+            named_tensor.report,
+            tuple(named_tensor.tags),
+        )
+        _, _, _, _, tags = tensor_key
+        # Secure aggregation setup stage key
+        if "secagg" in tags:
+            nparray = json.loads(named_tensor.data_bytes)
+            self._tensor_db.cache_tensor({tensor_key: nparray})
+            logger.debug("Created TensorKey: %s", tensor_key)
