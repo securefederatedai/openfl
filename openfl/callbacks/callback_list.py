@@ -3,6 +3,7 @@
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 from openfl.callbacks.metric_writer import MetricWriter
+from tictoc import bench_dict
 
 
 class CallbackList(Callback):
@@ -29,6 +30,7 @@ class CallbackList(Callback):
         **params,
     ):
         super().__init__()
+        print(callbacks)
         self.callbacks = list(_flatten(callbacks)) if callbacks else []
 
         self._add_default_callbacks(add_memory_profiler, add_metric_writer)
@@ -68,10 +70,14 @@ class CallbackList(Callback):
             self.callbacks.append(self._metric_writer)
 
     def on_round_begin(self, round_num: int, logs=None):
+        bench_dict['global'].gstep()
+        if round_num % 5 == 0 and round_num > 0:
+            bench_dict.save()
         for callback in self.callbacks:
             callback.on_round_begin(round_num, logs)
 
     def on_round_end(self, round_num: int, logs=None):
+        bench_dict['global'].gstop()
         for callback in self.callbacks:
             callback.on_round_end(round_num, logs)
 

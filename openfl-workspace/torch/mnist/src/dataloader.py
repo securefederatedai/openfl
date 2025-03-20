@@ -6,8 +6,21 @@
 from openfl.federated import PyTorchDataLoader
 from torchvision import datasets
 from torchvision import transforms
+import torch
 import numpy as np
 from logging import getLogger
+from torchvision import transforms
+from torch.utils.data import DataLoader
+
+# Define the preprocessing transformations
+preprocess = transforms.Compose(
+    [
+        transforms.Resize(64),  # Resize the shorter side to 256
+        transforms.CenterCrop(64),  # Crop the center to a 224x224 square
+        transforms.ToTensor(),  # Convert to a PyTorch tensor
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
 
 logger = getLogger(__name__)
 
@@ -30,20 +43,24 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
             int(data_path)
         except:
             raise ValueError(
-                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
-                "number used by the collaborator.",
-                data_path
+                "Expected `%s` to be representable as `int`, as it refers to the data shard "
+                + "number used by the collaborator.",
+                data_path,
             )
 
         num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
             shard_num=int(data_path), **kwargs
         )
-        self.X_train = X_train
-        self.y_train = y_train
+        t = torch.from_numpy
+
+        number = 20
+        self.X_train = t(np.random.random([number, 3, 64, 64])).float()
+        self.y_train = t(np.random.randint(0, 9, [number]))
+
         self.train_loader = self.get_train_loader()
 
-        self.X_valid = X_valid
-        self.y_valid = y_valid
+        self.X_valid = t(np.random.random([number, 3, 64, 64])).float()
+        self.y_valid = t(np.random.randint(0, 9, [number]))
         self.val_loader = self.get_valid_loader()
 
         self.num_classes = num_classes
@@ -76,7 +93,7 @@ def load_mnist_shard(
     num_classes = 10
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
-        shard_num, collaborator_count, transform=transforms.ToTensor()
+        shard_num, collaborator_count, transform=preprocess
     )
 
     logger.info(f"MNIST > X_train Shape : {X_train.shape}")
@@ -121,7 +138,9 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
         2 tuples: (image, label) of the training, validation dataset
     """
     train_data, val_data = (
-        datasets.MNIST("data", train=train, download=True, transform=transform)
+        datasets.MNIST(
+            "~/workspace/giant_data", train=train, download=True, transform=transform
+        )
         for train in (True, False)
     )
     X_train_tot, y_train_tot = train_data.train_data, train_data.train_labels

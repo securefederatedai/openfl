@@ -19,6 +19,7 @@ from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.secagg.setup import Setup as secagg_setup
+from tictoc import bench_dict
 
 logger = logging.getLogger(__name__)
 
@@ -469,6 +470,7 @@ class Aggregator:
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
         """
+        bench_dict['global'].step('start get tasks')
         logger.debug(
             f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
         )
@@ -536,6 +538,7 @@ class Aggregator:
         # Start straggler handling policy for timer based callback is required
         # for %age based policy callback is not required
         self.straggler_handling_policy.start_policy(callback=self._straggler_cutoff_time_elapsed)
+        bench_dict['global'].step('get_tasks')
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -586,6 +589,7 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
+        bench_dict['global'].step('start')
         logger.debug(
             f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
             f"for collaborator {collaborator_name}"
@@ -631,6 +635,7 @@ class Aggregator:
         named_tensor = self._nparray_to_named_tensor(
             agg_tensor_key, nparray, send_model_deltas=True, compress_lossless=compress_lossless
         )
+        bench_dict['global'].step('get_aggregate_tensor')
 
         return named_tensor
 
@@ -752,6 +757,7 @@ class Aggregator:
         Returns:
             None
         """
+        bench_dict['global'].step('start send local task')
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
             secagg_setup = self._secure_aggregation_setup(collaborator_name, named_tensors)
@@ -773,6 +779,7 @@ class Aggregator:
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
+        bench_dict['global'].step('send task results')
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
@@ -837,6 +844,7 @@ class Aggregator:
                 self.metric_queue.put(metrics)
 
             task_results.append(tensor_key)
+        bench_dict['global'].step('process task')
 
         self.collaborator_tasks_results[task_key] = task_results
 
@@ -863,6 +871,7 @@ class Aggregator:
             ]
             if len(self.stragglers) != 0:
                 logger.warning(f"Identified stragglers: {self.stragglers}")
+            bench_dict['global'].step('straggler check')
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -1165,22 +1174,25 @@ class Aggregator:
         logs = {}
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
+        bench_dict['global'].step('compute validation metrics')
 
         # End of round callbacks.
         self.callbacks.on_round_end(self.round_number, logs)
-
+        bench_dict['other'].gstep()
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
+        bench_dict['other'].step('save model')
 
         self.round_number += 1
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+        bench_dict['other'].gstop()
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -1191,9 +1203,12 @@ class Aggregator:
             self.callbacks.on_round_begin(self.round_number)
 
         # Cleaning tensor db
+        
         self.tensor_db.clean_up(self.db_store_rounds)
+        bench_dict['global'].step('Cleaning tensor db')
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
+        bench_dict['global'].step('reset straggler')
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
