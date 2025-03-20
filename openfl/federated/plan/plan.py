@@ -27,7 +27,7 @@ logger = getLogger(__name__)
 
 
 class Plan:
-    """A class used to represent a Federated Learning plan.
+    """A class used to represent a Federated Learning/Analytics plan.
 
     This class provides methods to manage and manipulate federated learning
     plans.
@@ -304,7 +304,11 @@ class Plan:
         self.federation_uuid = f"{self.name}_{self.hash[:8]}"
         self.aggregator_uuid = f"aggregator_{self.federation_uuid}"
 
-        self.rounds_to_train = self.config["aggregator"][SETTINGS]["rounds_to_train"]
+        self.rounds_to_train = (
+            self.config["aggregator"][SETTINGS]["rounds_to_train"]
+            if self.config["aggregator"][SETTINGS].get("mode", "learning") == "learning"
+            else 1
+        )
 
         if self.config["network"][SETTINGS]["agg_addr"] == AUTO:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
@@ -456,8 +460,9 @@ class Plan:
         if self.runner_ is None:
             self.runner_ = Plan.build(**defaults)
 
-        # Define task dependencies after taskrunner has been initialized
-        self.runner_.initialize_tensorkeys_for_functions()
+        if self.config["aggregator"][SETTINGS].get("mode", "learning") == "learning":
+            # Define task dependencies after taskrunner has been initialized
+            self.runner_.initialize_tensorkeys_for_functions()
 
         return self.runner_
 

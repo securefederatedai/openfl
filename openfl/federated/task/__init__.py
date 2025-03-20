@@ -7,6 +7,7 @@
 from importlib import util
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
+from openfl.federated.task.runner_fa import FederatedAnalyticsTaskRunner  # NOQA
 
 if util.find_spec("keras") is not None:
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA

@@ -12,6 +12,7 @@ TaskResultKey = namedtuple("TaskResultKey", ["task_name", "owner", "round_number
 
 Metric = namedtuple("Metric", ["name", "value"])
 LocalTensor = namedtuple("LocalTensor", ["col_name", "tensor", "weight"])
+AnalysisLocalTensor = namedtuple("LocalTensor", ["col_name", "tensor"])
 
 
 class SingletonABCMeta(ABCMeta):
