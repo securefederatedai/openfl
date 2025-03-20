@@ -56,7 +56,7 @@ class ConnectorFlower:
         """
         connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
         self.interop_client = FlowerInteropClient(connector_address, self.automatic_shutdown)
-        return self.interop_client 
+        return self.interop_client
 
     def _build_flwr_superlink_command(self) -> list[str]:
         """

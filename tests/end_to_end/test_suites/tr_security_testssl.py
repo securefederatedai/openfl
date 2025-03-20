@@ -9,7 +9,6 @@ import json
 
 from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,
-    fx_federation_tr_dws,
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 from tests.end_to_end.utils import constants
@@ -27,11 +26,14 @@ def test_federation_via_native(request, fx_federation_tr):
     """
     # Start the federation
     assert fed_helper.run_federation(fx_federation_tr)
-    # Run testssl.sh on the aggregator port
-    output_path = os.path.join(fx_federation_tr.workspace_path, "testssl_output.json")
+
+    # Get aggregator address and port from plan.yaml
     plan_dir = constants.AGG_PLAN_PATH.format(fx_federation_tr.local_bind_path)
     plan_file = os.path.join(plan_dir, "plan.yaml")
     aggreagtor_addr, aggregator_port = fed_helper.get_agg_addr_port(plan_file)
+
+    # Run testssl.sh on the aggregator port
+    output_path = os.path.join(fx_federation_tr.workspace_path, "testssl_output.json")
     run_testssl_sh(aggreagtor_addr, aggregator_port, output_path)
 
     # Verify the completion of the federation run
@@ -53,16 +55,17 @@ def run_testssl_sh(aggregator_host, aggregator_port, output_path):
     Args:
         aggregator_host (str): Aggregator host
         aggregator_port (int): Aggregator port
+        output_path (str): Path to store the testssl.sh output
     """
     # Use testssl.sh to scan the aggregator port using subprocess and store the output in json file
     command = f"testssl --full --jsonfile {output_path} {aggregator_host}:{aggregator_port}"
-    log.info(f"============== TestSSL.sh output for Aggregator - {aggregator_host}:{aggregator_port} ==============")
+    log.info(f"============== testssl.sh output for Aggregator - {aggregator_host}:{aggregator_port} ==============")
     subprocess.run(command, shell=True)
 
 
 def verify_testssl_report(output_path):
     """
-    Verify the testssl.sh report.
+    Verify the testssl.sh report for security risks. If severity is HIGH, log the issue.
     Args:
         output_path (str): Path to testssl.sh output file
     """
@@ -70,7 +73,7 @@ def verify_testssl_report(output_path):
     log.info("Verifying testssl.sh report")
 
     # Check if the testssl.sh output file exists
-    assert os.path.exists(output_path), "Testssl.sh output file not found"
+    assert os.path.exists(output_path), "testssl.sh output file not found"
 
     # Load the JSON output file
     with open(output_path, "r") as file:
@@ -91,4 +94,4 @@ def verify_testssl_report(output_path):
                 log.error(f"Security risk found in testssl.sh report: {item}")
 
     # Assert that no security risks were found
-    assert not security_risk, "Testssl.sh report shows security risk"
+    assert not security_risk, "testssl.sh report shows security risk"
