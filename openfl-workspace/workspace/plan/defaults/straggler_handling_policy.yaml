@@ -1,1 +1,1 @@
-template : openfl.component.NoPolicy
+template : openfl.component.WaitForAllPolicy

@@ -420,7 +420,10 @@ class Plan:
         """Get straggler handling policy."""
         defaults = self.config.get(
             "straggler_handling_policy",
-            {TEMPLATE: "openfl.component.aggregator.straggler_handling.NoPolicy", SETTINGS: {}},
+            {
+                TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                SETTINGS: {},
+            },
         )
 
         if self.straggler_policy_ is None:

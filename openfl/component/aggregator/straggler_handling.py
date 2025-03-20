@@ -56,7 +56,7 @@ class StragglerPolicy(ABC):
         raise NotImplementedError
 
 
-class NoPolicy(StragglerPolicy):
+class WaitForAllPolicy(StragglerPolicy):
     """
     This policy waits for all collaborators.
     """
