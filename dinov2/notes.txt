@@ -1,0 +1,6 @@
+unet vs dinov2 vs vit
+federate both
+allow peft for dinov2
+normal federated
+few shot
+pretraining
