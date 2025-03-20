@@ -19,7 +19,8 @@ WORKDIR /
 ARG WORKSPACE_NAME
 COPY ${WORKSPACE_NAME}.zip /workspace.zip
 RUN fx workspace import --archive /workspace.zip && \
-    pip install --no-cache-dir -r /workspace/requirements.txt
+    cd /workspace && \
+    pip install --no-cache-dir -r ./requirements.txt
 
 # Build enclaves
 WORKDIR /workspace

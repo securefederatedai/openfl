@@ -39,7 +39,10 @@ class TaskRunner:
             **kwargs: Additional parameters to pass to the function.
         """
         self.data_loader = data_loader
-        self.feature_shape = self.data_loader.get_feature_shape()
+        if self.data_loader:
+            self.feature_shape = self.data_loader.get_feature_shape()
+        else:
+            self.feature_shape = None
         # TODO: Should this comment a path of the doc string?
         # key word arguments for determining which parameters to hold out from
         # aggregation.
