@@ -6,13 +6,13 @@ aggregator :
   template : openfl.component.Aggregator
   settings :
     save_path : save/result.csv
-    mode: analysis
+    mode: analytics
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
-    mode: analysis
+    mode: analytics
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml

@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
@@ -399,8 +399,17 @@ class Aggregator:
         utils.dump_proto(self.model, file_path)
 
     def _save_analysis(self, round_number):
+        """
+        Save the analysis results for a given round number.
+        This method retrieves tensors associated with the specified round number
+        and the "analysis" tag from the tensor database, and then saves the analysis
+        results to the specified save path.
+        Args:
+            round_number (int): The round number for which to save the analysis results.
+        """
+
         tensors = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analysis",))
-        utils.save_analysis_result(tensors, self.save_path)
+        utils.save_analytics_result(tensors, self.save_path)
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """

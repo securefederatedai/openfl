@@ -13,7 +13,7 @@ import pandas as pd
 
 from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _store
 from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.utilities import AnalysisLocalTensor, LocalTensor, TensorKey, change_tags
+from openfl.utilities import FALocalTensor, LocalTensor, TensorKey, change_tags
 
 
 class TensorDB:
@@ -260,7 +260,7 @@ class TensorDB:
             ]
         else:
             local_tensors = [
-                AnalysisLocalTensor(
+                FALocalTensor(
                     col_name=col_name,
                     tensor=agg_tensor_dict[col_name],
                 )

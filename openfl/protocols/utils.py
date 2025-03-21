@@ -300,9 +300,9 @@ def dump_proto(model_proto, fpath):
         f.write(s)
 
 
-def save_analysis_result(result, fpath):
+def save_analytics_result(result, fpath):
     """
-    Save the analysis result to a CSV file.
+    Save the analytics result to a CSV file.
     Args:
         result (dict): result tensors to be written to the CSV file.
         fpath (str): The file path where the CSV file will be saved.

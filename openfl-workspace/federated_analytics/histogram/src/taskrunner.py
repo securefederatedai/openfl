@@ -10,7 +10,7 @@ from openfl.utilities import TensorKey
 
 class IrisHistogram(FederatedAnalyticsTaskRunner):
     """
-    A class used to perform federated analytics on the Iris dataset by generating histograms for specified columns.
+    Taskrunner class used to perform federated analytics on the Iris dataset by generating histograms for specified columns.
     Methods
     -------
     __init__(**kwargs)
