@@ -97,7 +97,7 @@ def plan(context):
     help="Path to initial model protobuf file.",
     type=ClickPath(exists=True),
 )
-def initialize(
+def initialize(  # noqa: C901
     context,
     plan_config,
     cols_config,

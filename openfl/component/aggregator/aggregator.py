@@ -139,6 +139,9 @@ class Aggregator:
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
         self._secure_aggregation_enabled = secure_aggregation
         self.tensor_db = TensorDB()
+        self.uuid = aggregator_uuid
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
+        self.tensor_codec = TensorCodec(self.compression_pipeline)
         if self.mode == "learning":
             self.model = None  # Initialize the model attribute to None
             self.best_model_score = None
@@ -146,9 +149,6 @@ class Aggregator:
             self.init_state_path = init_state_path
             self.best_state_path = best_state_path
             self.last_state_path = last_state_path
-            self.uuid = aggregator_uuid
-            self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
-            self.tensor_codec = TensorCodec(self.compression_pipeline)
 
             if initial_tensor_dict:
                 self._load_initial_tensors_from_dict(initial_tensor_dict)
