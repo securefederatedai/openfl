@@ -8,6 +8,7 @@ from openfl.component.aggregator.straggler_handling import (
     CutoffTimePolicy,
     PercentagePolicy,
     StragglerPolicy,
+    WaitForAllPolicy,
 )
 from openfl.component.assigner.assigner import Assigner
 from openfl.component.assigner.random_grouped_assigner import RandomGroupedAssigner

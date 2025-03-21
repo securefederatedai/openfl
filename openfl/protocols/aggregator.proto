@@ -12,6 +12,7 @@ service Aggregator {
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
   rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
   rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
+  rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
 
 message MessageHeader {
@@ -68,4 +69,10 @@ message TaskResults {
 
 message SendLocalTaskResultsResponse {
   MessageHeader header = 1;
+}
+
+message InteropMessage {
+  MessageHeader header = 1;
+  DataStream message = 2;
+  map<string, string> metadata = 3;
 }

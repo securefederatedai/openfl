@@ -14,15 +14,6 @@ import numpy as np
 from openfl.callbacks.callback import Callback
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
-from openfl.utilities.secagg import (
-    calculate_shared_mask,
-    create_ciphertext,
-    create_secret_shares,
-    decipher_ciphertext,
-    generate_agreed_key,
-    generate_key_pair,
-    pseudo_random_generator,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +29,18 @@ class SecAggBootstrapping(Callback):
 
     It also requires the tensor-db client to be set.
     """
+
+    def __init__(self):
+        super().__init__()
+
+        from importlib import util
+
+        # Check if pycryptodome is installed.
+        if util.find_spec("Crypto") is None:
+            raise Exception(
+                "'pycryptodome' not installed."
+                "This package is necessary when secure aggregation is enabled."
+            )
 
     def on_experiment_begin(self, logs=None):
         """
@@ -73,6 +76,8 @@ class SecAggBootstrapping(Callback):
             secure aggregation mechanism.
         5. Updates the instance parameters with the local result.
         """
+        from openfl.utilities.secagg import generate_key_pair
+
         private_key1, public_key1 = generate_key_pair()
         private_key2, public_key2 = generate_key_pair()
 
@@ -127,6 +132,12 @@ class SecAggBootstrapping(Callback):
                 indices and values are lists containing public keys of the
                 collaborators.
         """
+        from openfl.utilities.secagg import (
+            create_ciphertext,
+            create_secret_shares,
+            generate_agreed_key,
+        )
+
         logger.debug("SecAgg: Generating ciphertexts to be shared with other collaborators")
         collaborator_count = len(public_keys)
 
@@ -184,6 +195,11 @@ class SecAggBootstrapping(Callback):
             public_keys (dict): A dictionary containing the public keys of the
                 collaborators.
         """
+        from openfl.utilities.secagg import (
+            decipher_ciphertext,
+            generate_agreed_key,
+        )
+
         logger.debug("SecAgg: fetching addressed ciphertexts from the aggregator")
 
         ciphertexts = self._fetch_from_aggregator("ciphertexts")
@@ -213,6 +229,11 @@ class SecAggBootstrapping(Callback):
         Use the private seed and agreed keys to calculate the masks to be
         added to the gradients.
         """
+        from openfl.utilities.secagg import (
+            calculate_shared_mask,
+            pseudo_random_generator,
+        )
+
         private_mask = pseudo_random_generator(self.params.get("private_seed"))
         shared_mask = calculate_shared_mask(self.params.get("agreed_keys"))
 
