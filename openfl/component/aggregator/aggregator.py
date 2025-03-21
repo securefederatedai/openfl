@@ -138,6 +138,7 @@ class Aggregator:
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
         self._secure_aggregation_enabled = secure_aggregation
+        self.tensor_db = TensorDB()
         if self.mode == "learning":
             self.model = None  # Initialize the model attribute to None
             self.best_model_score = None
@@ -145,6 +146,9 @@ class Aggregator:
             self.init_state_path = init_state_path
             self.best_state_path = best_state_path
             self.last_state_path = last_state_path
+            self.uuid = aggregator_uuid
+            self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
+            self.tensor_codec = TensorCodec(self.compression_pipeline)
 
             if initial_tensor_dict:
                 self._load_initial_tensors_from_dict(initial_tensor_dict)
@@ -180,12 +184,10 @@ class Aggregator:
 
         # if the collaborator requests a delta, this value is set to true
         self.authorized_cols = authorized_cols
-        self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
 
         self.quit_job_sent_to = []
 
-        self.tensor_db = TensorDB()
         if persist_checkpoint:
             persistent_db_path = persistent_db_path or "tensor.db"
             logger.info(
@@ -201,9 +203,6 @@ class Aggregator:
         self.db_store_rounds = db_store_rounds
 
         self.metric_queue = queue.Queue()
-
-        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
-        self.tensor_codec = TensorCodec(self.compression_pipeline)
 
         # maintain a list of collaborators that have completed task and
         # reported results in a given round
