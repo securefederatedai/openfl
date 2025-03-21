@@ -21,16 +21,44 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
         )
 
     def _download_raw_data(self):
+        """
+        Downloads the raw Iris dataset and saves it as a CSV file.
+        This method loads the Iris dataset using the `load_iris` function from
+        the `sklearn.datasets` module. The dataset is then converted to a
+        pandas DataFrame and saved as a CSV file named 'client.csv' in the
+        './data/' directory.
+        Returns:
+            None
+        """
+
         iris = load_iris(as_frame=True)
         data = iris['data']
         data.to_csv('./data/client.csv', index=False)
 
-    def _load_raw_datashards(self):
+    def _load_datashards(self):
+        """
+        Loads data shards from a CSV file.
+        This method reads the data from a CSV file located at './data/client.csv'
+        and returns it as a pandas DataFrame.
+        Returns:
+            pd.DataFrame: The data loaded from the CSV file.
+        """
+
         return pd.read_csv('./data/client.csv')
 
 
     def load_mnist_shard(self, shard_num, collaborator_count, **kwargs):
-        return self._load_raw_datashards().iloc[shard_num::collaborator_count]
+        """
+        Load a specific shard of the MNIST dataset for a given collaborator.
+        Args:
+            shard_num (int): The shard number to load.
+            collaborator_count (int): The total number of collaborators.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            pandas.DataFrame: The shard of the MNIST dataset corresponding to the given shard number.
+        """
+
+        return self._load_datashards().iloc[shard_num::collaborator_count]
 
     def query(self, columns, **kwargs):
         """

@@ -210,7 +210,6 @@ class Collaborator:
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
         logger.debug("Using TaskRunner subclassing API")
-        unmasked_metrics = {}
         if self.mode == "learning":
             # this would return a list of what tensors we require as TensorKeys
             required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
@@ -254,9 +253,7 @@ class Collaborator:
             # If secure aggregation is enabled, add masks to the dict to be shared
             # with the aggregator.
             if self._secure_aggregation_enabled:
-                unmasked_metrics = self._secure_aggregation_masking(
-                    global_output_tensor_dict, task_name
-                )
+                self._apply_masks(global_output_tensor_dict)
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
