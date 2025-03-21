@@ -11,22 +11,14 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
     """Data Loader for IRIS Dataset."""
 
     def __init__(self, batch_size, data_path, **kwargs):
-        print('IRISInMemory.__init__')
-        print(batch_size)
-        print(data_path)
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
         super().__init__(**kwargs)
 
         # download data
         self._download_raw_data()
-        self._load_raw_datashards()
         # create shards
         self.data_shard = self.load_mnist_shard(
             shard_num=int(data_path), **kwargs
         )
-        print("Data shard loaded")
-        print(self.data_shard)
 
     def _download_raw_data(self):
         iris = load_iris(as_frame=True)
@@ -38,17 +30,19 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
 
 
     def load_mnist_shard(self, shard_num, collaborator_count, **kwargs):
-        print('IRISInMemory.load_mnist_shard')
-        print(shard_num)
-        print(collaborator_count)
         return self._load_raw_datashards().iloc[shard_num::collaborator_count]
 
-    def get_data(self, **kwargs):
-        print('IRISInMemory.get_data')
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-        return self.data_shard
-
-    def get_query_data_size(self):
-        print('IRISInMemory.get_query_data_size')
-        return len(self.data_shard)
+    def query(self, columns, **kwargs):
+        """
+        Query the data shard for the specified columns.
+        Parameters:
+        columns (list): A list of column names to query from the data shard.
+        **kwargs: Additional keyword arguments (currently not used).
+        Returns:
+        DataFrame: A DataFrame containing the data for the specified columns.
+        Raises:
+        ValueError: If the columns parameter is not a list.
+        """
+        if not isinstance(columns, list):
+            raise ValueError("Columns parameter must be a list")
+        return self.data_shard[columns]

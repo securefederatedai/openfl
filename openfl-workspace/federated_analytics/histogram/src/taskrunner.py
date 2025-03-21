@@ -9,25 +9,46 @@ import numpy as np
 from openfl.utilities import TensorKey
 
 class IrisHistogram(FederatedAnalyticsTaskRunner):
+    """
+    A class used to perform federated analytics on the Iris dataset by generating histograms for specified columns.
+    Methods
+    -------
+    __init__(**kwargs)
+        Initializes the IrisHistogram instance with the provided keyword arguments.
+    analysis(columns, **kwargs)
+        Performs analysis on the specified columns and returns a dictionary of histograms.
+    compute_hist(df, col_name)
+        Computes the histogram for a specified column in the dataframe.
+    """
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def analysis(self, col_name, round_num, columns, **kwargs):
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
-        data = self.data_loader.get_data()
-        query_tensorkey_dict = {}
-        tags = ("analysis",)
+    def analysis(self, columns, **kwargs):
+        """
+        Perform analysis on the specified columns and compute histograms.
+        Args:
+            columns (list): List of column names to analyze.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            dict: A dictionary where keys are column names and values are histograms.
+        """
+        # query data
+        data = self.data_loader.query(columns)
+        histogram = {}
         for column in columns:
-            print(f"Computing histogram for column: {column}")
-            query_tensorkey_dict[TensorKey(column, col_name, round_num, False, tags)] = self.compute_hist(data, column)
-        return query_tensorkey_dict
-
-    def compute_hist(self, df, col_name):
-        _, histogram = np.histogram(df[col_name])
+            histogram[column] = self.compute_hist(data, column)
         return histogram
 
-    def save_native(self):
-        """Save aggegated query result."""
-        pass
+    def compute_hist(self, data, col_name):
+        """
+        Compute the histogram of a specified column in a DataFrame.
+        Parameters:
+        data (pandas.DataFrame): The DataFrame containing the data.
+        col_name (str): The name of the column for which to compute the histogram.
+        Returns:
+        numpy.ndarray: The computed histogram as an array.
+        """
+        histogram, _ = np.histogram(data[col_name], bins=np.linspace(2.0, 10.0, 10))
+        return histogram

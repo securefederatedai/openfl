@@ -262,12 +262,17 @@ class Collaborator:
             self.tensor_db.cache_tensor(global_output_tensor_dict)
             self.tensor_db.cache_tensor(local_output_tensor_dict)
         else:
-            global_output_tensor_dict = func(
-                col_name=self.collaborator_name,
-                round_num=round_number,
-                input_tensor_dict={},
+            metrics = func(
                 **kwargs,
             )
+
+            global_output_tensor_dict = {}
+            tags = ("analysis",)
+            for key, metric in metrics.items():
+                global_output_tensor_dict[
+                    TensorKey(key, self.collaborator_name, round_number, False, tags)
+                ] = metric
+
             self.tensor_db.cache_tensor(global_output_tensor_dict)
             metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
         # send the results for this tasks; delta and compression will occur in

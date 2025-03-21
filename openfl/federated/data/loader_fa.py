@@ -23,5 +23,15 @@ class FederatedAnalyticsDataLoader:
         """
         pass
 
-    def get_data(self):
+    def query(self, **kwargs):
+        """
+        Query the data loader with specific parameters.
+        This method should be implemented by subclasses to provide
+        functionality for querying data based on the provided keyword arguments.
+        Args:
+            **kwargs: Arbitrary keyword arguments that specify the query parameters.
+        Raises:
+            NotImplementedError: This method is not implemented and should be
+                                 overridden by subclasses.
+        """
         raise NotImplementedError
