@@ -1,8 +1,0 @@
-Bangalore:
-  private_attributes: src.experiment.Bangalore_private_attributes
-Chandler:
-  private_attributes: src.experiment.Chandler_private_attributes
-Portland:
-  private_attributes: src.experiment.Portland_private_attributes
-Seattle:
-  private_attributes: src.experiment.Seattle_private_attributes

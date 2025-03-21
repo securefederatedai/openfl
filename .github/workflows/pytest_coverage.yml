@@ -31,7 +31,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest coverage
         pip install -r test-requirements.txt
-        pip install -r openfl-tutorials/experimental/workflow/workflow_interface_requirements.txt
         pip install .
     - name: Test with pytest and report code coverage
       run: |
