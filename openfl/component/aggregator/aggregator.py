@@ -165,7 +165,9 @@ class Aggregator:
 
             self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
             if self._secure_aggregation_enabled:
-                self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
+                from openfl.utilities.secagg.bootstrap import SecAggSetup
+
+                self.secagg = SecAggSetup(self.uuid, self.authorized_cols, self.tensor_db)
         else:
             self.rounds_to_train = 1
             self.save_path = save_path
