@@ -136,7 +136,7 @@ def initialize(
         # that were not installable via requirements.txt
         plan.get_task_runner(data_loader=None)
     else:
-        aggregator_mode = plan.config["aggregator"]["settings"]["mode"]
+        aggregator_mode = plan.config["aggregator"]["settings"].get("mode", "learning")
         if aggregator_mode == "learning":
             init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
             # This is needed to bypass data being locally available
