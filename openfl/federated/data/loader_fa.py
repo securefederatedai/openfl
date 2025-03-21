@@ -35,3 +35,11 @@ class FederatedAnalyticsDataLoader:
                                  overridden by subclasses.
         """
         raise NotImplementedError
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            tuple: The shape of an example feature array.
+        """
+        pass

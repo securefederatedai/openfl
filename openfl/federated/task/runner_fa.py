@@ -8,35 +8,18 @@ Base classes for Federated Analytics.
 You may copy this file as the starting point of your own keras model.
 """
 
-from logging import getLogger
-
 from openfl.federated.task.runner import TaskRunner
 
 
 class FederatedAnalyticsTaskRunner(TaskRunner):
-    """The base class for Federated Analytics."""
+    """The base class for Federated Analytics Task Runner."""
 
-    def __init__(self, data_loader, **kwargs):
-        """Intializes the TaskRunner object.
-
-        Args:
-            data_loader: The data_loader object
-            **kwargs: Additional parameters to pass to the function.
-        """
-        self.data_loader = data_loader
-        self.set_logger()
-
-    def set_logger(self):
-        """Set up the log object.
-
-        Returns:
-            None
-        """
-        self.logger = getLogger(__name__)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def analysis(self, **kwargs):
         """
-        Perform analysis on the provided data.
+        Perform analytics on the provided data.
         This method should be implemented by subclasses to perform specific analysis tasks.
         Args:
             **kwargs: Arbitrary keyword arguments that can be used for analysis.
