@@ -13,7 +13,6 @@ from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, Str
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
-from openfl.utilities.secagg.setup import Setup as secagg_setup
 from openfl.utilities import TaskResultKey
 
 from openfl.component import Aggregator
@@ -143,10 +142,11 @@ class AggregatorFlower(Aggregator):
                 self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
                 self._load_initial_tensors()  # keys are TensorKeys
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
-            self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
+            from openfl.utilities.secagg.bootstrap import SecAggSetup
+
+            self.secagg = SecAggSetup(self.uuid, self.authorized_cols, self.tensor_db)
 
         if self.persistent_db and self._recover():
             logger.info("Recovered state of aggregator")
