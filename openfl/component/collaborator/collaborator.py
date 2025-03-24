@@ -196,6 +196,7 @@ class Collaborator:
             self.callbacks.on_round_end(round_num, logs)
             bench_dict[self.collaborator_name].step('on_round_end')
             bench_dict[self.collaborator_name].gstop()
+            bench_dict.save()
 
         # Experiment end
         timer.tic()

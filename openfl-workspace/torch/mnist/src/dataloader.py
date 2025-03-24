@@ -53,7 +53,7 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         )
         t = torch.from_numpy
 
-        number = 20
+        number = 1
         self.X_train = t(np.random.random([number, 3, 64, 64])).float()
         self.y_train = t(np.random.randint(0, 9, [number]))
 

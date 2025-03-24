@@ -222,13 +222,13 @@ class Aggregator:
             collaborators=self.authorized_cols,
             aggregator_uuid=self.uuid,
         )
-        if self.persistent_db and self._recover():
-            logger.info("Recovered state of aggregator")
+        #if self.persistent_db and self._recover():
+        #    logger.info("Recovered state of aggregator")
 
         # TODO: Aggregator has no concrete notion of round_begin.
         # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
         self.callbacks.on_experiment_begin()
-        self.callbacks.on_round_begin(self.round_number)
+        self.callbacks.on_round_begin(self.round_number, 'agg')
 
     def _recover(self):
         """Populates the aggregator state to the state it was prior a restart"""
@@ -1177,7 +1177,7 @@ class Aggregator:
         bench_dict['global'].step('compute validation metrics')
 
         # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
+        self.callbacks.on_round_end(self.round_number, 'agg')
         bench_dict['other'].gstep()
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
@@ -1200,7 +1200,7 @@ class Aggregator:
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
-            self.callbacks.on_round_begin(self.round_number)
+            self.callbacks.on_round_begin(self.round_number, 'agg')
 
         # Cleaning tensor db
         
