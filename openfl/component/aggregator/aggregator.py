@@ -203,6 +203,17 @@ class Aggregator:
 
         self.metric_queue = queue.Queue()
 
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
+        self.tensor_codec = TensorCodec(self.compression_pipeline)
+
+        self.init_state_path = init_state_path
+        self.best_state_path = best_state_path
+        self.last_state_path = last_state_path
+
+        # these enable getting all tensors for a task
+        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
+        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
+
         # maintain a list of collaborators that have completed task and
         # reported results in a given round
         self.collaborators_done = []
@@ -216,8 +227,6 @@ class Aggregator:
             add_metric_writer=write_logs,
             origin="aggregator",
         )
-
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
 
         if initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
@@ -587,7 +596,6 @@ class Aggregator:
 
     def get_aggregated_tensor(
         self,
-        collaborator_name,
         tensor_name,
         round_number,
         report,
@@ -601,7 +609,6 @@ class Aggregator:
         that matches the request.
 
         Args:
-            collaborator_name (str): Requested tensor key collaborator name.
             tensor_name (str): Name of the tensor.
             round_number (int): Actual round number.
             report (bool): Whether to report.
@@ -614,11 +621,6 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        logger.debug(
-            f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
-            f"for collaborator {collaborator_name}"
-        )
-
         if "compressed" in tags or require_lossless:
             compress_lossless = True
         else:
@@ -801,6 +803,7 @@ class Aggregator:
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
+
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
@@ -868,10 +871,9 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        with self.lock:
-            self._is_collaborator_done(collaborator_name, round_number)
-
-            self._end_of_round_with_stragglers_check()
+        # Check if collaborator or round is done.
+        self._is_collaborator_done(collaborator_name, round_number)
+        self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -1206,6 +1208,8 @@ class Aggregator:
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+        self.collaborator_tasks_results = {}
+        self.collaborator_task_weight = {}
 
         # TODO This needs to be fixed!
         if self._time_to_quit():

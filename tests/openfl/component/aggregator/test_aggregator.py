@@ -137,7 +137,6 @@ def test_get_tasks(agg, col_name, tasks, time_to_quit,
 
 def test_get_aggregated_tensor(agg):
     """Test that test_get_tasks is failed without a correspond data."""
-    collaborator_name = 'col1'
     tensor_name = 'test_tensor_name'
     require_lossless = False
     round_number = 0
@@ -145,7 +144,7 @@ def test_get_aggregated_tensor(agg):
     tags = ['compressed']
     with pytest.raises(ValueError):
         agg.get_aggregated_tensor(
-            collaborator_name, tensor_name, round_number, report, tags, require_lossless)
+            tensor_name, round_number, report, tags, require_lossless)
 
 
 def test_collaborator_task_completed_none(agg):

@@ -56,7 +56,7 @@ class Float32NumpyArrayToBytes(Transformer):
         """Initialize Float32NumpyArrayToBytes."""
         self.lossy = False
 
-    def forward(self, data, **kwargs):
+    def forward(self, data: np.ndarray, **kwargs):
         """Convert a float32 Numpy array to bytes.
 
         Args:
@@ -127,8 +127,6 @@ class TransformationPipeline:
             data: The transformed data.
             transformer_metadata: The metadata for the transformation.
         """
-        transformer_metadata = []
-
         # dataformat::numpy::float.32
         # model proto:: a collection of tensor_dict proto
         # protobuff::-> a layer of weights
@@ -141,7 +139,7 @@ class TransformationPipeline:
         # input:: (data(bytes), transformer_metadata_list::a list of dictionary
         # from int to float)
 
-        data = data.copy()
+        transformer_metadata = []
         for transformer in self.transformers:
             data, metadata = transformer.forward(data=data, **kwargs)
             transformer_metadata.append(metadata)
