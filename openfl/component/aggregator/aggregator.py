@@ -79,7 +79,6 @@ class Aggregator:
         single_col_cert_common_name=None,
         compression_pipeline=None,
         db_store_rounds=1,
-        initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
         callbacks: Optional[List] = [],
@@ -87,31 +86,6 @@ class Aggregator:
         persistent_db_path=None,
         secure_aggregation=False,
     ):
-        """Initializes the Aggregator.
-
-        Args:
-            aggregator_uuid (int): Aggregation ID.
-            federation_uuid (str): Federation ID.
-            authorized_cols (list of str): The list of IDs of enrolled
-                collaborators.
-            init_state_path (str): The location of the initial weight file.
-            best_state_path (str): The file location to store the weight of
-                the best model.
-            last_state_path (str): The file location to store the latest
-                weight.
-            assigner: Assigner object.
-            straggler_handling_policy (optional): Straggler handling policy.
-            rounds_to_train (int, optional): Number of rounds to train.
-                Defaults to 256.
-            single_col_cert_common_name (str, optional): Common name for single
-                collaborator certificate. Defaults to None.
-            compression_pipeline (optional): Compression pipeline. Defaults to
-                NoCompressionPipeline.
-            db_store_rounds (int, optional): Rounds to store in TensorDB.
-                Defaults to 1.
-            initial_tensor_dict (dict, optional): Initial tensor dictionary.
-            callbacks: List of callbacks to be used during the experiment.
-        """
         self.round_number = 0
         self.next_model_round_number = 0
 
@@ -189,16 +163,8 @@ class Aggregator:
             origin="aggregator",
         )
 
-        if initial_tensor_dict:
-            self._load_initial_tensors_from_dict(initial_tensor_dict)
-            self.model = utils.construct_model_proto(
-                tensor_dict=initial_tensor_dict,
-                round_number=0,
-                tensor_pipe=self.compression_pipeline,
-            )
-        else:
-            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
-            self._load_initial_tensors()  # keys are TensorKeys
+        self.model = utils.load_proto(self.init_state_path)
+        self._load_initial_tensors()  # keys are TensorKeys
 
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
@@ -307,23 +273,6 @@ class Aggregator:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
 
-        tensor_key_dict = {
-            TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
-            for k, v in tensor_dict.items()
-        }
-        # all initial model tensors are loaded here
-        self.tensor_db.cache_tensor(tensor_key_dict)
-        logger.debug("This is the initial tensor_db: %s", self.tensor_db)
-
-    def _load_initial_tensors_from_dict(self, tensor_dict):
-        """Load all of the tensors required to begin federated learning.
-
-        Required tensors are: \
-            1. Initial model.
-
-        Returns:
-            None
-        """
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
             for k, v in tensor_dict.items()
