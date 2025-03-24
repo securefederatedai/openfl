@@ -3,6 +3,7 @@
 """Common functions for gRPC transport."""
 
 import logging
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import grpc
@@ -20,6 +21,17 @@ DEFAULT_CHANNEL_OPTIONS = [
     ("grpc.max_send_message_length", MAX_MESSAGE_LENGTH_BYTES),
     ("grpc.max_receive_message_length", MAX_MESSAGE_LENGTH_BYTES),
 ]
+
+
+def synchronized(func):
+    """Executes `func` synchronously in a threading lock."""
+    _lock = threading.Lock()
+
+    def wrapper(self, *args, **kwargs):
+        with _lock:
+            return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def create_insecure_channel(uri) -> grpc.Channel:
