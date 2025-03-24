@@ -17,7 +17,7 @@ from openfl.interface.aggregation_functions import SecureWeightedAverage, Weight
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
-from openfl.utilities import TaskResultKey, TensorKey, change_tags
+from openfl.utilities import TaskResultKey, TensorKey, apply_delta, change_tags, generate_delta
 
 logger = logging.getLogger(__name__)
 
@@ -660,9 +660,7 @@ class Aggregator:
                 "The original model layer should be present if the latest "
                 "aggregated model is present"
             )
-            delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                tensor_key, nparray, model_nparray
-            )
+            delta_tensor_key, delta_nparray = generate_delta(tensor_key, nparray, model_nparray)
             delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
                 delta_tensor_key, delta_nparray, lossless=compress_lossless
             )
@@ -919,7 +917,7 @@ class Aggregator:
             base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tensor_key)
             if base_model_nparray is None:
                 raise ValueError(f"Base model {base_model_tensor_key} not present in TensorDB")
-            final_tensor_key, final_nparray = self.tensor_codec.apply_delta(
+            final_tensor_key, final_nparray = apply_delta(
                 decompressed_tensor_key,
                 decompressed_nparray,
                 base_model_nparray,
@@ -959,9 +957,7 @@ class Aggregator:
         base_model_tk = TensorKey(tensor_name, origin, round_number, report, ("model",))
         base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
         if base_model_nparray is not None and self.use_delta_updates:
-            delta_tk, delta_nparray = self.tensor_codec.generate_delta(
-                agg_tag_tk, agg_results, base_model_nparray
-            )
+            delta_tk, delta_nparray = generate_delta(agg_tag_tk, agg_results, base_model_nparray)
         else:
             # This condition is possible for base model
             # optimizer states (i.e. Adam/iter:0, SGD, etc.)
@@ -989,7 +985,7 @@ class Aggregator:
         # Apply delta (unless delta couldn't be created)
         if base_model_nparray is not None and self.use_delta_updates:
             logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
-            new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
+            new_model_tk, new_model_nparray = apply_delta(
                 decompressed_delta_tk,
                 decompressed_delta_nparray,
                 base_model_nparray,

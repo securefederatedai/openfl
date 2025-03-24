@@ -263,3 +263,54 @@ def rmtree(path, ignore_errors=False):
         func(path)
 
     return shutil.rmtree(path, ignore_errors=ignore_errors, onerror=remove_readonly)
+
+
+def generate_delta(tensor_key, nparray, base_model_nparray):
+    """Create delta from the updated layer and base layer.
+
+    Args:
+        tensor_key: This is the tensor_key associated with the nparray.
+            Should have a tag of 'trained' or 'aggregated'
+        nparray: The nparray that corresponds to the tensorkey.
+        base_model_nparray: The base model tensor that will be subtracted
+            from the new weights.
+
+    Returns:
+        delta_tensor_key: Tensorkey that corresponds to the delta weight
+            array.
+        delta: Difference between the provided tensors.
+    """
+    tensor_key = tensor_key._replace(
+        tags=(
+            *tensor_key.tags,
+            "delta",
+        )
+    )
+
+    return tensor_key, nparray - base_model_nparray
+
+
+def apply_delta(tensor_key, delta, base_model_nparray, creates_model=False):
+    """Add delta to the nparray.
+
+    Args:
+        tensor_key: This is the tensor_key associated with the delta.
+            Should have a tag of 'trained' or 'aggregated'.
+        delta: Weight delta between the new model and old model.
+        base_model_nparray: The nparray that corresponds to the prior
+            weights.
+        creates_model: If flag is set, the tensorkey returned will
+            correspond to the aggregator model.
+
+    Returns:
+        new_model_tensor_key: Latest model layer tensorkey.
+        new_model_nparray: Latest layer weights.
+    """
+    if "aggregator" in tensor_key.tags and not creates_model:
+        tensor_key = tensor_key._replace(
+            tags=tuple(tag for tag in tensor_key.tags if tag != "delta")
+        )
+    else:
+        tensor_key = tensor_key._replace(tags=("model",))
+
+    return tensor_key, base_model_nparray + delta

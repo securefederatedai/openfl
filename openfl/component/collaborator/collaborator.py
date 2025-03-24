@@ -11,10 +11,10 @@ from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
-from openfl.pipelines import NoCompressionPipeline, TensorCodec
-from openfl.protocols import utils
+from openfl.pipelines import NoCompressionPipeline
 from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
-from openfl.utilities import TensorKey
+from openfl.transport.serialiser.collaborator import CollaboratorSerialiser
+from openfl.utilities import TensorKey, apply_delta, generate_delta
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,13 @@ class Collaborator:
         self.federation_uuid = federation_uuid
 
         self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
-        self.tensor_codec = TensorCodec(self.compression_pipeline)
+
+        # This serialisation middleware is used to convert tensors to protobuf and vice versa when
+        # communicating with the aggregator.
+        self._serialisation_middleware = CollaboratorSerialiser(
+            self.collaborator_name, client, compression_pipeline
+        )
+
         self.tensor_db = TensorDB()
         self.db_store_rounds = db_store_rounds
 
@@ -159,7 +165,7 @@ class Collaborator:
         self.callbacks.on_experiment_begin()
 
         while True:
-            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
+            tasks, round_num, sleep_time, time_to_quit = self._serialisation_middleware.get_tasks()
 
             if time_to_quit:
                 break
@@ -300,9 +306,7 @@ class Collaborator:
             # Determine whether there are additional compression related
             # dependencies.
             # Typically, dependencies are only relevant to model layers
-            tensor_dependencies = self.tensor_codec.find_dependencies(
-                tensor_key, self.use_delta_updates
-            )
+            tensor_dependencies = self._find_dependencies(tensor_key)
             logger.debug(
                 "Unable to get tensor from local store..."
                 "attempting to retrieve from client len tensor_dependencies"
@@ -319,7 +323,7 @@ class Collaborator:
                     uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
                         tensor_dependencies[1]
                     )
-                    new_model_tk, nparray = self.tensor_codec.apply_delta(
+                    new_model_tk, nparray = apply_delta(
                         tensor_dependencies[1],
                         uncompressed_delta,
                         prior_model_layer,
@@ -379,18 +383,13 @@ class Collaborator:
         tensor_name, origin, round_number, report, tags = tensor_key
 
         logger.debug("Requesting aggregated tensor %s", tensor_key)
-        tensor = self.client.get_aggregated_tensor(
+        tensor_key, nparray = self._serialisation_middleware.get_aggregated_tensor(
             tensor_name,
             round_number,
             report,
             tags,
             require_lossless,
         )
-
-        # this translates to a numpy array and includes decompression, as
-        # necessary
-        nparray = self.named_tensor_to_nparray(tensor)
-
         # cache this tensor
         self.tensor_db.cache_tensor({tensor_key: nparray})
 
@@ -407,8 +406,6 @@ class Collaborator:
         Returns:
             A dictionary of reportable metrics of the current collaborator for the task.
         """
-        named_tensors = [self.nparray_to_named_tensor(k, v) for k, v in tensor_dict.items()]
-
         # for general tasks, there may be no notion of data size to send.
         # But that raises the question how to properly aggregate results.
 
@@ -423,127 +420,36 @@ class Collaborator:
         logger.debug("%s data size = %s", task_name, data_size)
 
         metrics = {}
+        tensor_dict_copy = tensor_dict
         for tensor in tensor_dict:
-            tensor_name, origin, fl_round, report, tags = tensor
+            tensor_name, origin, round_number, report, tags = tensor
+            if "trained" in tags and self.use_delta_updates:
+                # Should get the pretrained model to create the delta. If training
+                # has happened,
+                # Model should already be stored in the TensorDB
+                model_nparray = self.tensor_db.get_tensor_from_cache(
+                    TensorKey(tensor_name, origin, round_number, report, ("model",))
+                )
+
+                # The original model will not be present for the optimizer on the
+                # first round.
+                if model_nparray is not None:
+                    tensor, nparray = generate_delta(tensor, tensor_dict[tensor], model_nparray)
+                    tensor_dict_copy[tensor] = nparray
 
             if report:
                 # Reportable metric must be a scalar
                 value = float(tensor_dict[tensor])
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
 
-        self.client.send_local_task_results(
+        self._serialisation_middleware.send_local_task_results(
             round_number,
             task_name,
             data_size,
-            named_tensors,
+            tensor_dict_copy,
         )
 
         return metrics
-
-    def nparray_to_named_tensor(self, tensor_key, nparray):
-        """Construct the NamedTensor Protobuf.
-
-        Includes logic to create delta, compress tensors with the TensorCodec,
-        etc.
-
-        Args:
-            tensor_key (namedtuple): Tensorkey that will be resolved locally or
-                remotely. May be the product of other tensors.
-            nparray: The decompressed tensor associated with the requested
-                tensor key.
-
-        Returns:
-            named_tensor (protobuf) : The tensor constructed from the nparray.
-        """
-        # if we have an aggregated tensor, we can make a delta
-        tensor_name, origin, round_number, report, tags = tensor_key
-        if "trained" in tags and self.use_delta_updates:
-            # Should get the pretrained model to create the delta. If training
-            # has happened,
-            # Model should already be stored in the TensorDB
-            model_nparray = self.tensor_db.get_tensor_from_cache(
-                TensorKey(tensor_name, origin, round_number, report, ("model",))
-            )
-
-            # The original model will not be present for the optimizer on the
-            # first round.
-            if model_nparray is not None:
-                delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                    tensor_key, nparray, model_nparray
-                )
-                delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
-                    delta_tensor_key, delta_nparray
-                )
-
-                named_tensor = utils.construct_named_tensor(
-                    delta_comp_tensor_key,
-                    delta_comp_nparray,
-                    metadata,
-                    lossless=False,
-                )
-                return named_tensor
-
-        # Assume every other tensor requires lossless compression
-        compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
-            tensor_key, nparray, require_lossless=True
-        )
-        named_tensor = utils.construct_named_tensor(
-            compressed_tensor_key, compressed_nparray, metadata, lossless=True
-        )
-
-        return named_tensor
-
-    def named_tensor_to_nparray(self, named_tensor):
-        """Convert named tensor to a numpy array.
-
-        Args:
-            named_tensor (protobuf): The tensor to convert to nparray.
-
-        Returns:
-            decompressed_nparray (nparray): The nparray converted.
-        """
-        # do the stuff we do now for decompression and frombuffer and stuff
-        # This should probably be moved back to protoutils
-        raw_bytes = named_tensor.data_bytes
-        metadata = [
-            {
-                "int_to_float": proto.int_to_float,
-                "int_list": proto.int_list,
-                "bool_list": proto.bool_list,
-            }
-            for proto in named_tensor.transformer_metadata
-        ]
-        # The tensor has already been transferred to collaborator, so
-        # the newly constructed tensor should have the collaborator origin
-        tensor_key = TensorKey(
-            named_tensor.name,
-            self.collaborator_name,
-            named_tensor.round_number,
-            named_tensor.report,
-            tuple(named_tensor.tags),
-        )
-        *_, tags = tensor_key
-        if "compressed" in tags:
-            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=True,
-            )
-        elif "lossy_compressed" in tags:
-            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key, data=raw_bytes, transformer_metadata=metadata
-            )
-        else:
-            # There could be a case where the compression pipeline is bypassed
-            # entirely
-            logger.warning("Bypassing tensor codec...")
-            decompressed_tensor_key = tensor_key
-            decompressed_nparray = raw_bytes
-
-        self.tensor_db.cache_tensor({decompressed_tensor_key: decompressed_nparray})
-
-        return decompressed_nparray
 
     def _apply_masks(
         self,
@@ -577,3 +483,35 @@ class Collaborator:
                 continue
             masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
             tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
+
+    def _find_dependencies(self, tensor_key):
+        """Resolve the tensors required to do the specified operation.
+
+        Args:
+            tensor_key: A tuple containing the tensor name, origin, round
+                number, report, and tags.
+
+        Returns:
+            tensor_key_dependencies: A list of tensor keys that are
+                dependencies of the given tensor key.
+        """
+        tensor_key_dependencies = []
+
+        tensor_name, origin, round_number, report, tags = tensor_key
+
+        if "model" in tags and self.use_delta_updates:
+            if round_number >= 1:
+                # The new model can be generated by previous model + delta
+                tensor_key_dependencies.append(
+                    TensorKey(tensor_name, origin, round_number - 1, report, tags)
+                )
+                if self.compression_pipeline.is_lossy():
+                    new_tags = ("aggregated", "delta", "lossy_compressed")
+                else:
+                    new_tags = ("aggregated", "delta", "compressed")
+
+                tensor_key_dependencies.append(
+                    TensorKey(tensor_name, origin, round_number, report, new_tags)
+                )
+
+        return tensor_key_dependencies
