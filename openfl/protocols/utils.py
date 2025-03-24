@@ -308,14 +308,12 @@ def datastream_to_proto(proto, stream):
     Returns:
         proto: The protobuf filled with the data stream.
     """
-    npbytes = b""
+    npbytes = bytearray()
     for chunk in stream:
-        npbytes += chunk.npbytes
+        npbytes.extend(chunk.npbytes)
 
     if len(npbytes) > 0:
         proto.ParseFromString(npbytes)
-        if logger is not None:
-            logger.debug("datastream_to_proto parsed a %s.", type(proto))
         return proto
     else:
         raise RuntimeError(f"Received empty stream message of type {type(proto)}")
@@ -336,11 +334,6 @@ def proto_to_datastream(proto, max_buffer_size=(2 * 1024 * 1024)):
     npbytes = proto.SerializeToString()
     data_size = len(npbytes)
     buffer_size = data_size if max_buffer_size > data_size else max_buffer_size
-    logger.debug(
-        "Setting stream chunks with size %s for proto of type %s",
-        buffer_size,
-        type(proto),
-    )
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i : i + buffer_size]
