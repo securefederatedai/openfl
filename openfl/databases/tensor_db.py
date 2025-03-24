@@ -149,7 +149,7 @@ class TensorDB:
 
         if len(df) == 0:
             return None
-        return np.array(df["nparray"].iloc[0])
+        return np.asarray(df["nparray"].iloc[0])
 
     def get_tensors_by_round_and_tags(self, fl_round: int, tags: tuple) -> dict:
         """Retrieve all tensors that match the specified round and tags.
@@ -231,7 +231,7 @@ class TensorDB:
             & (self.tensor_db["tags"] == tags)
         ]["nparray"]
         if len(raw_df) > 0:
-            return np.array(raw_df.iloc[0]), {}
+            return np.asarray(raw_df.iloc[0]), {}
 
         for col in collaborator_names:
             new_tags = change_tags(tags, add_field=col)
@@ -277,7 +277,7 @@ class TensorDB:
         agg_nparray = aggregation_function(local_tensors, db_iterator, tensor_name, fl_round, tags)
         self.cache_tensor({tensor_key: agg_nparray})
 
-        return np.array(agg_nparray)
+        return np.asarray(agg_nparray)
 
     def _iterate(self, order_by: str = "round", ascending: bool = False) -> Iterator[pd.Series]:
         """Returns an iterator over the rows of the TensorDB, sorted by a
