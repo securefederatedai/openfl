@@ -63,7 +63,7 @@ data/
 Notice under `./plan`, you will find the familiar OpenFL YAML files to configure the experiment. `cols.yaml` and `data.yaml` will be populated by the collaborators that will run the Flower client app and the respective data shard or directory they will perform their training and testing on.
 `plan.yaml` configures the experiment itself. The Open-Flower integration makes a few key changes to the `plan.yaml`:
 
-1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. The `SuperLink` parameters can be configured using `connector.settings.superlink_params`. If nothing is supplied, it will simply run `flower-superlink --insecure` with the command's default settings as dictated by Flower. It also includes the option to run the flwr run command via `connector.settings.flwr_run_params`. If `flwr_run_params` are not provided, the user will be expected to run `flwr run <app>` from the aggregator machine to initiate the experiment. Additionally, the `ConnectorFlower` has an additional setting `connector.settings.auto_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously. 
+1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. The `SuperLink` parameters can be configured using `connector.settings.superlink_params`. If nothing is supplied, it will simply run `flower-superlink --insecure` with the command's default settings as dictated by Flower. It also includes the option to run the flwr run command via `connector.settings.flwr_run_params`. If `flwr_run_params` are not provided, the user will be expected to run `flwr run <app>` from the aggregator machine to initiate the experiment. Additionally, the `ConnectorFlower` has an additional setting `connector.settings.automatic_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously. 
 
 ```yaml
 connector:
@@ -91,8 +91,6 @@ task_runner:
 
 3. `FlowerDataLoader` with similar high-level functionality to other dataloaders.
 
-**IMPORTANT NOTE**: `aggregator.settings.rounds_to_train` is set to 1. __Do not edit this__. The actual number of rounds for the experiment is controlled by Flower logic inside of `./app-pytorch/pyproject.toml`. The entirety of the Flower experiment will run in a single OpenFL round. Increasing this will cause OpenFL to attempt to run the experiment again. The aggregator round is there to stop the OpenFL components at the completion of the experiment.
-
 4. `Task` - we introduce a `tasks_connector.yaml` that will allow the collaborator to connect to Flower framework via the local gRPC server. It also handles the task runner's `start_client_adapter` method, which actually starts the Flower component and local gRPC server. By setting `local_server_port` to 0, the port is dynamically allocated. This is mainly for local experiments to avoid overlapping the ports.
 
 ```yaml
@@ -104,6 +102,12 @@ tasks:
     kwargs:
       local_server_port: 0
 ```
+
+> **Note**: `aggregator.settings.rounds_to_train` is set to 1. __Do not edit this__. The actual number of rounds for the experiment is controlled by Flower logic inside of `./app-pytorch/pyproject.toml`. The entirety of the Flower experiment will run in a single OpenFL round. Increasing this will cause OpenFL to attempt to run the experiment again. The aggregator round is there to stop the OpenFL components at the completion of the experiment.
+
+> **Note**: `aggregator.settings.write_logs` will be set to `False`. While setting it to `True` will not result in an error, OpenFL's aggregator will not capture the logs since logging is handled by Flower directly.
+
+> **Note**: This workspace does not currently support secure aggregation through OpenFL natively. Look into Flower's documentation to enable secure aggregation.
 
 ## Execution Methods
 There are two ways to execute this:
@@ -124,10 +128,10 @@ Run the workspace as normal (aggregator setup, collaborator setup, etc.):
 
 ```SH
 # Generate a Certificate Signing Request (CSR) for the Aggregator
-fx aggregator generate-cert-request
+fx aggregator generate-cert-request --fqdn localhost
 
 # The CA signs the aggregator's request, which is now available in the workspace
-fx aggregator certify --silent
+fx aggregator certify --fqdn localhost --silent
 
 ################################
 # Setup Collaborator 1 
