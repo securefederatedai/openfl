@@ -4,9 +4,8 @@
 
 """TensorCodec module."""
 
-import numpy as np
-
 from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import utils
 from openfl.utilities import TensorKey, change_tags
 
 
@@ -29,7 +28,7 @@ class TensorCodec:
         Args:
             compression_pipeline: The pipeline used for compression.
         """
-        self.compression_pipeline = compression_pipeline
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         if self.compression_pipeline.is_lossy():
             self.lossless_pipeline = NoCompressionPipeline()
         else:
@@ -146,98 +145,98 @@ class TensorCodec:
 
         return decompressed_tensor_key, decompressed_nparray
 
-    @staticmethod
-    def generate_delta(tensor_key, nparray, base_model_nparray):
-        """Create delta from the updated layer and base layer.
+    def deserialise(self, named_tensor, collaborator_name):
+        """Convert named tensor to a numpy array.
 
         Args:
-            tensor_key: This is the tensor_key associated with the nparray.
-                Should have a tag of 'trained' or 'aggregated'
-            nparray: The nparray that corresponds to the tensorkey.
-            base_model_nparray: The base model tensor that will be subtracted
-                from the new weights.
+            named_tensor (protobuf): The tensor to convert to nparray.
+            collaborator_name (str): Name of teh collaborator for which the named tensor is to
+                be deserialised.
 
         Returns:
-            delta_tensor_key: Tensorkey that corresponds to the delta weight
-                array.
-            delta: Difference between the provided tensors.
+            decompressed_nparray (nparray): The nparray converted.
         """
-        tensor_name, origin, round_number, report, tags = tensor_key
-        if not np.isscalar(nparray):
-            assert nparray.shape == base_model_nparray.shape, (
-                f"Shape of updated layer ({nparray.shape}) is not equal to base "
-                f"layer shape of ({base_model_nparray.shape})"
-            )
-        assert "model" not in tags, (
-            "The tensorkey should be provided from the layer with new weights, not the base model"
+        # do the stuff we do now for decompression and frombuffer and stuff
+        # This should probably be moved back to protoutils
+        raw_bytes = named_tensor.data_bytes
+        metadata = [
+            {
+                "int_to_float": proto.int_to_float,
+                "int_list": proto.int_list,
+                "bool_list": proto.bool_list,
+            }
+            for proto in named_tensor.transformer_metadata
+        ]
+        # The tensor has already been transferred to collaborator, so
+        # the newly constructed tensor should have the collaborator origin
+        tensor_key = TensorKey(
+            named_tensor.name,
+            collaborator_name,
+            named_tensor.round_number,
+            named_tensor.report,
+            tuple(named_tensor.tags),
         )
-        new_tags = change_tags(tags, add_field="delta")
-        delta_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-        return delta_tensor_key, nparray - base_model_nparray
-
-    @staticmethod
-    def apply_delta(tensor_key, delta, base_model_nparray, creates_model=False):
-        """Add delta to the nparray.
-
-        Args:
-            tensor_key: This is the tensor_key associated with the delta.
-                Should have a tag of 'trained' or 'aggregated'.
-            delta: Weight delta between the new model and old model.
-            base_model_nparray: The nparray that corresponds to the prior
-                weights.
-            creates_model: If flag is set, the tensorkey returned will
-                correspond to the aggregator model.
-
-        Returns:
-            new_model_tensor_key: Latest model layer tensorkey.
-            new_model_nparray: Latest layer weights.
-        """
-        tensor_name, origin, round_number, report, tags = tensor_key
-        if not np.isscalar(base_model_nparray):
-            assert delta.shape == base_model_nparray.shape, (
-                f"Shape of delta ({delta.shape}) is not equal to shape of model"
-                f" layer ({base_model_nparray.shape})"
+        *_, tags = tensor_key
+        if "compressed" in tags:
+            decompressed_tensor_key, decompressed_nparray = self.decompress(
+                tensor_key,
+                data=raw_bytes,
+                transformer_metadata=metadata,
+                require_lossless=True,
             )
-        # assert('model' in tensor_key[3]), 'The tensorkey should be provided
-        # from the base model'
-        # Aggregator UUID has the prefix 'aggregator'
-        if "aggregator" in origin and not creates_model:
-            new_tags = change_tags(tags, remove_field="delta")
-            new_model_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
+        elif "lossy_compressed" in tags:
+            decompressed_tensor_key, decompressed_nparray = self.decompress(
+                tensor_key,
+                data=raw_bytes,
+                transformer_metadata=metadata,
+                require_lossless=False,
+            )
         else:
-            new_model_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("model",))
+            # There could be a case where the compression pipeline is bypassed
+            # entirely
+            decompressed_tensor_key = tensor_key
+            decompressed_nparray = raw_bytes
 
-        return new_model_tensor_key, base_model_nparray + delta
+        return decompressed_tensor_key, decompressed_nparray
 
-    def find_dependencies(self, tensor_key, send_model_deltas):
-        """Resolve the tensors required to do the specified operation.
+    def serialise(self, tensor_key, nparray, lossless=True):
+        """Construct the NamedTensor Protobuf.
+
+        Includes logic to create delta, compress tensors with the TensorCodec,
+        etc.
 
         Args:
-            tensor_key: A tuple containing the tensor name, origin, round
-                number, report, and tags.
-            send_model_deltas: A boolean flag indicating whether to send model
-                deltas.
+            tensor_key (namedtuple): Tensorkey that will be resolved locally or
+                remotely. May be the product of other tensors.
+            nparray: The decompressed tensor associated with the requested
+                tensor key.
 
         Returns:
-            tensor_key_dependencies: A list of tensor keys that are
-                dependencies of the given tensor key.
+            named_tensor (protobuf) : The tensor constructed from the nparray.
         """
-        tensor_key_dependencies = []
+        # Secure aggregation setup tensor.
+        if "secagg" in tensor_key.tags:
+            import json
 
-        tensor_name, origin, round_number, report, tags = tensor_key
+            import numpy as np
 
-        if "model" in tags and send_model_deltas:
-            if round_number >= 1:
-                # The new model can be generated by previous model + delta
-                tensor_key_dependencies.append(
-                    TensorKey(tensor_name, origin, round_number - 1, report, tags)
-                )
-                if self.compression_pipeline.is_lossy():
-                    new_tags = ("aggregated", "delta", "lossy_compressed")
-                else:
-                    new_tags = ("aggregated", "delta", "compressed")
-                tensor_key_dependencies.append(
-                    TensorKey(tensor_name, origin, round_number, report, new_tags)
-                )
+            class NumpyEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, np.ndarray):
+                        return obj.tolist()
+                    return super().default(obj)
 
-        return tensor_key_dependencies
+            compressed_tensor_key, compressed_nparray = (
+                tensor_key,
+                str.encode(json.dumps(nparray, cls=NumpyEncoder)),
+            )
+        else:
+            compressed_tensor_key, compressed_nparray, metadata = self.compress(
+                tensor_key, nparray, require_lossless=lossless
+            )
+
+        named_tensor = utils.construct_named_tensor(
+            compressed_tensor_key, compressed_nparray, metadata, lossless=lossless
+        )
+
+        return named_tensor
