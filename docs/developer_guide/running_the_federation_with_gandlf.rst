@@ -169,7 +169,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
         $ cp ~/GaNDLF/train.csv data/one
         $ cp ~/GaNDLF/val.csv data/one
 
-6.  Create the FL plan and initialialize the model weights.
+6.  Create the FL plan and initialize the model weights.
 
 
     This step will initialize the federated learning plan and initialize the random model weights that will be used by all collaborators at the start of the expeirment.
