@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test_secure_aggregation:
-    name: Secure Aggregation (torch/mnist, 3.10)
+    name: Secure Aggregation (keras/mnist, 3.10)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
-      MODEL_NAME: 'torch/mnist'
+      MODEL_NAME: 'keras/mnist'
       PYTHON_VERSION: '3.10'
       NUM_ROUNDS: 5
       NUM_COLLABORATORS: 2

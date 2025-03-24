@@ -142,6 +142,14 @@ class Aggregator:
         self.uuid = aggregator_uuid
         self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
+        self._end_of_round_check_done = [False] * rounds_to_train
+        self.stragglers = []
+
+        # if the collaborator requests a delta, this value is set to true
+        self.authorized_cols = authorized_cols
+        self.federation_uuid = federation_uuid
+
+        self.quit_job_sent_to = []
         if self.mode == "learning":
             self.model = None  # Initialize the model attribute to None
             self.best_model_score = None
@@ -178,15 +186,6 @@ class Aggregator:
             logger.info(
                 f"For federated analytics tasks setting rounds_to_train = {self.rounds_to_train}"
             )
-
-        self._end_of_round_check_done = [False] * rounds_to_train
-        self.stragglers = []
-
-        # if the collaborator requests a delta, this value is set to true
-        self.authorized_cols = authorized_cols
-        self.federation_uuid = federation_uuid
-
-        self.quit_job_sent_to = []
 
         if persist_checkpoint:
             persistent_db_path = persistent_db_path or "tensor.db"
