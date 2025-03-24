@@ -13,6 +13,10 @@ permissions:
 jobs:
   test_secure_aggregation:
     name: Secure Aggregation (torch/mnist, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
@@ -29,7 +33,7 @@ jobs:
           submodules: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Secure Aggregation dependies
+      - name: Install Secure Aggregation dependencies
         run: |
           python -m pip install pycryptodome
           

@@ -12,11 +12,15 @@ TaskRunner API
 -------------------------------------
 
 OpenFL treats SecAgg as a core security feature and can be enabled for any experiment by simply modifying the plan.
+**NOTE**: 
+- `pycryptodome <https://pypi.org/project/pycryptodome/>`_ is a required dependency that must be installed on the participant nodes before starting the experiment.
+- Secure aggregation only supports `WaitForAllPolicy` as `straggler_handling_policy`; the support for other policies will be addressed in future updates.
+- The impact of secure aggregation on the aggregator and/or collaborator restart will be assessed, and additional resiliency features will be introduced in subsequent updates.
 
 The following plan shows secure aggregation being enabled on `keras/mnist <https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras/mnist>`_ workspace by simply modifying the plan.
 
 .. code-block:: yaml
-    :emphasize-lines: 10
+    :emphasize-lines: 10,51,52,53
 
     aggregator:
         settings:
@@ -68,6 +72,9 @@ The following plan shows secure aggregation being enabled on `keras/mnist <https
             require_client_auth: true
             use_tls: true
         template: openfl.federation.Network
+    straggler_handling_policy:
+        settings: {}
+        template: openfl.component.aggregator.straggler_handling.WaitForAllPolicy
     task_runner:
         settings: {}
         template: src.taskrunner.KerasCNN

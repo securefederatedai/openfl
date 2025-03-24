@@ -78,11 +78,11 @@ jobs:
         --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
         echo "Task runner end to end test run completed"
 
-    - name: Create Tar (exclude folders - cert/data/__pycache__, files - tensor.db/workspace.tar)
+    - name: Create Tar (exclude folders - cert/data/__pycache__, files - tensor.db/workspace.tar/*.csv)
       id: tar_files
       if: ${{ always() }}
       run: |
-        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" --exclude="*.csv" $HOME/results
 
     - name: Upload Artifacts
       id: upload_artifacts

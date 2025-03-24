@@ -11,7 +11,7 @@ from time import sleep
 import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
-from openfl.transport.grpc.common import create_grpc_server, create_header
+from openfl.transport.grpc.common import create_grpc_server, create_header, synchronized
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,19 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
+
+        if hasattr(self.aggregator, "is_connector_available"):
+            self.use_connector = self.aggregator.is_connector_available()
+        else:
+            self.use_connector = False
+
+        if self.use_connector:
+            self.interop_client = (
+                self.aggregator.get_interop_client()
+            )  # Initialize the interoperability client
+        else:
+            self.interop_client = None
+
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
     def validate_collaborator(self, request, context):
@@ -196,37 +209,37 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.GetAggregatedTensorResponse: The response to the
                 request.
         """
+        if self.use_connector:
+            context.abort(
+                grpc.StatusCode.UNIMPLEMENTED,
+                "This method is not available in framework interopability mode.",
+            )
+
         self.validate_collaborator(request, context)
         self.check_request(request)
-        collaborator_name = request.header.sender
-        tensor_name = request.tensor_name
-        require_lossless = request.require_lossless
-        round_number = request.round_number
-        report = request.report
-        tags = tuple(request.tags)
 
         named_tensor = self.aggregator.get_aggregated_tensor(
-            collaborator_name,
-            tensor_name,
-            round_number,
-            report,
-            tags,
-            require_lossless,
+            request.tensor_name,
+            request.round_number,
+            request.report,
+            tuple(request.tags),
+            request.require_lossless,
         )
 
         header = create_header(
             sender=self.aggregator.uuid,
-            receiver=collaborator_name,
+            receiver=request.header.sender,
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
 
         return aggregator_pb2.GetAggregatedTensorResponse(
             header=header,
-            round_number=round_number,
+            round_number=request.round_number,
             tensor=named_tensor,
         )
 
+    @synchronized
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """Request a model download from aggregator.
 
@@ -269,10 +282,46 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
+
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
+
+    def InteropRelay(self, request, context):
+        """
+        Args:
+            request (aggregator_pb2.InteropRelay): The request
+                from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            aggregator_pb2.InteropRelay: The response to the
+            request.
+        """
+        if not self.use_connector:
+            context.abort(
+                grpc.StatusCode.UNIMPLEMENTED,
+                "InteropRelay is only available in federated interopability mode.",
+            )
+
+        self.validate_collaborator(request, context)
+        self.check_request(request)
+        collaborator_name = request.header.sender
+
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=collaborator_name,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
+        # Forward the incoming OpenFL message to the local gRPC client
+        return self.interop_client.send_receive(request, header=header)
 
     def serve(self):
         """Starts the aggregator gRPC server."""
+
+        if self.use_connector:
+            self.aggregator.start_connector()
+
         server = create_grpc_server(
             self.uri,
             self.use_tls,
@@ -289,5 +338,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         while not self.aggregator.all_quit_jobs_sent():
             sleep(5)
+
+        if self.use_connector:
+            self.aggregator.stop_connector()
 
         server.stop(0)

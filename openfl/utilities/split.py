@@ -87,7 +87,7 @@ def split_tensor_dict_for_holdouts(
     holdout_tensors = {}
 
     # filter by-name tensors from tensors_to_send and add to holdout_tensors
-    # (for ones not already held out becuase of their type)
+    # (for ones not already held out because of their type)
     for tensor_name in holdout_tensor_names:
         if tensor_name not in holdout_tensors.keys():
             try:

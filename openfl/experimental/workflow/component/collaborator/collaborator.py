@@ -23,7 +23,7 @@ class Collaborator:
         Aggregator Server.
 
         private_attrs_callable (Callable): Function for Collaborator
-        private attriubtes.
+        private attributes.
         private_attrs_kwargs (Dict): Arguments to call private_attrs_callable.
 
     Note:
@@ -218,7 +218,7 @@ class Collaborator:
             # Update the function name
             f_name = f.__name__
 
-        # Reomve private attributes from context
+        # Remove private attributes from context
         self.__delete_private_attrs_from_clone(ctx)
 
         return f_name, ctx

@@ -18,7 +18,7 @@ A new OpenFL interface that gives significantly more flexility to researchers in
 There are several modifications we make in our reimagined version of this interface that are necessary for federated learning:
 
 1. *Placement*: Metaflow's :code:`@step` decorator is replaced by placement decorators that specify where a task will run. In horizontal federated learning, there are server (or aggregator) and client (or collaborator) nodes. Tasks decorated by :code:`@aggregator` will run on the aggregator node, and :code:`@collaborator` will run on the collaborator node. These placement decorators are interpreted by *Runtime* implementations: these do the heavy lifting of figuring out how to get the state of the current task to another process or node. 
-2. *Runtime*: Each flow has a :code:`.runtime` attribute. The runtime encapsulates the details of the infrastucture where the flow will run. We support the LocalRuntime for simulating experiments on local node and FederatedRuntime to launch experiments on distributed infrastructure.
+2. *Runtime*: Each flow has a :code:`.runtime` attribute. The runtime encapsulates the details of the infrastructure where the flow will run. We support the LocalRuntime for simulating experiments on local node and FederatedRuntime to launch experiments on distributed infrastructure.
 3. *Conditional branches*: Perform different tasks if a criteria is met
 4. *Loops*: Internal loops are within a flow; this is necessary to support rounds of training where the same sequence of tasks is performed repeatedly.   
 

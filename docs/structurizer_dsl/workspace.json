@@ -259,7 +259,7 @@
                 "tags": "Relationship"
               },
               {
-                "description": "Provides tasks' defenitions",
+                "description": "Provides tasks' definitions",
                 "destinationId": "17",
                 "id": "38",
                 "sourceId": "13",

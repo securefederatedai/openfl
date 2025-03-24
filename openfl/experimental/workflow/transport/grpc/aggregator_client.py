@@ -161,7 +161,7 @@ class AggregatorGRPCClient:
         Warns user that this is not recommended.
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri: The uniform resource identifier of the insecure channel
 
         Returns:
             An insecure gRPC channel object
@@ -179,11 +179,11 @@ class AggregatorGRPCClient:
         """Set an secure gRPC channel (i.e. TLS).
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri: The uniform resource identifier of the insecure channel
             root_certificate: The Certificate Authority filename
             disable_client_auth (boolean): True disabled client-side
              authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
+            certificate: The client certificate filename from the collaborator
              (signed by the certificate authority)
 
         Returns:
