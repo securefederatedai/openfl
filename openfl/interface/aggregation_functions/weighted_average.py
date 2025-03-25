@@ -50,5 +50,6 @@ class WeightedAverage(AggregationFunction):
         Returns:
             np.ndarray: aggregated tensor
         """
-        tensors, weights = zip(*[(x.tensor, x.weight) for x in local_tensors])
+        tensors = np.asarray([x.tensor for x in local_tensors], dtype=np.float32)
+        weights = np.asarray([x.weight for x in local_tensors], dtype=np.float32)
         return weighted_average(tensors, weights)
