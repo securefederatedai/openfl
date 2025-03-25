@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test_secure_aggregation:
-    name: Secure Aggregation (keras/mnist, 3.10)
+    name: Secure Aggregation (torch/mnist, 3.10)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
