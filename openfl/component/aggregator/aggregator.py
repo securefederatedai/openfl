@@ -15,7 +15,7 @@ from openfl.component.aggregator.straggler_handling import StragglerPolicy, Wait
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
-from openfl.protocols import base_pb2, utils
+from openfl.protocols import utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 
@@ -152,8 +152,6 @@ class Aggregator:
         # Initialize a lock for thread safety
         self.lock = Lock()
         self.use_delta_updates = use_delta_updates
-
-        self.model = None  # Initialize the model attribute to None
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -988,7 +986,6 @@ class Aggregator:
         )
         # Leave out straggler for the round even if they've partially
         # completed given tasks
-        collaborators_for_task = []
         collaborators_for_task = [
             c for c in all_collaborators_for_task if c in self.collaborators_done
         ]
@@ -1082,25 +1079,25 @@ class Aggregator:
         # Compute all validation related metrics
         logs = {}
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
-            logs.update(self._compute_validation_related_task_metrics(task_name))
+            metrics = self._compute_validation_related_task_metrics(task_name)
+            logs.update(metrics)
 
         # End of round callbacks.
         self.callbacks.on_round_end(self.round_number, logs)
-
-        # Once all of the task results have been processed
-        self._end_of_round_check_done[self.round_number] = True
-
-        # Save the latest model
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
 
+        # Once all of the task results have been processed
+        self._end_of_round_check_done[self.round_number] = True
         self.round_number += 1
-        # resetting stragglers for task for a new round
+
+        # Reset for next round
         self.stragglers = []
-        # resetting collaborators_done for next round
         self.collaborators_done = []
         self.collaborator_tasks_results = {}
         self.collaborator_task_weight = {}
+        self.tensor_db.clean_up(self.db_store_rounds)
+        self.straggler_handling_policy.reset_policy_for_round()
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -1109,11 +1106,6 @@ class Aggregator:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
             self.callbacks.on_round_begin(self.round_number)
-
-        # Cleaning tensor db
-        self.tensor_db.clean_up(self.db_store_rounds)
-        # Reset straggler handling policy for the next round.
-        self.straggler_handling_policy.reset_policy_for_round()
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
