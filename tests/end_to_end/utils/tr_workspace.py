@@ -54,7 +54,6 @@ def common_workspace_creation(request, eval_scope=False):
     fh.create_persistent_store(model_owner.name, local_bind_path)
 
     model_owner.create_workspace()
-    fh.add_local_workspace_permission(local_bind_path)
 
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
@@ -294,7 +293,6 @@ def create_tr_dws_workspace(request, eval_scope=False):
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
     model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_IMAGE)
-    image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS
     if request.config.use_tls:
@@ -357,7 +355,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Note: In case of multiple machines setup, scp this workspace tar
     # to the other machine(s) so that docker load can load the image.
-    model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
+    model_owner.load_workspace(workspace_tar_name=f"{constants.DFLT_WORKSPACE_NAME}.tar")
 
     # Return the federation fixture
     return federation_details(
