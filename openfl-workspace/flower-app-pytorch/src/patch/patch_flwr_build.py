@@ -12,6 +12,7 @@ import shutil
 import tomli_w
 import hashlib
 import os
+import re
 
 def build(
     app: Annotated[
@@ -131,6 +132,12 @@ def build(
 
     ### PATCH ###
     # # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
+    if not os.path.isdir(flwr_home):
+        raise ValueError("Invalid directory")
+    
+    if not is_safe_filename(fab_filename):
+        raise ValueError("Invalid filename")
+
     final_path = os.path.join(flwr_home, fab_filename)
     shutil.move(temp_filename, final_path)
     #################################
@@ -144,5 +151,8 @@ def build(
     return final_path, fab_hash
     ################
 
+def is_safe_filename(filename):
+    # Allow only alphanumeric characters, underscores, and hyphens
+    return re.match(r'^[\w\-.]+$', filename) is not None
 
 flwr.cli.build.build = build
