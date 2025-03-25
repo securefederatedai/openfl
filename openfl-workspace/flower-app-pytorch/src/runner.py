@@ -177,7 +177,7 @@ def get_dynamic_port():
     # Create a socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind to port 0 to let the OS assign an available port
-        s.bind(('', 0))
+        s.bind(('127.0.0.1', 0))
         # Get the assigned port number
         port = s.getsockname()[1]
     return port
