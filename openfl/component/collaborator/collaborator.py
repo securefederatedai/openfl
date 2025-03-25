@@ -199,9 +199,7 @@ class Collaborator:
             bench_dict.save()
 
         # Experiment end
-        timer.tic()
         self.callbacks.on_experiment_end()
-        timer.pttoc('on_experiment_end')
         bench_dict.save()
         logger.info("Received shutdown signal. Exiting...")
 

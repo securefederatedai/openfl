@@ -18,7 +18,6 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-#from openfl.utilities.secagg.setup import Setup as secagg_setup
 from tictoc import bench_dict
 
 logger = logging.getLogger(__name__)
@@ -1155,7 +1154,6 @@ class Aggregator:
         logs = {}
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
-        
 
         # End of round callbacks.
         self.callbacks.on_round_end(self.round_number, 'agg')
@@ -1195,7 +1193,6 @@ class Aggregator:
             self.callbacks.on_round_begin(self.round_number, 'agg')
 
         # Cleaning tensor db
-        
         self.tensor_db.clean_up(self.db_store_rounds)
         bench_dict['global'].step('Cleaning tensor db')
         # Reset straggler handling policy for the next round.

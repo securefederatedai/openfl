@@ -30,7 +30,6 @@ class CallbackList(Callback):
         **params,
     ):
         super().__init__()
-        print(callbacks)
         self.callbacks = list(_flatten(callbacks)) if callbacks else []
 
         self._add_default_callbacks(add_memory_profiler, add_metric_writer)
