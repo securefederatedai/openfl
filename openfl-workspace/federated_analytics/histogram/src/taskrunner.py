@@ -44,11 +44,11 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
     def compute_hist(self, data, col_name):
         """
         Compute the histogram of a specified column in a DataFrame.
-        Parameters:
-        data (pandas.DataFrame): The DataFrame containing the data.
-        col_name (str): The name of the column for which to compute the histogram.
+        Args:
+            data (pandas.DataFrame): The DataFrame containing the data.
+            col_name (str): The name of the column for which to compute the histogram.
         Returns:
-        numpy.ndarray: The computed histogram as an array.
+            numpy.ndarray: The computed histogram as an array.
         """
         histogram, _ = np.histogram(data[col_name], bins=np.linspace(2.0, 10.0, 10))
         return histogram
