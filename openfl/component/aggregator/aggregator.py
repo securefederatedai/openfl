@@ -18,7 +18,7 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.secagg.setup import Setup as secagg_setup
+#from openfl.utilities.secagg.setup import Setup as secagg_setup
 from tictoc import bench_dict
 
 logger = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self._secure_aggregation_enabled = secure_aggregation
+        self._secure_aggregation_enabled = False
         if self._secure_aggregation_enabled:
             from openfl.utilities.secagg.bootstrap import SecAggSetup
 
@@ -456,7 +456,7 @@ class Aggregator:
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
         """
-        bench_dict['global'].step('start get tasks')
+        bench_dict['global'].step('wait get tasks')
         logger.debug(
             f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
         )
@@ -573,11 +573,8 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        bench_dict['global'].step('start')
-        logger.debug(
-            f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
-            f"for collaborator {collaborator_name}"
-        )
+        bench_dict['global'].step('wait get aggregated tensor')
+        bench_dict['get_aggregate_tensor'].gstep()
 
         if "compressed" in tags or require_lossless:
             compress_lossless = True
@@ -591,16 +588,23 @@ class Aggregator:
             tags = change_tags(tags, remove_field="compressed")
         if "lossy_compressed" in tags:
             tags = change_tags(tags, remove_field="lossy_compressed")
+            
+        bench_dict['get_aggregate_tensor'].step('change tag')
 
         tensor_key = TensorKey(tensor_name, self.uuid, round_number, report, tags)
         tensor_name, origin, round_number, report, tags = tensor_key
+        
+        bench_dict['get_aggregate_tensor'].step('get tensorkey')
 
         if "aggregated" in tags and "delta" in tags and round_number != 0:
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("aggregated",))
         else:
             agg_tensor_key = tensor_key
+        
+        bench_dict['get_aggregate_tensor'].step('tensorkey if')
 
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
+        bench_dict['get_aggregate_tensor'].step('tensor from cache')
 
         start_retrieving_time = time.time()
         while nparray is None:
@@ -609,6 +613,7 @@ class Aggregator:
             nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
             if (time.time() - start_retrieving_time) > 60:
                 break
+        bench_dict['get_aggregate_tensor'].step('wait for tensorkey')
 
         if nparray is None:
             raise ValueError(f"Aggregator does not have an aggregated tensor for {tensor_key}")
@@ -619,6 +624,8 @@ class Aggregator:
         named_tensor = self._nparray_to_named_tensor(
             agg_tensor_key, nparray, send_model_deltas=True, compress_lossless=compress_lossless
         )
+        bench_dict['get_aggregate_tensor'].step('_nparray_to_named_tensor')
+        bench_dict['get_aggregate_tensor'].gstop()
         bench_dict['global'].step('get_aggregate_tensor')
 
         return named_tensor
@@ -741,7 +748,7 @@ class Aggregator:
         Returns:
             None
         """
-        bench_dict['global'].step('start send local task')
+        bench_dict['global'].step('wait send local task')
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
             secagg_setup = self.secagg.process_secagg_setup_tensors(named_tensors)
@@ -828,12 +835,13 @@ class Aggregator:
                 self.metric_queue.put(metrics)
 
             task_results.append(tensor_key)
-        bench_dict['global'].step('process task')
+        
 
         self.collaborator_tasks_results[task_key] = task_results
 
         # Check if collaborator or round is done.
         self._is_collaborator_done(collaborator_name, round_number)
+        bench_dict['global'].step('process task')
         self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
@@ -854,7 +862,6 @@ class Aggregator:
             ]
             if len(self.stragglers) != 0:
                 logger.warning(f"Identified stragglers: {self.stragglers}")
-            bench_dict['global'].step('straggler check')
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -1148,34 +1155,43 @@ class Aggregator:
         logs = {}
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
-        bench_dict['global'].step('compute validation metrics')
+        
 
         # End of round callbacks.
         self.callbacks.on_round_end(self.round_number, 'agg')
-        bench_dict['other'].gstep()
+        bench_dict['global'].step('on round end')
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
-        bench_dict['other'].step('save model')
+        bench_dict['global'].step('save model')
+        if self.round_number % 10 == 0:
+            bench_dict.save()
+            bench_dict['global'].step('save tictoc')
+            
+        if self.round_number % 3 == 0:
+            import pickle
+            self.tensor_db.tensor_db.to_pickle(f'tensor_db_{str(self.round_number).zfill(2)}.pkl')
 
         self.round_number += 1
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
-        bench_dict['other'].gstop()
         self.collaborator_tasks_results = {}
         self.collaborator_task_weight = {}
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
+            bench_dict.save()
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
+            bench_dict['global'].step('other')
+            bench_dict['global'].gstop()
             self.callbacks.on_round_begin(self.round_number, 'agg')
 
         # Cleaning tensor db

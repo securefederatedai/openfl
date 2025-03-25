@@ -84,10 +84,6 @@ class CallbackList(Callback):
             callback.on_round_begin(round_num, logs)
 
     def on_round_end(self, round_num: int, logs=None):
-        if logs == 'agg':
-            bench_dict['global'].gstop()
-            if round_num > 0:
-                bench_dict.save()
         for callback in self.callbacks:
             callback.on_round_end(round_num, logs)
 
