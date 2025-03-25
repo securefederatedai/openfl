@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
-      MODEL_NAME: 'keras/mnist'
+      MODEL_NAME: 'torch/mnist'
       PYTHON_VERSION: '3.10'
       NUM_ROUNDS: 5
       NUM_COLLABORATORS: 2
