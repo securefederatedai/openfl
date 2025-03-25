@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 @pytest.fixture
-def data_sources(fs) -> Tuple[Path, Path]:
+def local_data_sources(fs) -> Tuple[Path, Path]:
     """Fixture to create two data sources with a file tree structure using pyfakefs."""
     base_tmp = Path("/test_data")  # Fake base path
 
@@ -49,81 +49,81 @@ def copy_subtree(fs, existing_dir_path, new_dir_tree):
             file_content = fs.get_object(subpath).contents  # Read from fake filesystem
             fs.create_file(new_path, contents=file_content)  # Create file in new location
 
-def test_one_local_datasource(data_sources):
-    ds1, _ = data_sources
+def test_one_local_datasource(local_data_sources):
+    ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_two_local_datasource(data_sources):
-    ds1, ds2 = data_sources
+def test_two_local_datasource(local_data_sources):
+    ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_one_local_datasource_one_folder(data_sources):
-    ds1, _ = data_sources
+def test_one_local_datasource_one_folder(local_data_sources):
+    ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1"])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md",base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_one_local_datasource_one_file(data_sources):
-    ds1, _ = data_sources
+def test_one_local_datasource_one_file(local_data_sources):
+    ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_two_local_datasource_two_dirs(data_sources):
-    ds1, ds2 = data_sources
+def test_two_local_datasource_two_dirs(local_data_sources):
+    ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1", ds2 / "1"])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_two_local_datasource_two_files(data_sources):
-    ds1, ds2 = data_sources
+def test_two_local_datasource_two_files(local_data_sources):
+    ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file2.txt", ds2 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md",base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_one_local_datasource_two_files(data_sources):
-    ds1, _ = data_sources
+def test_one_local_datasource_two_files(local_data_sources):
+    ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file1.txt", ds1 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
 
-def test_two_local_datasource_different_base_path(fs, data_sources):
-    ds1, ds2 = data_sources
+def test_two_local_datasource_different_base_path(fs, local_data_sources):
+    ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     # Copy the datasources to a new location to have a different base_path
     new_base = Path("/new_test_data")
     new_ds1 = new_base / "datasource1"
@@ -135,11 +135,11 @@ def test_two_local_datasource_different_base_path(fs, data_sources):
     verifiable_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, new_base)
 
-def test_two_local_datasource_use_saved_hash(data_sources):
-    ds1, ds2 = data_sources
+def test_two_local_datasource_use_saved_hash(local_data_sources):
+    ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md",base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
@@ -147,27 +147,27 @@ def test_two_local_datasource_use_saved_hash(data_sources):
     assert verifiable.verify_dataset(dataset_info)
     assert verifiable.verify_dataset()
 
-def test_two_local_datasource_with_symlink(fs, data_sources):
-    real_ds1, ds2 = data_sources
+def test_two_local_datasource_with_symlink(fs, local_data_sources):
+    real_ds1, ds2 = local_data_sources
     symlink_ds1 = Path("/symlink_datasource1")
     fs.create_symlink(symlink_ds1, real_ds1)  # Create symlink to real_ds1
     base_path, relative_paths = split_to_base_and_relative_paths([symlink_ds1, ds2])
     assert relative_paths[0] == real_ds1.name
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     dataset_hash = verifiable.create_dataset_hash()
     assert isinstance(dataset_hash, str), f"Expected str, got {type(dataset_hash)}"
     verifiable_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, base_path)
 
-def test_two_local_datasource_different_base_path_with_symlink(fs, data_sources):
-    real_ds1, ds2 = data_sources
+def test_two_local_datasource_different_base_path_with_symlink(fs, local_data_sources):
+    real_ds1, ds2 = local_data_sources
     symlink_ds1 = Path("/symlink_datasource1")
     fs.create_symlink(symlink_ds1, real_ds1)  # Create symlink to real_ds1
     base_path, relative_paths = split_to_base_and_relative_paths([symlink_ds1, ds2])
     assert relative_paths[0] == real_ds1.name
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     # Copy the datasources to a new location to have a different base_path
     new_base = Path("/new_test_data")
     new_ds1 = new_base / "datasource1"
@@ -179,11 +179,11 @@ def test_two_local_datasource_different_base_path_with_symlink(fs, data_sources)
     verifiable_json = verifiable.to_json()
     assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, new_base)
 
-def test_one_local_datasource_verify_single_file(data_sources):
-    ds1, _ = data_sources
+def test_one_local_datasource_verify_single_file(local_data_sources):
+    ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
-    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md", base_path=base_path)
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
     verifaible_json = verifiable.to_json()
@@ -193,5 +193,4 @@ def test_one_local_datasource_verify_single_file(data_sources):
     verifiable.verify_dataset(dataset_info_dict)
     verifiable1.verify_dataset(dataset_info_dict)
     for file_path, hash in verifiable.all_hashes.items():
-        file_full_path = Path(base_path) / Path(file_path)
-        assert verifiable1.verify_single_file(file_full_path, hash)
+        assert verifiable1.verify_single_file(file_path, hash)

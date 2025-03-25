@@ -20,12 +20,11 @@ class VerifiableImageFolder(VerifiableMapStyleDataset):
         datasources = []
         for data_source in self.verifiable_dataset_info.data_sources:
             if data_source.type == DataSourceType.LOCAL:
-                datasource_full_path = (
-                    self.verifiable_dataset_info.base_path / data_source.source_path
-                )
                 datasources.append(
                     LocalImageFolder(
-                        datasource_full_path, self.label_mapper, transform=self.transform
+                        data_source.get_source_full_path(),
+                        self.label_mapper,
+                        transform=self.transform,
                     )
                 )
             else:

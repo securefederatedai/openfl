@@ -6,12 +6,10 @@
 import json
 from enum import Enum
 from hashlib import sha384
-from pathlib import Path
 from typing import List
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 from openfl.federated.data.sources.local_data_source import LocalDataSource
-
 
 class DatasetCommitment(Enum):
     """Enum for the different dataset commitment formats."""
@@ -30,7 +28,6 @@ class VerifiableDatasetInfo:
     def __init__(
         self,
         data_sources: List[DataSource],
-        base_path: Path,
         label: str,
         metadata=None,
         root_hash=None,
@@ -38,17 +35,14 @@ class VerifiableDatasetInfo:
         self.data_sources = data_sources
         self.label = label
         self.metadata = metadata
-        self.base_path = Path(base_path)
         self.root_hash = root_hash
         self.all_hashes = None
 
     def _create_verbose_dataset_hash(self):
         all_hashes = {
-            str(file_path.relative_to(self.base_path)): ds.compute_file_hash(
-                str(self.base_path / file_path)
-            )
+            str(file_path): ds.compute_file_hash(str(file_path))
             for ds in self.data_sources
-            for file_path in ds.enumerate_files(str(self.base_path))
+            for file_path in ds.enumerate_files()
         }
         return all_hashes
 
@@ -87,8 +81,9 @@ class VerifiableDatasetInfo:
         return self._validate_concise_dataset_info()
 
     def _verify_file_verbose(self, file_path, file_hash):
-        rel_file_path = Path(file_path).relative_to(Path(self.base_path))
-        return self.all_hashes[str(rel_file_path)] == file_hash
+        if str(file_path) not in self.all_hashes:
+            raise KeyError(f"Verification failed: No information found for the file: {file_path}")
+        return self.all_hashes[str(file_path)] == file_hash
 
     def verify_single_file(self, file_path, file_hash):
         """Verify the hash of a single file."""
@@ -107,28 +102,27 @@ class VerifiableDatasetInfo:
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
     @staticmethod
-    def from_dict(data_dict, base_path: Path):
+    def from_dict(data_dict, base_path=None):
         """Deserialize the VerifiableDatasetInfo from JSON"""
 
         # Create appropriate data source based on dictionary information
         data_sources = []
         for datasource in data_dict["data_sources"]:
             if datasource["type"] == DataSourceType.LOCAL.value:
-                data_source = LocalDataSource.from_dict(ds_dict=datasource)
+                data_source = LocalDataSource.from_dict(ds_dict=datasource, base_path=base_path)
             else:
                 raise ValueError(f"Unknown storage type: {datasource['type']}")
             data_sources.append(data_source)
 
         return VerifiableDatasetInfo(
             data_sources,
-            base_path=base_path,
             label=data_dict["label"],
             metadata=data_dict["metadata"],
             root_hash=data_dict["root_hash"],
         )
 
     @staticmethod
-    def deserialize_and_verify(json_str, base_path: Path):
+    def deserialize_and_verify(json_str, base_path=None):
         """Deserialize the VerifiableDatasetInfo from JSON and validate it."""
         data_dict = json.loads(json_str)
         vds = VerifiableDatasetInfo.from_dict(data_dict, base_path)

@@ -47,12 +47,9 @@ class DataSource(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def enumerate_files(self, base_path: str) -> Generator[str, None, None]:
+    def enumerate_files(self) -> Generator[str, None, None]:
         """
         Enumerate all files in the data source.
-
-        Args:
-            base_path (str): the base path of the data source.
 
         Returns:
             list: A list of objects

@@ -62,8 +62,7 @@ class MockVerifiableMapStyle(VerifiableMapStyleDataset):
         datasources = []
         for data_source in self.verifiable_dataset_info.data_sources:
             if data_source.type == DataSourceType.LOCAL:
-                datasource_full_path = self.verifiable_dataset_info.base_path / data_source.source_path
-                datasources.append(LocalTextFolder(base_path=datasource_full_path, label_mapper=self.label_mapper, transform=self.transform))
+                datasources.append(LocalTextFolder(base_path=data_source.get_source_full_path(), label_mapper=self.label_mapper, transform=self.transform))
             else:
                 raise ValueError(f"Unknown or unsupported storage type: {data_source.type}")
         return datasources
@@ -72,12 +71,11 @@ class MockVerifiableMapStyle(VerifiableMapStyleDataset):
 def test_local_map_style_datasource_verbose(data_sources):
     ds1, ds2 = data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
-        metadata={"test": "test"},
-        base_path=base_path
+        metadata={"test": "test"}
     )
     verifiable_map_style = MockVerifiableMapStyle(verifiable_dataset_info, verify_dataset=False)
 
@@ -90,12 +88,11 @@ def test_local_map_style_datasource_verbose(data_sources):
 def test_local_map_style_datasource_verbose_verify(data_sources):
     ds1, ds2 = data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
-        metadata={"test": "test"},
-        base_path=base_path
+        metadata={"test": "test"}
     )
     dataset_info_json = verifiable_dataset_info.to_json()
     verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json))
@@ -141,12 +138,11 @@ def fake_image_datasources(fs):
 def test_local_image_folder_map_style_datasource_verbose(fake_image_datasources):
     ds1, ds2, _ = fake_image_datasources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
-        metadata={"test": "test"},
-        base_path=base_path
+        metadata={"test": "test"}
     )
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=False)
     assert len(verifiable_map_style) == 12
@@ -163,12 +159,11 @@ def test_local_image_folder_map_style_datasource_verbose(fake_image_datasources)
 def test_local_image_folder_map_style_datasource_verbose_verify(fake_image_datasources):
     ds1, ds2, _ = fake_image_datasources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
-        metadata={"test": "test"},
-        base_path=base_path
+        metadata={"test": "test"}
     )
     dataset_info_json = verifiable_dataset_info.to_json()
     verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json))
@@ -189,12 +184,11 @@ def test_local_image_folder_map_style_datasource_verbose_labels(fake_image_datas
     """Test that LabelMapper correctly maps labels across multiple datasets."""
     ds1, ds2, ds3 = fake_image_datasources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2, ds3])
-    datasources = [LocalDataSource(source_path=rel_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
         label="Test VerifiableMapStyleDataset",
-        metadata={"test": "test"},
-        base_path=base_path
+        metadata={"test": "test"}
     )
     verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset=True)
 

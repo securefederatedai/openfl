@@ -13,16 +13,20 @@ from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 class LocalDataSource(DataSource):
     """This class represents a local data source."""
 
-    def __init__(self, source_path: Path, hash_func=sha384, max_dataset_size=0):
+    def __init__(self, source_path: Path, base_path, hash_func=sha384, max_dataset_size=0):
         super().__init__(DataSourceType.LOCAL)
         self.source_path = Path(source_path)
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size
+        self._base_path = Path(base_path)
 
-    def enumerate_files(self, base_path: str) -> Generator[str, None, None]:
+    def get_source_full_path(self):
+        return self._base_path / self.source_path
+
+    def enumerate_files(self) -> Generator[str, None, None]:
         """Enumerate all files in the data source."""
         total_size_bytes = 0
-        full_path = Path(base_path) / self.source_path
+        full_path = Path(self._base_path) / self.source_path
         if full_path.is_dir():
             for root, _, files in os.walk(full_path):
                 for file in files:
@@ -57,5 +61,5 @@ class LocalDataSource(DataSource):
         return hash_obj.hexdigest()
 
     @classmethod
-    def from_dict(cls, ds_dict: dict):
-        return cls(source_path=Path(ds_dict["source_path"]))
+    def from_dict(cls, ds_dict: dict, base_path):
+        return cls(source_path=Path(ds_dict["source_path"]), base_path=base_path)
