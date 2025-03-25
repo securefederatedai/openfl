@@ -1,6 +1,7 @@
 # Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from hashlib import sha256
 import json
 from openfl.federated.data.sources.local_data_source import LocalDataSource
 from openfl.federated.data.sources.verifiable_dataset_info import VerifiableDatasetInfo
@@ -56,8 +57,9 @@ def test_one_local_datasource(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource(local_data_sources):
     ds1, ds2 = local_data_sources
@@ -66,8 +68,9 @@ def test_two_local_datasource(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_one_local_datasource_one_folder(local_data_sources):
     ds1, _ = local_data_sources
@@ -76,8 +79,9 @@ def test_one_local_datasource_one_folder(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_one_local_datasource_one_file(local_data_sources):
     ds1, _ = local_data_sources
@@ -86,8 +90,9 @@ def test_one_local_datasource_one_file(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource_two_dirs(local_data_sources):
     ds1, ds2 = local_data_sources
@@ -96,8 +101,9 @@ def test_two_local_datasource_two_dirs(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource_two_files(local_data_sources):
     ds1, ds2 = local_data_sources
@@ -106,8 +112,9 @@ def test_two_local_datasource_two_files(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_one_local_datasource_two_files(local_data_sources):
     ds1, _ = local_data_sources
@@ -116,8 +123,9 @@ def test_one_local_datasource_two_files(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifaible_json, base_path)
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource_different_base_path(fs, local_data_sources):
     ds1, ds2 = local_data_sources
@@ -133,7 +141,8 @@ def test_two_local_datasource_different_base_path(fs, local_data_sources):
     dataset_hash = verifiable.create_dataset_hash()
     assert isinstance(dataset_hash, str), f"Expected str, got {type(dataset_hash)}"
     verifiable_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, new_base)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource_use_saved_hash(local_data_sources):
     ds1, ds2 = local_data_sources
@@ -142,9 +151,11 @@ def test_two_local_datasource_use_saved_hash(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    dataset_info = json.loads(verifaible_json)
-    assert verifiable.verify_dataset(dataset_info)
+    verifiable_json = verifiable.to_json()
+    dataset_info = json.loads(verifiable_json)
+    with pytest.raises(Exception):
+        verifiable.verify_dataset()
+    assert verifiable.verify_dataset(dataset_info["root_hash"])
     assert verifiable.verify_dataset()
 
 def test_two_local_datasource_with_symlink(fs, local_data_sources):
@@ -158,7 +169,8 @@ def test_two_local_datasource_with_symlink(fs, local_data_sources):
     dataset_hash = verifiable.create_dataset_hash()
     assert isinstance(dataset_hash, str), f"Expected str, got {type(dataset_hash)}"
     verifiable_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, base_path)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_two_local_datasource_different_base_path_with_symlink(fs, local_data_sources):
     real_ds1, ds2 = local_data_sources
@@ -177,7 +189,8 @@ def test_two_local_datasource_different_base_path_with_symlink(fs, local_data_so
     dataset_hash = verifiable.create_dataset_hash()
     assert isinstance(dataset_hash, str), f"Expected str, got {type(dataset_hash)}"
     verifiable_json = verifiable.to_json()
-    assert VerifiableDatasetInfo.deserialize_and_verify(verifiable_json, new_base)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
 
 def test_one_local_datasource_verify_single_file(local_data_sources):
     ds1, _ = local_data_sources
@@ -186,11 +199,40 @@ def test_one_local_datasource_verify_single_file(local_data_sources):
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
-    verifaible_json = verifiable.to_json()
-    dataset_info_dict = json.loads(verifaible_json)
-    verifiable1 = VerifiableDatasetInfo.from_dict(dataset_info_dict, base_path)
+    verifiable_json = verifiable.to_json()
+    dataset_info_dict = json.loads(verifiable_json)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
     # Create & save in memory the hashes for all files
-    verifiable.verify_dataset(dataset_info_dict)
-    verifiable1.verify_dataset(dataset_info_dict)
+    verifiable.verify_dataset(dataset_info_dict["dataset_id"])
     for file_path, hash in verifiable.all_hashes.items():
-        assert verifiable1.verify_single_file(file_path, hash)
+        assert verifiable_from_json.verify_single_file(file_path, hash)
+
+def test_two_local_datasource_verify_single_file(local_data_sources):
+    ds1, ds2 = local_data_sources
+    base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    dataset_info_dict = json.loads(verifiable_json)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    # Create & save in memory the hashes for all files
+    verifiable.verify_dataset(dataset_info_dict["root_hash"])
+    for file_path, hash in verifiable.all_hashes.items():
+        assert verifiable_from_json.verify_single_file(file_path, hash)
+
+def test_two_local_datasource_non_defalt_args(local_data_sources):
+    ds1, ds2 = local_data_sources
+    base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path, hash_func=sha256, max_dataset_size=500) for rel_path in relative_paths]
+    verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json, base_path)
+    assert verifiable_from_json.verify_dataset()
+    assert verifiable_from_json.data_sources[0].hash_func == sha256
+    assert verifiable_from_json.data_sources[0].max_dataset_size == 500
+    assert verifiable_from_json.data_sources[1].hash_func == sha256
+    assert verifiable_from_json.data_sources[1].max_dataset_size == 500

@@ -4,18 +4,11 @@
 """This module contains the VerifiableDatasetInfo class."""
 
 import json
-from enum import Enum
 from hashlib import sha384
 from typing import List
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 from openfl.federated.data.sources.local_data_source import LocalDataSource
-
-class DatasetCommitment(Enum):
-    """Enum for the different dataset commitment formats."""
-
-    VERBOSE = "verbose"
-    CONCISE = "concise"
 
 
 class VerifiableDatasetInfo:
@@ -65,19 +58,16 @@ class VerifiableDatasetInfo:
     def _validate_concise_dataset_info(self):
         concise_hash, all_hashes = self._create_concise_dataset_hash()
         valid = concise_hash == self.root_hash
-        if valid:
-            if self.all_hashes is None:
-                self.all_hashes = all_hashes
-            if self.root_hash is None:
-                self.root_hash = concise_hash
+        if valid and self.all_hashes is None:
+            self.all_hashes = all_hashes
         return valid
 
-    def verify_dataset(self, dataset_info=None):
+    def verify_dataset(self, root_hash=None):
         """Verify the dataset against root_hash."""
-        if dataset_info is None and self.root_hash is None:
+        if root_hash is None and self.root_hash is None:
             raise ValueError("No saved root hash found. Please provide 'dataset_info'.")
-        if dataset_info:
-            self.root_hash = dataset_info["root_hash"]
+        if root_hash:
+            self.root_hash = root_hash
         return self._validate_concise_dataset_info()
 
     def _verify_file_verbose(self, file_path, file_hash):
@@ -88,12 +78,30 @@ class VerifiableDatasetInfo:
     def verify_single_file(self, file_path, file_hash):
         """Verify the hash of a single file."""
         if self.all_hashes is None:
-            raise ValueError("Files hashes not found in the dataset")
+            if self.root_hash is not None:
+                self.verify_dataset(self.root_hash)
+            else:
+                raise ValueError("Trusted hash not found in the dataset")
         return self._verify_file_verbose(file_path, file_hash)
 
     def to_json(self):
-        """Serialize the VerifiableDatasetInfo to JSON"""
+        if len(self.data_sources) == 1 and isinstance(self.data_sources[0], LocalDataSource):
+            return self._to_json_v1()
+        return self._to_json_v2()
+
+    def _to_json_v1(self):
         dataset_dict = {
+            "dataset_id": self.create_dataset_hash(),
+            "mount_absolute_path": str(self.data_sources[0].get_source_full_path()),
+            "label": self.label,
+            "metadata": self.metadata,
+            "dataset_format": "concise_dataset",
+        }
+        return json.dumps(dataset_dict, sort_keys=True, indent=4)
+
+    def _to_json_v2(self):
+        dataset_dict = {
+            "version": "2.0",
             "data_sources": [ds.to_dict() for ds in self.data_sources],
             "label": self.label,
             "metadata": self.metadata,
@@ -101,8 +109,16 @@ class VerifiableDatasetInfo:
         dataset_dict["root_hash"] = self.create_dataset_hash()
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
+    def _from_dict_v1(data_dict, base_path=None):
+        return VerifiableDatasetInfo(
+            [LocalDataSource(source_path=".", base_path=base_path)],
+            label=data_dict["label"],
+            metadata=data_dict["metadata"],
+            root_hash=data_dict["dataset_id"],
+        )
+
     @staticmethod
-    def from_dict(data_dict, base_path=None):
+    def _from_dict_v2(data_dict, base_path=None):
         """Deserialize the VerifiableDatasetInfo from JSON"""
 
         # Create appropriate data source based on dictionary information
@@ -122,8 +138,14 @@ class VerifiableDatasetInfo:
         )
 
     @staticmethod
-    def deserialize_and_verify(json_str, base_path=None):
-        """Deserialize the VerifiableDatasetInfo from JSON and validate it."""
+    def _from_dict(data_dict, base_path=None):
+        """Deserialize the VerifiableDatasetInfo from JSON"""
+        if "version" in data_dict and data_dict["version"] == "2.0":
+            return VerifiableDatasetInfo._from_dict_v2(data_dict, base_path)
+        return VerifiableDatasetInfo._from_dict_v1(data_dict, base_path)
+
+    @staticmethod
+    def from_json(json_str, base_path=None):
+        """Deserialize the VerifiableDatasetInfo from JSON"""
         data_dict = json.loads(json_str)
-        vds = VerifiableDatasetInfo.from_dict(data_dict, base_path)
-        return vds.verify_dataset(dataset_info=data_dict)
+        return VerifiableDatasetInfo._from_dict(data_dict, base_path)

@@ -9,6 +9,12 @@ from torch.utils.data import Dataset
 
 
 class LabelMapper:
+    """
+    A utility class for mapping class names (labels) to unique integer indices and vice versa.
+    This ensures consistent labeling across data sources and processes by maintaining a
+    bidirectional mapping between labels and their corresponding indices.
+    """
+
     def __init__(self):
         self.label_to_idx = {}
         self.idx_to_label = {}
@@ -30,9 +36,9 @@ class LocalFolder(Dataset):
     def __init__(self, base_path, label_mapper: LabelMapper, transform=None):
         """
         Args:
-            base_path (str or Path): Root directory containing labeled image subdirectories.
+            base_path (str or Path): Root directory containing labeled subdirectories.
             label_mapper (LabelMapper): LabelMapper object to map class names to indices.
-            transform (callable, optional): Transformations to apply to images.
+            transform (callable, optional): Transformations to apply to loaded data.
         """
         self.base_path = Path(base_path).resolve()
         self.transform = transform
@@ -43,8 +49,8 @@ class LocalFolder(Dataset):
         self._load_samples()
 
     def _load_samples(self):
-        """Recursively find all image files and assign labels based on the directory name."""
-        for file_path in self.base_path.rglob("*.*"):  # Search for all files in subdirectories
+        """Recursively find all files and assign labels based on the directory name."""
+        for file_path in self.base_path.rglob("*"):  # Search for all files in subdirectories
             if file_path.is_file():
                 # Get parent directory as label
                 label_name = file_path.parent.name
@@ -54,7 +60,7 @@ class LocalFolder(Dataset):
     @abstractmethod
     def load_file(self, file_path):
         """Load a file from the dataset."""
-        return NotImplementedError
+        pass
 
     def __getitem__(self, index) -> Dict[str, Any]:
         file_path, label = self.samples[index]
@@ -67,7 +73,3 @@ class LocalFolder(Dataset):
 
     def __len__(self):
         return len(self.samples)
-
-    def get_label_map(self):
-        """Returns the mapping of class names to label indices."""
-        return self.label_to_idx

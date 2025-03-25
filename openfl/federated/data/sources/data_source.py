@@ -3,8 +3,9 @@
 
 """Base class for different types of data sources."""
 
+import hashlib
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Dict, Generator
 
@@ -12,8 +13,8 @@ from typing import Any, Dict, Generator
 class DataSourceType(Enum):
     """Enum for the different types of data sources."""
 
-    LOCAL = "local"
-    S3 = "s3"
+    LOCAL = auto()
+    S3 = auto()
 
 
 class DataSource(ABC):
@@ -44,7 +45,7 @@ class DataSource(ABC):
         Returns:
             str: The file's hash.
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def enumerate_files(self) -> Generator[str, None, None]:
@@ -54,7 +55,7 @@ class DataSource(ABC):
         Returns:
             list: A list of objects
         """
-        yield
+        pass
 
     @classmethod
     @abstractmethod
@@ -68,7 +69,22 @@ class DataSource(ABC):
         Returns:
             DataSource: The created DataSource.
         """
-        raise NotImplementedError
+        pass
+
+    def is_valid_hash_function(self, func):
+        try:
+            func_name = func.__name__.removeprefix("openssl_")
+
+            # Ensure it is a known hashlib function
+            if func_name not in hashlib.algorithms_available:
+                return False
+
+            # Ensure it's callable and returns a valid hash object
+            test_instance = func()
+            return callable(func) and hasattr(test_instance, "digest")
+
+        except Exception:
+            return False
 
     def _serialize_fields(self) -> Dict[str, Any]:
         """Returns a dictionary of serializable fields."""
@@ -76,6 +92,8 @@ class DataSource(ABC):
         for key, val in self.__dict__.items():
             if key.startswith("_"):  # Skip private attributes
                 continue
+            if self.is_valid_hash_function(val):
+                val = val.__name__.removeprefix("openssl_")
             if callable(val):
                 continue  # Skip methods
             if isinstance(val, Path):

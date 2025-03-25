@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from openfl.federated.data.sources.data_source import DataSourceType
-from openfl.federated.data.sources.pytorch.local_folder import LabelMapper
-from openfl.federated.data.sources.pytorch.local_image_folder import LocalImageFolder
-from openfl.federated.data.sources.pytorch.verifiable_map_style_dataset import (
+from openfl.federated.data.sources.torch.local_folder import LabelMapper
+from openfl.federated.data.sources.torch.local_image_folder import LocalImageFolder
+from openfl.federated.data.sources.torch.verifiable_map_style_dataset import (
     VerifiableMapStyleDataset,
 )
 
@@ -12,9 +12,9 @@ from openfl.federated.data.sources.pytorch.verifiable_map_style_dataset import (
 class VerifiableImageFolder(VerifiableMapStyleDataset):
     """VerifiableImageFolder class for image folder datasets."""
 
-    def __init__(self, vds, transform=None, verify_dataset=False):
+    def __init__(self, vds, transform=None, verify_dataset_items=False):
         self.label_mapper = LabelMapper()
-        super().__init__(vds, transform=transform, verify_dataset=verify_dataset)
+        super().__init__(vds, transform=transform, verify_dataset_items=verify_dataset_items)
 
     def create_datasets(self):
         datasources = []

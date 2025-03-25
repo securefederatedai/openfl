@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """This module contains the LocalDataSource class."""
 
+import hashlib
 import os
 from hashlib import sha384
 from pathlib import Path
-from typing import Generator
+from typing import Callable, Generator
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 
@@ -13,14 +14,35 @@ from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 class LocalDataSource(DataSource):
     """This class represents a local data source."""
 
-    def __init__(self, source_path: Path, base_path, hash_func=sha384, max_dataset_size=0):
+    def __init__(
+        self,
+        source_path: Path,
+        base_path,
+        hash_func: Callable[..., "hashlib._Hash"] = sha384,
+        max_dataset_size=0,
+    ):
+        """
+        Initialize a LocalDataSource object.
+
+        Args:
+            source_path (Path): The path to the source data, relative to base_path.
+            base_path (Path): The base path to the data source.
+            hash_func (Callable[..., hashlib._Hash]): The hash function from hashlib
+            to use to hash the data.
+            max_dataset_size (int): The maximum size of the dataset in GB.
+        """
         super().__init__(DataSourceType.LOCAL)
         self.source_path = Path(source_path)
+        if not super().is_valid_hash_function(hash_func):
+            raise ValueError(
+                f"Invalid hash function: {hash_func.__name__}. Must be a hashlib function."
+            )
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size
-        self._base_path = Path(base_path)
+        self._base_path = Path(base_path)  # private attribute, will not be serialized
 
     def get_source_full_path(self):
+        """Return the full path to the source data."""
         return self._base_path / self.source_path
 
     def enumerate_files(self) -> Generator[str, None, None]:
@@ -62,4 +84,13 @@ class LocalDataSource(DataSource):
 
     @classmethod
     def from_dict(cls, ds_dict: dict, base_path):
-        return cls(source_path=Path(ds_dict["source_path"]), base_path=base_path)
+        source_path = Path(ds_dict["source_path"])
+        # Retrieve function from hashlib
+        hash_func = getattr(hashlib, ds_dict.get("hash_func", "sha384"), None)
+        max_dataset_size = ds_dict.get("max_dataset_size", 0)
+        return cls(
+            source_path=source_path,
+            base_path=base_path,
+            hash_func=hash_func,
+            max_dataset_size=max_dataset_size,
+        )
