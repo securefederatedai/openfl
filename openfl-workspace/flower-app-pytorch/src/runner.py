@@ -7,8 +7,13 @@ import numpy as np
 from pathlib import Path
 import sys
 import socket
+from src.util import is_safe_path
 
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
+flwr_home = os.path.join(os.getcwd(), "save/.flwr")
+if not is_safe_path(flwr_home):
+    raise ValueError("Invalid path for FLWR_HOME")
+
+os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class FlowerTaskRunner(TaskRunner):

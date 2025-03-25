@@ -12,7 +12,7 @@ import shutil
 import tomli_w
 import hashlib
 import os
-import re
+from src.util import is_safe_path
 
 def build(
     app: Annotated[
@@ -135,7 +135,7 @@ def build(
     if not os.path.isdir(flwr_home):
         raise ValueError("Invalid directory")
     
-    if not is_safe_filename(fab_filename):
+    if not is_safe_path(fab_filename):
         raise ValueError("Invalid filename")
 
     final_path = os.path.join(flwr_home, fab_filename)
@@ -150,9 +150,5 @@ def build(
     # return final_path
     return final_path, fab_hash
     ################
-
-def is_safe_filename(filename):
-    # Allow only alphanumeric characters, underscores, and hyphens
-    return re.match(r'^[\w\-.]+$', filename) is not None
 
 flwr.cli.build.build = build
