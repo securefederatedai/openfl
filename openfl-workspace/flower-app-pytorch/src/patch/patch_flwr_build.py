@@ -134,7 +134,7 @@ def build(
     # # REASONING: original code writes to /tmp/ by default. Writing to flwr_home allows us to consolidate written files
     if not os.path.isdir(flwr_home):
         raise ValueError("Invalid directory")
-    
+
     if not is_safe_path(fab_filename):
         raise ValueError("Invalid filename")
 
