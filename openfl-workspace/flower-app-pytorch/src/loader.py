@@ -29,7 +29,7 @@ class FlowerDataLoader(DataLoader):
         super().__init__(**kwargs)
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"The specified data path does not exist: {data_path}")
-        
+
         self.data_path = data_path
 
     def get_node_configs(self):

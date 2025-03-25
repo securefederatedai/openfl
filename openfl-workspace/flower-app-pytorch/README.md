@@ -4,7 +4,7 @@ This workspace demonstrates a new functionality in OpenFL to interoperate with [
 
 ## Overview
 
-In this repository, you'll notice a directory under `src` called `app-pytorch`. This is essentially a Flower PyTorch app created using Flower's `flwr new` command that has been modified to run a local federation. The `client_app.py` and `server_app.py` dictate what will be run by the client and server respectively. `task.py` defines the logic that will be executed by each app, such as the model definition, train/test tasks, etc. Under `server_app.py` a section titled "Save Model" is added in order to save the `best.pbuf` and `last.pbuf` models from the experiment in your local workspace under `./save`. This uses native OpenFL logic to store the model as a `.pbuf` in order to later be retrieved by `fx model save` into a native format (limited to `.npz` to be deep learning framework agnostic), but this can be overridden to save the model directly following Flower's recommended method for [saving model checkpoints](https://flower.ai/docs/framework/how-to-save-and-load-model-checkpoints.html).
+In this repository, you'll notice a directory under `src` called `app-pytorch`. This is essentially a Flower PyTorch app created using Flower's `flwr new` command that has been modified to run a local federation. The `client_app.py` and `server_app.py` dictate what will be run by the client and server respectively. `task.py` defines the logic that will be executed by each app, such as the model definition, train/test tasks, etc. Under `server_app.py` a save model strategy is defined in order to save the best and last models from the experiment in your local workspace under `./save`.
 
 ## Getting Started
 
@@ -19,21 +19,58 @@ Start by creating a workspace:
 ```sh
 fx workspace create --template flower-app-pytorch --prefix my_workspace
 cd my_workspace
+pip install -r requirements.txt
 ```
 
-This will create a workspace in your current working directory called `./my_workspace` as well as install the Flower app defined in `./app-pytorch.` This will be where the experiment takes place.
+Then create a certificate authority (CA)
+
+```sh
+fx workspace certify
+```
+
+This will create a workspace in your current working directory called `./my_workspace` as well as install the Flower app defined in `./app-pytorch.` This will be where the experiment takes place. The CA will be used to sign the certificates of the collaborators.
+
+### Setup Data
+We will be using CIFAR10 dataset. You can install an automatically partition it into 2 using the `./src/setup_data.py` script provided.
+
+```sh
+python ./src/setup_data.py 2
+```
+
+This will download the data, partition it into 2 shards and store it under the `./data/1` and `./data/2`, respectively.
+
+```
+data/
+├── 1
+│   ├── test
+│   │   ├── 0
+│   │   ├── 1
+│   │   ├── 2
+│   │   ├── 3
+│   │   ├── 4
+│   │   ├── 5
+│   │   ├── 6
+│   │   ├── 7
+│   │   ├── 8
+│   │   └── 9
+│   └── train
+│       ├── ...
+└── 2
+    ├── ...
+```
 
 ### Configure the Experiment
 Notice under `./plan`, you will find the familiar OpenFL YAML files to configure the experiment. `cols.yaml` and `data.yaml` will be populated by the collaborators that will run the Flower client app and the respective data shard or directory they will perform their training and testing on.
 `plan.yaml` configures the experiment itself. The Open-Flower integration makes a few key changes to the `plan.yaml`:
 
-1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. The `SuperLink` parameters can be configured using `connector.settings.superlink_params`. If nothing is supplied, it will simply run `flower-superlink --insecure` with the command's default settings as dictated by Flower. It also includes the option to run the flwr run command via `connector.settings.flwr_run_params`. If `flwr_run_params` are not provided, the user will be expected to run `flwr run <app>` from the aggregator machine to initiate the experiment. 
+1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. The `SuperLink` parameters can be configured using `connector.settings.superlink_params`. If nothing is supplied, it will simply run `flower-superlink --insecure` with the command's default settings as dictated by Flower. It also includes the option to run the flwr run command via `connector.settings.flwr_run_params`. If `flwr_run_params` are not provided, the user will be expected to run `flwr run <app>` from the aggregator machine to initiate the experiment. Additionally, the `ConnectorFlower` has an additional setting `connector.settings.automatic_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously. 
 
 ```yaml
 connector:
   defaults: plan/defaults/connector.yaml
   template: openfl.component.ConnectorFlower
   settings:
+    automatic_shutdown: True
     superlink_params:
       insecure: True
       serverappio-api-address: 127.0.0.1:9091
@@ -44,19 +81,15 @@ connector:
       federation_name: "local-poc"
 ```
 
-2. `FlowerTaskRunner` which will execute the `start_client_adapter` task. This task starts the Flower SuperNode and makes a connection to the OpenFL client. Additionally, the `FlowerTaskRunner` has an additional setting `FlowerTaskRunner.settings.auto_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously.
+2. `FlowerTaskRunner` which will execute the `start_client_adapter` task. This task starts the Flower SuperNode and makes a connection to the OpenFL client.
 
 ```yaml
 task_runner:
   defaults: plan/defaults/task_runner.yaml
   template: openfl.federated.task.runner_flower.FlowerTaskRunner
-  settings:
-    auto_shutdown: True
 ```
 
 3. `FlowerDataLoader` with similar high-level functionality to other dataloaders.
-
-**IMPORTANT NOTE**: `aggregator.settings.rounds_to_train` is set to 1. __Do not edit this__. The actual number of rounds for the experiment is controlled by Flower logic inside of `./app-pytorch/pyproject.toml`. The entirety of the Flower experiment will run in a single OpenFL round. Increasing this will cause OpenFL to attempt to run the experiment again. The aggregator round is there to stop the OpenFL components at the completion of the experiment.
 
 4. `Task` - we introduce a `tasks_connector.yaml` that will allow the collaborator to connect to Flower framework via the local gRPC server. It also handles the task runner's `start_client_adapter` method, which actually starts the Flower component and local gRPC server. By setting `local_server_port` to 0, the port is dynamically allocated. This is mainly for local experiments to avoid overlapping the ports.
 
@@ -70,6 +103,12 @@ tasks:
       local_server_port: 0
 ```
 
+> **Note**: `aggregator.settings.rounds_to_train` is set to 1. __Do not edit this__. The actual number of rounds for the experiment is controlled by Flower logic inside of `./app-pytorch/pyproject.toml`. The entirety of the Flower experiment will run in a single OpenFL round. Increasing this will cause OpenFL to attempt to run the experiment again. The aggregator round is there to stop the OpenFL components at the completion of the experiment.
+
+> **Note**: `aggregator.settings.write_logs` will be set to `False`. While setting it to `True` will not result in an error, OpenFL's aggregator will not capture the logs since logging is handled by Flower directly.
+
+> **Note**: This workspace does not currently support secure aggregation through OpenFL natively. Look into Flower's documentation to enable secure aggregation.
+
 ## Execution Methods
 There are two ways to execute this:
 
@@ -78,17 +117,21 @@ There are two ways to execute this:
 
 ## Running the Workspace
 We proceed with the automatic shutdown method of execution.
-Run the workspace as normal (certify the workspace, initialize the plan, register the collaborators, etc.):
+
+Initialize the plan.
+
+```SH
+fx plan initialize --a localhost
+```
+
+Run the workspace as normal (aggregator setup, collaborator setup, etc.):
 
 ```SH
 # Generate a Certificate Signing Request (CSR) for the Aggregator
-fx aggregator generate-cert-request
+fx aggregator generate-cert-request --fqdn localhost
 
 # The CA signs the aggregator's request, which is now available in the workspace
-fx aggregator certify --silent
-
-# Initialize FL Plan and Model Weights for the Federation
-fx plan initialize
+fx aggregator certify --fqdn localhost --silent
 
 ################################
 # Setup Collaborator 1 
@@ -115,12 +158,11 @@ fx collaborator generate-cert-request -n collaborator2
 
 # The CA signs collaborator2's certificate
 fx collaborator certify -n collaborator2 --silent
+```
 
-##############################
-# Start to Run the Federation
-##############################
+Start the aggregator
 
-# Run the Aggregator
+```SH
 fx aggregator start
 ```
 
@@ -241,13 +283,14 @@ It will run another experiment. Once you are done, you can manually shut down Op
 ### Running in SGX Enclave
 Gramine does not support all Linux system calls. Flower FAB is built and installed at runtime. During this, `utime()` is called, which is an [unsupported call](https://gramine.readthedocs.io/en/latest/devel/features.html#list-of-system-calls), resulting in error or unexpected behavior. To navigate this, when running in an SGX enclave, we opt to build and install the FAB during initialization and package it alongside the OpenFL workspace. To make this work, we introduce some patches to Flower's build command, which helps circumvent the unsupported system call as well as minimize read/write access.
 
-To run these patches, simply add `patch: True` to the `Connector` and `Task Runner` settings. For the `Task Runner` also include the name of the Flower app for building and installation.
+To run these patches, simply add `patch: True` to the `Connector` and `Task Runner` settings (if not already set). For the `Task Runner` also include the name of the Flower app for building and installation.
 
 ```yaml
 connector : 
   defaults : plan/defaults/connector.yaml
   template : openfl.component.ConnectorFlower
   settings :
+    automatic_shutdown : True
     superlink_params :
       insecure : True
       serverappio-api-address : 127.0.0.1:9091 
