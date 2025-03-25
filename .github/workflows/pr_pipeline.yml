@@ -39,10 +39,9 @@ jobs:
     name: Federated Runtime Watermarking E2E
     uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
 
-# Issue - https://github.com/mlcommons/GaNDLF/issues/993
-  # gandlf_taskrunner:
-  #   name: GaNDLF TaskRunner E2E
-  #   uses: ./.github/workflows/gandlf.yml
+  gandlf_taskrunner:
+    name: GaNDLF TaskRunner E2E
+    uses: ./.github/workflows/gandlf.yml
 
   hadolint_security_scan:
     name: Hadolint Security Scan
