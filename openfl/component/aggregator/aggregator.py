@@ -12,6 +12,7 @@ from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
+from openfl.component.assigner.assigner import Assigner
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -72,7 +73,7 @@ class Aggregator:
         init_state_path,
         best_state_path,
         last_state_path,
-        assigner,
+        assigner: Assigner,
         use_delta_updates=True,
         straggler_handling_policy: StragglerPolicy = WaitForAllPolicy,
         rounds_to_train=256,
@@ -401,74 +402,41 @@ class Aggregator:
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
         """
-        logger.debug(
-            f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
-        )
+        time_to_quit = False
 
-        # first, if it is time to quit, inform the collaborator
+        # If it is time to quit, inform the collaborator.
         if self._time_to_quit():
-            logger.info(
-                "Sending signal to collaborator %s to shutdown...",
-                collaborator_name,
-            )
+            logger.info("Sending signal to collaborator %s to shutdown...", collaborator_name)
             self.quit_job_sent_to.append(collaborator_name)
 
-            tasks = None
+            tasks = []
             sleep_time = 0
             time_to_quit = True
-
             return tasks, self.round_number, sleep_time, time_to_quit
 
-        time_to_quit = False
-        # otherwise, get the tasks from our task assigner
+        # If not Fetch tasks for the collaborator.
         tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
 
-        # if no tasks, tell the collaborator to sleep
-        if len(tasks) == 0:
-            tasks = None
+        # If no tasks, signal the collaborator to sleep
+        if not tasks:
+            tasks = []
             sleep_time = Aggregator._get_sleep_time()
-
             return tasks, self.round_number, sleep_time, time_to_quit
 
-        # if we do have tasks, remove any that we already have results for
-        if isinstance(tasks[0], str):
-            # backward compatibility
-            tasks = [
-                t
-                for t in tasks
-                if not self._collaborator_task_completed(collaborator_name, t, self.round_number)
-            ]
-            if collaborator_name in self.stragglers:
-                tasks = []
+        # If tasks, skip tasks the collaborator has already completed (aggregator has results)
+        for t in tasks:
+            if self._collaborator_task_completed(collaborator_name, t, self.round_number):
+                tasks.pop(t)
 
-        else:
-            tasks = [
-                t
-                for t in tasks
-                if not self._collaborator_task_completed(
-                    collaborator_name, t.name, self.round_number
-                )
-            ]
-            if collaborator_name in self.stragglers:
-                tasks = []
+        if collaborator_name in self.stragglers:
+            tasks = []
 
-        # Do the check again because it's possible that all tasks have
-        # been completed
-        if len(tasks) == 0:
-            tasks = None
-            sleep_time = Aggregator._get_sleep_time()
-
-            return tasks, self.round_number, sleep_time, time_to_quit
-
-        logger.info(
-            f"Sending tasks to collaborator {collaborator_name} for round {self.round_number}"
-        )
+        logger.info(f"Sending tasks to `{collaborator_name}` for round {self.round_number}")
         sleep_time = 0
 
         # Start straggler handling policy for timer based callback is required
         # for %age based policy callback is not required
         self.straggler_handling_policy.start_policy(callback=self._straggler_cutoff_time_elapsed)
-
         return tasks, self.round_number, sleep_time, time_to_quit
 
     def _straggler_cutoff_time_elapsed(self) -> None:

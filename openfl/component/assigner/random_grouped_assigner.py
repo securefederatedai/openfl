@@ -100,7 +100,7 @@ class RandomGroupedAssigner(Assigner):
                 col_idx += num_col_in_group
             assert col_idx == col_list_size, "Task groups were not divided properly"
 
-    def get_tasks_for_collaborator(self, collaborator_name, round_number):
+    def get_tasks_for_collaborator(self, collaborator_name, round_number) -> list:
         """Get tasks for a specific collaborator in a specific round.
 
         Args:
@@ -112,7 +112,7 @@ class RandomGroupedAssigner(Assigner):
         """
         return self.collaborator_tasks[collaborator_name][round_number]
 
-    def get_collaborators_for_task(self, task_name, round_number):
+    def get_collaborators_for_task(self, task_name, round_number) -> list:
         """Get collaborators for a specific task in a specific round.
 
         Args:

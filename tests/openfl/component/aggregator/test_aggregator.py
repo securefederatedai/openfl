@@ -122,8 +122,8 @@ def test_time_to_quit(agg, round_number, rounds_to_train, expected):
 
 @pytest.mark.parametrize(
     'col_name,tasks,time_to_quit,exp_tasks,exp_sleep_time,exp_time_to_quit', [
-        ('col1', ['task_name'], True, None, 0, True),
-        ('col1', [], False, None, 10, False),
+        ('col1', ['task_name'], True, [], 0, True),
+        ('col1', [], False, [], 10, False),
         ('col1', ['task_name'], False, ['task_name'], 0, False),
     ])
 def test_get_tasks(agg, col_name, tasks, time_to_quit,
