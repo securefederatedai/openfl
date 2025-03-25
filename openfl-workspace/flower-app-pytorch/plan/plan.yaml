@@ -13,6 +13,7 @@ connector :
   defaults : plan/defaults/connector.yaml
   template : src.connector_flower.ConnectorFlower
   settings :
+    automatic_shutdown : True
     superlink_params :
       insecure : True
       serverappio-api-address : 127.0.0.1:9091
