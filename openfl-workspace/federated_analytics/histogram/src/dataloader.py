@@ -46,7 +46,6 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
 
         return pd.read_csv('./data/client.csv')
 
-
     def load_mnist_shard(self, shard_num, collaborator_count, **kwargs):
         """
         Load a specific shard of the MNIST dataset for a given collaborator.
@@ -63,13 +62,13 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
     def query(self, columns, **kwargs):
         """
         Query the data shard for the specified columns.
-        Parameters:
-        columns (list): A list of column names to query from the data shard.
-        **kwargs: Additional keyword arguments (currently not used).
+        Args:
+            columns (list): A list of column names to query from the data shard.
+            **kwargs: Additional keyword arguments (currently not used).
         Returns:
-        DataFrame: A DataFrame containing the data for the specified columns.
+            DataFrame: A DataFrame containing the data for the specified columns.
         Raises:
-        ValueError: If the columns parameter is not a list.
+            ValueError: If the columns parameter is not a list.
         """
         if not isinstance(columns, list):
             raise ValueError("Columns parameter must be a list")
