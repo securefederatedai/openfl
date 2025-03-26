@@ -96,3 +96,11 @@ jobs:
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Secret SSL E2E
     uses: ./.github/workflows/task_runner_secret_tls_e2e.yml
+
+  # run flower app with pytorch
+  task_runner_flower_app_pytorch:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Flower App Pytorch E2E
+    uses: ./.github/workflows/task_runner_flower_e2e.yml
