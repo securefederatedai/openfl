@@ -37,7 +37,7 @@ def test_flower_app_pytorch_native(request, fx_federation_tr):
 
 
 @pytest.mark.task_runner_dockerized_ws
-def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
+def test_flower_app_pytorch_dockerized_workspace(request, fx_federation_tr_dws):
     """
     Test federation via dockerized workspace for Flower app with PyTorch.
     Args:
