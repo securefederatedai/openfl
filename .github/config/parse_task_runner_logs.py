@@ -3,7 +3,6 @@
 
 import os
 import subprocess
-pass
 import json
 import logging
 import argparse
@@ -34,13 +33,6 @@ def get_log_files(log_dir):
         for file in files:
             if file.endswith(".log"):
                 log_files.append(os.path.join(root, file))
-
-    # Save log files to a text file
-    log_files_list = os.path.join(log_dir, "log_files.txt")
-    with open(log_files_list, "w") as f:
-        for log_file in log_files:
-            f.write(log_file + "\n")
-
     return log_files
 
 
@@ -70,10 +62,10 @@ def run_trufflehog(log_file):
         return last_json.get("unverified_secrets", 0)
     except subprocess.CalledProcessError as e:
         logger.error(f"Error running TruffleHog on file {log_file}: {e}")
-        return -1
+        raise e
     except json.JSONDecodeError as e:
         logger.error(f"Error decoding JSON output for file {log_file}: {e}")
-        return -1
+        raise e
 
 
 def main(log_dir):
@@ -92,10 +84,6 @@ def main(log_dir):
     for log_file in log_files:
         logger.info(f"Scanning file: {log_file}")
         unverified_secrets = run_trufflehog(log_file)
-
-        if unverified_secrets == -1:
-            logger.error(f"Error in {log_file} file.")
-            exit(1)
 
         if unverified_secrets > 0:
             logger.error(f"File '{log_file}' contains {unverified_secrets} unverified secrets.")
