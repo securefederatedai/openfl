@@ -1,1 +1,11 @@
 nibabel
+datasets
+transformers
+peft
+pillow
+torch
+torchinfo
+albumentations
+monai
+tensorboard
+evaluate

@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import numpy as np
 from transformers import Trainer, get_scheduler

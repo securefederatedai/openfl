@@ -38,15 +38,17 @@ def process_directory(args):
 
     slice_list = [slice_range_x, slice_range_y, slice_range_z]
 
-    for name in ["flair", "t1ce", "seg", 't2', 't1']:
+    for name in ["flair", "t1ce", "seg", "t2", "t1"]:
         file_path = os.path.join(dir_path, os.path.basename(dir_path) + f"_{name}.nii")
 
         if os.path.exists(file_path):
             img = nib.load(file_path).get_fdata()
 
-            for n, dim in enumerate(['x', 'y', 'z']):
+            for n, dim in enumerate(["x", "y", "z"]):
                 if slice_list[n] > 0:
-                    save_slices(img, output_path, os.path.basename(dir_path), name, dim, slice_list[n])
+                    save_slices(
+                        img, output_path, os.path.basename(dir_path), name, dim, slice_list[n]
+                    )
 
 
 def save_middle_slices(
@@ -72,15 +74,20 @@ def save_middle_slices(
 
 def main():
     parser = argparse.ArgumentParser(description="Process MRI slices.")
+    parser.add_argument("--dataset_path", type=str, required=True, help="Path to the dataset")
     parser.add_argument("--slice_range_x", type=int, default=240, help="Slice range for x-axis")
     parser.add_argument("--slice_range_y", type=int, default=240, help="Slice range for y-axis")
     parser.add_argument("--slice_range_z", type=int, default=155, help="Slice range for z-axis")
     args = parser.parse_args()
 
-    TRAIN_DATASET_PATH = PATH
-    OUTPUT_TRAIN_PATH = PATH/Processed_TrainingData/"
+    TRAIN_DATASET_PATH = os.path.join(
+        args.dataset_path, "BraTS2020_TrainingData", "MICCAI_BraTS2020_TrainingData"
+    )
+    OUTPUT_TRAIN_PATH = os.path.join(args.dataset_path, "Processed_TrainingData")
     if os.path.exists(OUTPUT_TRAIN_PATH):
         os.system(f"rm -rf {OUTPUT_TRAIN_PATH}")
+
+    print("dataset_path:", args.dataset_path, "output_train_path:", OUTPUT_TRAIN_PATH)
 
     save_middle_slices(
         TRAIN_DATASET_PATH,

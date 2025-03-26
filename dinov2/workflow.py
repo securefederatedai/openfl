@@ -1,21 +1,17 @@
 # %%
-import evaluate
 import torch
 import os
-import numpy as np
-from transformers import Trainer, TrainingArguments
+from transformers import TrainingArguments
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torchinfo import summary
-from peft.config import PeftConfig
-from peft import LoraConfig, TaskType, PeftModel
+from peft import LoraConfig, TaskType
 
-from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
+from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
-from openfl.experimental.workflow.placement import aggregator, collaborator
 
 os.chdir(path)
-from src.dataloader import create_dataset_dict, SEGMENT_CLASSES, collate_fn
+from src.dataloader import create_dataset_dict, SEGMENT_CLASSES
 from src.model import VitForSemanticSegmentation
 from src.utils import PeftModelForVit
 from src.unet import UNet
@@ -34,7 +30,7 @@ parser.add_argument("--use_vit", action="store_true", help="Use ViT model")
 parser.add_argument("--fast", action="store_true", help="Enable fast mode")
 parser.add_argument("--patient_percentage", type=float, default=0.1, help="Patient percentage")
 parser.add_argument("--patient_count", type=int, default=0, help="Patient count")
-parser.add_argument("--experiment", type=str, default='', help="Patient count")
+parser.add_argument("--experiment", type=str, default="", help="Patient count")
 args = parser.parse_args()
 
 use_dino = args.use_dino
@@ -88,7 +84,10 @@ if use_vit:
     else:
         summary(model.feature_extractor, input_size=(1, 3, 224, 224))
     patches = 224 // model.feature_extractor.config.patch_size
-    summary(model.classifier, input_size=(5 if use_decoder_unet else 1, patches * patches, 768))
+    embeddings = model.feature_extractor.config.hidden_size
+    summary(
+        model.classifier, input_size=(5 if use_decoder_unet else 1, patches * patches, embeddings)
+    )
 else:
     model = UNet(3, len(SEGMENT_CLASSES))
     model_type = "unet"
@@ -97,26 +96,30 @@ else:
 
 # Format output directory based on options used
 lora_type = "lora" if use_lora else "nolora"
-head_type = 'decoder' if use_decoder_unet else ''
-split_type = f"split:{str(patient_percentage).replace('.', '_')}" if patient_count == 0 else f"count:{patient_count}"
-dir_path = f'./{experiment}'
+head_type = "decoder" if use_decoder_unet else ""
+split_type = (
+    f"split:{str(patient_percentage).replace('.', '_')}"
+    if patient_count == 0
+    else f"count:{patient_count}"
+)
+dir_path = f"./{experiment}"
 os.makedirs(dir_path, exist_ok=True)
 output_dir = f"{dir_path}/{model_type}_{lora_type}_{'decoder' if use_decoder_unet else ''}_{split_type}_{'_dummy' if use_fast else ''}"
 os.makedirs(output_dir, exist_ok=True)
 
 training_args = TrainingArguments(
-    bf16=True,
+    fp16=True,
     output_dir=output_dir,
     learning_rate=1e-4,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    per_device_train_batch_size=32,
+    per_device_eval_batch_size=32,
     num_train_epochs=1,
     weight_decay=0.01,
     logging_dir=f"{output_dir}/logs",
     logging_steps=0.1,
     logging_strategy="steps",
     remove_unused_columns=False,
-    dataloader_num_workers=10,
+    dataloader_num_workers=6,
     batch_eval_metrics=True,
     report_to=["tensorboard"],  # Add this line to enable TensorBoard logging
 )
@@ -158,7 +161,7 @@ print(f"Local runtime collaborators = {local_runtime.collaborators}")
 model.to("cpu")
 flflow = FederatedFlow(
     model,
-    rounds=10 if use_fast else 10,
+    rounds=3 if use_fast else 10,
     val_set=val_set if not use_fast else val_set.select(range(len(eval_dataset) // 20)),
     training_args=training_args,
     use_lora=use_lora,

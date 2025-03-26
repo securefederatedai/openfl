@@ -14,7 +14,7 @@ SEGMENT_CLASSES = {
     3: "ENHANCING",
 }
 
-SEGMENT_CLASSES = {
+_SEGMENT_CLASSES = {
     0: "NOT tumor",
     1: "tumor",
 }
@@ -182,7 +182,7 @@ def transforms(examples):
     transformed_images, transformed_masks = [], []
 
     for image, seg_mask in zip(examples["flair"], examples["seg"]):
-        image, seg_mask = np.array(image), np.array(seg_mask)
+        image, seg_mask = np.array(image), np.array(seg_mask, np.int32)
         max_value = np.percentile(image, 95)
         min_value = np.percentile(image, 5)
         image = np.where(image <= max_value, image, max_value)
