@@ -263,7 +263,7 @@ def run_federation_for_dws(fed_obj, use_tls):
         try:
             container = dh.start_docker_container_with_federation_run(
                 participant=participant,
-                image=constants.DFLT_DOCKERIZE_IMAGE_NAME,
+                image=constants.DFLT_WORKSPACE_NAME,
                 use_tls=use_tls,
                 env_keyval_list=set_keras_backend(fed_obj.model_name) if "keras" in fed_obj.model_name else None,
             )
@@ -462,30 +462,6 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     return workspace_path, local_bind_path, agg_domain_name
 
 
-def add_local_workspace_permission(local_bind_path):
-    """
-    Add permission to workspace. This is aggregator/model owner specific operation.
-    Args:
-        workspace_path (str): Workspace path
-        agg_container_id (str): Container ID
-    """
-    try:
-        agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
-        return_code, output, error = run_command(
-            f"sudo chmod -R 777 {agg_workspace_path}",
-            workspace_path=local_bind_path,
-        )
-        if return_code != 0:
-            raise Exception(f"Failed to add local permission to workspace: {error}")
-
-        log.debug(
-            f"Recursive permission added to workspace on local machine: {agg_workspace_path}"
-        )
-    except Exception as e:
-        log.error(f"Failed to add local permission to workspace: {e}")
-        raise e
-
-
 def create_persistent_store(participant_name, local_bind_path):
     """
     Create persistent store for the participant on local machine (even for docker)
@@ -498,8 +474,7 @@ def create_persistent_store(participant_name, local_bind_path):
         error_msg = f"Failed to create persistent store for {participant_name}"
         cmd_persistent_store = (
             f"export WORKING_DIRECTORY={local_bind_path}; "
-            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; "
-            "sudo chmod -R 755 $WORKING_DIRECTORY"
+            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace"
         )
         log.debug(f"Creating persistent store")
         return_code, output, error = run_command(
@@ -639,7 +614,7 @@ def setup_collaborator(index, workspace_path, local_bind_path):
             local_bind_path, collaborator.name
         )
         copy_file_between_participants(
-            local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME
+            local_agg_ws_path, local_col_ws_path, f"{constants.DFLT_WORKSPACE_NAME}.zip"
         )
         collaborator.import_workspace()
     except Exception as e:
