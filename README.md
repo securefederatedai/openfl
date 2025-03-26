@@ -47,6 +47,10 @@ Install via PyPI (latest stable release):
 ```
 pip install -U openfl
 ```
+Or via conda:
+```
+conda install conda-forge::openfl
+```
 For more installation options, checkout the [installation guide](https://openfl.readthedocs.io/en/latest/installation.html).
 
 ## Features
