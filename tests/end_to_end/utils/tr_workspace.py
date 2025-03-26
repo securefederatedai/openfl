@@ -336,14 +336,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
+        add_data=True if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value] else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
