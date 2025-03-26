@@ -406,7 +406,7 @@ jobs:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false)) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_flower_app_pytorch')
+      (github.event.pull_request.draft == false) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_flower_app_pytorch')
 
     env:
       MODEL_NAME: "flower-app-pytorch"
