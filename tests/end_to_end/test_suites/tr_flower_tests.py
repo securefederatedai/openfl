@@ -14,7 +14,7 @@ from tests.end_to_end.utils.exceptions import FlowerAppException
 log = logging.getLogger(__name__)
 
 
-@pytest.mark.flower_native
+@pytest.mark.task_runner_basic_flower
 def test_flower_app_pytorch_native(request, fx_federation_tr):
     """
     Test federation via native task runner for Flower app with PyTorch.
