@@ -56,7 +56,7 @@ jobs:
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py \
-          -m task_runner_basic_flower --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Flower app pytorch test run completed"
 
