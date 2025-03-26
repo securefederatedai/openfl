@@ -422,13 +422,13 @@ jobs:
         uses: ./.github/actions/tr_pre_test_run
         if: ${{ always() }}
 
-      - name: Run Eden Compression Test
+      - name: Run Flower App Pytorch
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py \
           --model_name ${{ env.MODEL_NAME }} --num_rounds ${{ env.NUM_ROUNDS }} \
           --num_collaborators ${{ env.NUM_COLLABORATORS }}
-          echo "Eden compression test run completed"
+          echo "Flower app pytorch test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
