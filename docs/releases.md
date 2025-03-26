@@ -1,4 +1,20 @@
 # Releases
+## 1.8
+[Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.8)
+
+### New Features
+- [**Secure Aggregation**](https://openfl.readthedocs.io/en/latest/about/features_index/secure_aggregation.html): A privacy-preserving aggregation algorithm for Federated Learning, based on secure multiparty computation (MPC) that helps protect intermediate model updates from introspection. OpenFL now supports Secure Aggregation via both Task Runner API and Workflow API.
+
+- [**OpenFL/Flower Interop**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/flower-app-pytorch): Showcasing how FL experiments defined using the Flower API can be run as OpenFL federations via TaskRunner API. This enables combining Flower's extensive library of FL algorithms with OpenFL's advanced security features, including trusted execution, secure communication, and explicit safeguards against data exfiltration.
+
+- [**Federated Evaluation**](https://openfl.readthedocs.io/en/latest/about/features_index/fed_eval.html): Enabling seamless switching from learning to evaluation in Task Runner API without redistributing the FL plan, which is particularly advantageous in large, geo-distributed federations. Furthermore, Federated Evaluation is now available via the [Workflow API](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/405_MNIST_FederatedEvaluation.ipynb).
+
+### Enhanced Developer Experience
+- **Removing Legacy APIs**: The Python Native API and the Interactive API have been removed, along with the accompanying examples and documentation.
+
+- **ML Frameworks Integration**: Upgraded PyTorch-based FL workspaces to 2.4.1, and provided additional [Keras 3 back-ends](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras) (incl. Jax and PyTorch).
+
+- **Enhanced Resilience**: OpenFL Task Runner API experiments can now recover from Collaborator and Aggregator restarts.
 
 ## 1.7
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.7)
