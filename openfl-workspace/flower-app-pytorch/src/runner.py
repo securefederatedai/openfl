@@ -7,8 +7,13 @@ import numpy as np
 from pathlib import Path
 import sys
 import socket
+from src.util import is_safe_path
 
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
+flwr_home = os.path.join(os.getcwd(), "save/.flwr")
+if not is_safe_path(flwr_home):
+    raise ValueError("Invalid path for FLWR_HOME")
+
+os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class FlowerTaskRunner(TaskRunner):
@@ -177,7 +182,7 @@ def get_dynamic_port():
     # Create a socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind to port 0 to let the OS assign an available port
-        s.bind(('', 0))
+        s.bind(('127.0.0.1', 0))
         # Get the assigned port number
         port = s.getsockname()[1]
     return port
