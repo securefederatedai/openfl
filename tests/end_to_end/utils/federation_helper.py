@@ -218,18 +218,15 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True):
+def run_federation(fed_obj):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
-        install_dependencies (bool): Install dependencies on collaborators (default is True)
     Returns:
         bool: True if successful, else False
     """
     executor = concurrent.futures.ThreadPoolExecutor()
-    if install_dependencies:
-        install_dependencies_on_collaborators(fed_obj)
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
@@ -275,27 +272,6 @@ def run_federation_for_dws(fed_obj, use_tls):
         participant.res_file = os.path.join(participant.workspace_path, "logs", f"{participant.name}.log")
 
     return True
-
-
-def install_dependencies_on_collaborators(fed_obj):
-    """
-    Install dependencies on all the collaborators
-    """
-    executor = concurrent.futures.ThreadPoolExecutor()
-    # Install dependencies on collaborators
-    # This is a time taking process, thus doing at this stage after all verification is done
-    log.info("Installing dependencies on collaborators. This might take some time...")
-    futures = [
-        executor.submit(participant.install_dependencies)
-        for participant in fed_obj.collaborators
-    ]
-    results = [f.result() for f in futures]
-    log.info(
-        f"Results from all the collaborators for installation of dependencies: {results}"
-    )
-
-    if not all(results):
-        raise Exception("Failed to install dependencies on one or more collaborators")
 
 
 def verify_federation_run_completion(fed_obj, test_env, num_rounds):
