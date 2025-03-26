@@ -5,6 +5,7 @@
 <div align="center">
 	
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
+[![Conda version](https://img.shields.io/conda/vn/conda-forge/openfl?color=green)](https://pypi.org/project/openfl/)
 [![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
