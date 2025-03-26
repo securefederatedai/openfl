@@ -6,5 +6,5 @@ pytest-asyncio==0.25.3
 pytest-mock==3.14.0
 defusedxml==0.7.1
 matplotlib==3.10.1
-fpdf==1.7.2
+fpdf2==2.8.2
 papermill==2.6.0

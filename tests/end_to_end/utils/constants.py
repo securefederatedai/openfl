@@ -43,7 +43,7 @@ DATA_SETUP_FILE = "setup_data.py" # currently xgb_higgs is using this file to se
 
 AGG_COL_RESULT_FILE = "{0}/{1}/workspace/{1}.log"  # example - /tmp/my_federation/aggregator/workspace/aggregator.log
 
-AGG_WORKSPACE_ZIP_NAME = "workspace.zip"
+DFLT_WORKSPACE_NAME = "workspace"
 
 # Memory logs related
 AGG_MEM_USAGE_JSON = "{}/aggregator/workspace/logs/aggregator_memory_usage.json"  # example - /tmp/my_federation/aggregator/workspace/logs/aggregator_memory_usage.json
@@ -55,5 +55,4 @@ COL_START_CMD = "fx collaborator start -n {}"
 COL_END_MSG = "Received shutdown signal"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
-DFLT_DOCKERIZE_IMAGE_NAME = "workspace"
 EXCEPTION = "Exception"
