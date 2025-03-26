@@ -28,7 +28,6 @@ on:
           - keras/mnist
           - keras/torch/mnist
           - keras/jax/mnist
-          - flower-app-pytorch
       python_version:
         description: "Python version"
         required: false
@@ -51,7 +50,6 @@ on:
           - test_memory_logs
           - test_straggler_check
           - test_eden_compression
-          - test_flower_app_pytorch
         required: false
 
 permissions:
@@ -398,40 +396,3 @@ jobs:
         if: ${{ always() }}
         with:
           test_type: "With_TLS"
-
-  test_flower_app_pytorch:
-    name: With TLS (flower-app-pytorch, 3.10)
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_flower_app_pytorch')
-
-    env:
-      MODEL_NAME: "flower-app-pytorch"
-      PYTHON_VERSION: "3.10"
-      NUM_ROUNDS: 1 # DO NOT change this value as it is used in the test suite
-
-    steps:
-      - name: Checkout OpenFL repository
-        id: checkout_openfl
-        uses: actions/checkout@v4
-
-      - name: Pre test run
-        uses: ./.github/actions/tr_pre_test_run
-        if: ${{ always() }}
-
-      - name: Run Flower App Pytorch
-        id: run_tests
-        run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py \
-          -m task_runner_basic_flower --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
-          echo "Flower app pytorch test run completed"
-
-      - name: Post test run
-        uses: ./.github/actions/tr_post_test_run
-        if: ${{ always() }}
-        with:
-          test_type: "With_TLS_Flower"
