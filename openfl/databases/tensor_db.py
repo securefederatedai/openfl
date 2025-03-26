@@ -13,7 +13,7 @@ import pandas as pd
 
 from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _store
 from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.utilities import FALocalTensor, LocalTensor, TensorKey, change_tags
+from openfl.utilities import LocalTensor, TensorKey, change_tags
 
 
 class TensorDB:
@@ -188,9 +188,7 @@ class TensorDB:
         self,
         tensor_key: TensorKey,
         collaborator_weight_dict: dict,
-        collaborator_names: list,
         aggregation_function: AggregationFunction,
-        mode: str = "learning",
     ) -> Optional[np.ndarray]:
         """
         Determine whether all of the collaborator tensors are present for a
@@ -214,11 +212,12 @@ class TensorDB:
                 returns None.
             None: if not all values are present.
         """
-        if mode == "learning" and len(collaborator_weight_dict) != 0:
+        if len(collaborator_weight_dict) != 0:
             assert np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01, (
                 f"Collaborator weights do not sum to 1.0: {collaborator_weight_dict}"
             )
 
+        collaborator_names = collaborator_weight_dict.keys()
         agg_tensor_dict = {}
 
         # Check if the aggregated tensor is already present in TensorDB
@@ -249,23 +248,15 @@ class TensorDB:
                 return None
             else:
                 agg_tensor_dict[col] = raw_df.iloc[0]
-        if mode == "learning":
-            local_tensors = [
-                LocalTensor(
-                    col_name=col_name,
-                    tensor=agg_tensor_dict[col_name],
-                    weight=collaborator_weight_dict[col_name],
-                )
-                for col_name in collaborator_names
-            ]
-        else:
-            local_tensors = [
-                FALocalTensor(
-                    col_name=col_name,
-                    tensor=agg_tensor_dict[col_name],
-                )
-                for col_name in collaborator_names
-            ]
+
+        local_tensors = [
+            LocalTensor(
+                col_name=col_name,
+                tensor=agg_tensor_dict[col_name],
+                weight=collaborator_weight_dict[col_name],
+            )
+            for col_name in collaborator_names
+        ]
 
         if hasattr(aggregation_function, "_privileged"):
             if aggregation_function._privileged:

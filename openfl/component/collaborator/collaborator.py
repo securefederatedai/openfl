@@ -75,7 +75,6 @@ class Collaborator:
         write_logs=False,
         callbacks: Optional[List] = [],
         secure_aggregation=False,
-        mode="learning",
     ):
         """Initialize the Collaborator object.
 
@@ -118,33 +117,31 @@ class Collaborator:
 
         self.task_config = task_config
 
-        self.mode = mode
+        # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
+        if hasattr(OptTreatment, opt_treatment):
+            self.opt_treatment = OptTreatment[opt_treatment]
+        else:
+            logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
+            raise NotImplementedError(f"Unknown opt_treatment: {opt_treatment}.")
+        self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+
+        logger.warning(
+            "Argument `device_assignment_policy` is deprecated and will be removed in the future."
+        )
+        del device_assignment_policy
+
+        # Secure aggregation
         self._secure_aggregation_enabled = secure_aggregation
-        if self.mode == "learning":
-            # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
-            if hasattr(OptTreatment, opt_treatment):
-                self.opt_treatment = OptTreatment[opt_treatment]
+        if self._secure_aggregation_enabled:
+            self._private_mask = None
+            self._shared_mask = None
+            secure_aggregation_callback = callbacks_module.SecAggBootstrapping()
+            if isinstance(callbacks, callbacks_module.Callback):
+                callbacks = [callbacks, secure_aggregation_callback]
+            elif isinstance(callbacks, list):
+                callbacks.append(secure_aggregation_callback)
             else:
-                logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
-                raise NotImplementedError(f"Unknown opt_treatment: {opt_treatment}.")
-            self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
-
-            logger.warning(
-                "`device_assignment_policy` is deprecated and will be removed in the future."
-            )
-            del device_assignment_policy
-
-            # Secure aggregation
-            if self._secure_aggregation_enabled:
-                self._private_mask = None
-                self._shared_mask = None
-                secure_aggregation_callback = callbacks_module.SecAggBootstrapping()
-                if isinstance(callbacks, callbacks_module.Callback):
-                    callbacks = [callbacks, secure_aggregation_callback]
-                elif isinstance(callbacks, list):
-                    callbacks.append(secure_aggregation_callback)
-                else:
-                    callbacks = [secure_aggregation_callback]
+                callbacks = [secure_aggregation_callback]
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -190,7 +187,7 @@ class Collaborator:
         logger.info("Received shutdown signal. Exiting...")
 
     def do_task(self, task, round_number) -> dict:
-        """Perform the specified task for federated learning or analytics.
+        """Perform the specified task.
 
         Args:
             task (list_of_str): List of tasks.
@@ -207,53 +204,43 @@ class Collaborator:
         func_name = self.task_config[task_name]["function"]
         kwargs = self.task_config[task_name]["kwargs"]
 
+        # this would return a list of what tensors we require as TensorKeys
+        required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
+            func_name, **kwargs
+        )
+
+        # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
+        # round_offset)
+        # so we need to update these keys to their "absolute values"
+        required_tensorkeys = []
+        for (
+            tname,
+            origin,
+            rnd_num,
+            report,
+            tags,
+        ) in required_tensorkeys_relative:
+            if origin == "GLOBAL":
+                origin = self.aggregator_uuid
+            else:
+                origin = self.collaborator_name
+
+            # rnd_num is the relative round. So if rnd_num is -1, get the
+            # tensor from the previous round
+            required_tensorkeys.append(
+                TensorKey(tname, origin, rnd_num + round_number, report, tags)
+            )
+
+        # print('Required tensorkeys = {}'.format(
+        # [tk[0] for tk in required_tensorkeys]))
+        input_tensor_dict = {
+            k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
+        }
+
+        # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
         logger.debug("Using TaskRunner subclassing API")
-        if self.mode == "learning":
-            # this would return a list of what tensors we require as TensorKeys
-            required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
-                func_name, **kwargs
-            )
-
-            # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
-            # round_offset)
-            # so we need to update these keys to their "absolute values"
-            required_tensorkeys = []
-            for (
-                tname,
-                origin,
-                rnd_num,
-                report,
-                tags,
-            ) in required_tensorkeys_relative:
-                if origin == "GLOBAL":
-                    origin = self.aggregator_uuid
-                else:
-                    origin = self.collaborator_name
-
-                # rnd_num is the relative round. So if rnd_num is -1, get the
-                # tensor from the previous round
-                required_tensorkeys.append(
-                    TensorKey(tname, origin, rnd_num + round_number, report, tags)
-                )
-
-            # print('Required tensorkeys = {}'.format(
-            # [tk[0] for tk in required_tensorkeys]))
-            input_tensor_dict = {
-                k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
-            }
-
-            global_output_tensor_dict, local_output_tensor_dict = func(
-                col_name=self.collaborator_name,
-                round_num=round_number,
-                input_tensor_dict=input_tensor_dict,
-                **kwargs,
-            )
-            # If secure aggregation is enabled, add masks to the dict to be shared
-            # with the aggregator.
-            if self._secure_aggregation_enabled:
-                self._apply_masks(global_output_tensor_dict)
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -266,15 +253,10 @@ class Collaborator:
         if self._secure_aggregation_enabled:
             self._apply_masks(global_output_tensor_dict)
 
-            global_output_tensor_dict = {}
-            tags = ("analysis",)
-            for key, metric in metrics.items():
-                global_output_tensor_dict[
-                    TensorKey(key, self.collaborator_name, round_number, False, tags)
-                ] = metric
+        # Save global and local output_tensor_dicts to TensorDB
+        self.tensor_db.cache_tensor(global_output_tensor_dict)
+        self.tensor_db.cache_tensor(local_output_tensor_dict)
 
-            self.tensor_db.cache_tensor(global_output_tensor_dict)
-            metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
         # send the results for this tasks; delta and compression will occur in
         # this function
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
