@@ -44,6 +44,13 @@ def common_workspace_creation(request, eval_scope=False):
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
+    # For Flower App Pytorch, num of rounds must be 1
+    if request.config.model_name.lower() == constants.ModelName.FLOWER_APP_PYTORCH.value:
+        if request.config.num_rounds != 1:
+            raise ex.FlowerAppException(
+                "Flower app with PyTorch only supports 1 round of training."
+            )
+
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
     model_owner = mo_model.ModelOwner(
@@ -141,7 +148,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:

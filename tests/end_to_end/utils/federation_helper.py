@@ -419,7 +419,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     test_env = request.config.test_env
 
     # Validate the model name and create the workspace name
-    if not request.config.model_name.replace("/", "_").upper() in constants.ModelName._member_names_:
+    if not request.config.model_name.replace("/", "_").replace("-", "_").upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path specific to the model and the test case
@@ -649,6 +649,8 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
         # Below step will also modify the data.yaml file for all the collaborators
         if model_name == constants.ModelName.XGB_HIGGS.value:
             download_higgs_data(collaborators, local_bind_path)
+        elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
+            download_flower_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
@@ -716,6 +718,19 @@ def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
 
+def download_flower_data(collaborators, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+
+
 def download_higgs_data(collaborators, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
@@ -725,6 +740,15 @@ def download_higgs_data(collaborators, local_bind_path):
         local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+    
+
+def common_download_for_higgs_and_flower(collaborators, local_bind_path):
+    """
+    Common function to download the data for both Higgs and Flower models.
+    In future, if the data setup for other models is similar, we can use this function.
+    Also, if the setup changes for any of the models, we can modify this function to accommodate the changes.
     """
     log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
     try:
@@ -740,7 +764,7 @@ def download_higgs_data(collaborators, local_bind_path):
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
         subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for XGBoost model")
+        raise ex.DataSetupException(f"Failed to download data for given model")
 
     try:
         # Copy the data to the respective workspaces based on the index
@@ -761,9 +785,9 @@ def download_higgs_data(collaborators, local_bind_path):
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
-    # Below step is specific to XGBoost model which uses higgs_data folder to create data folders.
+    # XGBoost model uses folder name higgs_data and Flower model uses data to create data folders.
     shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
-
+    shutil.rmtree(os.path.join(local_bind_path, "data"), ignore_errors=True)
     return True
 
 
