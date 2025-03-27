@@ -5,6 +5,10 @@ name: Task_Runner_Flower_E2E  # Please do not modify the name as it is used in t
 
 on:
   workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       num_collaborators:
@@ -32,6 +36,7 @@ env:
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
   MODEL_NAME: "flower-app-pytorch"
   PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 
 jobs:
   test_flower_app_pytorch:
@@ -47,6 +52,8 @@ jobs:
       - name: Checkout OpenFL repository
         id: checkout_openfl
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
 
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
