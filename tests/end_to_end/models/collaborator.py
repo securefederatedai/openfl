@@ -147,26 +147,6 @@ class Collaborator():
             raise e
         return True
 
-    def install_dependencies(self):
-        """
-        Install the dependencies for the collaborator
-        Returns:
-            bool: True if successful, else False
-        """
-        try:
-            cmd = f"pip install -r requirements.txt"
-            error_msg = f"Failed to install dependencies for {self.collaborator_name}"
-            return_code, output, error = fh.run_command(
-                cmd,
-                error_msg=error_msg,
-                container_id=self.container_id,
-                workspace_path=self.workspace_path,
-            )
-        except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
-        return True
-
     def import_workspace(self):
         """
         Import the workspace

@@ -121,7 +121,7 @@ We proceed with the automatic shutdown method of execution.
 Initialize the plan.
 
 ```SH
-fx plan initialize --a localhost
+fx plan initialize -a localhost
 ```
 
 Run the workspace as normal (aggregator setup, collaborator setup, etc.):
