@@ -151,6 +151,28 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
+  # only run on schedule
+  run_trivy:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+    name: Run Trivy Code Scanner
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/trivy.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+
+  # only run on schedule
+  run_bandit:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+    name: Run Bandit Code Scanner
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/bandit.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
     if: |
@@ -167,6 +189,8 @@ jobs:
       task_runner_straggler_e2e,
       task_runner_dockerized_e2e,
       task_runner_secret_ssl_e2e,
-      task_runner_flower_app_pytorch
+      task_runner_flower_app_pytorch,
+      run_trivy,
+      run_bandit
     ]
     uses: ./.github/workflows/publish_nightly_package.yml
