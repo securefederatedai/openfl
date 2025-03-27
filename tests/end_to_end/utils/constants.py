@@ -19,6 +19,7 @@ class ModelName(Enum):
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
     XGB_HIGGS = "xgb_higgs"
     GANDLF_SEG_TEST = "gandlf_seg_test"
+    FLOWER_APP_PYTORCH = "flower-app-pytorch"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5

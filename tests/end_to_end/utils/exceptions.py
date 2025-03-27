@@ -119,3 +119,8 @@ class TensorDBException(Exception):
 class GaNDLFConfigSegException(Exception):
     """Exception for GaNDLF config segmentation file"""
     pass
+
+
+class FlowerAppException(Exception):
+    """Exception for Flower app"""
+    pass
