@@ -170,8 +170,6 @@ jobs:
     uses: ./.github/workflows/bandit.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
-    with:
-      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
