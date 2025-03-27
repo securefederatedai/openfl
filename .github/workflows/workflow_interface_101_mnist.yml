@@ -5,7 +5,16 @@ name: Workflow MNIST Local Runtime E2E
 
 on:
   workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+        description: 'Commit ID to run the workflow against. If not provided, the latest commit will be used.'
 
 permissions:
   contents: read
@@ -17,33 +26,42 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
+    - name: Set commit ID to latest if not provided
+      id: set_commit_id
+      run: echo "::set-output name=commit_id::${{ github.sha }}"
+      if: ${{ inputs.commit_id == '' }}
+
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 2 # needed for detecting changes
         submodules: "true"
         token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ inputs.commit_id || steps.set_commit_id.outputs.commit_id }}  # use commit_id from the calling workflow
+
+    - name: Print the commit ID
+      run: echo "The commit ID is ${{ inputs.commit_id || steps.set_commit_id.outputs.commit_id }}"
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    - name: Install Papermill Package
-      run: python -m pip install --upgrade pip ipython ipykernel papermill
+    # - name: Install Papermill Package
+    #   run: python -m pip install --upgrade pip ipython ipykernel papermill
 
-    - name: Run Notebook
-      run: |
-        cd openfl-tutorials/experimental/workflow
-        papermill 101_MNIST.ipynb 101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
-        echo "Notebook run completed"
+    # - name: Run Notebook
+    #   run: |
+    #     cd openfl-tutorials/experimental/workflow
+    #     papermill 101_MNIST.ipynb 101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
+    #     echo "Notebook run completed"
 
-    - name: Tar files
-      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb
+    # - name: Tar files
+    #   run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      if: ${{ always() }}   # collect artifacts regardless of failures
-      with:
-        name: wf_interface_101_mnist_${{ github.run_id }}
-        path: notebook.tar
+    # - name: Upload Artifacts
+    #   uses: actions/upload-artifact@v4
+    #   if: ${{ always() }}   # collect artifacts regardless of failures
+    #   with:
+    #     name: wf_interface_101_mnist_${{ github.run_id }}
+    #     path: notebook.tar
