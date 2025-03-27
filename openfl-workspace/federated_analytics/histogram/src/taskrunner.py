@@ -25,7 +25,7 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def analysis(self, columns, **kwargs):
+    def analysis_task(self, columns, **kwargs):
         """
         Perform analysis on the specified columns and compute histograms.
         Args:

@@ -5,14 +5,17 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    save_path : save/result.csv
-    mode: analytics
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/result.csv
+    rounds_to_train : 10
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
-    mode: analytics
+    use_delta_updates    : false
+    opt_treatment    : RESET
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
