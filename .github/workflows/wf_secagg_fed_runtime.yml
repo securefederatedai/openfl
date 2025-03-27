@@ -27,11 +27,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
-    - name: Set commit ID to latest if not provided
-      id: set_commit_id
-      run: echo "commit_id=$(github.sha)" >> $GITHUB_OUTPUT
-      if: ${{ inputs.commit_id == '' }}
-
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:

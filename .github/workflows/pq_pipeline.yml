@@ -19,10 +19,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
 
 jobs:
-  set_commit_id:
+  set_commit_id_for_all_jobs:
     name: Get/Set Commit ID
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
+    outputs:
+      commit_id: ${{ steps.set_commit_id.outputs.commit_id }}
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
