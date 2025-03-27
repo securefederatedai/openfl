@@ -403,8 +403,9 @@ class Aggregator:
             time_to_quit (bool): Whether it's time to quit.
         """
         time_to_quit = False
+        sleep_time = Aggregator._get_sleep_time()
 
-        # If it is time to quit, inform the collaborator.
+        # If time to quit, inform collaborator.
         if self._time_to_quit():
             logger.info("Sending signal to collaborator %s to shutdown...", collaborator_name)
             self.quit_job_sent_to.append(collaborator_name)
@@ -414,25 +415,18 @@ class Aggregator:
             time_to_quit = True
             return tasks, self.round_number, sleep_time, time_to_quit
 
-        # If not Fetch tasks for the collaborator.
+        # Fetch tasks for the collaborator.
         tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
 
-        # If no tasks, signal the collaborator to sleep
-        if not tasks:
-            tasks = []
-            sleep_time = Aggregator._get_sleep_time()
-            return tasks, self.round_number, sleep_time, time_to_quit
-
-        # If tasks, skip tasks the collaborator has already completed (aggregator has results)
-        for t in tasks:
-            if self._collaborator_task_completed(collaborator_name, t, self.round_number):
-                tasks.pop(t)
+        # Filter out tasks that have already been completed by the collaborator.
+        tasks = [
+            t
+            for t in tasks
+            if not self._collaborator_task_completed(collaborator_name, t, self.round_number)
+        ]
 
         if collaborator_name in self.stragglers:
             tasks = []
-
-        logger.info(f"Sending tasks to `{collaborator_name}` for round {self.round_number}")
-        sleep_time = 0
 
         # Start straggler handling policy for timer based callback is required
         # for %age based policy callback is not required
