@@ -8,7 +8,7 @@ aggregator :
     init_state_path : save/init.pbuf
     best_state_path : save/best.pbuf
     last_state_path : save/result.csv
-    rounds_to_train : 10
+    rounds_to_train : 1
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

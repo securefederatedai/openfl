@@ -16,7 +16,7 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
         # download data
         self._download_raw_data()
         # create shards
-        self.data_shard = self.load_mnist_shard(
+        self.data_shard = self.load_mnist_data_shard(
             shard_num=int(data_path), **kwargs
         )
 
@@ -35,9 +35,9 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
         data = iris['data']
         data.to_csv('./data/client.csv', index=False)
 
-    def _load_datashards(self):
+    def _load_data(self):
         """
-        Loads data shards from a CSV file.
+        Loads data from a CSV file.
         This method reads the data from a CSV file located at './data/client.csv'
         and returns it as a pandas DataFrame.
         Returns:
@@ -46,7 +46,7 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
 
         return pd.read_csv('./data/client.csv')
 
-    def load_mnist_shard(self, shard_num, collaborator_count, **kwargs):
+    def load_mnist_data_shard(self, shard_num, collaborator_count, **kwargs):
         """
         Load a specific shard of the MNIST dataset for a given collaborator.
         Args:
@@ -57,7 +57,7 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
             pandas.DataFrame: The shard of the MNIST dataset corresponding to the given shard number.
         """
 
-        return self._load_datashards().iloc[shard_num::collaborator_count]
+        return self._load_data().iloc[shard_num-1::collaborator_count]
 
     def query(self, columns, **kwargs):
         """

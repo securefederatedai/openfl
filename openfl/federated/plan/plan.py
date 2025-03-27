@@ -671,7 +671,6 @@ class Plan:
 
         # Create and save the protobuf message
         try:
-            print("construct_model_proto called from save_model_to_state_file in plan.py")
             model_proto = utils.construct_model_proto(
                 tensor_dict=tensor_dict, round_number=round_number, tensor_pipe=tensor_pipe
             )
