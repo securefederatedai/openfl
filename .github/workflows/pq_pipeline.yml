@@ -104,3 +104,23 @@ jobs:
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Flower App Pytorch E2E
     uses: ./.github/workflows/task_runner_flower_e2e.yml
+
+  # publish nightly package to PyPI (only run on schedule)
+  publish_package:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
+    name: Publish Nightly Package to PyPI
+    needs: [
+      wf_mnist_local_runtime,
+      wf_watermark_e2e,
+      wf_secagg_e2e,
+      task_runner_e2e,
+      task_runner_resiliency_e2e,
+      task_runner_fedeval_e2e,
+      task_runner_secure_agg_e2e,
+      task_runner_straggler_e2e,
+      task_runner_dockerized_e2e,
+      task_runner_secret_ssl_e2e,
+      task_runner_flower_app_pytorch
+    ]
+    uses: ./.github/workflows/publish_nightly_package.yml
