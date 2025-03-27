@@ -19,7 +19,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
 
 jobs:
-  set_commit_id_for_all_jobs:
+  set_commit_id_for_all_jobs: # Do not change this job name, it is used by other jobs to get the commit ID
     name: Get/Set Commit ID
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
@@ -43,7 +43,7 @@ jobs:
     needs: set_commit_id
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   wf_watermark_e2e:
     if: |
@@ -53,7 +53,7 @@ jobs:
     needs: wf_mnist_local_runtime
     uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   wf_secagg_e2e:
     if: |
@@ -63,7 +63,7 @@ jobs:
     needs: wf_watermark_e2e
     uses: ./.github/workflows/wf_secagg_fed_runtime.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_e2e:
     if: |
@@ -73,7 +73,7 @@ jobs:
     needs: set_commit_id
     uses: ./.github/workflows/task_runner_basic_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_resiliency_e2e:
     if: |
@@ -83,7 +83,7 @@ jobs:
     needs: task_runner_e2e
     uses: ./.github/workflows/task_runner_resiliency_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_fedeval_e2e:
     if: |
@@ -93,7 +93,7 @@ jobs:
     needs: task_runner_e2e
     uses: ./.github/workflows/task_runner_fedeval_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_secure_agg_e2e:
     if: |
@@ -103,7 +103,7 @@ jobs:
     needs: set_commit_id
     uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_straggler_e2e:
     if: |
@@ -113,7 +113,7 @@ jobs:
     needs: task_runner_resiliency_e2e
     uses: ./.github/workflows/task_runner_straggler_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   # run basic dockerized test with keras/mnist
   task_runner_dockerized_e2e:
@@ -124,7 +124,7 @@ jobs:
     needs: task_runner_straggler_e2e
     uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   # run testssl for task runner
   task_runner_secret_ssl_e2e:
@@ -135,7 +135,7 @@ jobs:
     needs: set_commit_id
     uses: ./.github/workflows/task_runner_secret_tls_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   # run flower app with pytorch
   task_runner_flower_app_pytorch:
@@ -146,7 +146,7 @@ jobs:
     needs: set_commit_id
     uses: ./.github/workflows/task_runner_flower_e2e.yml
     with:
-      commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   create_package_on_success:
     name: Create Package on Success
