@@ -145,10 +145,10 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # only run on schedule
   run_trivy:
     if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     name: Run Trivy Code Scanner
     needs: set_commit_id_for_all_jobs
     permissions:
@@ -159,10 +159,10 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # only run on schedule
   run_bandit:
     if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     name: Run Bandit Code Scanner
     needs: set_commit_id_for_all_jobs
     permissions:
