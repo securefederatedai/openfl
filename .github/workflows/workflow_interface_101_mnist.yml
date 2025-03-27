@@ -24,10 +24,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
-    - name: Print commit ID from inputs
-      run: |
-        echo "Commit ID from inputs: ${{ inputs.commit_id }}"
-
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:

@@ -48,126 +48,126 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # wf_watermark_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: Workflow Watermarking Federated Runtime E2E
-  #   needs: wf_mnist_local_runtime
-  #   uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  wf_watermark_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Watermarking Federated Runtime E2E
+    needs: wf_mnist_local_runtime
+    uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # wf_secagg_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: Workflow Secure Aggregation Federated Runtime E2E
-  #   needs: wf_watermark_e2e
-  #   uses: ./.github/workflows/wf_secagg_fed_runtime.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  wf_secagg_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Secure Aggregation Federated Runtime E2E
+    needs: wf_watermark_e2e
+    uses: ./.github/workflows/wf_secagg_fed_runtime.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # task_runner_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner E2E
-  #   needs: set_commit_id_for_all_jobs
-  #   uses: ./.github/workflows/task_runner_basic_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  task_runner_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner E2E
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/task_runner_basic_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # task_runner_resiliency_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Resiliency E2E
-  #   needs: task_runner_e2e
-  #   uses: ./.github/workflows/task_runner_resiliency_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  task_runner_resiliency_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Resiliency E2E
+    needs: task_runner_e2e
+    uses: ./.github/workflows/task_runner_resiliency_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # task_runner_fedeval_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner FedEval E2E
-  #   needs: task_runner_e2e
-  #   uses: ./.github/workflows/task_runner_fedeval_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  task_runner_fedeval_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner FedEval E2E
+    needs: task_runner_e2e
+    uses: ./.github/workflows/task_runner_fedeval_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # task_runner_secure_agg_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Secure Aggregation E2E
-  #   needs: set_commit_id_for_all_jobs
-  #   uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  task_runner_secure_agg_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Secure Aggregation E2E
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # task_runner_straggler_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Straggler E2E
-  #   needs: task_runner_resiliency_e2e
-  #   uses: ./.github/workflows/task_runner_straggler_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  task_runner_straggler_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Straggler E2E
+    needs: task_runner_resiliency_e2e
+    uses: ./.github/workflows/task_runner_straggler_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # # run basic dockerized test with keras/mnist
-  # task_runner_dockerized_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Dockerized E2E
-  #   needs: task_runner_straggler_e2e
-  #   uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  # run basic dockerized test with keras/mnist
+  task_runner_dockerized_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Dockerized E2E
+    needs: task_runner_straggler_e2e
+    uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # # run testssl for task runner
-  # task_runner_secret_ssl_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Secret SSL E2E
-  #   needs: set_commit_id_for_all_jobs
-  #   uses: ./.github/workflows/task_runner_secret_tls_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  # run testssl for task runner
+  task_runner_secret_ssl_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Secret SSL E2E
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/task_runner_secret_tls_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # # run flower app with pytorch
-  # task_runner_flower_app_pytorch:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: TaskRunner Flower App Pytorch E2E
-  #   needs: set_commit_id_for_all_jobs
-  #   uses: ./.github/workflows/task_runner_flower_e2e.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  # run flower app with pytorch
+  task_runner_flower_app_pytorch:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Flower App Pytorch E2E
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/task_runner_flower_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # publish nightly package to PyPI
+  # publish nightly package to PyPI (only run on schedule)
   publish_package:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
     name: Publish Nightly Package to PyPI
     needs: [
       wf_mnist_local_runtime,
-      # wf_watermark_e2e,
-      # wf_secagg_e2e,
-      # task_runner_e2e,
-      # task_runner_resiliency_e2e,
-      # task_runner_fedeval_e2e,
-      # task_runner_secure_agg_e2e,
-      # task_runner_straggler_e2e,
-      # task_runner_dockerized_e2e,
-      # task_runner_secret_ssl_e2e,
-      # task_runner_flower_app_pytorch
+      wf_watermark_e2e,
+      wf_secagg_e2e,
+      task_runner_e2e,
+      task_runner_resiliency_e2e,
+      task_runner_fedeval_e2e,
+      task_runner_secure_agg_e2e,
+      task_runner_straggler_e2e,
+      task_runner_dockerized_e2e,
+      task_runner_secret_ssl_e2e,
+      task_runner_flower_app_pytorch
     ]
     uses: ./.github/workflows/publish_nightly_package.yml
     with:
