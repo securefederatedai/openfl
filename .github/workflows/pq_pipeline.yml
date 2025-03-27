@@ -146,8 +146,8 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id.outputs.commit_id }}
 
-  final_check:
-    name: Final Check
+  create_package_on_success:
+    name: Create Package on Success
     runs-on: ubuntu-22.04
     needs: [
       wf_mnist_local_runtime,
@@ -166,37 +166,20 @@ jobs:
     steps:
     - name: Check all previous jobs
       id: final_check
+      if: |
+        (needs.wf_mnist_local_runtime.result == 'success' || needs.wf_mnist_local_runtime.result == 'skipped') &&
+        (needs.wf_watermark_e2e.result == 'success' || needs.wf_watermark_e2e.result == 'skipped') &&
+        (needs.wf_secagg_e2e.result == 'success' || needs.wf_secagg_e2e.result == 'skipped') &&
+        (needs.task_runner_e2e.result == 'success' || needs.task_runner_e2e.result == 'skipped') &&
+        (needs.task_runner_resiliency_e2e.result == 'success' || needs.task_runner_resiliency_e2e.result == 'skipped') &&
+        (needs.task_runner_fedeval_e2e.result == 'success' || needs.task_runner_fedeval_e2e.result == 'skipped') &&
+        (needs.task_runner_secure_agg_e2e.result == 'success' || needs.task_runner_secure_agg_e2e.result == 'skipped') &&
+        (needs.task_runner_straggler_e2e.result == 'success' || needs.task_runner_straggler_e2e.result == 'skipped') &&
+        (needs.task_runner_dockerized_e2e.result == 'success' || needs.task_runner_dockerized_e2e.result == 'skipped') &&
+        (needs.task_runner_secret_ssl_e2e.result == 'success' || needs.task_runner_secret_ssl_e2e.result == 'skipped') &&
+        (needs.task_runner_flower_app_pytorch.result == 'success' || needs.task_runner_flower_app_pytorch.result == 'skipped')
       run: |
-        jobs=(
-          wf_mnist_local_runtime
-          wf_watermark_e2e
-          wf_secagg_e2e
-          task_runner_e2e
-          task_runner_resiliency_e2e
-          task_runner_fedeval_e2e
-          task_runner_secure_agg_e2e
-          task_runner_straggler_e2e
-          task_runner_dockerized_e2e
-          task_runner_secret_ssl_e2e
-          task_runner_flower_app_pytorch
-        )
-        all_passed=true
-        for job in "${jobs[@]}"; do
-          if [[ "${{ needs[$job].result }}" != "success" && "${{ needs[$job].result }}" != "skipped" ]]; then
-            all_passed=false
-            break
-          fi
-        done
-        if [ "$all_passed" = true ]; then
-          echo "All previous jobs were successful."
-          echo "all_passed=$all_passed" >> $GITHUB_OUTPUT
-        else
-          echo "Some jobs failed."
-        fi
-
-    - name: Create a package if all jobs successful."
-      if: ${{ fromJson(needs.final_check.outputs.all_passed) == 'true' }}
-      run: |
+        echo "All previous jobs were successful."
         openfl_version=$(pip list | grep openfl | awk '{print $2}')
         date=$(date +%Y%m%d)
         package_name="openfl-nightly-${openfl_version}-${date}"
