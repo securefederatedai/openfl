@@ -10,11 +10,6 @@ on:
         required: false
         type: string
   workflow_dispatch:
-    inputs:
-      commit_id:
-        required: false
-        type: string
-        description: 'Commit ID to run the workflow against. If not provided, the latest commit will be used.'
 
 permissions:
   contents: read
