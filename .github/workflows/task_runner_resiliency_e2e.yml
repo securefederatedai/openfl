@@ -7,7 +7,7 @@ on:
   workflow_call:
     inputs:
       commit_id:
-        required: true
+        required: false
         type: string
   workflow_dispatch:
     inputs:
