@@ -40,7 +40,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: Workflow MNIST Local Runtime
-    needs: set_commit_id
+    needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/workflow_interface_101_mnist.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -70,7 +70,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner E2E
-    needs: set_commit_id
+    needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/task_runner_basic_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -100,7 +100,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Secure Aggregation E2E
-    needs: set_commit_id
+    needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -132,7 +132,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Secret SSL E2E
-    needs: set_commit_id
+    needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/task_runner_secret_tls_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -143,7 +143,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Flower App Pytorch E2E
-    needs: set_commit_id
+    needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/task_runner_flower_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
