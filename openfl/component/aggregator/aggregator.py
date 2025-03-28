@@ -10,6 +10,8 @@ import time
 from threading import Lock
 from typing import List, Optional
 
+import numpy as np
+
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
@@ -344,7 +346,13 @@ class Aggregator:
         """
         analysis_result = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analysis",))
         if len(analysis_result) > 0:
-            utils.save_analytics_result(analysis_result, file_path)
+            with open(file_path, "w") as jsonfile:
+                json_data = {}
+                for tensorkey, values in analysis_result.items():
+                    if isinstance(values, np.ndarray):
+                        values = values.tolist()
+                    json_data[tensorkey.tensor_name] = values
+                json.dump(json_data, jsonfile, indent=4)
             return
 
         # Extract the model from TensorDB and set it to the new model

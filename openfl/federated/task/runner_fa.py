@@ -36,13 +36,13 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # Dummy model initialization
-        self.model = self.build_model((28, 28, 1), 10, **kwargs)
+        self.model = self.build_dummy_model((28, 28, 1), 10, **kwargs)
 
         self.model_tensor_names = []
         self.required_tensorkeys_for_function = {}
         self.initialize_tensorkeys_for_functions()
 
-    def build_model(
+    def build_dummy_model(
         self,
         input_shape,
         num_classes=10,
@@ -54,7 +54,8 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         **kwargs,
     ):
         """
-        Define the model architecture.
+        Define the Dummy model architecture.
+        This is just a placeholder model and will not be used for training in this experiment.
 
         Args:
             input_shape (numpy.ndarray): The shape of the data
@@ -76,21 +77,6 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
                 input_shape=input_shape,
             )
         )
-
-        model.add(
-            keras.layers.Conv2D(
-                conv2_channels_out,
-                kernel_size=conv_kernel_size,
-                strides=conv_strides,
-                activation="relu",
-            )
-        )
-
-        model.add(keras.layers.Flatten())
-
-        model.add(keras.layers.Dense(final_dense_inputsize, activation="relu"))
-
-        model.add(keras.layers.Dense(num_classes, activation="softmax"))
 
         model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
@@ -199,7 +185,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         """Get the required tensors for specified function that could be called
         as part of a task.
 
-        By default, this is just all of the layers and optimizer of the model.
+        By default, this is just all of the layers and optimizer of the dummy model.
 
         Args:
             func_name (str): The function name.
@@ -214,7 +200,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         """Set the required tensors for all publicly accessible methods that
         could be called as part of a task.
 
-        By default, this is just all of the layers and optimizer of the model.
+        By default, this is just all of the layers and optimizer of the dummy model.
         Custom tensors should be added to this function
 
         Args:

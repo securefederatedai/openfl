@@ -6,7 +6,6 @@
 
 from openfl.federated import FederatedAnalyticsTaskRunner
 import numpy as np
-from openfl.utilities import TensorKey
 
 class IrisHistogram(FederatedAnalyticsTaskRunner):
     """
