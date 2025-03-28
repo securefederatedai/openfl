@@ -5,10 +5,17 @@ name: Workflow MNIST Local Runtime E2E
 
 on:
   workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
   workflow_dispatch:
 
 permissions:
   contents: read
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 
 jobs:
   wf_local_101_mnist:
@@ -20,9 +27,7 @@ jobs:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 2 # needed for detecting changes
-        submodules: "true"
-        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
 
     - name: Set up Python
       uses: actions/setup-python@v5
