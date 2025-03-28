@@ -36,7 +36,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # Dummy model initialization
-        self.model = self.build_dummy_model((28, 28, 1), 10, **kwargs)
+        self.model = self.build_dummy_model((28, 28, 1), **kwargs)
 
         self.model_tensor_names = []
         self.required_tensorkeys_for_function = {}
@@ -45,12 +45,9 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
     def build_dummy_model(
         self,
         input_shape,
-        num_classes=10,
         conv_kernel_size=(4, 4),
         conv_strides=(2, 2),
         conv1_channels_out=16,
-        conv2_channels_out=32,
-        final_dense_inputsize=100,
         **kwargs,
     ):
         """
