@@ -7,7 +7,7 @@ aggregator :
   settings :
     init_state_path : save/init.pbuf
     best_state_path : save/best.pbuf
-    last_state_path : save/result.csv
+    last_state_path : save/result.json
     rounds_to_train : 1
 
 collaborator :
