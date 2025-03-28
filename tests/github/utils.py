@@ -50,6 +50,7 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
+    check_call(['pip', 'install', '-r', 'requirements.txt'])
 
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
@@ -82,7 +83,7 @@ def certify_aggregator(fqdn):
 
 def create_signed_cert_for_collaborator(col, data_path):
     '''
-    We do certs exchage for all participants in a single workspace to speed up this test run.
+    We do certs exchange for all participants in a single workspace to speed up this test run.
     Do not do this in real experiments in untrusted environments
     '''
     print(f'Certifying collaborator {col} with data path {data_path}...')
@@ -119,24 +120,20 @@ def create_signed_cert_for_collaborator(col, data_path):
     os.remove(f'col_{col}_to_agg_cert_request.zip')
 
 
-def start_aggregator_container(workspace_image_name, aggregator_required_files):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
-        '-e \"CONTAINER_TYPE=aggregator\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+def is_path_name_allowed(path):
+    """
+    Check if given path name is allowed.
+    Allow alphanumeric characters, hyphens and underscores.
+    Also, / in case of a nested directory.
 
+    Args:
+        path (str): The path name to check.
+    Returns:
+        bool: True if the path name is allowed, False otherwise.
+    """
+    special_characters = "!@#$%^&*()+?=,<>"
 
-def start_collaborator_container(workspace_image_name, col_name):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd()}/cert_col_{col_name}.tar:/certs.tar '
-        '-e \"CONTAINER_TYPE=collaborator\" '
-        f'-e \"COL={col_name}\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+    if any(c in special_characters for c in path):
+        return False
+    else:
+        return True

@@ -3,7 +3,6 @@
 
 import os
 import time
-import socket
 import argparse
 from pathlib import Path
 import re
@@ -11,7 +10,8 @@ import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
-from tests.github.utils import create_collaborator, certify_aggregator
+from tests.github.utils import create_collaborator, certify_aggregator, is_path_name_allowed
+from openfl.utilities.utils import getfqdn_env
 
 
 def exec(command, directory):
@@ -19,9 +19,9 @@ def exec(command, directory):
     check_call(command)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--template', default='keras_cnn_mnist')
+    parser.add_argument('--template', default='keras/mnist')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one')
     parser.add_argument('--col2', default='two')
@@ -34,8 +34,14 @@ if __name__ == '__main__':
     origin_dir = Path().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
+
+    # Check if the path name is allowed before creating the workspace
+    if not is_path_name_allowed(fed_workspace):
+        print(f"The path name {fed_workspace} is not allowed")
+        return
+
     archive_name = f'{fed_workspace}.zip'
-    fqdn = socket.getfqdn()
+    fqdn = getfqdn_env()
     template = args.template
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2
@@ -43,6 +49,7 @@ if __name__ == '__main__':
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
+    check_call(['pip', 'install', '-r', 'requirements.txt'])
     Path(Path.cwd().resolve() / 'data' / col1).mkdir(exist_ok=True)
     with os.scandir(origin_dir) as iterator:
         for entry in iterator:
@@ -116,3 +123,7 @@ if __name__ == '__main__':
         dir2 = workspace_root / col2 / fed_workspace
         executor.submit(exec, ['fx', 'collaborator', 'start', '-n', col2], dir2)
     shutil.rmtree(workspace_root)
+
+
+if __name__ == '__main__':
+    main()

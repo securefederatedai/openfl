@@ -1,0 +1,11 @@
+settings:
+  listen_host: localhost
+  listen_port: 50050
+  envoy_health_check_period: 5  # in seconds
+
+aggregator:
+  callable_func:
+    settings:
+      batch_size: 50
+      watermark_data: private_attributes.watermark_data
+    template: private_attributes.aggregator_attrs

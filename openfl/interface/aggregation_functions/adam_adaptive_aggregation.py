@@ -1,19 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Adam adaptive aggregation module."""
 
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
+from openfl.interface.aggregation_functions.core import AdaptiveAggregation, AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities.optimizers.numpy import NumPyAdam
-from .core import AdaptiveAggregation
-from .core import AggregationFunction
-from .weighted_average import WeightedAverage
-
 
 DEFAULT_AGG_FUNC = WeightedAverage()
 
@@ -32,25 +29,29 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
         initial_accumulator_value: float = 0.0,
         epsilon: float = 1e-8,
     ) -> None:
-        """Initialize.
+        """Initialize the AdamAdaptiveAggregation object.
 
         Args:
-            agg_func: Aggregate function for aggregating
-                parameters that are not inside the optimizer (default: WeightedAverage()).
-            params: Parameters to be stored for optimization.
+            agg_func (AggregationFunction): Aggregate function for aggregating
+                parameters that are not inside the optimizer (default:
+                WeightedAverage()).
+            params (Optional[Dict[str, np.ndarray]]): Parameters to be stored
+                for optimization.
             model_interface: Model interface instance to provide parameters.
-            learning_rate: Tuning parameter that determines
+            learning_rate (float): Tuning parameter that determines
                 the step size at each iteration.
-            betas: Coefficients used for computing running
-                averages of gradient and its square.
-            initial_accumulator_value: Initial value for gradients
+            betas (Tuple[float, float]): Coefficients used for computing
+                running averages of gradient and its square.
+            initial_accumulator_value (float): Initial value for gradients
                 and squared gradients.
-            epsilon: Value for computational stability.
+            epsilon (float): Value for computational stability.
         """
-        opt = NumPyAdam(params=params,
-                        model_interface=model_interface,
-                        learning_rate=learning_rate,
-                        betas=betas,
-                        initial_accumulator_value=initial_accumulator_value,
-                        epsilon=epsilon)
+        opt = NumPyAdam(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
         super().__init__(opt, agg_func)

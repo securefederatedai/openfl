@@ -1,0 +1,5 @@
+setuptools>=65.5.1
+tensorboard
+torch==2.4.1
+torchvision==0.19.1
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability

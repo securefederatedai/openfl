@@ -1,26 +1,31 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """KerasDataLoader module."""
 
 import numpy as np
 
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class KerasDataLoader(DataLoader):
-    """Federation Data Loader for TensorFlow Models."""
+    """A class used to represent a Federation Data Loader for Keras models.
+
+    Attributes:
+        batch_size (int): Size of batches used for all data loaders.
+        X_train (np.array): Training features.
+        y_train (np.array): Training labels.
+        X_valid (np.array): Validation features.
+        y_valid (np.array): Validation labels.
+    """
 
     def __init__(self, batch_size, **kwargs):
-        """
-        Instantiate the data object.
+        """Initializes the KerasDataLoader object.
 
         Args:
-            batch_size: Size of batches used for all data loaders
-            kwargs: consumes all un-used kwargs
-
-        Returns:
-            None
+            batch_size (int): The size of batches used for all data loaders.
+            kwargs: Additional arguments to pass to the function.
         """
         self.batch_size = batch_size
         self.X_train = None
@@ -33,66 +38,73 @@ class KerasDataLoader(DataLoader):
         # define self.X_train, self.y_train, self.X_valid, and self.y_valid
 
     def get_feature_shape(self):
-        """Get the shape of an example feature array.
+        """Returns the shape of an example feature array.
 
         Returns:
-            tuple: shape of an example feature array
+            tuple: The shape of an example feature array.
         """
         return self.X_train[0].shape
 
     def get_train_loader(self, batch_size=None, num_batches=None):
-        """
-        Get training data loader.
+        """Returns the data loader for the training data.
 
-        Returns
-        -------
-        loader object
-        """
-        return self._get_batch_generator(X=self.X_train, y=self.y_train, batch_size=batch_size,
-                                         num_batches=num_batches)
-
-    def get_valid_loader(self, batch_size=None):
-        """
-        Get validation data loader.
+        Args:
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
+            num_batches (int, optional): The number of batches for the data
+                loader (default is None).
 
         Returns:
-            loader object
+            DataLoader: The DataLoader object for the training data.
+        """
+        return self._get_batch_generator(
+            X=self.X_train,
+            y=self.y_train,
+            batch_size=batch_size,
+            num_batches=num_batches,
+        )
+
+    def get_valid_loader(self, batch_size=None):
+        """Returns the data loader for the validation data.
+
+        Args:
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
+
+        Returns:
+            DataLoader: The DataLoader object for the validation data.
         """
         return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
 
     def get_train_data_size(self):
-        """
-        Get total number of training samples.
+        """Returns the total number of training samples.
 
         Returns:
-            int: number of training samples
+            int: The total number of training samples.
         """
         return self.X_train.shape[0]
 
     def get_valid_data_size(self):
-        """
-        Get total number of validation samples.
+        """Returns the total number of validation samples.
 
         Returns:
-            int: number of validation samples
+            int: The total number of validation samples.
         """
         return self.X_valid.shape[0]
 
     @staticmethod
     def _batch_generator(X, y, idxs, batch_size, num_batches):
-        """
-        Generate batch of data.
+        """Generates batches of data.
 
         Args:
-            X: input data
-            y: label data
-            idxs: The index of the dataset
-            batch_size: The batch size for the data loader
-            num_batches: The number of batches
+            X (np.array): The input data.
+            y (np.array): The label data.
+            idxs (np.array): The index of the dataset.
+            batch_size (int): The batch size for the data loader.
+            num_batches (int): The number of batches.
 
         Yields:
-            tuple: input data, label data
-
+            tuple: The input data and label data for each batch.
         """
         for i in range(num_batches):
             a = i * batch_size
@@ -100,14 +112,17 @@ class KerasDataLoader(DataLoader):
             yield X[idxs[a:b]], y[idxs[a:b]]
 
     def _get_batch_generator(self, X, y, batch_size, num_batches=None):
-        """
-        Return the dataset generator.
+        """Returns the dataset generator.
 
         Args:
-            X: input data
-            y: label data
-            batch_size: The batch size for the data loader
+            X (np.array): The input data.
+            y (np.array): The label data.
+            batch_size (int): The batch size for the data loader.
+            num_batches (int, optional): The number of batches (default is
+                None).
 
+        Returns:
+            generator: The dataset generator.
         """
         if batch_size is None:
             batch_size = self.batch_size

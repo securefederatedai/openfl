@@ -1,24 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""openfl.component package."""
+"""OpenFL Component Module."""
 
-from .aggregator import Aggregator
-from .assigner import Assigner
-from .assigner import RandomGroupedAssigner
-from .assigner import StaticGroupedAssigner
-from .collaborator import Collaborator
-from .straggler_handling_functions import StragglerHandlingFunction
-from .straggler_handling_functions import CutoffTimeBasedStragglerHandling
-from .straggler_handling_functions import PercentageBasedStragglerHandling
-
-__all__ = [
-    'Assigner',
-    'RandomGroupedAssigner',
-    'StaticGroupedAssigner',
-    'Aggregator',
-    'Collaborator',
-    'StragglerHandlingFunction',
-    'CutoffTimeBasedStragglerHandling',
-    'PercentageBasedStragglerHandling'
-]
+from openfl.component.aggregator.aggregator import Aggregator
+from openfl.component.aggregator.straggler_handling import (
+    CutoffTimePolicy,
+    PercentagePolicy,
+    StragglerPolicy,
+    WaitForAllPolicy,
+)
+from openfl.component.assigner.assigner import Assigner
+from openfl.component.assigner.random_grouped_assigner import RandomGroupedAssigner
+from openfl.component.assigner.static_grouped_assigner import StaticGroupedAssigner
+from openfl.component.collaborator.collaborator import Collaborator

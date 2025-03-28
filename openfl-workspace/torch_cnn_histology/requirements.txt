@@ -1,2 +1,0 @@
-torchvision==0.14.1 -f https://download.pytorch.org/whl/torch_stable.html
-torch==1.13.1 -f https://download.pytorch.org/whl/torch_stable.html

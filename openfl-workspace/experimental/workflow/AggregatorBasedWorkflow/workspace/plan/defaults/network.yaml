@@ -1,0 +1,7 @@
+template: openfl.federation.Network
+settings:
+    agg_addr                   : auto
+    agg_port                   : auto
+    tls                        : True
+    client_reconnect_interval  : 5
+    disable_client_auth        : False

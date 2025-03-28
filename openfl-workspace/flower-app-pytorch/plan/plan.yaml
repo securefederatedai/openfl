@@ -1,0 +1,63 @@
+# Copyright (C) 2024 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : src.aggregator.AggregatorFlower
+  settings :
+    rounds_to_train : 1 # DO NOT EDIT. This is to indicate OpenFL communication rounds
+    persist_checkpoint : false
+    write_logs : false
+
+connector : 
+  defaults : plan/defaults/connector.yaml
+  template : src.connector_flower.ConnectorFlower
+  settings :
+    automatic_shutdown : True
+    superlink_params :
+      insecure : True
+      serverappio-api-address : 127.0.0.1:9091
+      fleet-api-address :  127.0.0.1:9092 
+      exec-api-address : 127.0.0.1:9093
+    flwr_run_params :
+      flwr_app_name : "app-pytorch"
+      federation_name : "local-poc"
+      patch: True
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : src.collaborator.CollaboratorFlower
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.loader.FlowerDataLoader
+  settings :
+    collaborator_count : 2
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.runner.FlowerTaskRunner
+  settings :
+    flwr_app_name: app-pytorch
+    patch: True
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+  template : openfl.component.RandomGroupedAssigner
+  settings :
+    task_groups :
+      - name  : Connector_Flower
+        percentage : 1.0
+        tasks : 
+          - start_client_adapter
+
+tasks :
+  defaults : plan/defaults/tasks_connector.yaml
+  settings :
+    connect_to : Flower
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

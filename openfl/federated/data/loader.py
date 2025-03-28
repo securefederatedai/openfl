@@ -1,72 +1,81 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """DataLoader module."""
 
 
 class DataLoader:
-    """Federated Learning Data Loader Class."""
+    """A base class used to represent a Federated Learning Data Loader.
+
+    This class should be inherited by any data loader class specific to a
+    machine learning framework.
+
+    Attributes:
+        None
+    """
 
     def __init__(self, **kwargs):
-        """
-        Instantiate the data object.
+        """Initializes the DataLoader object.
 
-        Returns:
-            None
+        Args:
+            kwargs: Additional arguments to pass to the function.
         """
         pass
 
     def get_feature_shape(self):
-        """
-        Get the shape of an example feature array.
+        """Returns the shape of an example feature array.
 
-        Returns:
-            tuple: shape of an example feature array
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
     def get_train_loader(self, **kwargs):
-        """
-        Get training data loader.
+        """Returns the data loader for the training data.
 
-        Returns:
-            loader object (class defined by inheritor)
+        Args:
+            kwargs: Additional arguments to pass to the function.
+
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
     def get_valid_loader(self):
-        """
-        Get validation data loader.
+        """Returns the data loader for the validation data.
 
-        Returns:
-            loader object (class defined by inheritor)
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
     def get_infer_loader(self):
-        """
-        Get inferencing data loader.
+        """Returns the data loader for inferencing data.
 
-        Returns
-        -------
-        loader object (class defined by inheritor)
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         return NotImplementedError
 
     def get_train_data_size(self):
-        """
-        Get total number of training samples.
+        """Returns the total number of training samples.
 
-        Returns:
-            int: number of training samples
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
     def get_valid_data_size(self):
-        """
-        Get total number of validation samples.
+        """Returns the total number of validation samples.
 
-        Returns:
-            int: number of validation samples
+        Raises:
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError

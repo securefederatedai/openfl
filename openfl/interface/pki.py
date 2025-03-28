@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """PKI CLI."""
 
 import logging
@@ -7,108 +9,132 @@ import os
 import sys
 from pathlib import Path
 
-from click import group
-from click import option
-from click import pass_context
-from click import password_option
 from click import Path as ClickPath
+from click import echo, group, option, pass_context, password_option
 
-from openfl.utilities.ca.ca import CA_CONFIG_JSON
-from openfl.utilities.ca.ca import CA_PASSWORD_FILE
-from openfl.utilities.ca.ca import CA_PKI_DIR
-from openfl.utilities.ca.ca import CA_STEP_CONFIG_DIR
-from openfl.utilities.ca.ca import certify
-from openfl.utilities.ca.ca import get_ca_bin_paths
-from openfl.utilities.ca.ca import get_token
-from openfl.utilities.ca.ca import install
-from openfl.utilities.ca.ca import remove_ca
-from openfl.utilities.ca.ca import run_ca
+from openfl.utilities.ca.ca import (
+    CA_CONFIG_JSON,
+    CA_PASSWORD_FILE,
+    CA_PKI_DIR,
+    CA_STEP_CONFIG_DIR,
+    certify,
+    get_ca_bin_paths,
+    get_token,
+    install,
+    remove_ca,
+    run_ca,
+)
 
 logger = logging.getLogger(__name__)
 
-CA_URL = 'localhost:9123'
+CA_URL = "localhost:9123"
 
 
 @group()
 @pass_context
 def pki(context):
-    """Manage Step-ca PKI."""
-    context.obj['group'] = 'pki'
+    """Manage Step-CA PKI."""
+    context.obj["group"] = "pki"
 
 
-@pki.command(name='run')
-@option('-p', '--ca-path', required=True,
-        help='The ca path', type=ClickPath())
+@pki.command(name="run")
+@option("-p", "--ca-path", required=True, help="The ca path", type=ClickPath())
 def run_(ca_path):
+    """Starts a CA server."""
     run(ca_path)
 
 
 def run(ca_path):
-    """Run CA server."""
+    """Starts a CA server.
+
+    Args:
+        ca_path (str): The ca path.
+    """
     ca_path = Path(ca_path).absolute()
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     pki_dir = ca_path / CA_PKI_DIR
     password_file = pki_dir / CA_PASSWORD_FILE
     ca_json = step_config_dir / CA_CONFIG_JSON
     _, step_ca_path = get_ca_bin_paths(ca_path)
-    if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
-            or not os.path.exists(password_file) or not os.path.exists(ca_json)
-            or not os.path.exists(step_ca_path)):
-        logger.error('CA is not installed or corrupted, please install it first')
+    if (
+        not os.path.exists(step_config_dir)
+        or not os.path.exists(pki_dir)
+        or not os.path.exists(password_file)
+        or not os.path.exists(ca_json)
+        or not os.path.exists(step_ca_path)
+    ):
+        logger.error("CA is not installed or corrupted, please install it first")
         sys.exit(1)
     run_ca(step_ca_path, password_file, ca_json)
 
 
-@pki.command(name='install')
-@option('-p', '--ca-path', required=True,
-        help='The ca path', type=ClickPath())
-@password_option(prompt='The password will encrypt some ca files \nEnter the password')
-@option('--ca-url', required=False, default=CA_URL)
+@pki.command(name="install")
+@option("-p", "--ca-path", required=True, help="Path to CA.", type=ClickPath())
+@password_option(prompt="The password will encrypt CA files. \nEnter the password: ")
+@option("--ca-url", required=False, default=CA_URL, show_default=True)
 def install_(ca_path, password, ca_url):
-    """Create a ca workspace."""
+    """Creates a CA workspace, optionally password protected."""
     ca_path = Path(ca_path).absolute()
     install(ca_path, ca_url, password)
 
 
-@pki.command(name='uninstall')
-@option('-p', '--ca-path', required=True,
-        help='The CA path', type=ClickPath())
+@pki.command(name="uninstall")
+@option("-p", "--ca-path", required=True, help="Path to CA to be uninstalled.", type=ClickPath())
 def uninstall(ca_path):
-    """Remove step-CA."""
+    """Removes Step-CA."""
     ca_path = Path(ca_path).absolute()
     remove_ca(ca_path)
 
 
-@pki.command(name='get-token')
-@option('-n', '--name', required=True)
-@option('--ca-url', required=False, default=CA_URL)
-@option('-p', '--ca-path', default='.',
-        help='The CA path', type=ClickPath(exists=True))
+@pki.command(name="get-token")
+@option("-n", "--name", required=True)
+@option(
+    "--ca-url", required=False, default=CA_URL, help="Full URL of CA server.", show_default=True
+)
+@option(
+    "-p",
+    "--ca-path",
+    default=".",
+    help="Path to CA binaries, defaults to current directory.",
+    type=ClickPath(exists=True),
+)
 def get_token_(name, ca_url, ca_path):
-    """
-    Create authentication token.
-
-    Args:
-        name: common name for following certificate
-                    (aggregator fqdn or collaborator name)
-        ca_url: full url of CA server
-        ca_path: the path to CA binaries
-    """
+    """Creates an authentication token."""
     ca_path = Path(ca_path).absolute()
     token = get_token(name, ca_url, ca_path)
-    print('Token:')
-    print(token)
+    echo(f"Token: {token}")
 
 
-@pki.command(name='certify')
-@option('-n', '--name', required=True)
-@option('-t', '--token', 'token_with_cert', required=True)
-@option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
-        help='The path where certificates will be stored', type=ClickPath())
-@option('-p', '--ca-path', default='.', help='The path to CA client',
-        type=ClickPath(exists=True), required=False)
+@pki.command(name="certify")
+@option(
+    "-n",
+    "--name",
+    required=True,
+    help=(
+        "Subject Alternative Name (SAN) to use for certificate. "
+        "Use FQDN for aggregator, and common name for collaborator"
+    ),
+)
+@option("-t", "--token", "token_with_cert", required=True, help="Authentication token.")
+@option(
+    "-c",
+    "--certs-path",
+    required=False,
+    default=Path(".") / "cert",
+    help="The path where certificates will be stored",
+    type=ClickPath(),
+)
+@option(
+    "-p",
+    "--ca-path",
+    default=".",
+    help="Path to CA client, defaults to current directory.",
+    type=ClickPath(exists=True),
+    required=False,
+    show_default=True,
+)
 def certify_(name, token_with_cert, certs_path, ca_path):
-    """Create an envoy workspace."""
+    """Generates a certificate for the given name."""
     certs_path = Path(certs_path).absolute()
     ca_path = Path(ca_path).absolute()
     certs_path.mkdir(parents=True, exist_ok=True)

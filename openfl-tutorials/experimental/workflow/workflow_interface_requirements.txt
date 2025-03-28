@@ -1,0 +1,11 @@
+chardet
+charset-normalizer
+dill==0.3.6
+matplotlib>=2.0.0
+metaflow==2.7.15
+nbdev==2.3.37
+nbformat==5.10.4
+ray==2.43.0
+tabulate==0.9.0
+torch==2.3.1
+torchvision==0.18.1

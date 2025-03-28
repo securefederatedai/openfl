@@ -1,0 +1,54 @@
+# Copyright (C) 2020-2024 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator:
+  settings:
+    best_state_path: save/best.pbuf
+    db_store_rounds: 2
+    init_state_path: save/init.pbuf
+    last_state_path: save/last.pbuf
+    rounds_to_train: 2
+    write_logs: false
+  template: openfl.component.aggregator.Aggregator
+  defaults : plan/defaults/aggregator.yaml
+assigner :
+  defaults : plan/defaults/assigner.yaml
+collaborator:
+  settings:
+    db_store_rounds: 1
+    use_delta_updates: false
+    opt_treatment: RESET
+  template: openfl.component.collaborator.Collaborator
+compression_pipeline:
+  settings: {}
+  template: openfl.pipelines.NoCompressionPipeline
+data_loader:
+  settings:
+    batch_size: 64
+    collaborator_count: 2
+  template: src.dataloader.PyTorchMNISTInMemory
+network:
+  defaults: plan/defaults/network.yaml
+task_runner:
+  settings: {}
+  template: src.taskrunner.TemplateTaskRunner
+tasks:
+  aggregated_model_validation:
+    function: validate_task
+    kwargs:
+      apply: global
+      metrics:
+      - acc
+  locally_tuned_model_validation:
+    function: validate_task
+    kwargs:
+      apply: local
+      metrics:
+      - acc
+  settings: {}
+  train:
+    function: train_task
+    kwargs:
+      epochs: 1
+      metrics:
+      - loss

@@ -1,0 +1,21 @@
+aggregated_model_validation:
+  function : validate_task
+  kwargs :
+    apply : global
+    metrics :
+      - acc
+  
+locally_tuned_model_validation:
+  function : validate_task
+  kwargs :
+    apply : local
+    metrics :
+      - acc
+  
+train:
+  function : train_task
+  kwargs :
+    metrics :
+    - loss
+  aggregation_type :
+      template : openfl.interface.aggregation_functions.FedBaggingXGBoost  

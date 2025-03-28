@@ -1,0 +1,106 @@
+# Tests an FL experiment in a Dockerized environment.
+name: TaskRunner (docker/gramine-direct)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+
+    - name: Build base image
+      run: |
+        docker build -t openfl -f openfl-docker/Dockerfile.base .
+
+    - name: Create workspace image
+      run: |
+        fx workspace create --prefix example_workspace --template keras/mnist
+        cd example_workspace
+        pip install -r requirements.txt
+        fx plan initialize -a localhost
+        
+        # Disable tensorboard logging as multiprocessing is not supported in Gramine
+        # https://github.com/gramineproject/examples/issues/33
+        sed -i 's/write_logs: true/write_logs: false/g' plan/plan.yaml
+
+        fx workspace dockerize --base-image openfl --save
+
+    - name: Create certificate authority for workspace
+      run: |
+        cd example_workspace
+        fx workspace certify
+
+    - name: Create signed cert for collaborator
+      run: |
+        cd example_workspace
+        fx collaborator create -d 1 -n charlie --silent
+        fx collaborator generate-cert-request -n charlie --silent
+        fx collaborator certify --request-pkg col_charlie_to_agg_cert_request.zip --silent
+        
+        # Pack the collaborator's private key, signed cert, and data.yaml into a tarball
+        tarfiles="plan/data.yaml agg_to_col_charlie_signed_cert.zip"
+        for entry in cert/client/*; do
+            if [[ "$entry" == *.key ]]; then
+                tarfiles="$tarfiles $entry"
+            fi
+        done
+
+        tar -cf cert_col_charlie.tar $tarfiles
+
+        # Clean up
+        rm -f $tarfiles
+        rm -f col_charlie_to_agg_cert_request.zip
+
+    - name: Create signed cert for aggregator
+      run: |
+        cd example_workspace
+        fx aggregator generate-cert-request --fqdn localhost
+        fx aggregator certify --fqdn localhost --silent
+
+        # Pack all files that aggregator needs to start training
+        tar -cf cert_agg.tar plan cert save
+
+        # Remove the directories after archiving
+        rm -rf plan cert save
+
+    - name: Load workspace image
+      run: |
+        cd example_workspace
+        docker load -i example_workspace.tar
+
+    - name: Run aggregator and collaborator
+      run: |
+        cd example_workspace
+
+        set -x
+        docker run --rm \
+          --network host \
+          --security-opt seccomp=unconfined \
+          --mount type=bind,source=./cert_agg.tar,target=/certs.tar \
+          --env KERAS_HOME=/tmp \
+          example_workspace bash -c "tar -xf /certs.tar && gramine-direct fx aggregator start" &
+
+        # TODO: Run with two collaborators instead.
+        docker run --rm \
+          --network host \
+          --security-opt seccomp=unconfined \
+          --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
+          --env KERAS_HOME=/tmp \
+          example_workspace bash -c "tar -xf /certs.tar && fx collaborator certify --import agg_to_col_charlie_signed_cert.zip && gramine-direct fx collaborator start -n charlie"

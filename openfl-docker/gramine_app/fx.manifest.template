@@ -1,0 +1,74 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# -------------------------------------
+# Enclave Manifest for OpenFL TaskRunner API.
+# This defines the configuration for the Gramine loader to run a Python application.
+# -------------------------------------
+
+libos.entrypoint = "{{ entrypoint }}"
+loader.entrypoint.uri = "file:{{ gramine.libos }}"
+loader.log_level = "{{ log_level }}"
+
+loader.insecure__use_cmdline_argv = true
+loader.insecure__use_host_env = true
+
+loader.env.LD_LIBRARY_PATH = "{{ venv_root }}:{{ arch_libdir }}:/usr/{{ arch_libdir }}:/lib:/usr/lib"
+loader.env.SSL_CERT_DIR = "/etc/ssl/certs"
+
+# Filesystem configuration within Gramine LibOS
+fs.start_dir = "{{ workspace_root }}"
+fs.mounts = [
+  # System mounts (URI: path on host, PATH: pointer inside gramine)
+  { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
+  { uri = "file:{{ arch_libdir }}", path = "{{ arch_libdir }}" },
+  { uri = "file:/etc/ssl/certs", path = "/etc/ssl/certs" },
+  { uri = "file:/usr", path = "/usr" },
+  { type = "tmpfs", path = "/tmp" },
+  # User-defined mounts specific to the application.
+  { uri = "file:{{ workspace_root }}", path = "{{ workspace_root }}" },
+  { uri = "file:{{ venv_root }}", path = "{{ venv_root }}" },
+]
+
+# System configuration
+sys.stack.size = "4M"
+sys.brk.max_size = "1M"
+sys.enable_sigterm_injection = true
+sys.enable_extra_runtime_domain_names_conf = true
+
+# SGX configuration
+sgx.debug = false
+sgx.enclave_size = "16G"
+sgx.preheat_enclave = false
+sgx.remote_attestation = "dcap"
+sgx.max_threads = 512
+
+# List of trusted files, that are hashed and signed by the enclave.
+# If these files change after signing of an enclave, application cannot run.
+sgx.trusted_files = [
+  "file:{{ gramine.libos }}",
+  "file:{{ entrypoint }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ arch_libdir }}/",
+  "file:/usr/{{ arch_libdir }}/",
+  "file:/etc/ssl/certs/",
+  "file:{{ python.stdlib }}/",
+  "file:{{ python.distlib }}/",
+{% for path in python.get_sys_path('python') %}
+  "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
+{% endfor %}
+  "file:{{ venv_root }}/",
+  "file:{{ workspace_root }}/src/",
+]
+
+# List of allowed files that SGX enclave does NOT verify with signatures.
+# One should be conservative as to which files are allowed, these can be modified by enclave.
+sgx.allowed_files = [
+  "file:{{ workspace_root }}/save",
+  "file:{{ workspace_root }}/local_state",
+  "file:{{ workspace_root }}/logs",
+  "file:{{ workspace_root }}/cert",
+  "file:{{ workspace_root }}/data",
+  "file:{{ workspace_root }}/plan/cols.yaml",
+  "file:{{ workspace_root }}/plan/data.yaml",
+  "file:{{ workspace_root }}/plan/plan.yaml",
+]

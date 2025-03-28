@@ -1,0 +1,1158 @@
+# Copyright 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+import time
+import concurrent.futures
+import logging
+import yaml
+import os
+import json
+import re
+import subprocess   # nosec B404
+from pathlib import Path
+import shutil
+from glob import glob
+
+import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.db_helper as db_helper
+import tests.end_to_end.utils.docker_helper as dh
+import tests.end_to_end.utils.exceptions as ex
+import tests.end_to_end.utils.ssh_helper as ssh
+from tests.end_to_end.models import collaborator as col_model
+
+log = logging.getLogger(__name__)
+home_dir = Path().home()
+
+
+def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
+    """
+    Setup PKI for trusted communication within the federation
+
+    Args:
+        collaborators (list): List of collaborator objects
+        model_owner (object): Model owner object
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    # PKI setup for aggregator is done at fixture level
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    # Performing all the operations step by step
+    # This is to avoid problems during parallel execution
+    # in case one or more collaborator operations delay for some reason
+    # Generate sign request for all the collaborators
+    try:
+        results = [
+            executor.submit(
+                collaborator.generate_sign_request,
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception(
+                "Failed to generate sign request for one or more collaborators"
+            )
+
+    except Exception as e:
+        raise e
+
+    # Copy the generated sign request zip from all the collaborators to aggregator
+    try:
+        results = [
+            executor.submit(
+                copy_file_between_participants,
+                local_src_path=constants.COL_WORKSPACE_PATH.format(
+                    local_bind_path, collaborator.name
+                ),
+                local_dest_path=local_agg_ws_path,
+                file_name=f"col_{collaborator.name}_to_agg_cert_request.zip",
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception(
+                "Failed to copy sign request zip from one or more collaborators to aggregator"
+            )
+    except Exception as e:
+        raise e
+
+    # Certify the collaborator sign requests
+    # DO NOT run this in parallel as it causes command to fail with FileNotFoundError for a different collaborator
+    for collaborator in collaborators:
+        try:
+            model_owner.certify_collaborator(
+                collaborator_name=collaborator.name,
+                zip_name=f"col_{collaborator.name}_to_agg_cert_request.zip",
+            )
+        except Exception as e:
+            log.error(f"Failed to certify sign request for {collaborator.name}: {e}")
+            raise e
+
+    # Copy the signed certificates from aggregator to all the collaborators
+    try:
+        results = [
+            executor.submit(
+                copy_file_between_participants,
+                local_src_path=local_agg_ws_path,
+                local_dest_path=constants.COL_WORKSPACE_PATH.format(
+                    local_bind_path, collaborator.name
+                ),
+                file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception(
+                "Failed to copy signed certificates from aggregator to one or more collaborators"
+            )
+    except Exception as e:
+        raise e
+
+    return True
+
+
+def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, add_data=False):
+    """
+    Create tarball for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+        use_tls (bool): Use TLS or not (default is True)
+        add_data (bool): Add data to the tarball (default is False)
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    try:
+
+        def _create_tarball(collaborator_name, data_file_path, local_bind_path, add_data):
+            """
+            Internal function to create tarball for the collaborator.
+            If TLS is enabled - include client certificates and signed certificates in the tarball
+            If data needs to be added - include the data file in the tarball
+            """
+            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+                local_bind_path, collaborator_name
+            )
+            client_cert_entries = ""
+            tarfiles = f"cert_{collaborator_name}.tar plan/data.yaml"
+            # If TLS is enabled, client certificates and signed certificates are also included
+            if use_tls:
+                client_cert_entries = [
+                    f"cert/client/{f}" for f in os.listdir(f"{local_col_ws_path}/cert/client") if f.endswith(".key")
+                ]
+                client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
+                tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
+                # IMPORTANT: Models XGBoost(xgb_higgs) and Flower use format like data/1 and data/2, thus adding data to tarball in the same format.
+                if add_data:
+                    tarfiles += f" data/{data_file_path}"
+
+            log.info(f"Tarfile for {collaborator_name} includes: {tarfiles}")
+            return_code, output, error = ssh.run_command(
+                f"tar -cf {tarfiles}", work_dir=local_col_ws_path
+            )
+            if return_code != 0:
+                raise Exception(
+                    f"Failed to create tarball for {collaborator_name}: {error}"
+                )
+            return True
+
+        results = [
+            executor.submit(
+                _create_tarball, collaborator.name, data_file_path=index, local_bind_path=local_bind_path, add_data=add_data
+            )
+            for index, collaborator in enumerate(collaborators, start=1)
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception("Failed to create tarball for one or more collaborators")
+    except Exception as e:
+        raise e
+
+    return True
+
+
+def import_pki_for_collaborators(collaborators):
+    """
+    Import and certify the CSR for the collaborators
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+    try:
+        results = [
+            executor.submit(
+                collaborator.import_pki,
+                zip_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
+            )
+            for collaborator in collaborators
+        ]
+        if not all([f.result() for f in results]):
+            raise Exception(
+                "Failed to import and certify the CSR for one or more collaborators"
+            )
+    except Exception as e:
+        raise e
+
+    return True
+
+
+def copy_file_between_participants(
+    local_src_path, local_dest_path, file_name, run_with_sudo=False
+):
+    """
+    Copy file between participants
+    Args:
+        local_src_path (str): Source path on local machine
+        local_dest_path (str): Destination path on local machine
+        file_name (str): File name only (without path)
+        run_with_sudo (bool): Run the command with sudo
+    """
+    cmd = "sudo cp" if run_with_sudo else "cp"
+    cmd += f" {local_src_path}/{file_name} {local_dest_path}"
+    return_code, output, error = ssh.run_command(cmd)
+    if return_code != 0:
+        log.error(f"Failed to copy file: {error}")
+        raise Exception(f"Failed to copy file: {error}")
+    log.info(
+        f"File {file_name} copied successfully from {local_src_path} to {local_dest_path}"
+    )
+    return True
+
+
+def run_federation(fed_obj):
+    """
+    Start the federation
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    # Set the backend (KERAS_BACKEND) for Keras as an environment variable
+    if "keras" in fed_obj.model_name:
+        _ = set_keras_backend(fed_obj.model_name)
+
+    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
+    futures = [
+        executor.submit(
+            participant.start
+        )
+        for participant in [fed_obj.aggregator] + fed_obj.collaborators
+    ]
+
+    # Result will contain response files for all the participants.
+    results = [f.result() for f in futures]
+    if not all(results):
+        raise ex.ParticipantStartException("Failed to start one or more participants")
+    return True
+
+
+def run_federation_for_dws(fed_obj, use_tls):
+    """
+    Start the federation
+    Args:
+        fed_obj (object): Federation fixture object
+        use_tls (bool): Use TLS or not (default is True)
+    Returns:
+        bool: True if successful, else False
+    """
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            container = dh.start_docker_container_with_federation_run(
+                participant=participant,
+                image=constants.DFLT_WORKSPACE_NAME,
+                use_tls=use_tls,
+                env_keyval_list=set_keras_backend(fed_obj.model_name) if "keras" in fed_obj.model_name else None,
+            )
+        except Exception as e:
+            log.error(f"Failed to start docker container for {participant.name}: {e}")
+            raise e
+
+        participant.container_id = container.id
+        participant.res_file = os.path.join(participant.workspace_path, "logs", f"{participant.name}.log")
+
+    return True
+
+
+def verify_federation_run_completion(fed_obj, test_env, num_rounds):
+    """
+    Verify the completion of the process for all the participants
+    Args:
+        fed_obj (object): Federation fixture object
+        test_env (str): Test environment
+        num_rounds (int): Number of rounds
+    Returns:
+        list: List of response (True or False) for all the participants
+    """
+    log.info("Verifying the completion of the process for all the participants")
+    # Start the collaborators and aggregator
+    executor = concurrent.futures.ThreadPoolExecutor()
+    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
+    futures = [
+        executor.submit(
+            _verify_completion_for_participant,
+            participant,
+            num_rounds,
+        )
+        for participant in fed_obj.collaborators + [fed_obj.aggregator]
+    ]
+
+    # Result will contain a list of boolean values for all the participants.
+    # True - successful completion, False - failed/incomplete
+    results = [f.result() for f in futures]
+    log.debug(f"Results from all the participants: {results}")
+
+    # If any of the participant failed, return False, else return True
+    return all(results)
+
+
+def _verify_completion_for_participant(
+    participant, num_rounds, time_for_each_round=100
+):
+    """
+    Verify the completion of the process for the participant
+    Args:
+        participant (object): Participant object
+        num_rounds (int): Number of rounds
+        time_for_each_round (int): Time for each round
+    Returns:
+        bool: True if successful, else False
+    """
+    start_time = time.time()
+    # Wait for a min so that log files are available
+    while not os.path.exists(participant.res_file):
+        if time.time() - start_time > 60:
+            raise Exception(f"Log file {participant.res_file} not found after 60 seconds")
+        time.sleep(10)
+
+    # Set timeout based on the number of rounds and time for each round
+    timeout = 600 + (time_for_each_round * num_rounds)  # in seconds
+
+    # Do not open file here as it will be opened in the loop below
+    # Also it takes time for the federation run to start and write the logs
+    content = [""]
+
+    while time.time() - start_time < timeout:
+        with open(participant.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+
+        # Below change is done to handle warnings coming in end of runs
+        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
+
+        # Print last line of the log file on screen to track the progress
+        log.info(f"Last line in {participant.name} log: {lines[-1:]}")
+
+        # If in logs Exception is encountered, throw Exception and stop the process
+        if constants.EXCEPTION in content:
+            log.error(
+                f"Process {participant.name} is throwing Exception. Check the logs for more details"
+            )
+            raise Exception(f"Process failed for {participant.name}")
+
+        msg_received = [line for line in content if constants.AGG_END_MSG in line or constants.COL_END_MSG in line]
+        if msg_received:
+            log.info(f"Process completed for {participant.name}")
+            break
+
+        time.sleep(45)
+
+        # Verify that the process is completed successfully
+        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
+
+        # Find the process ID
+        pids = []
+        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
+            fields = line.split()
+            pids.append(fields[0])
+
+        if not pids:
+            log.info(f"No processes found for participant {participant.name}")
+            break
+        else:
+            log.info(f"Process is yet to complete for {participant.name}")
+
+    # Read tensor.db file for aggregator to check if the process is completed
+    if participant.name == "aggregator" and num_rounds > 1:
+        current_round = get_current_round(participant.tensor_db_file)
+        if (current_round + 1) != num_rounds:
+            raise Exception(f"Process completed but only till round {current_round}")
+
+    return True
+
+
+def federation_env_setup_and_validate(request, eval_scope=False):
+    """
+    Setup the federation environment and validate the configurations
+    Args:
+        request (object): Request object
+        eval_scope (bool): If True, sets up the evaluation scope for a single round
+    Returns:
+        tuple: Model name, workspace path, local bind path, aggregator domain name
+    """
+    agg_domain_name = "localhost"
+
+    # Determine the test type based on the markers
+    test_env = request.config.test_env
+
+    # Validate the model name and create the workspace name
+    if not request.config.model_name.replace("/", "_").replace("-", "_").upper() in constants.ModelName._member_names_:
+        raise ValueError(f"Invalid model name: {request.config.model_name}")
+
+    # Set the workspace path specific to the model and the test case
+    home_dir = Path().home()
+    local_bind_path = os.path.join(
+        home_dir, request.config.results_dir, request.node.name, request.config.model_name.replace("/", "_")
+    )
+
+    num_rounds = request.config.num_rounds
+
+    if eval_scope:
+        local_bind_path = f"{local_bind_path}_eval"
+        log.info(f"Running evaluation for the model: {request.config.model_name}")
+
+    workspace_path = local_bind_path
+
+    # if path exists delete it
+    if os.path.exists(workspace_path):
+        remove_workspace(workspace_path)
+
+    if test_env == "task_runner_dockerized_ws":
+        agg_domain_name = "aggregator"
+        # Cleanup docker containers
+        dh.cleanup_docker_containers()
+        dh.remove_docker_network()
+        dh.create_docker_network()
+
+    log.info(
+        f"Running federation setup using {test_env} API on single machine with below configurations:\n"
+        f"Number of collaborators: {request.config.num_collaborators}\n"
+        f"Number of rounds: {num_rounds}\n"
+        f"Model name: {request.config.model_name}\n"
+        f"Client authentication: {request.config.require_client_auth}\n"
+        f"TLS: {request.config.use_tls}\n"
+        f"Secure Aggregation: {request.config.secure_agg}\n"
+        f"Memory Logs: {request.config.log_memory_usage}\n"
+        f"Results directory: {request.config.results_dir}\n"
+        f"Workspace path: {workspace_path}"
+    )
+    return workspace_path, local_bind_path, agg_domain_name
+
+
+def create_persistent_store(participant_name, local_bind_path):
+    """
+    Create persistent store for the participant on local machine (even for docker)
+    Args:
+        participant_name (str): Participant name
+        local_bind_path (str): Local bind path
+    """
+    try:
+        # Create persistent store
+        error_msg = f"Failed to create persistent store for {participant_name}"
+        cmd_persistent_store = (
+            f"export WORKING_DIRECTORY={local_bind_path}; "
+            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace"
+        )
+        log.debug(f"Creating persistent store")
+        return_code, output, error = run_command(
+            cmd_persistent_store,
+            workspace_path=Path().home(),
+        )
+        if error:
+            raise ex.PersistentStoreCreationException(f"{error_msg}: {error}")
+
+        log.info(f"Persistent store created for {participant_name}")
+
+    except Exception as e:
+        raise ex.PersistentStoreCreationException(f"{error_msg}: {e}")
+
+
+def run_command(
+    command,
+    workspace_path,
+    error_msg=None,
+    container_id=None,
+    run_in_background=False,
+    bg_file=None,
+    print_output=False,
+    with_docker=False,
+    return_error=False,
+):
+    """
+    Run the command
+    Args:
+        command (str): Command to run
+        workspace_path (str): Workspace path
+        container_id (str): Container ID
+        run_in_background (bool): Run the command in background
+        bg_file (str): Background file (with path)
+        print_output (bool): Print the output
+        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
+        return_error (bool): Return error message
+    Returns:
+        tuple: Return code, output and error
+    """
+    return_code, output, error = 0, None, None
+    error_msg = error_msg or "Failed to run the command"
+
+    if with_docker and container_id:
+        log.debug("Running command in docker container")
+        if len(workspace_path):
+            docker_command = f"docker exec -w {workspace_path} {container_id} sh -c "
+        else:
+            # This scenario is mainly for workspace creation where workspace path is not available
+            docker_command = f"docker exec -i {container_id} sh -c "
+
+        if run_in_background and bg_file:
+            docker_command += f"'{command} > {bg_file}' &"
+        else:
+            docker_command += f"'{command}'"
+
+        command = docker_command
+    else:
+        if not run_in_background:
+            # When the command is run in background, we anyways pass the workspace path
+            command = f"cd {workspace_path}; {command}"
+
+    if print_output:
+        log.info(f"Running command: {command}")
+
+    if run_in_background and not with_docker:
+        if bg_file:
+            bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
+        ssh.run_command_background(
+            command,
+            work_dir=workspace_path,
+            redirect_to_file=bg_file,
+            check_sleep=60,
+        )
+    else:
+        return_code, output, error = ssh.run_command(command)
+        if return_code != 0 and not return_error:
+            log.error(f"{error_msg}: {error}")
+            raise Exception(f"{error_msg}: {error}")
+
+    if print_output:
+        log.info(f"Output: {output}")
+        log.info(f"Error: {error}")
+    return return_code, output, error
+
+
+# This functionality is common across multiple participants, thus moved to a common function
+def verify_cmd_output(
+    output, return_code, error, error_msg, success_msg, raise_exception=True
+):
+    """
+    Verify the output of fx command run
+    Assumption - it will have '✔️ OK' in the output if the command is successful
+    Args:
+        output (list): Output of the command using run_command()
+        return_code (int): Return code of the command
+        error (list): Error message
+        error_msg (str): Error message
+        success_msg (str): Success message
+    """
+    msg_received = [line for line in output if constants.SUCCESS_MARKER in line]
+    log.info(f"Message received: {msg_received}")
+    if return_code == 0 and len(msg_received):
+        log.info(success_msg)
+    else:
+        log.error(f"{error_msg}: {error}")
+        if raise_exception:
+            raise Exception(f"{error_msg}: {error}")
+
+
+def setup_collaborator(index, workspace_path, local_bind_path):
+    """
+    Setup the collaborator
+    Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
+    Args:
+        index (int): Index of the collaborator. Starts with 1.
+        workspace_path (str): Workspace path
+        local_bind_path (str): Local bind path
+    """
+    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+
+    try:
+        collaborator = col_model.Collaborator(
+            collaborator_name=f"collaborator{index}",
+            data_directory_path=index,
+            workspace_path=f"{workspace_path}/collaborator{index}/workspace",
+        )
+        create_persistent_store(collaborator.name, local_bind_path)
+
+    except Exception as e:
+        raise ex.PersistentStoreCreationException(
+            f"Failed to create persistent store for {collaborator.name}: {e}"
+        )
+
+    try:
+        local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+            local_bind_path, collaborator.name
+        )
+        copy_file_between_participants(
+            local_agg_ws_path, local_col_ws_path, f"{constants.DFLT_WORKSPACE_NAME}.zip"
+        )
+        collaborator.import_workspace()
+    except Exception as e:
+        raise ex.WorkspaceImportException(
+            f"Failed to import workspace for {collaborator.name}: {e}"
+        )
+
+    try:
+        collaborator.create_collaborator()
+    except Exception as e:
+        raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
+
+    return collaborator
+
+
+def setup_collaborator_data(collaborators, model_name, local_bind_path):
+    """
+    Function to setup the data for collaborators.
+    IMP: This function is specific to the model and should be updated as per the model requirements.
+    Args:
+        collaborators (list): List of collaborator objects
+        model_name (str): Model name
+        local_bind_path (str): Local bind path
+    """
+    # Check if data already exists, if yes, skip the download part
+    # This is mainly helpful in case of re-runs
+    if all(os.path.exists(os.path.join(collaborator.workspace_path, "data", str(index))) for index, collaborator in enumerate(collaborators, start=1)):
+        log.info("Data already exists for all the collaborators. Skipping the download part..")
+        return
+    else:
+        log.info("Data does not exist for all the collaborators. Proceeding with the download..")
+        # Below step will also modify the data.yaml file for all the collaborators
+        if model_name == constants.ModelName.XGB_HIGGS.value:
+            download_higgs_data(collaborators, local_bind_path)
+        elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
+            download_flower_data(collaborators, local_bind_path)
+
+    log.info("Data setup is complete for all the collaborators")
+
+
+def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results_path):
+    """
+    Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
+    For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
+    where download is at collaborator level
+    Args:
+        aggregator: Aggregator object
+        collaborators: List of collaborator objects
+        local_bind_path: Local bind path
+        results_path: Result directory (mostly $HOME/results) where GaNDLF csv and config yaml files are present
+    """
+    try:
+        # Get list of all CSV files in openfl_path
+        csv_files = glob(os.path.join(results_path, '*.csv'))
+
+        # Get data.yaml file and remove any entry, if present
+        data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
+        with open(data_file, "w") as df:
+            df.write("")
+
+        # Copy the data to the respective workspaces based on the index
+        for col_index in range(1, num_collaborators+1):
+            dst_folder = os.path.join(aggregator.workspace_path, "data", str(col_index))
+            os.makedirs(dst_folder, exist_ok=True)
+            for csv_file in csv_files:
+                shutil.copy(csv_file, dst_folder)
+                log.info(f"Copied data from {csv_file} to {dst_folder}")
+
+            aggregator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, "aggregator"),
+                f"collaborator{col_index}",
+                col_index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+    return True
+
+
+def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path):
+    """
+    Function to copy the GaNDLF data from aggregator to respective collaborators
+    """
+    try:
+        # Copy the data to the respective workspaces based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(aggregator.workspace_path, "data", str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+
+def download_flower_data(collaborators, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+
+
+def download_higgs_data(collaborators, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+    
+
+def common_download_for_higgs_and_flower(collaborators, local_bind_path):
+    """
+    Common function to download the data for both Higgs and Flower models.
+    In future, if the data setup for other models is similar, we can use this function.
+    Also, if the setup changes for any of the models, we can modify this function to accommodate the changes.
+    """
+    log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
+    try:
+        shutil.copyfile(
+            src=os.path.join(collaborators[0].workspace_path, "src", constants.DATA_SETUP_FILE),
+            dst=os.path.join(local_bind_path, constants.DATA_SETUP_FILE)
+        )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to copy data setup file: {e}")
+
+    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
+    try:
+        command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
+        subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
+    except Exception:
+        raise ex.DataSetupException(f"Failed to download data for given model")
+
+    try:
+        # Copy the data to the respective workspaces based on the index
+        for index, collaborator in enumerate(collaborators, start=1):
+            src_folder = os.path.join(local_bind_path, "data", str(index))
+            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
+                log.info(f"Copied data from {src_folder} to {dst_folder}")
+            else:
+                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
+
+            # Modify the data.yaml file for all the collaborators
+            collaborator.modify_data_file(
+                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
+                index,
+            )
+    except Exception as e:
+        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+    # XGBoost model uses folder name higgs_data and Flower model uses data to create data folders.
+    shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
+    shutil.rmtree(os.path.join(local_bind_path, "data"), ignore_errors=True)
+    return True
+
+
+def extract_memory_usage(log_file):
+    """
+    Extracts memory usage data from a log file.
+    This function reads the content of the specified log file, searches for memory usage data
+    using a regular expression pattern, and returns the extracted data as a dictionary.
+    Args:
+        log_file (str): The path to the log file from which to extract memory usage data.
+    Returns:
+        dict: A dictionary containing the memory usage data.
+    Raises:
+        json.JSONDecodeError: If there is an error decoding the JSON data.
+        Exception: If memory usage data is not found in the log file.
+    """
+    try:
+        with open(log_file, "r") as file:
+            content = file.read()
+
+        pattern = r"Publish memory usage: (\[.*?\])"
+        match = re.search(pattern, content, re.DOTALL)
+
+        if match:
+            memory_usage_data = match.group(1)
+            memory_usage_data = re.sub(r"\S+\.py:\d+", "", memory_usage_data)
+            memory_usage_data = memory_usage_data.replace("\n", "").replace(" ", "")
+            memory_usage_data = memory_usage_data.replace("'", '"')
+            memory_usage_dict = json.loads(memory_usage_data)
+            return memory_usage_dict
+        else:
+            log.error("Memory usage data not found in the log file")
+            raise Exception("Memory usage data not found in the log file")
+    except Exception as e:
+        log.error(f"An error occurred while extracting memory usage: {e}")
+        raise e
+
+
+def write_memory_usage_to_file(memory_usage_dict, output_file):
+    """
+    Writes memory usage data to a file.
+    This function writes the specified memory usage data to the specified output file.
+    Args:
+        memory_usage_dict (dict): A dictionary containing the memory usage data.
+        output_file (str): The path to the output file to which to write the memory usage data.
+    """
+    try:
+        with open(output_file, "w") as file:
+            json.dump(memory_usage_dict, file, indent=4)
+    except Exception as e:
+        log.error(f"An error occurred while writing memory usage data to file: {e}")
+        raise e
+
+
+def start_director(workspace_path, dir_res_file):
+    """
+    Start the director.
+    Args:
+        workspace_path (str): Workspace path
+        dir_res_file (str): Director result file
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        error_msg = "Failed to start the director"
+        return_code, output, error = run_command(
+            "./start_director.sh",
+            error_msg=error_msg,
+            workspace_path=os.path.join(workspace_path, "director"),
+            run_in_background=True,
+            bg_file=dir_res_file,
+        )
+        log.debug(f"Director start: Return code: {return_code}, Output: {output}, Error: {error}")
+        log.info(
+            "Waiting for 30s for the director to start. With no retry mechanism in place, "
+            "envoys will fail immediately if the director is not ready."
+        )
+        time.sleep(30)
+    except ex.DirectorStartException as e:
+        raise e
+    return True
+
+
+def start_envoy(envoy_name, workspace_path, res_file):
+    """
+    Start given envoy.
+    Args:
+        envoy_name (str): Name of the envoy. For e.g. Bangalore, Chandler (case sensitive)
+        workspace_path (str): Workspace path
+        res_file (str): Result file to track the logs.
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        error_msg = f"Failed to start {envoy_name} envoy"
+        return_code, output, error = run_command(
+            f"./start_envoy.sh {envoy_name} {envoy_name}_config.yaml",
+            error_msg=error_msg,
+            workspace_path=os.path.join(workspace_path, envoy_name),
+            run_in_background=True,
+            bg_file=res_file,
+        )
+        log.debug(f"{envoy_name} start: Return code: {return_code}, Output: {output}, Error: {error}")
+    except ex.EnvoyStartException as e:
+        raise e
+    return True
+
+
+def create_federated_runtime_participant_res_files(results_dir, envoys, model_name):
+    """
+    Create result log files for the director and envoys.
+    Args:
+        results_dir (str): Results directory
+        envoys (list): List of envoys
+        model_name (str): Model name
+    Returns:
+        tuple: Result path and participant result files (including director)
+    """
+    participant_res_files = {}
+    result_path = os.path.join(
+        home_dir, results_dir, model_name
+    )
+    os.makedirs(result_path, exist_ok=True)
+
+    for participant in envoys + ["director"]:
+        res_file = os.path.join(result_path, f"{participant.lower()}.log")
+        participant_res_files[participant.lower()] = res_file
+        # Create the file
+        open(res_file, 'w').close()
+
+
+    return result_path, participant_res_files
+
+
+def check_envoys_director_conn_federated_runtime(
+    notebook_path, expected_envoys, director_node_fqdn="localhost", director_port=50050
+):
+    """
+    Function to check if the envoys are connected to the director for Federated Runtime notebooks.
+    Args:
+        notebook_path (str): Path to the notebook
+        expected_envoys (list): List of expected envoys
+        director_node_fqdn (str): Director node FQDN
+        director_port (int): Director port
+    Returns:
+        bool: True if all the envoys are connected to the director, else False
+    """
+    from openfl.experimental.workflow.runtime import FederatedRuntime
+
+    # Number of retries and delay between retries in seconds
+    MAX_RETRIES = RETRY_DELAY = 5
+
+    federated_runtime = FederatedRuntime(
+        collaborators=expected_envoys,
+        director={
+            "director_node_fqdn": director_node_fqdn,
+            "director_port": director_port,
+        },
+        notebook_path=notebook_path,
+    )
+    # Retry logic
+    for attempt in range(MAX_RETRIES):
+        actual_envoys = federated_runtime.get_envoys()
+        if all(
+            sorted(expected_envoys) == sorted(actual_envoys)
+            for expected_envoys, actual_envoys in [(expected_envoys, actual_envoys)]
+        ):
+            log.info("All the envoys are connected to the director")
+            return True
+        else:
+            log.warning(
+                f"Attempt {attempt + 1}/{MAX_RETRIES}: Not all envoys are connected. Retrying in {RETRY_DELAY} seconds..."
+            )
+            time.sleep(RETRY_DELAY)
+
+    return False
+
+
+def run_notebook(notebook_path, output_notebook_path):
+    """
+    Function to run the notebook.
+    Args:
+        notebook_path (str): Path to the notebook
+        participant_res_files (dict): Dictionary containing participant names and their result log files
+    Returns:
+        bool: True if successful, else False
+    """
+    import papermill as pm
+    try:
+        log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
+        output = pm.execute_notebook(
+            input_path=notebook_path,
+            output_path=output_notebook_path,
+            request_save_on_cell_execute=True,
+            autosave_cell_every=5, # autosave every 5 seconds
+            log_output=True,
+        )
+    except pm.exceptions.PapermillExecutionError as e:
+        log.error(f"PapermillExecutionError: {e}")
+        raise e
+
+    except ex.NotebookRunException as e:
+        log.error(f"Failed to run the notebook: {e}")
+        raise e
+    return True
+
+
+def verify_federated_runtime_experiment_completion(participant_res_files):
+    """
+    Verify the completion of the experiment using the participant logs.
+    Args:
+        participant_res_files (dict): Dictionary containing participant names and their result log files
+    Returns:
+        bool: True if successful, else False
+    """
+    # Check participant logs for successful completion
+    for name, result_file in participant_res_files.items():
+        # Do not open file here as it will be opened in the loop below
+        # Also it takes time for the federation run to start and write the logs
+        with open(result_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        last_7_lines = list(filter(str.rstrip, lines))[-7:]
+        if (
+            name == "director"
+            and [1 for content in last_7_lines if "was finished successfully" in content]
+        ):
+            log.debug(f"Process completed for {name}")
+            continue
+        elif name != "director" and [1 for content in last_7_lines if "End of Federation reached." in content]:
+            log.debug(f"Process completed for {name}")
+            continue
+        else:
+            log.error(f"Process failed for {name}")
+            return False
+    return True
+
+
+def get_current_round(database_file: str) -> int:
+    """
+    Get the current round number from the database file
+    Args:
+        database_file (str): Database file
+    Returns:
+        int: Current round number
+    """
+    return int(db_helper.get_key_value_from_db("round_number", database_file))
+
+
+def get_best_agg_score(database_file: str) -> float:
+    """
+    Get the best aggregated score from the database file
+    Args:
+        database_file (str): Database file
+    Returns:
+        float: Best aggregated score
+    """
+    return db_helper.get_key_value_from_db("best_score", database_file)
+
+
+def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
+    """
+    Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
+    and retrying with some wait time for input timeout.
+    Args:
+        inp_round (int): The initial round number to compare against.
+        database_file (str): The path to the database file.
+        total_rounds (int): The total number of rounds expected.
+        timeout (int): The maximum time to wait in seconds.
+            Default is 300 seconds as some of the models take more time to complete the round.
+        sleep_interval (int): The wait time between retries in seconds. Default is 5 seconds.
+    Returns:
+        round number(int) if current round number has increased, else False.
+    """
+    if inp_round == total_rounds:
+        log.info("Federation is already at the last round.")
+        return inp_round
+
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        current_round = get_current_round(database_file)
+        # Sometimes round number is not updated immediately, thus checking for current_round > inp_round + 1
+        if current_round > inp_round + 1:
+            log.info(f"Round number has increased from {inp_round} to {current_round}")
+            return current_round
+        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        time.sleep(sleep_interval)
+    log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
+    return False
+
+
+def set_keras_backend(model_name):
+    """
+    Function to set the KERAS_BACKEND environment variable based on the model name.
+    Args:
+        model_name (str): Model name
+    Returns:
+        list: List of environment variables
+    """
+    if "keras" not in model_name:
+        return None
+
+    parts = model_name.split("/")
+    # TODO - modify the logic if the model name changes to have more than 3 parts
+    if len(parts) == 3:
+        backend = parts[1]
+    else:
+        return None
+
+    os.environ["KERAS_BACKEND"] = backend
+
+    return [f"KERAS_BACKEND={backend}"]
+
+
+def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
+    """
+    Remove stale processes
+    """
+    if num_collaborators > 0:
+        log.info("Removing stale processes..")
+        # Remove any stale processes
+        try:
+            for i in range(1, num_collaborators + 1):
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            subprocess.run(
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if director:
+        try:
+            subprocess.run(
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
+                shell=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to kill processes: {e}")
+
+    if envoys:
+        for envoy in envoys:
+            try:
+                subprocess.run(
+                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
+                    shell=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                log.warning(f"Failed to kill processes: {e}")
+    log.info("Stale processes (if any) removed successfully")
+
+
+def remove_workspace(path):
+    """
+    Recursively delete given workspace and its contents, including symbolic links.
+
+    Args:
+        path (str): The path to the workspace to be deleted.
+    """
+    if os.path.islink(path) or os.path.isfile(path):
+        subprocess.run(['sudo', 'rm', '-f', path], check=True)
+    elif os.path.isdir(path):
+        for entry in os.scandir(path):
+            remove_workspace(entry.path)
+        subprocess.run(['sudo', 'rmdir', path], check=True)
+
+
+def get_agg_addr_port(plan_file):
+    """
+    Get the aggregator address and port
+    Returns:
+        tuple: Aggregator address and port
+    """
+    try:
+        with open(plan_file) as fp:
+            data = yaml.safe_load(fp)
+
+        agg_addr = data["network"]["settings"]["agg_addr"]
+        agg_port = data["network"]["settings"]["agg_port"]
+        return agg_addr, agg_port
+    except Exception as e:
+        raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
