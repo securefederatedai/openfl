@@ -8,7 +8,6 @@ from keras_contrib.layers import InstanceNormalization
 
 from openfl.federated import KerasTaskRunner
 from keras import backend as K
-import requests
 import gdown
 import hashlib
 
@@ -32,24 +31,6 @@ def compute_file_hash(file_path):
         data = file.read()
         file_hash = hashlib.sha256(data).hexdigest()
     return file_hash
-
-
-def download_file_from_google_drive(file_id, destination):
-    # Google Drive URL to access file content
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
-
-    # Send a GET request to the URL
-    response = requests.get(url, stream=True)
-
-    if response.status_code == 200:
-        with open(destination, "wb") as file:
-            for chunk in response.iter_content(1024):
-                if chunk:
-                    file.write(chunk)
-        print(f"File downloaded successfully to {destination}")
-    else:
-        print(f"Failed to download file. Status code: {response.status_code}")
-        response.raise_for_status()
 
 
 class KerasHippmapp3r(KerasTaskRunner):
