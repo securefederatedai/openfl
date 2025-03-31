@@ -1,0 +1,15 @@
+---
+# Composite Action to run pre-test functions for task runner end to end tests
+
+name: 'TruffleHog Logs Scan'
+description: 'Run TruffleHog scan on logs'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run trufflehog for all log file in results
+      id: trufflehog_scan
+      run: |
+        export PYTHONPATH="$PYTHONPATH:."
+        python .github/config/parse_task_runner_logs.py --log_dir ~/results
+      shell: bash
