@@ -35,6 +35,8 @@ class FederatedFlow(FLSpec):
         super().__init__(**kwargs)
         if model is not None:
             self.model = model
+        else:
+            
         self.rounds = rounds
         self.val_set = val_set
         self.training_args = training_args

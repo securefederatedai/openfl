@@ -1,13 +1,13 @@
 # %%
 import torch
 import os
-from transformers import Dinov2Model, ViTModel
+from transformers import Dinov2Model, ViTModel, Dinov2Config, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import SemanticSegmenterOutput
 import torch.nn as nn
 from monai.losses import DiceLoss
 from peft import get_peft_model_state_dict, set_peft_model_state_dict
 from torchinfo import summary
-from peft import LoraConfig, TaskType
+from peft import LoraConfig, TaskType, PeftConfig
 from src.dataloader import SEGMENT_CLASSES
 from src.utils import PeftModelForVit
 from src.unet import UNet
@@ -19,37 +19,59 @@ from src.heads import LinearClassifierToken, UNetDecoder
 
 class VitForSemanticSegmentation(nn.Module):
     def __init__(
-        self, use_UNetDecoder=False, output_hidden_states=True, lora=False, dinov2=True, **kwargs
+        self,
+        feature_extractor: PreTrainedModel = None,
+        use_UNetDecoder=False,
+        output_hidden_states=True,
+        lora=False,
+        dinov2=True,
+        feature_extractor_config: PretrainedConfig = None,
+        peft_config: PeftConfig = None,
+        head: nn.Module = None,
+        **kwargs
     ):
         super(VitForSemanticSegmentation, self).__init__()
-        self.lora = lora
-        if dinov2:
-            self.feature_extractor = Dinov2Model.from_pretrained(**kwargs)
-        else:
-            self.feature_extractor = ViTModel.from_pretrained(**kwargs)
-        self.config = self.feature_extractor.config
+        if feature_extractor_config is None:
+            self.feature_extractor_config: Dinov2Config = Dinov2Config.from_pretrained(
+                "facebook/dinov2-base"
+            )
 
-        self.use_UNetDecoder = use_UNetDecoder
-        self.patch_size = self.config.patch_size
-        if use_UNetDecoder:
-            self.classifier = UNetDecoder(
-                self.config.hidden_size, out_channels=self.config.num_labels
+        if feature_extractor is None:
+            self.feature_extractor: Dinov2Model = Dinov2Model.from_pretrained(
+                self.feature_extractor_config
             )
         else:
-            patches = 224 // self.config.patch_size
+            self.feature_extractor: PreTrainedModel = feature_extractor
+
+        if peft_config is not None:
+            self.using_peft = True
+            self.feature_extractor: PeftModelForVit = PeftModelForVit(
+                self.feature_extractor, peft_config
+            )
+
+        if head is not None:
+            self.head = head
+        else:
+            self.patch_size = self.feature_extractor.config.patch_size
+            patches = (
+                self.feature_extractor.config.image_size // self.feature_extractor.config.patch_size
+            )
             self.classifier = LinearClassifierToken(
-                self.config.hidden_size, patches, patches, self.config.num_labels
+                feature_extractor_config.hidden_size,
+                patches,
+                patches,
+                feature_extractor_config.num_labels,
             )
         self.output_hidden_states = output_hidden_states
 
     def get_weights(self):
-        if self.lora:
+        if self.using_peft:
             return get_peft_model_state_dict(self.feature_extractor), self.classifier.state_dict()
         else:
             return self.classifier.state_dict()
 
     def set_weights(self, weights):
-        if self.lora:
+        if self.using_peft:
             peft_weights, classifier_weights = weights
             set_peft_model_state_dict(self.feature_extractor, peft_weights)
             self.classifier.load_state_dict(classifier_weights)

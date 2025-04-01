@@ -1,7 +1,7 @@
 # %%
 import torch
 import os
-from transformers import TrainingArguments
+from transformers import TrainingArguments, Dinov2Config
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torchinfo import summary
@@ -10,7 +10,7 @@ from peft import LoraConfig, TaskType
 from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
 
-os.chdir(path)
+os.chdir("/home/oamontoy/workspace/openfl/dinov2")
 from src.dataloader import create_dataset_dict, SEGMENT_CLASSES
 from src.model import VitForSemanticSegmentation
 from src.utils import PeftModelForVit
@@ -60,10 +60,15 @@ if use_vit:
     else:
         model_name = "google/vit-base-patch16-224"
         model_type = "vit"
+    
+    MODEL_CONFIG = Dinov2Config()
+    self.feature_extractor = ViTModel.from_pretrained(**kwargs)
+    self.classifier = UNetDecoder(
+                self.config.hidden_size, out_channels=self.config.num_labels
+            )
+        
     model = VitForSemanticSegmentation(
         pretrained_model_name_or_path=model_name,
-        id2label=SEGMENT_CLASSES,
-        num_labels=len(SEGMENT_CLASSES),
         use_UNetDecoder=use_decoder_unet,
         lora=use_lora,
         dinov2=use_dino,
@@ -83,7 +88,7 @@ if use_vit:
         model.feature_extractor.print_trainable_parameters()
     else:
         summary(model.feature_extractor, input_size=(1, 3, 224, 224))
-    patches = 224 // model.feature_extractor.config.patch_size
+    patches = model.feature_extractor.config.image_size // model.feature_extractor.config.patch_size
     embeddings = model.feature_extractor.config.hidden_size
     summary(
         model.classifier, input_size=(5 if use_decoder_unet else 1, patches * patches, embeddings)
