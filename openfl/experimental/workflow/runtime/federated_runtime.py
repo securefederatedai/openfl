@@ -146,11 +146,12 @@ class FederatedRuntime(Runtime):
             Tuple[Path, str]: A tuple containing the path of the created
         archive and the experiment name.
         """
-        archive_path, exp_name = NotebookTools.export_federated(
-            notebook_path=self.notebook_path,
-            output_workspace="./generated_workspace",
-            director_fqdn=self.director["director_node_fqdn"],
-            tls=self.tls,
+        nb_tools = NotebookTools(
+            notebook_path=self.notebook_path, output_workspace="./generated_workspace"
+        )
+
+        archive_path, exp_name = nb_tools.export(
+            director_fqdn=self.director["director_node_fqdn"], tls=self.tls
         )
         return archive_path, exp_name
 
