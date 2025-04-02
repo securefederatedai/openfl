@@ -1,15 +1,18 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from hashlib import sha256
+from hashlib import sha256, sha384
 import json
 from openfl.federated.data.sources.local_data_source import LocalDataSource
+from openfl.federated.data.sources.s3_data_source import S3DataSource
 from openfl.federated.data.sources.verifiable_dataset_info import VerifiableDatasetInfo
 import pytest
+import boto3
 import os
 
 from pathlib import Path
 from typing import List, Tuple
+from moto import mock_aws
 
 @pytest.fixture
 def local_data_sources(fs) -> Tuple[Path, Path]:
@@ -30,6 +33,43 @@ def local_data_sources(fs) -> Tuple[Path, Path]:
                 fs.create_file(file_path, contents=f"Hello world! {ds.name} dir {subdir} file{i}\n")
 
     return ds1, ds2  # Return fake paths
+
+@pytest.fixture
+def mock_s3_buckets():
+    with mock_aws():
+        s3_client = boto3.client("s3")
+
+        # Create two test buckets
+        bucket1 = "test-bucket-1"
+        bucket2 = "test-bucket-2"
+        s3_client.create_bucket(Bucket=bucket1)
+        s3_client.create_bucket(Bucket=bucket2)
+
+        # Add multiple test files to both buckets
+        files1 = [
+            "folder1/file1.txt",
+            "folder1/file2.txt",
+            "folder1/subfolder/file3.txt",
+            "folder2/file4.txt",
+            "folder2/file5.txt",
+            "folder2/subfolder/file6.txt"
+        ]
+        files2 = [
+            "dir1/fileA.txt",
+            "dir1/fileB.txt",
+            "dir1/subdir/fileC.txt",
+            "dir2/fileD.txt",
+            "dir2/fileE.txt",
+            "dir2/subdir/fileF.txt"
+        ]
+
+        for file in files1:
+            s3_client.put_object(Bucket=bucket1, Key=file, Body=f"Content of {file}")
+
+        for file in files2:
+            s3_client.put_object(Bucket=bucket2, Key=file, Body=f"Content of {file}")
+
+        yield bucket1, bucket2  # Return both bucket names
 
 def split_to_base_and_relative_paths(data_sources_paths: List[str]) -> Tuple[str, List[str]]:
     """Split a list of paths into a base directory and relative paths."""
@@ -236,3 +276,82 @@ def test_two_local_datasource_non_defalt_args(local_data_sources):
     assert verifiable_from_json.data_sources[0].max_dataset_size == 500
     assert verifiable_from_json.data_sources[1].hash_func == sha256
     assert verifiable_from_json.data_sources[1].max_dataset_size == 500
+
+def test_one_s3_data_source(mock_s3_buckets):
+    bucket1, _ = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json)
+    assert verifiable_from_json.verify_dataset()
+
+def test_two_s3_datasource(mock_s3_buckets):
+    bucket1, bucket2 = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    ds2 = S3DataSource(f"s3://{bucket2}/dir1")
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json)
+    assert verifiable_from_json.verify_dataset()
+
+def test_one_s3_datasource_one_file(mock_s3_buckets):
+    bucket1, _ = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1/file1.txt")
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json)
+    assert verifiable_from_json.verify_dataset()
+
+def test_two_s3_datasource_use_saved_hash(mock_s3_buckets):
+    bucket1, bucket2 = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    ds2 = S3DataSource(f"s3://{bucket2}/dir1")
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    dataset_info = json.loads(verifiable_json)
+    assert verifiable.verify_dataset(dataset_info["root_hash"])
+    assert verifiable.verify_dataset()
+
+def test_one_s3_datasource_one_file_hash_func(mock_s3_buckets):
+    bucket1, _ = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1/file1.txt", hash_func=sha384)
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json)
+    assert verifiable_from_json.verify_dataset()
+
+def test_two_s3_datasource_hash_func_use_saved_hash(mock_s3_buckets):
+    bucket1, bucket2 = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1", hash_func=sha384)
+    ds2 = S3DataSource(f"s3://{bucket2}/dir1", hash_func=sha384)
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    dataset_info = json.loads(verifiable_json)
+    assert verifiable.verify_dataset(dataset_info["root_hash"])
+    assert verifiable.verify_dataset()
+
+def test_one_s3_datasource_verify_single_file(mock_s3_buckets):
+    bucket1, _ = mock_s3_buckets
+    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
+    hash = verifiable.create_dataset_hash()
+    assert isinstance(hash, str), f"Expected str, got {type(hash)}"
+    verifiable_json = verifiable.to_json()
+    dataset_info_dict = json.loads(verifiable_json)
+    verifiable_from_json = VerifiableDatasetInfo.from_json(verifiable_json)
+    # Create & save in memory the hashes for all files
+    verifiable.verify_dataset(dataset_info_dict["dataset_id"])
+    for file_path, hash in verifiable.all_hashes.items():
+        assert verifiable_from_json.verify_single_file(file_path, hash)

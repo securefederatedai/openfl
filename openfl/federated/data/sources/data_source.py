@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base class for different types of data sources."""
