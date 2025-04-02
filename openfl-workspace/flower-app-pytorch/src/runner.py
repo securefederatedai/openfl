@@ -80,20 +80,35 @@ class FlowerTaskRunner(TaskRunner):
             "--node-config", f"data-path='{self.data_path}'"
         ]
 
+        if self.patch:
+            command += ["--isolation", "process"]
+            flwr_clientapp_command = [
+                "flwr-clientapp",
+                "--insecure",
+                "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
+            ]
+        
+        self.logger.info("Starting Flower SuperNode process...")
         supernode_process = subprocess.Popen(command, shell=False)
         local_grpc_server.handle_signals(supernode_process)
 
+        if self.patch:
+            self.logger.info("Starting Flower ClientApp process...")
+            flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
+            local_grpc_server.handle_signals(flwr_clientapp_process)
+
         self.logger.info("Press CTRL+C to stop the server and SuperNode process.")
 
-        try:
-            while not local_grpc_server.termination_event.is_set():
-                if self.shutdown_requested:
-                    local_grpc_server.terminate_supernode_process(supernode_process)
-                    local_grpc_server.stop_server()
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            local_grpc_server.terminate_supernode_process(supernode_process)
-            local_grpc_server.stop_server()
+        while not local_grpc_server.termination_event.is_set():
+            if self.shutdown_requested:
+                self.logger.info("Shutting down the server and SuperNode process...")
+                local_grpc_server.terminate_supernode_process(supernode_process)
+                if self.patch:
+                    self.logger.info("Terminating Flower ClientApp process...")
+                    local_grpc_server.terminate_supernode_process(flwr_clientapp_process)
+                local_grpc_server.stop_server()
+            time.sleep(0.1)
+
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
         """
