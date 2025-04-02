@@ -130,7 +130,7 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
             "Please provide one of the following options: "
             + "`template`, `custom_template`, or `notebook`."
         )
-
+    # FIXME: Remove this CLI Aggregator-Based functionality in the subsequent PR
     if notebook:
         if not template_output_dir:
             raise ValueError(

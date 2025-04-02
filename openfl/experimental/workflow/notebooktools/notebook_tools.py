@@ -3,25 +3,20 @@
 
 """Notebook Tools module."""
 
-import logging
 import shutil
 from importlib import import_module
-from logging import getLogger
 from pathlib import Path
 from shutil import copytree
 from typing import Any, Dict, Tuple
 
 from openfl.experimental.workflow.federated.plan import Plan
-from openfl.experimental.workflow.interface.cli.cli_helper import print_tree
+from openfl.experimental.workflow.interface.cli.cli_helper import WORKSPACE, print_tree
 from openfl.experimental.workflow.notebooktools.code_analyzer import CodeAnalyzer
-
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = getLogger(__name__)
 
 
 class NotebookTools:
-    """Class to convert Jupyter notebook based on Workflow API into a
-    workspace that could be deployed on distributed infrastructure
+    """Class providing utility functions to convert Jupyter notebook based on Workflow API
+    into a workspace enabling its deployment on distributed infrastructure
 
     Attributes:
         notebook_path: Absolute path of jupyter notebook.
@@ -43,66 +38,21 @@ class NotebookTools:
             raise FileNotFoundError(f"The Jupyter notebook at {notebook_path} does not exist.")
 
         self.output_workspace_path = Path(output_workspace).resolve()
+        self._initialize_workspace()
+
+        self.code_analyzer = CodeAnalyzer(self.notebook_path, self.output_workspace_path)
+
+    def _initialize_workspace(self) -> None:
+        """Initialize the workspace by setting up path and copying templates"""
         # Regenerate the workspace if it already exists
         if self.output_workspace_path.exists():
+            print(f"Removing existing workspace: {self.output_workspace_path}")
             shutil.rmtree(self.output_workspace_path)
         self.output_workspace_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.template_workspace_path = (
-            Path(f"{__file__}")
-            .parent.parent.parent.parent.parent.joinpath(
-                "openfl-workspace",
-                "experimental",
-                "workflow",
-                "AggregatorBasedWorkflow",
-                "template_workspace",
-            )
-            .resolve(strict=True)
-        )
-
-        # Copy template workspace to output directory
+        self.template_workspace_path = (WORKSPACE / "template_workspace").resolve(strict=True)
         copytree(self.template_workspace_path, self.output_workspace_path)
-
-        logger.info(f"Copied template workspace to {self.output_workspace_path}")
-
-        # Initialize CodeAnalyzer object
-        self.code_analyzer = CodeAnalyzer(self.notebook_path, self.output_workspace_path)
-
-    @classmethod
-    def export_federated(
-        cls, notebook_path: str, output_workspace: str, director_fqdn: str, tls: bool = False
-    ) -> Tuple[str, str]:
-        """Exports workspace for FederatedRuntime.
-
-        Args:
-            notebook_path (str): Path to the Jupyter notebook.
-            output_workspace (str): Path for the generated workspace directory.
-            director_fqdn (str): Fully qualified domain name of the director node.
-            tls (bool, optional): Whether to use TLS for the connection.
-
-        Returns:
-            Tuple[str, str]: A tuple containing:
-                (archive_path, flow_class_name).
-        """
-        instance = cls(notebook_path, output_workspace)
-        instance._generate_requirements()
-        instance._generate_plan_yaml(director_fqdn, tls)
-        instance._clean_generated_workspace()
-        print_tree(output_workspace, level=2)
-        return instance._generate_experiment_archive()
-
-    @classmethod
-    def export(cls, notebook_path: str, output_workspace: str) -> None:
-        """Exports workspace to output_workspace.
-        Args:
-            notebook_path (str): Path to the Jupyter notebook.
-            output_workspace (str): Path for the generated workspace directory.
-        """
-        instance = cls(notebook_path, output_workspace)
-        instance._generate_requirements()
-        instance._generate_plan_yaml()
-        instance._generate_data_yaml()
-        print_tree(output_workspace, level=2)
+        print(f"Copied template workspace to {self.output_workspace_path}")
 
     def _generate_experiment_archive(self) -> Tuple[str, str]:
         """
@@ -114,76 +64,43 @@ class NotebookTools:
         """
         parent_directory = self.output_workspace_path.parent
         archive_path = parent_directory / "experiment"
-
         # Create a ZIP archive of the generated_workspace directory
         arch_path = shutil.make_archive(str(archive_path), "zip", str(self.output_workspace_path))
-
         print(f"Archive created at {archive_path}.zip")
 
         return arch_path, self.flow_class_name
 
     def _generate_requirements(self) -> None:
-        """Extracts pip libraries from exported python script
-        and append in workspace/requirements.txt
+        """Extract dependencies (pip install <module name>) from exported python script
+        and append to workspace/requirements.txt
         """
         try:
-            # Get requirements and related data from the code analyzer
             requirements, line_numbers, data = self.code_analyzer.get_requirements()
-
-            # Define the path for the requirements.txt file
             requirements_filepath = str(
                 self.output_workspace_path.joinpath("requirements.txt").resolve()
             )
-
-            # Write libraries found in requirements.txt
             with open(requirements_filepath, "a") as f:
                 f.writelines(requirements)
 
             # Delete pip requirements from the python script to ensure it can be imported
             self.code_analyzer.remove_lines(data, line_numbers)
 
-            logger.info(f"Successfully generated {requirements_filepath}")
+            print(f"Successfully generated {requirements_filepath}")
 
         except Exception as e:
-            # Log error message with exception details
-            logger.error(f"Failed to generate requirements: {e}")
-
-    def _clean_generated_workspace(self) -> None:
-        """
-        Remove cols.yaml and data.yaml from the generated workspace
-        as these are not needed in FederatedRuntime (Director based workflow)
-
-        """
-        cols_file = self.output_workspace_path.joinpath("plan", "cols.yaml")
-        data_file = self.output_workspace_path.joinpath("plan", "data.yaml")
-
-        if cols_file.exists():
-            cols_file.unlink()
-        if data_file.exists():
-            data_file.unlink()
+            print(f"Failed to generate requirements: {e}")
 
     def _generate_plan_yaml(self, director_fqdn: str = None, tls: bool = False) -> None:
-        """Generate the plan.yaml
+        """Generates workspace/plan.yaml
         Args:
             director_fqdn (str): Fully qualified domain name of the director node.
             tls (bool, optional): Whether to use TLS for the connection.
         """
-
-        # Get the flow_class details
         flow_details = self._extract_flow_details()
-
-        # Get flow_class_name
-        self.flow_class_name = flow_details["flow_class_name"]
-
-        # Get flow configuration
         flow_config = self.code_analyzer.fetch_flow_configuration(flow_details)
-
-        # Determine the path for the plan.yaml file
         plan_path = self.output_workspace_path.joinpath("plan", "plan.yaml").resolve()
-
         # Build the complete plan configuration
         data_config = self._build_plan_config(flow_config, director_fqdn, tls, plan_path)
-
         # Write the updated plan configuraiton to the plan.yaml file
         Plan.dump(plan_path, data_config)
 
@@ -204,7 +121,6 @@ class NotebookTools:
         """
         data_config = self._initialize_plan_yaml(plan_path)
         data_config["federated_flow"].update(flow_config["federated_flow"])
-
         if director_fqdn:
             network_settings = Plan.parse(plan_path).config["network"]
             data_config["network"] = network_settings
@@ -213,58 +129,14 @@ class NotebookTools:
 
         return data_config
 
-    def _generate_data_yaml(self) -> None:
-        """Generate data.yaml"""
-
-        # Get runtime information
-        runtime, flow_instance_name = self._get_flow_runtime()
-
-        # Determine the path for the data.yaml
-        data_yaml = self.output_workspace_path.joinpath("plan", "data.yaml").resolve()
-
-        # Initialize the YAML data
-        data_config = self._initialize_data_yaml(data_yaml)
-
-        # Initialize runtime name
-        runtime_name = "runtime_local"
-
-        # Process aggregator information using CodeAnalyzer
-        runtime_created = self.code_analyzer.process_aggregator(
-            runtime, data_config, flow_instance_name, runtime_name
-        )
-
-        # Process collaborator information using CodeAnalyzer
-        self.code_analyzer.process_collaborators(
-            runtime, data_config, flow_instance_name, runtime_created, runtime_name
-        )
-
-        # Write updated data configuration to the data.yaml file
-        Plan.dump(data_yaml, data_config)
-
     def _extract_flow_details(self) -> str:
         """Extract the flow class details"""
         flspsec = import_module("openfl.experimental.workflow.interface").FLSpec
         flow_details = self.code_analyzer.get_flow_class_details(flspsec)
-        if not flow_details:
-            raise ValueError("Failed to extract flow class details")
+        # Set flow_class_name for future reference
+        self.flow_class_name = flow_details["flow_class_name"]
+
         return flow_details
-
-    def _get_flow_runtime(self) -> Tuple[object, str]:
-        """
-        Get the runtime and flow instance name using CodeAnalyzer
-
-        Returns:
-            Tuple[object, str]: A tuple containing the runtime and flow instance name.
-        """
-        if not hasattr(self, "flow_class_name"):
-            flow_details = self._extract_flow_details()
-            self.flow_class_name = flow_details["flow_class_name"]
-
-        # Get runtime information and flow instance name using CodeAnalyzer
-        runtime, flow_instance_name = self.code_analyzer.fetch_flow_runtime_info(
-            self.flow_class_name
-        )
-        return runtime, flow_instance_name
 
     def _initialize_plan_yaml(self, plan_yaml: Path) -> dict:
         """Load or initialize the plan YAML data.
@@ -278,15 +150,21 @@ class NotebookTools:
         if data is None:
             data = {}
             data["federated_flow"] = {"settings": {}, "template": ""}
+
         return data
 
-    def _initialize_data_yaml(self, data_yaml: Path) -> dict:
-        """Load or initialize the YAML data.
+    def export(self, director_fqdn: str, tls: bool = False) -> Tuple[str, str]:
+        """Exports workspace for FederatedRuntime.
         Args:
-            data_yaml (Path): The path to the data.yaml file.
+            director_fqdn (str): Fully qualified domain name of the director node.
+            tls (bool, optional): Whether to use TLS for the connection.
 
         Returns:
-            dict: The data dictionary from data.yaml
+            Tuple[str, str]: A tuple containing:
+                (archive_path, flow_class_name).
         """
-        data = Plan.load(data_yaml)
-        return data if data is not None else {}
+        self._generate_requirements()
+        self._generate_plan_yaml(director_fqdn, tls)
+        print_tree(self.output_workspace_path, level=2)
+
+        return self._generate_experiment_archive()

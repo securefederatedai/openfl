@@ -6,14 +6,11 @@ import inspect
 import re
 import sys
 from importlib import import_module
-from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import nbformat
 from nbdev.export import nb_export
-
-logger = getLogger(__name__)
 
 
 class CodeAnalyzer:
@@ -32,24 +29,18 @@ class CodeAnalyzer:
             notebook_path (Path): Path to Jupyter notebook to be converted.
             output_path (Path): The directory where the converted Python script will be saved.
         """
-        logger.info("Converting jupyter notebook to python script...")
-
+        print("Converting jupyter notebook to python script...")
         # Extract the export filename from the notebook
-        export_filename = self.__get_exp_name(notebook_path)
-
+        self.script_name = self.__get_exp_name(notebook_path)
         # Convert the notebook to a Python script and set the script path
         self.script_path = Path(
             self.__convert_to_python(
                 notebook_path,
                 output_path.joinpath("src"),
-                f"{export_filename}.py",
+                f"{self.script_name}.py",
             )
         ).resolve()
-        # Generated python script name
-        self.script_name = self.script_path.name.split(".")[0].strip()
-
-        # Transform the script
-        self.__transform_script()
+        self.__comment_flow_execution()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -59,7 +50,7 @@ class CodeAnalyzer:
         Args:
             notebook_path (str): Path to Jupyter notebook.
         """
-        with open(str(notebook_path), "r") as f:
+        with notebook_path.open("r") as f:
             notebook_content = nbformat.read(f, as_version=nbformat.NO_CONVERT)
 
         for cell in notebook_content.cells:
@@ -67,7 +58,7 @@ class CodeAnalyzer:
                 code = cell.source
                 match = re.search(r"#\s*\|\s*default_exp\s+(\w+)", code)
                 if match:
-                    logger.info(f"Retrieved {match.group(1)} from default_exp")
+                    print(f"Retrieved {match.group(1)} from default_exp")
                     return match.group(1)
         raise ValueError(
             "The notebook does not contain a '#| default_exp <experiment_name' marker."
@@ -90,37 +81,17 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __transform_script(self) -> None:
-        """
-        Transform the script by commenting out flow.run() and changing the runtime backend.
-        """
-        # Comment out flow.run() to prevent the flow from starting execution
-        self.__comment_flow_execution()
-
-        self.__switch_to_single_process_backend()
-
     def __comment_flow_execution(self) -> None:
         """Comment out lines containing '.run()' in the specified Python script"""
-        with open(self.script_path, "r") as f:
+        run_statement = ".run()"
+
+        with self.script_path.open("r") as f:
             data = f.readlines()
         for idx, line in enumerate(data):
-            if ".run()" in line:
+            if run_statement in line:
                 data[idx] = f"# {line}"
-        with open(self.script_path, "w") as f:
+        with self.script_path.open("w") as f:
             f.writelines(data)
-
-    def __switch_to_single_process_backend(self) -> None:
-        """Change the LocalRuntime backend from ray to single_process."""
-        with open(self.script_path, "r") as f:
-            data = f.read()
-
-        if "backend='ray'" in data or 'backend="ray"' in data:
-            data = data.replace("backend='ray'", "backend='single_process'").replace(
-                'backend="ray"', 'backend="single_process"'
-            )
-
-        with open(self.script_path, "w") as f:
-            f.write(data)
 
     def __import_generated_script(self) -> None:
         """
@@ -130,10 +101,8 @@ class CodeAnalyzer:
             sys.path.append(str(self.script_path.parent))
             self.exported_script_module = import_module(self.script_name)
             self.available_modules_in_exported_script = dir(self.exported_script_module)
-
         except ImportError as e:
-            logger.error(f"Failed to import script {self.script_name}: {e}")
-            raise
+            raise ImportError(f"Failed to import script {self.script_name}: {e}")
 
     def __get_class_arguments(self, class_name) -> list:
         """Given the class name returns expected class arguments.
@@ -144,7 +113,6 @@ class CodeAnalyzer:
         Returns:
             list: A list of expected class arguments.
         """
-        # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_generated_script()
 
@@ -155,13 +123,10 @@ class CodeAnalyzer:
                     self.exported_script_module,
                     self.available_modules_in_exported_script[idx],
                 )
-
-        # If class not found
         if "cls" not in locals():
             raise NameError(f"{class_name} not found.")
 
         if inspect.isclass(cls):
-            # Check if the class has an __init__ method
             if "__init__" in cls.__dict__:
                 init_signature = inspect.signature(cls.__init__)
                 # Extract the parameter names (excluding 'self', 'args', and
@@ -173,22 +138,16 @@ class CodeAnalyzer:
                 ]
                 return arg_names
             return []
-        logger.error(f"{cls} is not a class")
+        print(f"{cls} is not a class")
 
-    def __get_class_meta_source(
-        self, parent_class
-    ) -> Optional[Tuple[Optional[str], Optional[str]]]:
-        """Provided the parent_class name returns derived class source code and
-        name.
+    def __get_class_name(self, parent_class) -> Optional[str]:
+        """Find and return the name of a class derived from the provided parent class.
         Args:
             parent_class: FLSpec instance.
 
         Returns:
-            Optional[Tuple[Optional[str], Optional[str]]]:
-                The source code of the derived class (str).
-                The name of the derived class (str).
+            Optional[str]: The name of the derived class.
         """
-        # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_generated_script()
 
@@ -196,9 +155,8 @@ class CodeAnalyzer:
         for attr in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, attr)
             if inspect.isclass(t) and t != parent_class and issubclass(t, parent_class):
-                return inspect.getsource(t), attr
-
-        return None, None
+                return attr
+        raise ValueError("No flow class found that inherits from FLSpec")
 
     def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:
         """Provided name of the class returns expected arguments and it's
@@ -284,7 +242,7 @@ class CodeAnalyzer:
                 data (list of str): The entire script data as a list of lines.
         """
         data = None
-        with open(self.script_path, "r") as f:
+        with self.script_path.open("r") as f:
             requirements = []
             line_nos = []
             data = f.readlines()
@@ -305,7 +263,7 @@ class CodeAnalyzer:
             data (List[str]): The entire script data as a list of lines.
             line_nos (List[int]): List of line numbers where "pip install" commands are found.
         """
-        with open(self.script_path, "w") as f:
+        with self.script_path.open("w") as f:
             for i, line in enumerate(data):
                 if i not in line_nos:
                     f.write(line)
@@ -322,14 +280,8 @@ class CodeAnalyzer:
                 expected_args (List[str]): The expected arguments for the flow class.
                 init_args (Dict[str, Any]): The initialization arguments for the flow class.
         """
-        _, flow_class_name = self.__get_class_meta_source(parent_class)
-        if not flow_class_name:
-            raise ValueError("No flow class found that inherits from FLSpec")
-
-        # Get expected arguments
+        flow_class_name = self.__get_class_name(parent_class)
         expected_arguments = self.__get_class_arguments(flow_class_name)
-
-        # get initialization arguments
         init_args = self.__extract_class_initializing_args(flow_class_name)
 
         return {
@@ -378,143 +330,3 @@ class CodeAnalyzer:
         update_dictionary(kw_args, "kwargs")
 
         return flow_config
-
-    def fetch_flow_runtime_info(self, flow_class_name: str) -> Tuple[object, str]:
-        """Fetch the federated flow class, its runtime information and flow instance name
-        Args:
-            flow_class_name (str): The name of the federated flow class.
-
-        Returns:
-            tuple: A tuple containing the runtime instance and the flow instance name.
-        """
-        if not hasattr(self, "exported_script_module"):
-            self.__import_generated_script()
-
-        federated_flow_class = getattr(self.exported_script_module, flow_class_name)
-        flow_instance_name, runtime = self._find_flow_instance_runtime(federated_flow_class)
-        return runtime, flow_instance_name
-
-    def _find_flow_instance_runtime(self, federated_flow_class) -> Tuple[str, object]:
-        """Find runtime instance
-        Args:
-            federated_flow_class: The class object of the federated flow.
-
-        Returns:
-            tuple: A tuple containing the name of the flow instance and the runtime.
-        """
-        for t in self.available_modules_in_exported_script:
-            tempstring = t
-            t = getattr(self.exported_script_module, t)
-            if isinstance(t, federated_flow_class):
-                flow_instance_name = tempstring
-                if not hasattr(t, "_runtime"):
-                    raise AttributeError("Unable to locate LocalRuntime instantiation")
-                runtime = t._runtime
-                if not hasattr(runtime, "collaborators"):
-                    raise AttributeError("LocalRuntime instance does not have collaborators")
-                return flow_instance_name, runtime
-        raise AttributeError("Runtime instance not found")
-
-    def process_aggregator(self, runtime, data, flow_instance_name, runtime_name) -> bool:
-        """Process the aggregator details.
-        Args:
-            runtime (Any): The runtime instance containing the aggregator.
-            data (Dict[str, Any]): The data dictionary to be updated with aggregator details.
-            flow_instance_name (str): The name of the flow instance.
-            runtime_name (str): The name of the runtime.
-
-        Returns:
-            bool: A boolean indicating whether the runtime was created.
-        """
-        aggregator = runtime._aggregator
-        runtime_created = False
-        private_attrs_callable = aggregator.private_attributes_callable
-        aggregator_private_attributes = aggregator.private_attributes
-
-        if private_attrs_callable is not None:
-            data["aggregator"] = {
-                "callable_func": {
-                    "settings": {},
-                    "template": f"src.{self.script_name}.{private_attrs_callable.__name__}",
-                }
-            }
-            arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")[
-                "kwargs"
-            ]
-            agg_kwargs = aggregator.kwargs
-            for key, value in agg_kwargs.items():
-                if isinstance(value, (int, str, bool)):
-                    data["aggregator"]["callable_func"]["settings"][key] = value
-                else:
-                    arg = arguments_passed_to_initialize[key]
-                    value = f"src.{self.script_name}.{arg}"
-                    data["aggregator"]["callable_func"]["settings"][key] = value
-        elif aggregator_private_attributes:
-            runtime_created = True
-            with open(self.script_path, "a") as f:
-                f.write(f"\n{runtime_name} = {flow_instance_name}._runtime\n")
-                f.write(
-                    f"\naggregator_private_attributes = "
-                    f"{runtime_name}._aggregator.private_attributes\n"
-                )
-            data["aggregator"] = {
-                "private_attributes": f"src.{self.script_name}.aggregator_private_attributes"
-            }
-        return runtime_created
-
-    def process_collaborators(
-        self, runtime, data, flow_instance_name, runtime_created, runtime_name
-    ) -> Dict[str, Any]:
-        """Process the collaborators.
-        Args:
-            runtime (Any): The runtime instance containing the collaborators.
-            data (Dict[str, Any]): The data dictionary to be updated with collaborator details.
-            flow_instance_name (str): The name of the flow instance.
-            runtime_created (bool): Flag indicating if the runtime has been created.
-            runtime_name (str): The name of the runtime.
-
-        Returns:
-            Dict[str, Any]: The updated data dictionary with collaborator details.
-        """
-        collaborators = runtime._LocalRuntime__collaborators
-        arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
-            "kwargs"
-        ]
-        runtime_collab_created = False
-
-        for collab in collaborators.values():
-            collab_name = collab.get_name()
-            callable_func = collab.private_attributes_callable
-            private_attributes = collab.private_attributes
-
-            if callable_func:
-                if collab_name not in data:
-                    data[collab_name] = {"callable_func": {"settings": {}, "template": None}}
-                kw_args = runtime.get_collaborator_kwargs(collab_name)
-                for key, value in kw_args.items():
-                    if key == "private_attributes_callable":
-                        value = f"src.{self.script_name}.{value}"
-                        data[collab_name]["callable_func"]["template"] = value
-                    elif isinstance(value, (int, str, bool)):
-                        data[collab_name]["callable_func"]["settings"][key] = value
-                    else:
-                        arg = arguments_passed_to_initialize[key]
-                        value = f"src.{self.script_name}.{arg}"
-                        data[collab_name]["callable_func"]["settings"][key] = value
-            elif private_attributes:
-                with open(self.script_path, "a") as f:
-                    if not runtime_created:
-                        f.write(f"\n{runtime_name} = {flow_instance_name}._runtime\n")
-                        runtime_created = True
-                    if not runtime_collab_created:
-                        f.write(
-                            f"\nruntime_collaborators = {runtime_name}._LocalRuntime__collaborators"
-                        )
-                        runtime_collab_created = True
-                    f.write(
-                        f"\n{collab_name}_private_attributes = "
-                        f"runtime_collaborators['{collab_name}'].private_attributes"
-                    )
-                data[collab_name] = {
-                    "private_attributes": f"src.{self.script_name}.{collab_name}_private_attributes"
-                }
