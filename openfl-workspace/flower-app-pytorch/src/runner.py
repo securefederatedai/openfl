@@ -92,6 +92,9 @@ class FlowerTaskRunner(TaskRunner):
         supernode_process = subprocess.Popen(command, shell=False)
         local_grpc_server.handle_signals(supernode_process)
 
+        while not is_port_open('127.0.0.1', local_server_port):
+            time.sleep(0.5)
+
         if self.patch:
             self.logger.info("Starting Flower ClientApp process...")
             flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
@@ -101,11 +104,13 @@ class FlowerTaskRunner(TaskRunner):
 
         while not local_grpc_server.termination_event.is_set():
             if self.shutdown_requested:
-                self.logger.info("Shutting down the server and SuperNode process...")
-                local_grpc_server.terminate_supernode_process(supernode_process)
                 if self.patch:
                     self.logger.info("Terminating Flower ClientApp process...")
                     local_grpc_server.terminate_supernode_process(flwr_clientapp_process)
+                    flwr_clientapp_process.wait()
+
+                self.logger.info("Shutting down the server and SuperNode process...")
+                local_grpc_server.terminate_supernode_process(supernode_process)
                 local_grpc_server.stop_server()
             time.sleep(0.1)
 
@@ -201,3 +206,10 @@ def get_dynamic_port():
         # Get the assigned port number
         port = s.getsockname()[1]
     return port
+
+def is_port_open(host, port):
+    """Check if a port is open on the given host."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        return result == 0
