@@ -61,7 +61,14 @@ def collaborator(context):
     required=True,
     help="The certified common name of the collaborator.",
 )
-def start_(plan, collaborator_name, data_config):
+@option(
+    "--ping",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="Flag for attempting to ping the aggregator, without starting any tasks.",
+)
+def start_(plan, collaborator_name, data_config, ping):
     """Starts a collaborator service."""
 
     if plan and is_directory_traversal(plan):
@@ -80,8 +87,12 @@ def start_(plan, collaborator_name, data_config):
 
     echo(f"Data = {plan.cols_data_paths}")
     logger.info("🧿 Starting a Collaborator Service.")
+    col = plan.get_collaborator(collaborator_name)
 
-    plan.get_collaborator(collaborator_name).run()
+    if ping:
+        col.ping()
+    else:
+        col.run()
 
 
 @collaborator.command(name="create")
