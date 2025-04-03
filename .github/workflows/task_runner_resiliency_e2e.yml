@@ -46,7 +46,7 @@ permissions:
 # Environment variables common for all the jobs
 # DO NOT use double quotes for the values of the environment variables
 env:
-  NUM_ROUNDS: ${{ inputs.num_rounds || 30 }}
+  NUM_ROUNDS: ${{ inputs.num_rounds || 50 }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
   MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
