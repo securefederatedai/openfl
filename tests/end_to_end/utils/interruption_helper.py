@@ -100,7 +100,10 @@ def stop_start_native_participant(participant, action):
         pids.append(fields[0])
 
     if not pids:
-        raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
+        if action == "stop":
+            raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
+        else:
+            pass
 
     # Kill all processes using sudo
     for pid in pids:
