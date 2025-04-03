@@ -1087,14 +1087,14 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
         try:
             for i in range(1, num_collaborators + 1):
                 subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}') || true",
                     shell=True,
                     check=True,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}') || true",
                 shell=True,
                 check=True,
                 stdout=subprocess.DEVNULL,
@@ -1106,7 +1106,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
     if director:
         try:
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}') || true",
                 shell=True,
                 check=True,
             )
@@ -1117,7 +1117,7 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
         for envoy in envoys:
             try:
                 subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
+                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}') || true",
                     shell=True,
                     check=True,
                 )
