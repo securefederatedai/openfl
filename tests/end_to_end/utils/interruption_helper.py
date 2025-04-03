@@ -75,22 +75,9 @@ def stop_start_native_participant(participant, action):
     if action not in ["stop", "start"]:
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
-    # Show output of "ps -ef| grep -e aggregator -e collaborator"
-    # Run the command and capture the output
-    try:
-        result = subprocess.run(
-            "ps -ef | grep -e aggregator -e collaborator",
-            capture_output=True,
-            shell=True,
-            check=True,
-        )
-    
-        # Print the output
-        log.info(f"\n\nCurrent list of processes: {result.stdout}\n\n")
-    except subprocess.CalledProcessError as e:
-        pass
+    log.info(f"Action is {action} for participant {participant.name}")
 
-    # Irrespective of the actions, kill the processes to ensure clean state
+    # Irrespective of the action, kill the processes to ensure clean state
     cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
     pids = []
 
@@ -102,8 +89,6 @@ def stop_start_native_participant(participant, action):
     if not pids:
         if action == "stop":
             raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
-        else:
-            pass
 
     # Kill all processes using sudo
     for pid in pids:
@@ -112,14 +97,9 @@ def stop_start_native_participant(participant, action):
         except subprocess.CalledProcessError as e:
             if action == "stop":
                 raise RuntimeError(f"Failed to kill process '{pid}': {e}")
-            else:
-                pass
 
-    if action == "stop":
-        log.info(f"Stopping participant {participant.name}")
-    else:
+    if action == "start":
         try:
-            log.info(f"Starting participant {participant.name}")
             participant.start()
         except Exception as e:
             raise ex.ParticipantStartException(f"Error starting participant: {e}")
