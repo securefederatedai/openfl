@@ -75,32 +75,24 @@ def stop_start_native_participant(participant, action):
     if action not in ["stop", "start"]:
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
-    log.info(f"Action is {action} for participant {participant.name}")
-
     # Irrespective of the action, kill the processes to ensure clean state
     cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
     pids = []
 
-    # Find the process ID
-    for line in os.popen(f"ps ax | grep '{cmd_for_process_kill}' | grep -v grep"):
-        fields = line.split()
-        pids.append(fields[0])
-
-    if not pids:
+    # Find the process ID and kill it
+    try:
+        result = subprocess.run(f"sudo kill -9 $(ps -ef | grep '{cmd_for_process_kill}' | awk '{{print $2}}')", capture_output=True, shell=True, check=False)
+        log.info(f"Process IDs killed: {result.stdout.decode('utf-8').strip()}")
+    except subprocess.CalledProcessError:
         if action == "stop":
             raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
 
-    # Kill all processes using sudo
-    for pid in pids:
-        try:
-            subprocess.run(['sudo', 'kill', '-9', pid], check=True)
-        except subprocess.CalledProcessError as e:
-            if action == "stop":
-                raise RuntimeError(f"Failed to kill process '{pid}': {e}")
-
-    if action == "start":
+    if action == "stop":
+        log.info(f"Stopped {participant.name} successfully")
+    else:
         try:
             participant.start()
+            log.info(f"Started {participant.name} successfully")
         except Exception as e:
             raise ex.ParticipantStartException(f"Error starting participant: {e}")
 
