@@ -75,6 +75,13 @@ def stop_start_native_participant(participant, action):
     if action not in ["stop", "start"]:
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
+    # Show output of "ps -ef| grep -e aggregator -e collaborator"
+    # Run the command and capture the output
+    result = subprocess.run(['ps', '-ef', '|', 'grep', '-e', 'aggregator', '-e', 'collaborator'], capture_output=True, text=True, shell=True)
+
+    # Print the output
+    log.info(f"\n\nCurrent list of processes: {result.stdout}\n\n")
+
     # Irrespective of the actions, kill the processes to ensure clean state
     cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
     pids = []
