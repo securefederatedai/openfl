@@ -1087,42 +1087,42 @@ def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
         try:
             for i in range(1, num_collaborators + 1):
                 subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}') || true",
+                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
                     shell=True,
                     check=True,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}') || true",
+                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
         except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+            pass
 
     if director:
         try:
             subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}') || true",
+                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
                 shell=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+            pass
 
     if envoys:
         for envoy in envoys:
             try:
                 subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}') || true",
+                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
                     shell=True,
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
-                log.warning(f"Failed to kill processes: {e}")
+                pass
     log.info("Stale processes (if any) removed successfully")
 
 
