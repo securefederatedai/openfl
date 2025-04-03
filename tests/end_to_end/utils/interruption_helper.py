@@ -82,7 +82,6 @@ def stop_start_native_participant(participant, action):
     # Find the process ID and kill it
     try:
         result = subprocess.run(f"sudo kill -9 $(ps -ef | grep '{cmd_for_process_kill}' | awk '{{print $2}}')", capture_output=True, shell=True, check=False)
-        log.info(f"Process IDs killed: {result.stdout.decode('utf-8').strip()}")
     except subprocess.CalledProcessError:
         if action == "stop":
             raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
