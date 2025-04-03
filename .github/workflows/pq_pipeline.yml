@@ -27,7 +27,7 @@ jobs:
       id: set_commit_id
       run: |
         echo "commit_id=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-    
+
     - name: Print commit ID to summary
       run: |
         echo "Commit ID used: ${{ steps.set_commit_id.outputs.commit_id }}" >> $GITHUB_STEP_SUMMARY
