@@ -278,7 +278,6 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
         total_rounds (int): Total number of rounds
     """
     init_round = fed_helper.get_current_round(db_file)
-    log.info(f"Current round number is {init_round}")
     # Restart aggregator
     assert int_helper.restart_participants([fed_obj.aggregator])
     log.info("Aggregator restarted successfully")
