@@ -17,7 +17,7 @@ import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.interruption_helper as int_helper
+import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 
@@ -357,13 +357,13 @@ def _verify_completion_for_participant(
 
         time.sleep(45)
 
-        # Process poll None means process is still running
-        # If it is 0, it means process is completed
-        if participant.start_process.poll() is None:
-            log.info(f"Process is yet to complete for {participant.name}")
-        else:
+        # If process.poll() has a value, it means the process has completed
+        # If None, it means the process is still running
+        if participant.start_process.poll():
             log.info(f"No processes found for participant {participant.name}")
             break
+        else:
+            log.info(f"Process is yet to complete for {participant.name}")
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
@@ -1081,14 +1081,16 @@ def remove_stale_processes(aggregator=None, collaborators=[], director=None, env
         envoys (list): List of envoy objects
     """
     if aggregator:
-        aggregator.kill_process()
-    for collaborator in collaborators:
-        collaborator.kill_process()
+        intr_helper.kill_processes(aggregator.name)
+
+    for collaborators in collaborators:
+        intr_helper.kill_processes(collaborators.name)
 
     if director:
-        int_helper.kill_processes("director")
+        intr_helper.kill_processes("director")
+
     for envoy in envoys:
-        int_helper.kill_processes(envoy)
+        intr_helper.kill_processes(envoy)
 
     log.info("Stale processes (if any) removed successfully")
 
