@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import subprocess
@@ -14,7 +14,7 @@ logging.getLogger('paramiko').setLevel(logging.CRITICAL+1)
 
 
 def run_command_background(
-    cmd, return_error=False, print_stdout=False, work_dir=None, redirect_to_file=None, check_sleep=1
+    cmd, return_error=False, print_stdout=False, work_dir=None, redirect_to_file=None, check_sleep=1, env=None
 ):
     """Execute a command and let it run in background.
 
@@ -30,9 +30,10 @@ def run_command_background(
         redirect_to_file: The file descriptor to which the STDERR and STDOUT will be written.
         check_sleep: Time in seconds to sleep before polling to make sure
             the background process is still running.
+        env: Environment variables to set for the command.
 
     Returns:
-        Popen object of the subprocess. None, if the command completed immediately.
+        Popen object of the subprocess.
     """
     if isinstance(cmd, list):
         shell = False
@@ -46,7 +47,7 @@ def run_command_background(
         output_redirect = subprocess.PIPE
         error_redirect = subprocess.PIPE
     process = subprocess.Popen(
-        cmd, stdout=output_redirect, stderr=error_redirect, shell=shell, text=True, cwd=work_dir
+        cmd, stdout=output_redirect, stderr=error_redirect, shell=shell, text=True, cwd=work_dir, env=env
     )
     time.sleep(check_sleep)
     return_code = process.poll()
@@ -72,7 +73,8 @@ def run_command_background(
             output = process.stdout.read().rstrip("\n").split("\n")
             if print_stdout and output is not None:
                 log.info(f"Command to run - {cmd}  output - {output}")
-        return None
+
+    return process
 
 
 def run_command(

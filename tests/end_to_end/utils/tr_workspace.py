@@ -155,7 +155,7 @@ def create_tr_workspace(request, eval_scope=False):
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators)
 
-    fh.remove_stale_processes(request.config.num_collaborators)
+    fh.remove_stale_processes(aggregator, collaborators)
 
     # Return the federation fixture
     return federation_details(
