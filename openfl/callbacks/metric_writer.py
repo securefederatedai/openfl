@@ -51,16 +51,19 @@ class MetricWriter(Callback):
             logs: A key-value pair of scalar metrics.
         """
         logs = logs or {}
-        logs["round_number"] = round_num
-        # time taken for the round to complete in seconds
-        logs["time_taken"] = time.monotonic() - self._round_start_time
-        logger.info(f"Round {round_num}: Metrics: {logs}")
+        elapsed_seconds = time.monotonic() - self._round_start_time
+        metrics = {
+            "round_number": round_num,
+            "elapsed_seconds": elapsed_seconds,
+            **logs,
+        }
+        logger.info(f"Round {round_num}: Metrics: {metrics}")
 
-        self._log_file_handle.write(json.dumps(logs) + "\n")
+        self._log_file_handle.write(json.dumps(metrics) + "\n")
         self._log_file_handle.flush()
 
         if self._summary_writer:
-            for key, value in logs.items():
+            for key, value in metrics.items():
                 self._summary_writer.add_scalar(key, value, round_num)
             self._summary_writer.flush()
 
