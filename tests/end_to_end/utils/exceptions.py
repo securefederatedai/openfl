@@ -124,3 +124,8 @@ class GaNDLFConfigSegException(Exception):
 class FlowerAppException(Exception):
     """Exception for Flower app"""
     pass
+
+
+class ProcessKillException(Exception):
+    """Exception for process kill"""
+    pass

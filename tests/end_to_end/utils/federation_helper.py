@@ -357,20 +357,13 @@ def _verify_completion_for_participant(
 
         time.sleep(45)
 
-        # Verify that the process is completed successfully
-        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
-
-        # Find the process ID
-        pids = []
-        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
-            fields = line.split()
-            pids.append(fields[0])
-
-        if not pids:
+        # Process poll None means process is still running
+        # If it is 0, it means process is completed
+        if participant.start_process.poll() is None:
+            log.info(f"Process is yet to complete for {participant.name}")
+        else:
             log.info(f"No processes found for participant {participant.name}")
             break
-        else:
-            log.info(f"Process is yet to complete for {participant.name}")
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
@@ -1078,24 +1071,24 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
+def remove_stale_processes(aggregator=None, collaborators=[], director=None, envoys=[]):
     """
     Remove stale processes
+    Args:
+        aggregator (object): Aggregator object
+        collaborators (list): List of collaborator objects
+        director (object): Director object
+        envoys (list): List of envoy objects
     """
-    if num_collaborators > 0:
-        log.info("Removing stale processes..")
-        # Remove any stale processes
-        for i in range(1, num_collaborators + 1):
-            int_helper.kill_processes(f"collaborator{i}")
-
-        int_helper.kill_processes("aggregator")
+    if aggregator:
+        aggregator.kill_process()
+    for collaborator in collaborators:
+        collaborator.kill_process()
 
     if director:
         int_helper.kill_processes("director")
-
-    if envoys:
-        for envoy in envoys:
-            int_helper.kill_processes(envoy)
+    for envoy in envoys:
+        int_helper.kill_processes(envoy)
 
     log.info("Stale processes (if any) removed successfully")
 
