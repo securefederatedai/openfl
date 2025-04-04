@@ -76,23 +76,79 @@ def stop_start_native_participant(participant, action):
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
     # Irrespective of the action, kill the processes to ensure clean state
-    cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
+    cmd_for_process = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
     pids = []
+    attempts = 5
 
     # Find the process ID and kill it
     try:
-        result = subprocess.run(f"sudo kill -9 $(ps -ef | grep '{cmd_for_process_kill}' | awk '{{print $2}}')", capture_output=True, shell=True, check=False)
+        kill_processes(cmd_for_process, fail_if_not_found=True)
+
     except subprocess.CalledProcessError:
         if action == "stop":
-            raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
+            raise RuntimeError(f"No processes found for command '{cmd_for_process}'")
 
     if action == "stop":
         log.info(f"Stopped {participant.name} successfully")
     else:
         try:
             participant.start()
-            log.info(f"Started {participant.name} successfully")
+            for i in range(1, attempts+1):
+                pids = get_pids_if_command_running(cmd_for_process)
+                if pids:
+                    log.info(f"Participant '{participant.name}' started successfully with PIDs: {pids}")
+                    break
+                log.info(f"Waiting for participant '{participant.name}' to start... Attempt {i}/{attempts}")
+                time.sleep(5)  # Wait for 1 second before retrying
+            else:
+                raise ex.ParticipantStartException(f"Participant {participant.name} failed to start")
         except Exception as e:
-            raise ex.ParticipantStartException(f"Error starting participant: {e}")
+            raise ex.ParticipantStartException(f"Error starting participant {participant.name}: {e}")
 
     return True
+
+
+def get_pids_if_command_running(command):
+    """
+    Get the process IDs of the given command if it is running.
+
+    Args:
+        command (str): The command to check.
+
+    Returns:
+        list: List of process IDs if the command is running, otherwise an empty list.
+    """
+    pids = []
+    try:
+        result = subprocess.run(f"ps -ef | grep '{command}' | grep -v grep", shell=True, capture_output=True, text=True)
+        if result.stdout.strip():
+            # Extract the process IDs from the output
+            pids = [line.split()[1] for line in result.stdout.strip().split('\n')]
+
+    except subprocess.CalledProcessError as e:
+        log.warning(f"Error checking for command '{command}': {e}")
+    
+    return pids
+
+
+def kill_processes(command_to_kill, fail_if_not_found=False):
+    """
+    Kill all processes for the given command.
+    
+    Args:
+        command_to_kill (str): The command to kill.
+        fail_if_not_found (bool): Fail if given process is not found.
+    
+    Returns:
+        bool: True if processes were killed, False otherwise.
+    """
+    try:
+        pids = get_pids_if_command_running(command_to_kill)
+        # Kill each process
+        for pid in pids:
+            subprocess.run(['sudo', 'kill', '-9', pid], check=fail_if_not_found)
+        return True
+    except subprocess.CalledProcessError:
+        if fail_if_not_found:
+            raise RuntimeError(f"Failed to kill process with PID {pid}")
+        return False
