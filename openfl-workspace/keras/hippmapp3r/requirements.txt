@@ -1,0 +1,5 @@
+keras==2.15.0
+tensorflow
+keras-contrib @ git+https://www.github.com/keras-team/keras-contrib.git
+gdown
+scikit-learn
