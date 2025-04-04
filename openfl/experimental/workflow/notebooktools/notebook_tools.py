@@ -33,7 +33,6 @@ class NotebookTools:
             output_workspace (str): Target directory for generated workspace
         """
         self.notebook_path = Path(notebook_path).resolve()
-        # Check if the Jupyter notebook exists
         if not self.notebook_path.exists() or not self.notebook_path.is_file():
             raise FileNotFoundError(f"The Jupyter notebook at {notebook_path} does not exist.")
 
@@ -75,15 +74,13 @@ class NotebookTools:
         and append to workspace/requirements.txt
         """
         try:
-            requirements, line_numbers, data = self.code_analyzer.get_requirements()
+            requirements, requirements_line_numbers, data = self.code_analyzer.get_requirements()
             requirements_filepath = str(
                 self.output_workspace_path.joinpath("requirements.txt").resolve()
             )
             with open(requirements_filepath, "a") as f:
                 f.writelines(requirements)
-
-            # Delete pip requirements from the python script to ensure it can be imported
-            self.code_analyzer.remove_lines(data, line_numbers)
+            self.code_analyzer.remove_lines(data, requirements_line_numbers)
 
             print(f"Successfully generated {requirements_filepath}")
 
@@ -99,9 +96,7 @@ class NotebookTools:
         flow_details = self._extract_flow_details()
         flow_config = self.code_analyzer.fetch_flow_configuration(flow_details)
         plan_path = self.output_workspace_path.joinpath("plan", "plan.yaml").resolve()
-        # Build the complete plan configuration
         data_config = self._build_plan_config(flow_config, director_fqdn, tls, plan_path)
-        # Write the updated plan configuraiton to the plan.yaml file
         Plan.dump(plan_path, data_config)
 
     def _build_plan_config(

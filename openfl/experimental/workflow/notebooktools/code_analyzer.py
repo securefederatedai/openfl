@@ -15,7 +15,7 @@ from nbdev.export import nb_export
 
 class CodeAnalyzer:
     """Analyzes and process Jupyter Notebooks.
-      Provides code extraction and transformation functionality to NotebookTools
+      Provides code extraction and transformation functionality
 
     Attributes:
        script_path: Absolute path to python script.
