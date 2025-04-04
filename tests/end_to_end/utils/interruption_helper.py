@@ -4,7 +4,6 @@
 import logging
 import concurrent.futures
 import time
-import os
 import psutil
 import subprocess   # nosec B404
 
@@ -117,11 +116,11 @@ def get_pids_for_active_command(command):
 def kill_processes(command_to_kill, fail_if_not_found=False):
     """
     Kill all processes for the given command.
-    
+
     Args:
         command_to_kill (str): The command to kill.
         fail_if_not_found (bool): Fail if given process is not found.
-    
+
     Returns:
         bool: True if processes were killed, False otherwise.
     """
