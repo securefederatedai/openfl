@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -38,7 +38,7 @@ class Collaborator():
         self.workspace_path = workspace_path
         self.container_id = container_id
         self.res_file = None # Result file to track the logs
-        self.start_process = None
+        self.start_process = None # Process associated with the aggregator start command
 
     def generate_sign_request(self):
         """
@@ -165,13 +165,12 @@ class Collaborator():
                 self.start_process.kill()
                 self.start_process.wait()
                 self.start_process = None
-                log.info(f"Stopped {self.collaborator_name} successfully")
             else:
                 log.warning(f"No process found for {self.collaborator_name}")
 
         except Exception as e:
-            log.error(f"Failed to kill the process for {self.collaborator_name}: {e}")
-            raise e
+            log.error(f"Failed to kill the process: {e}")
+            raise ex.ProcessKillException(f"Failed to kill the process: {e}")
 
     def import_workspace(self):
         """

@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
@@ -108,9 +108,8 @@ class Aggregator():
                 self.start_process.kill()
                 self.start_process.wait()
                 self.start_process = None
-                log.info(f"Stopped aggregator successfully.")
             else:
-                log.warning("No process to kill.")
+                log.warning("No process found for aggregator")
         except Exception as e:
             log.error(f"Failed to kill the process: {e}")
             raise ex.ProcessKillException(f"Failed to kill the process: {e}")
