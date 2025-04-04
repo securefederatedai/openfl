@@ -15,7 +15,9 @@ concurrency:
 jobs:
   set_commit_id_for_all_jobs: # Do not change this job name, it is used by other jobs to get the commit ID
     name: Set Commit ID for All Jobs
-    if: github.event.pull_request.draft == false
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     outputs:
       commit_id: ${{ steps.set_commit_id.outputs.commit_id }}
