@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import time
@@ -17,6 +17,7 @@ import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
+import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 
@@ -356,20 +357,18 @@ def _verify_completion_for_participant(
 
         time.sleep(45)
 
-        # Verify that the process is completed successfully
-        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
-
-        # Find the process ID
-        pids = []
-        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
-            fields = line.split()
-            pids.append(fields[0])
-
-        if not pids:
-            log.info(f"No processes found for participant {participant.name}")
-            break
+        # If process.poll() has a value, it means the process has completed
+        # If None, it means the process is still running
+        # This is applicable for native process only
+        if participant.start_process:
+            if participant.start_process.poll():
+                log.info(f"No processes found for participant {participant.name}")
+                break
+            else:
+                log.info(f"Process is yet to complete for {participant.name}")
         else:
-            log.info(f"Process is yet to complete for {participant.name}")
+            # Dockerized workspace scenario
+            log.info(f"No process found for participant {participant.name}")
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
@@ -1077,52 +1076,27 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
+def remove_stale_processes(aggregator=None, collaborators=[], director=None, envoys=[]):
     """
     Remove stale processes
+    Args:
+        aggregator (object): Aggregator object
+        collaborators (list): List of collaborator objects
+        director (object): Director object
+        envoys (list): List of envoy objects
     """
-    if num_collaborators > 0:
-        log.info("Removing stale processes..")
-        # Remove any stale processes
-        try:
-            for i in range(1, num_collaborators + 1):
-                subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
-                    shell=True,
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-            subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
-                shell=True,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+    if aggregator:
+        intr_helper.kill_processes(aggregator.name)
+
+    for collaborators in collaborators:
+        intr_helper.kill_processes(collaborators.name)
 
     if director:
-        try:
-            subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
-                shell=True,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+        intr_helper.kill_processes("director")
 
-    if envoys:
-        for envoy in envoys:
-            try:
-                subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
-                    shell=True,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                log.warning(f"Failed to kill processes: {e}")
+    for envoy in envoys:
+        intr_helper.kill_processes(envoy)
+
     log.info("Stale processes (if any) removed successfully")
 
 
