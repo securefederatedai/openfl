@@ -4,6 +4,7 @@
 """FlowerDataLoader module."""
 
 from openfl.federated.data.loader import DataLoader
+import os
 
 
 class FlowerDataLoader(DataLoader):
@@ -21,8 +22,14 @@ class FlowerDataLoader(DataLoader):
         Args:
             data_path (str or int): The directory of the dataset.
             **kwargs: Additional keyword arguments to pass to the parent DataLoader class.
+
+        Raises:
+            FileNotFoundError: If the specified data path does not exist.
          """
         super().__init__(**kwargs)
+        if not os.path.exists(data_path):
+            raise FileNotFoundError(f"The specified data path does not exist: {data_path}")
+
         self.data_path = data_path
 
     def get_node_configs(self):

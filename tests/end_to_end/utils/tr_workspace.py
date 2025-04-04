@@ -44,6 +44,13 @@ def common_workspace_creation(request, eval_scope=False):
 
     agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
 
+    # For Flower App Pytorch, num of rounds must be 1
+    if request.config.model_name.lower() == constants.ModelName.FLOWER_APP_PYTORCH.value:
+        if request.config.num_rounds != 1:
+            raise ex.FlowerAppException(
+                "Flower app with PyTorch only supports 1 round of training."
+            )
+
     # Create model owner object and the workspace for the model
     # Workspace name will be same as the model name
     model_owner = mo_model.ModelOwner(
@@ -54,7 +61,6 @@ def common_workspace_creation(request, eval_scope=False):
     fh.create_persistent_store(model_owner.name, local_bind_path)
 
     model_owner.create_workspace()
-    fh.add_local_workspace_permission(local_bind_path)
 
     # Modify the plan
     plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
@@ -142,14 +148,14 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators)
 
-    fh.remove_stale_processes(request.config.num_collaborators)
+    fh.remove_stale_processes(aggregator, collaborators)
 
     # Return the federation fixture
     return federation_details(
@@ -294,7 +300,6 @@ def create_tr_dws_workspace(request, eval_scope=False):
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
     model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_IMAGE)
-    image_name = constants.DFLT_DOCKERIZE_IMAGE_NAME
 
     # Certify the workspace in case of TLS
     if request.config.use_tls:
@@ -331,14 +336,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if request.config.model_name.lower() == constants.ModelName.XGB_HIGGS.value else False
+        add_data=True if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value] else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -357,7 +362,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Note: In case of multiple machines setup, scp this workspace tar
     # to the other machine(s) so that docker load can load the image.
-    model_owner.load_workspace(workspace_tar_name=f"{image_name}.tar")
+    model_owner.load_workspace(workspace_tar_name=f"{constants.DFLT_WORKSPACE_NAME}.tar")
 
     # Return the federation fixture
     return federation_details(
