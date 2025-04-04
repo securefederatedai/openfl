@@ -359,11 +359,16 @@ def _verify_completion_for_participant(
 
         # If process.poll() has a value, it means the process has completed
         # If None, it means the process is still running
-        if participant.start_process.poll():
-            log.info(f"No processes found for participant {participant.name}")
-            break
+        # This is applicable for native process only
+        if participant.start_process:
+            if participant.start_process.poll():
+                log.info(f"No processes found for participant {participant.name}")
+                break
+            else:
+                log.info(f"Process is yet to complete for {participant.name}")
         else:
-            log.info(f"Process is yet to complete for {participant.name}")
+            # Dockerized workspace scenario
+            log.info(f"No process found for participant {participant.name}")
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
