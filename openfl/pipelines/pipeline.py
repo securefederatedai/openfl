@@ -93,6 +93,44 @@ class Float32NumpyArrayToBytes(Transformer):
         return np.reshape(flat_array, newshape=array_shape, order="C")
 
 
+class NumpyArrayToBytes(Transformer):
+    """Transformer for converting generic Numpy arrays to bytes."""
+
+    def __init__(self):
+        self.lossy = False
+
+    def forward(self, data: np.ndarray, **kwargs):
+        """Convert a Numpy array to bytes.
+
+        Args:
+            data: The Numpy array to be converted.
+            **kwargs: Additional keyword arguments for the conversion.
+
+        Returns:
+            data_bytes: The data converted to bytes.
+            metadata: The metadata for the conversion.
+        """
+        array_shape = data.shape
+        metadata = {"int_list": list(array_shape), "dtype": str(data.dtype)}
+        data_bytes = data.tobytes(order="C")
+        return data_bytes, metadata
+
+    def backward(self, data, metadata, **kwargs):
+        """Convert bytes back to a Numpy array.
+
+        Args:
+            data: The data in bytes.
+            metadata: The metadata for the conversion.
+
+        Returns:
+            The data converted back to a Numpy array.
+        """
+        array_shape = tuple(metadata["int_list"])
+        dtype = np.dtype(metadata["dtype"])
+        flat_array = np.frombuffer(data, dtype=dtype)
+        return np.reshape(flat_array, newshape=array_shape, order="C")
+
+
 class TransformationPipeline:
     """Data Transformer Pipeline Class.
 

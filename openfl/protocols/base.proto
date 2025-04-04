@@ -22,6 +22,7 @@ message MetadataProto {
   map<int32, float> int_to_float = 1;
   repeated int32 int_list = 2;
   repeated bool bool_list = 3;
+  repeated string dtype = 4;
 }
 
 // handles large size data
