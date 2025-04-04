@@ -718,7 +718,7 @@ def download_higgs_data(collaborators, local_bind_path):
         bool: True if successful, else False
     """
     common_download_for_higgs_and_flower(collaborators, local_bind_path)
-    
+
 
 def common_download_for_higgs_and_flower(collaborators, local_bind_path):
     """
