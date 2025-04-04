@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import time
 
 from tensorboardX import SummaryWriter
 
@@ -26,6 +27,7 @@ class MetricWriter(Callback):
 
         self._log_file_handle = None
         self._summary_writer = None
+        self._round_start_time = None
 
     def on_experiment_begin(self, logs=None):
         """Open file handles for logging."""
@@ -49,6 +51,9 @@ class MetricWriter(Callback):
             logs: A key-value pair of scalar metrics.
         """
         logs = logs or {}
+        logs["round_number"] = round_num
+        # time taken for the round to complete in seconds
+        logs["time_taken"] = time.monotonic() - self._round_start_time
         logger.info(f"Round {round_num}: Metrics: {logs}")
 
         self._log_file_handle.write(json.dumps(logs) + "\n")
@@ -67,3 +72,6 @@ class MetricWriter(Callback):
 
         if self._summary_writer:
             self._summary_writer.close()
+            
+    def on_round_begin(self, round_num: int, logs=None):
+        self._round_start_time = time.monotonic()
