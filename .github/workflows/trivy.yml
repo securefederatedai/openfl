@@ -53,7 +53,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
         id: trivy-scan
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'json'
@@ -97,7 +97,7 @@ jobs:
           path: trivy-code-spdx-results.json
         
       - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'spdx-json'
