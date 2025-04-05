@@ -4,7 +4,7 @@
 import logging
 import concurrent.futures
 import time
-import os
+import psutil
 import subprocess   # nosec B404
 
 import tests.end_to_end.utils.constants as constants
@@ -75,30 +75,65 @@ def stop_start_native_participant(participant, action):
     if action not in ["stop", "start"]:
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
+    # Irrespective of the action, kill the processes to ensure clean state
+    log.info(f"Kill the processes for {participant.name} if running to avoid conflicts")
+    participant.kill_process()
+
     if action == "stop":
-        log.info(f"Stopping participant {participant.name}")
-        cmd_for_process_kill = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
-        pids = []
-        # Find the process ID
-        for line in os.popen(f"ps ax | grep '{cmd_for_process_kill}' | grep -v grep"):
-            fields = line.split()
-            pids.append(fields[0])
-
-        if not pids:
-            raise RuntimeError(f"No processes found for command '{cmd_for_process_kill}'")
-
-        # Kill all processes using sudo
-        for pid in pids:
-            try:
-                subprocess.run(['sudo', 'kill', '-9', pid], check=True)
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"Failed to kill process '{pid}': {e}")
-
+        log.info(f"Stopped {participant.name} successfully")
     else:
         try:
-            log.info(f"Starting participant {participant.name}")
             participant.start()
+            log.info(f"Started {participant.name} successfully")
         except Exception as e:
-            raise ex.ParticipantStartException(f"Error starting participant: {e}")
+            raise ex.ParticipantStartException(f"Error starting participant {participant.name}: {e}")
 
     return True
+
+
+def get_pids_for_active_command(command):
+    """
+    Get the process IDs of the given command if it is running.
+
+    Args:
+        command (str): The command to check.
+
+    Returns:
+        list: List of process IDs if the command is running, otherwise an empty list.
+    """
+    pids = []
+    for proc in psutil.process_iter(['pid', 'cmdline']):
+        try:
+            cmdline = proc.info['cmdline']
+            if isinstance(cmdline, list):
+                cmdline = ' '.join(cmdline)
+                if command in cmdline:
+                    pids.append(proc.info['pid'])
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return pids
+
+
+def kill_processes(command_to_kill, fail_if_not_found=False):
+    """
+    Kill all processes for the given command.
+
+    Args:
+        command_to_kill (str): The command to kill.
+        fail_if_not_found (bool): Fail if given process is not found.
+
+    Returns:
+        bool: True if processes were killed, False otherwise.
+    """
+    try:
+        pids = get_pids_for_active_command(command_to_kill)
+        log.info(f"PIDs for command '{command_to_kill}': {pids}")
+        # Kill each process
+        for pid in pids:
+            subprocess.run(['sudo', 'kill', '-9', str(pid)], check=fail_if_not_found)
+            log.info(f"Killed process with PID {pid}")
+        return True
+    except subprocess.CalledProcessError:
+        if fail_if_not_found:
+            raise RuntimeError(f"Failed to kill process with PID {pid}")
+        return False
