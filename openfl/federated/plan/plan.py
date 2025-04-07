@@ -552,7 +552,7 @@ class Plan:
 
         defaults[SETTINGS]["serialisation_middleware"] = CollaboratorSerialiser(
             collaborator_name,
-            client,
+            defaults[SETTINGS]["client"],
             self.get_tensor_pipe() or NoCompressionPipeline,
         )
 
