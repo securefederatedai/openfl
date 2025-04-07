@@ -281,25 +281,3 @@ def test_serialise(tensor_key, named_tensor):
 
     assert tensor.data_bytes == named_tensor.data_bytes
     assert tensor.lossless is True
-
-
-# FIXME
-def test_serialise_trained(tensor_key_trained, named_tensor):
-    """Test that serialise works correctly for trained tensor."""
-    # named_tensor.tags.append('compressed')
-    # collaborator_mock.use_delta_updates = True
-    # nparray = collaborator_mock.deserialise(named_tensor)
-    # collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
-    #     return_value=nparray)
-    # tensor = collaborator_mock.serialise(tensor_key_trained, nparray)
-    # assert len(tensor.data_bytes) == 32
-    # assert tensor.lossless is False
-    # assert 'delta' in tensor.tags
-
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tk, nparray = tensor_codec.deserialise(named_tensor, tensor_key_trained.origin)
-    tensor = tensor_codec.serialise(tk, nparray, lossless=False)
-
-    assert len(tensor.data_bytes) == 32
-    assert tensor.lossless is False
-    assert 'delta' in tensor.tags
