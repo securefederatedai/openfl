@@ -177,25 +177,24 @@ class TensorCodec:
             tuple(named_tensor.tags),
         )
         *_, tags = tensor_key
+
         if "compressed" in tags:
-            decompressed_tensor_key, decompressed_nparray = self.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=True,
-            )
+            lossless = True
         elif "lossy_compressed" in tags:
-            decompressed_tensor_key, decompressed_nparray = self.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=False,
-            )
+            lossless = False
         else:
             # There could be a case where the compression pipeline is bypassed
             # entirely
             decompressed_tensor_key = tensor_key
             decompressed_nparray = raw_bytes
+
+        if not (decompressed_tensor_key and decompressed_nparray):
+            decompressed_tensor_key, decompressed_nparray = self.decompress(
+                tensor_key,
+                data=raw_bytes,
+                transformer_metadata=metadata,
+                require_lossless=lossless,
+            )
 
         return decompressed_tensor_key, decompressed_nparray
 

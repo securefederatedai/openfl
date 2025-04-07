@@ -84,8 +84,8 @@ class CollaboratorSerialiser:
             None
         """
         named_tensors = [
-            self._tensor_codec.serialise(tensor_key, nparray)
-            for tensor_key, nparray in tensor_dict.items()
+            self._tensor_codec.serialise(tensor_key, value[0], lossless=value[1])
+            for tensor_key, value in tensor_dict.items()
         ]
         self._aggregator_client.send_local_task_results(
             round_number,
