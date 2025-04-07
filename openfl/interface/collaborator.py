@@ -61,14 +61,7 @@ def collaborator(context):
     required=True,
     help="The certified common name of the collaborator.",
 )
-@option(
-    "--ping",
-    is_flag=True,
-    required=False,
-    default=False,
-    help="Flag for attempting to ping the aggregator, without starting any tasks.",
-)
-def start_(plan, collaborator_name, data_config, ping):
+def start_(plan, collaborator_name, data_config):
     """Starts a collaborator service."""
 
     if plan and is_directory_traversal(plan):
@@ -87,12 +80,52 @@ def start_(plan, collaborator_name, data_config, ping):
 
     echo(f"Data = {plan.cols_data_paths}")
     logger.info("🧿 Starting a Collaborator Service.")
-    col = plan.get_collaborator(collaborator_name)
 
-    if ping:
-        col.ping()
-    else:
-        col.run()
+    plan.get_collaborator(collaborator_name).run()
+
+
+@collaborator.command(name="ping")
+@option(
+    "-p",
+    "--plan",
+    required=False,
+    help="Path to an FL plan.",
+    default="plan/plan.yaml",
+    type=ClickPath(exists=True),
+    show_default=True,
+)
+@option(
+    "-d",
+    "--data_config",
+    required=False,
+    help="The dataset shard configuration file.",
+    default="plan/data.yaml",
+    type=ClickPath(exists=True),
+    show_default=True,
+)
+@option(
+    "-n",
+    "--collaborator_name",
+    required=True,
+    help="The certified common name of the collaborator.",
+)
+def ping_(plan, collaborator_name, data_config):
+    """Ping the aggregator without starting any tasks."""
+
+    if plan and is_directory_traversal(plan):
+        echo("Federated learning plan path is out of the openfl workspace scope.")
+        sys.exit(1)
+    if data_config and is_directory_traversal(data_config):
+        echo("The data set/shard configuration file path is out of the openfl workspace scope.")
+        sys.exit(1)
+
+    plan = Plan.parse(
+        plan_config_path=Path(plan).absolute(),
+        data_config_path=Path(data_config).absolute(),
+    )
+
+    col = plan.get_collaborator(collaborator_name)
+    col.ping()
 
 
 @collaborator.command(name="create")

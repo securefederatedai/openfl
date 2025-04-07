@@ -139,7 +139,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def Ping(self, request, context):  # NOQA:N802
-        """Ping the Aggregator server.
+        """Ping endpoint of the Aggregator server.
 
         This method handles a ping request from a collaborator.
 
