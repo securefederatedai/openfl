@@ -119,13 +119,23 @@ def ping_(plan, collaborator_name, data_config):
         echo("The data set/shard configuration file path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    plan = Plan.parse(
+    fl_plan = Plan.parse(
         plan_config_path=Path(plan).absolute(),
         data_config_path=Path(data_config).absolute(),
     )
 
-    col = plan.get_collaborator(collaborator_name)
-    col.ping()
+    agg_addr = fl_plan.config["network"]["settings"]["agg_addr"]
+    agg_port = fl_plan.config["network"]["settings"]["agg_port"]
+    use_tls = fl_plan.config["network"]["settings"]["use_tls"]
+    protocol = "TLS" if use_tls else "TCP"
+
+    logger.info(
+        f"🧿 Testing connectivity with the Aggregator at {agg_addr}:{agg_port} via {protocol}..."
+    )
+    fl_plan.get_collaborator(collaborator_name).ping()
+
+    logger.info(f"The Aggregator is reachable at {agg_addr}:{agg_port}")
+    logger.info(f"{protocol} connection established.")
 
 
 @collaborator.command(name="create")
