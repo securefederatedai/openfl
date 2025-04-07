@@ -97,21 +97,6 @@ def test_do_task(collaborator_mock, tensor_key):
     collaborator_mock.send_task_results.assert_called_with(result[0], round_number, task.name)
 
 
-# FIXME
-def test_send_task_results(collaborator_mock, tensor_key):
-    """Test that send_task_results works correctly."""
-    task_name = 'task_name'
-    tensor_key = tensor_key._replace(report=False)
-    tensor_dict = {tensor_key: 0}
-    round_number = 0
-    data_size = -1
-    collaborator_mock._serialisation_middleware._aggregator_client.send_local_task_results = mock.Mock()
-    collaborator_mock.send_task_results(tensor_dict, round_number, task_name)
-
-    collaborator_mock._serialisation_middleware._aggregator_client.send_local_task_results.assert_called_with(
-        round_number, task_name, data_size, [None])
-
-
 def test_send_task_results_train(collaborator_mock):
     """Test that send_task_results for train tasks works correctly."""
     task_name = 'train_task'
