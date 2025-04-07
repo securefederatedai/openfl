@@ -424,7 +424,7 @@ class Collaborator:
         logger.debug("%s data size = %s", task_name, data_size)
 
         metrics = {}
-        tensor_dict_copy = tensor_dict
+        tensor_dict_copy = {}
         for tensor in tensor_dict:
             tensor_name, origin, round_number, report, tags = tensor
             if "trained" in tags and self.use_delta_updates:
@@ -439,12 +439,18 @@ class Collaborator:
                 # first round.
                 if model_nparray is not None:
                     tensor, nparray = generate_delta(tensor, tensor_dict[tensor], model_nparray)
-                    tensor_dict_copy[tensor] = nparray
+                    # Second element of value indicates whether a lossless transofmation is
+                    # required.
+                    tensor_dict_copy[tensor] = (nparray, False)
 
             if report:
                 # Reportable metric must be a scalar
                 value = float(tensor_dict[tensor])
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
+
+            # For all other elements, we assume a lossless transformation is required.
+            if tensor not in tensor_dict_copy:
+                tensor_dict_copy[tensor] = (tensor_dict[tensor], True)
 
         self._serialisation_middleware.send_local_task_results(
             round_number,
