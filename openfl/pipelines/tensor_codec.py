@@ -177,6 +177,8 @@ class TensorCodec:
             tuple(named_tensor.tags),
         )
         *_, tags = tensor_key
+        decompressed_tensor_key = None
+        decompressed_nparray = None
 
         if "compressed" in tags:
             lossless = True
