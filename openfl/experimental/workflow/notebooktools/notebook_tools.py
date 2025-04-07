@@ -19,11 +19,13 @@ class NotebookTools:
     into a workspace enabling its deployment on distributed infrastructure
 
     Attributes:
-        notebook_path: Absolute path of jupyter notebook.
-        template_workspace_path: Path to template workspace provided with
+        notebook_path (Path): Path to Jupyter notebook to be converted.
+        output_workspace_path (Path): Target directory for generated workspace.
+        template_workspace_path (Path): Path to template workspace provided with
             OpenFL.
-        output_workspace_path: Output directory for new generated workspace.
-        code_analyzer: An instance of the CodeAnalyzer class for analyzing notebook code.
+        code_analyzer (CodeAnalyzer): An instance of the CodeAnalyzer class for analyzing
+            notebook code.
+        flow_class_name (str): Name of the flow class.
     """
 
     def __init__(self, notebook_path: str, output_workspace: str) -> None:

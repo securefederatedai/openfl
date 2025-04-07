@@ -18,8 +18,11 @@ class CodeAnalyzer:
       Provides code extraction and transformation functionality
 
     Attributes:
-       script_path: Absolute path to python script.
-       script_name: Name of the python script.
+        script_path (Path): Absolute path to the python script generated.
+        script_name (str): Name of the generated python script.
+        exported_script_module (ModuleType): The imported module object of the generated script.
+        available_modules_in_exported_script (list): List of available attributes in the
+            exported script.
     """
 
     def __init__(self, notebook_path: Path, output_path: Path) -> None:
