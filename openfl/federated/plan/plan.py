@@ -15,7 +15,9 @@ from yaml import SafeDumper, dump, safe_load
 
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.pipelines import NoCompressionPipeline
 from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
+from openfl.transport.serialiser.collaborator import CollaboratorSerialiser
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = "settings"
@@ -531,7 +533,6 @@ class Plan:
             data_loader = self.get_data_loader(collaborator_name)
             defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
 
-        defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
         # Check if secure aggregation is enabled.
         defaults[SETTINGS]["secure_aggregation"] = (
@@ -548,6 +549,12 @@ class Plan:
                 private_key,
                 certificate,
             )
+
+        defaults[SETTINGS]["serialisation_middleware"] = CollaboratorSerialiser(
+            collaborator_name,
+            client,
+            self.get_tensor_pipe() or NoCompressionPipeline,
+        )
 
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
