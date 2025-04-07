@@ -46,6 +46,21 @@ def tensor_key(named_tensor):
     return tensor_key
 
 
+@pytest.fixture
+def tensor_key_trained(named_tensor):
+    """Initialize the tensor_key_trained mock."""
+    named_tensor.tags.append('trained')
+    # named_tensor.tags.remove('model')
+    tensor_key = TensorKey(
+        named_tensor.name,
+        'col1',
+        named_tensor.round_number,
+        named_tensor.report,
+        tuple(named_tensor.tags)
+    )
+    return tensor_key
+
+
 def test_compress(tensor_key, named_tensor):
     """Test that compress works correctly."""
     tensor_codec = TensorCodec(NoCompressionPipeline())
@@ -239,153 +254,52 @@ def test_decompress_compressed_in_tags(tensor_key, named_tensor):
     assert 'compressed' not in decompressed_tensor_key.tags
 
 
-def test_generate(tensor_key, named_tensor):
-    """Test that generate_delta works correctly."""
+def test_deserialise_without_tags(named_tensor):
+    """Test that deserialise works correctly for tensor without tags."""
     tensor_codec = TensorCodec(NoCompressionPipeline())
-    metadata = [{'int_to_float': proto.int_to_float,
-                 'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
-                 } for proto in named_tensor.transformer_metadata]
-    array_shape = tuple(metadata[0]['int_list'])
-    flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
+    _, nparray = tensor_codec.deserialise(named_tensor, 'col1')
 
-    nparray = np.reshape(flat_array, newshape=array_shape, order='C')
-
-    delta_tensor_key, delta_nparray = tensor_codec.generate_delta(tensor_key, nparray, nparray)
-
-    assert np.array_equal(delta_nparray, nparray - nparray)
-    assert 'delta' in delta_tensor_key.tags
+    assert named_tensor.data_bytes == nparray
 
 
-def test_generate_delta_assert_model_in_tags(tensor_key, named_tensor):
-    """Test that generate_delta raises exception when there is model tag."""
+@pytest.mark.parametrize('tag', ['compressed', 'lossy_compressed'])
+def test_deserialise_compressed_tag(named_tensor, tag):
+    """Test that deserialise works correctly for tensor with tags."""
+    named_tensor.tags.append(tag)
     tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    tensor_key = TensorKey(
-        tensor_name, origin, round_number, report, ('model',)
-    )
-    metadata = [{'int_to_float': proto.int_to_float,
-                 'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
-                 } for proto in named_tensor.transformer_metadata]
-    array_shape = tuple(metadata[0]['int_list'])
-    flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
+    _, nparray = tensor_codec.deserialise(named_tensor, 'col1')
 
-    nparray = np.reshape(flat_array, newshape=array_shape, order='C')
-
-    with pytest.raises(AssertionError):
-        tensor_codec.generate_delta(tensor_key, nparray, nparray)
+    assert isinstance(nparray, np.ndarray)
 
 
-def test_apply_delta_agg(tensor_key, named_tensor):
-    """Test that apply_delta works for aggregator tensor_key."""
+def test_serialise(tensor_key, named_tensor):
+    """Test that serialise works correctly."""
+    named_tensor.tags.append('compressed')
     tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    tensor_key = TensorKey(
-        tensor_name, 'aggregator_1', round_number, report, ('delta',)
-    )
-    metadata = [{'int_to_float': proto.int_to_float,
-                 'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
-                 } for proto in named_tensor.transformer_metadata]
-    array_shape = tuple(metadata[0]['int_list'])
-    flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
+    _, nparray = tensor_codec.deserialise(named_tensor, 'col1')
+    tensor = tensor_codec.serialise(tensor_key, nparray)
 
-    nparray = np.reshape(flat_array, newshape=array_shape, order='C')
-
-    new_model_tensor_key, nparray_with_delta = tensor_codec.apply_delta(
-        tensor_key, nparray, nparray)
-
-    assert 'delta' not in new_model_tensor_key.tags
-    assert np.array_equal(nparray_with_delta, nparray + nparray)
+    assert tensor.data_bytes == named_tensor.data_bytes
+    assert tensor.lossless is True
 
 
-def test_apply_delta_col(tensor_key, named_tensor):
-    """Test that apply_delta works for collaborator tensor_key."""
+# FIXME
+def test_serialise_trained(tensor_key_trained, named_tensor):
+    """Test that serialise works correctly for trained tensor."""
+    # named_tensor.tags.append('compressed')
+    # collaborator_mock.use_delta_updates = True
+    # nparray = collaborator_mock.deserialise(named_tensor)
+    # collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
+    #     return_value=nparray)
+    # tensor = collaborator_mock.serialise(tensor_key_trained, nparray)
+    # assert len(tensor.data_bytes) == 32
+    # assert tensor.lossless is False
+    # assert 'delta' in tensor.tags
+
     tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    tensor_key = TensorKey(
-        tensor_name, origin, round_number, report, ('delta',)
-    )
-    metadata = [{'int_to_float': proto.int_to_float,
-                 'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
-                 } for proto in named_tensor.transformer_metadata]
-    array_shape = tuple(metadata[0]['int_list'])
-    flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
+    tk, nparray = tensor_codec.deserialise(named_tensor, tensor_key_trained.origin)
+    tensor = tensor_codec.serialise(tk, nparray, lossless=False)
 
-    nparray = np.reshape(flat_array, newshape=array_shape, order='C')
-
-    new_model_tensor_key, nparray_with_delta = tensor_codec.apply_delta(
-        tensor_key, nparray, nparray)
-
-    assert 'model' in new_model_tensor_key.tags
-    assert 'delta' not in new_model_tensor_key.tags
-    assert np.array_equal(nparray_with_delta, nparray + nparray)
-
-
-def test_find_dependencies_without_send_model_deltas(tensor_key):
-    """Test that find_dependencies returns empty list when send_model_deltas = False."""
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    tensor_key = TensorKey(
-        tensor_name, origin, 5, report, ('model',)
-    )
-    tensor_key_dependencies = tensor_codec.find_dependencies(tensor_key, False)
-
-    assert len(tensor_key_dependencies) == 0
-
-
-def test_find_dependencies_without_model_in_tags(tensor_key):
-    """Test that find_dependencies returns empty list when there is no model tag."""
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_key_dependencies = tensor_codec.find_dependencies(tensor_key, True)
-
-    assert len(tensor_key_dependencies) == 0
-
-
-def test_find_dependencies_with_zero_round(tensor_key):
-    """Test that find_dependencies returns empty list when round number is 0."""
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    tensor_key = TensorKey(
-        tensor_name, origin, round_number, report, ('model',)
-    )
-    tensor_key_dependencies = tensor_codec.find_dependencies(tensor_key, True)
-
-    assert len(tensor_key_dependencies) == 0
-
-
-def test_find_dependencies(tensor_key):
-    """Test that find_dependencies works correctly."""
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_name, origin, round_number, report, tags = tensor_key
-    round_number = 2
-    tensor_key = TensorKey(
-        tensor_name, origin, round_number, report, ('model',)
-    )
-    tensor_key_dependencies = tensor_codec.find_dependencies(tensor_key, True)
-
-    assert len(tensor_key_dependencies) == 2
-    tensor_key_dependency_0, tensor_key_dependency_1 = tensor_key_dependencies
-    assert tensor_key_dependency_0.round_number == round_number - 1
-    assert tensor_key_dependency_0.tags == tensor_key.tags
-    assert tensor_key_dependency_1.tags == ('aggregated', 'delta', 'compressed')
-
-
-def test_find_dependencies_is_lossy(tensor_key):
-    """Test that find_dependencies works correctly with lossy_compressed."""
-    tensor_codec = TensorCodec(NoCompressionPipeline())
-    tensor_codec.compression_pipeline.is_lossy = mock.Mock(return_value=True)
-    tensor_name, origin, round_number, report, tags = tensor_key
-    round_number = 2
-    tensor_key = TensorKey(
-        tensor_name, origin, round_number, report, ('model',)
-    )
-    tensor_key_dependencies = tensor_codec.find_dependencies(tensor_key, True)
-
-    assert len(tensor_key_dependencies) == 2
-    tensor_key_dependency_0, tensor_key_dependency_1 = tensor_key_dependencies
-    assert tensor_key_dependency_0.round_number == round_number - 1
-    assert tensor_key_dependency_0.tags == tensor_key.tags
-    assert tensor_key_dependency_1.tags == ('aggregated', 'delta', 'lossy_compressed')
+    assert len(tensor.data_bytes) == 32
+    assert tensor.lossless is False
+    assert 'delta' in tensor.tags
