@@ -156,8 +156,6 @@ class TensorCodec:
         Returns:
             decompressed_nparray (nparray): The nparray converted.
         """
-        # do the stuff we do now for decompression and frombuffer and stuff
-        # This should probably be moved back to protoutils
         raw_bytes = named_tensor.data_bytes
         metadata = [
             {
@@ -215,26 +213,9 @@ class TensorCodec:
         Returns:
             named_tensor (protobuf) : The tensor constructed from the nparray.
         """
-        # Secure aggregation setup tensor.
-        if "secagg" in tensor_key.tags:
-            import json
-
-            import numpy as np
-
-            class NumpyEncoder(json.JSONEncoder):
-                def default(self, obj):
-                    if isinstance(obj, np.ndarray):
-                        return obj.tolist()
-                    return super().default(obj)
-
-            compressed_tensor_key, compressed_nparray = (
-                tensor_key,
-                str.encode(json.dumps(nparray, cls=NumpyEncoder)),
-            )
-        else:
-            compressed_tensor_key, compressed_nparray, metadata = self.compress(
-                tensor_key, nparray, require_lossless=lossless
-            )
+        compressed_tensor_key, compressed_nparray, metadata = self.compress(
+            tensor_key, nparray, require_lossless=lossless
+        )
 
         named_tensor = utils.construct_named_tensor(
             compressed_tensor_key, compressed_nparray, metadata, lossless=lossless
