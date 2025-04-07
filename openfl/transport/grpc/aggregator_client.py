@@ -292,11 +292,7 @@ class AggregatorGRPCClient:
     @_resend_data_on_reconnection
     @_atomic_connection
     def ping(self):
-        """Ping the aggregator to check connectivity.
-
-        Returns:
-            bool: True if the aggregator is reachable, False otherwise.
-        """
+        """Ping the aggregator to check connectivity."""
         logger.info("Aggregator ping...")
         header = create_header(
             sender=self.collaborator_name,

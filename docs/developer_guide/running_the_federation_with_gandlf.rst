@@ -438,18 +438,19 @@ STEP 3: Start the Federation
 
 1. Open a new terminal, change the directory to the workspace, and activate the virtual environment.
 
-2. Run the Collaborator.
+2. Test the connectivity with the Aggregator.
 
     .. code-block:: shell
 
-       $ fx collaborator start -n {COLLABORATOR_LABEL}
+       $ fx collaborator ping -n {COLLABORATOR_LABEL}
 
     where :code:`COLLABORATOR_LABEL` is the label for this Collaborator.
 
     .. note::
 
        Each workspace may have multiple FL plans and multiple collaborator lists associated with it.
-       Therefore, :code:`fx collaborator start` has the following optional parameters.
+       Therefore, the :code:`fx collaborator start` and :code:`fx collaborator ping` commands have
+       the following optional parameters:
 
            +-------------------------+---------------------------------------------------------+
            | Optional Parameters     | Description                                             |
@@ -459,7 +460,15 @@ STEP 3: Start the Federation
            | -d, --data_config PATH  | The data set/shard configuration file                   |
            +-------------------------+---------------------------------------------------------+
 
-3. Repeat the earlier steps for each collaborator node in the federation.
+3. Run the Collaborator.
+
+    .. code-block:: shell
+
+       $ fx collaborator start -n {COLLABORATOR_LABEL}
+
+    where :code:`COLLABORATOR_LABEL` is the label for this Collaborator.
+
+4. Repeat the earlier steps for each collaborator node in the federation.
 
   When all of the Collaborators connect, the Aggregator starts training. You will see log messages describing the progress of the federated training.
 
