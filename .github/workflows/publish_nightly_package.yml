@@ -1,0 +1,58 @@
+---
+# Publish nightly package to PyPI
+
+name: Publish Nightly Package to PyPI
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+        description: "Commit ID to use for the nightly build"
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  publish_package:
+    name: Publish Nightly Package
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.COMMIT_ID }}
+
+    - name: Modify setup.py for nightly build
+      run: |
+        echo "Creating package..."
+        version=$(grep -oP "(?<=version=')[^']+" setup.py)
+        date_suffix=$(date +%Y%m%d)
+        new_version="${version}${date_suffix}"
+        sed -i 's/name=.*/name="openfl-nightly",/' setup.py
+        sed -i "s/version=.*/version='$new_version',/" setup.py
+        sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
+
+    - name: Build package
+      run: |
+        python3 -m pip install --upgrade build
+        python3 -m build
+
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      continue-on-error: true
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository-url: https://pypi.org/legacy/
+        verbose: true
