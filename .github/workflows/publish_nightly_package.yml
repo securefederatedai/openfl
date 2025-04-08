@@ -9,9 +9,6 @@ on:
       commit_id:
         required: false
         type: string
-      environment:
-        required: true
-        type: string
     secrets:
       PYPI_API_TOKEN:
         required: true
