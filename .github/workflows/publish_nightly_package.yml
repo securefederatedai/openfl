@@ -9,6 +9,9 @@ on:
       commit_id:
         required: false
         type: string
+    secrets:
+      PYPI_API_TOKEN:
+        required: true
   workflow_dispatch:
     inputs:
       commit_id:
@@ -19,14 +22,17 @@ on:
 env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 
+permissions:
+  id-token: write
+
 jobs:
   publish_package:
     name: Publish Nightly Package
     runs-on: ubuntu-22.04
+    environment: dev
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false)
+      (github.event_name == 'workflow_dispatch')
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
@@ -45,14 +51,11 @@ jobs:
 
     - name: Build package
       run: |
-        python3 -m pip install --upgrade build
+        python3 -m pip install setuptools wheel twine --upgrade build
         python3 -m build
+        echo "Package built successfully!"
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
-      continue-on-error: true
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        repository-url: https://pypi.org/legacy/
-        verbose: true
+    - name: Upload package to PyPI
+      run: |
+        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+        echo "Package published successfully!"
