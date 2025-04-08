@@ -138,6 +138,30 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             f"Expected: {self.aggregator.single_col_cert_common_name}, Actual: {request.header.single_col_cert_common_name}"  # noqa: E501
         )
 
+    def Ping(self, request, context):  # NOQA:N802
+        """Ping endpoint of the Aggregator server.
+
+        This method handles a ping request from a collaborator.
+
+        Args:
+            request (aggregator_pb2.PingRequest): The ping request from the
+                collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            aggregator_pb2.PingResponse: The response to the ping request.
+        """
+        self.validate_collaborator(request, context)
+        self.check_request(request)
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=request.header.sender,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
+        return aggregator_pb2.PingResponse(header=header)
+
     def GetTasks(self, request, context):  # NOQA:N802
         """Request a job from aggregator.
 
