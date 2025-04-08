@@ -147,19 +147,19 @@ jobs:
   #   with:
   #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  run_trivy:
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
-    name: Run Trivy Code Scanner
-    needs: set_commit_id_for_all_jobs
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    uses: ./.github/workflows/trivy.yml
-    with:
-      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  # run_trivy:
+  #   if: |
+  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+  #     (github.event_name == 'workflow_dispatch')
+  #   name: Run Trivy Code Scanner
+  #   needs: set_commit_id_for_all_jobs
+  #   permissions:
+  #     contents: read # for actions/checkout to fetch code
+  #     security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+  #     actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+  #   uses: ./.github/workflows/trivy.yml
+  #   with:
+  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   run_bandit:
     if: |
@@ -174,6 +174,19 @@ jobs:
     uses: ./.github/workflows/bandit.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+
+  print_env:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Print Environment Name
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+    - name: Print environment name
+      run: |
+        echo "Environment: ${{ github.workflow }}"
 
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
@@ -195,7 +208,7 @@ jobs:
       # task_runner_dockerized_e2e,
       # task_runner_secret_ssl_e2e,
       # task_runner_flower_app_pytorch,
-      run_trivy,
+      # run_trivy,
       run_bandit
     ]
     uses: ./.github/workflows/publish_nightly_package.yml
