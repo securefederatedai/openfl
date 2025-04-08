@@ -338,7 +338,7 @@ def _verify_completion_for_participant(
             lines = [line.strip() for line in file.readlines()]
 
         # Below change is done to handle warnings coming in end of runs
-        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
+        content = list(filter(str.rstrip, lines))[-10:] if len(lines) >= 10 else lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
@@ -355,8 +355,6 @@ def _verify_completion_for_participant(
             log.info(f"Process completed for {participant.name}")
             break
 
-        time.sleep(45)
-
         # If process.poll() has a value, it means the process has completed
         # If None, it means the process is still running
         # This is applicable for native process only
@@ -369,6 +367,8 @@ def _verify_completion_for_participant(
         else:
             # Dockerized workspace scenario
             log.info(f"No process found for participant {participant.name}")
+
+        time.sleep(45)
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:

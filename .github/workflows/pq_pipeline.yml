@@ -178,8 +178,11 @@ jobs:
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
     if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
     name: Publish Nightly Package to PyPI
+    permissions:
+      id-token: write
     needs: [
       wf_mnist_local_runtime,
       wf_watermark_e2e,
@@ -198,3 +201,4 @@ jobs:
     uses: ./.github/workflows/publish_nightly_package.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+    secrets: inherit
