@@ -41,17 +41,19 @@ jobs:
         echo "Creating package..."
         version=$(grep -oP "(?<=version=')[^']+" setup.py)
         date_suffix=$(date +%Y%m%d)
-        new_version="${version}${date_suffix}002"
-        sed -i 's/name=.*/name="openfl-nightly-testing-01",/' setup.py
+        new_version="${version}${date_suffix}"
+        sed -i 's/name=.*/name="openfl-nightly",/' setup.py
         sed -i "s/version=.*/version='$new_version',/" setup.py
         sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
 
-    - name: Build and publish package
+    - name: Build package
       run: |
-        python3 -m pip install --upgrade build
+        python3 -m pip install setuptools wheel twine --upgrade build
         python3 -m build
-        python3 -m pip install setuptools wheel twine
         python3 setup.py sdist bdist_wheel
-        ls -lrt dist/
+        echo "Package built successfully!"
+
+    - name: Upload package to PyPI
+      run: |
         python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
         echo "Package published successfully!"
