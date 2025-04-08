@@ -9,6 +9,9 @@ on:
       commit_id:
         required: false
         type: string
+      environment:
+        required: true
+        type: string
     secrets:
       PYPI_API_TOKEN:
         required: true
@@ -39,6 +42,11 @@ jobs:
       with:
         ref: ${{ env.COMMIT_ID }}
 
+    - name: Print environment name
+      run: |
+        echo ${{ secrets.PYPI_API_TOKEN }}
+        echo "Environment: ${{ github.environment }}"
+
     - name: Modify setup.py for nightly build
       run: |
         echo "Creating package..."
@@ -55,11 +63,6 @@ jobs:
         python3 -m build
         python3 setup.py sdist bdist_wheel
         echo "Package built successfully!"
-
-    - name: Print environment name
-      run: |
-        echo ${{ secrets.PYPI_API_TOKEN }}
-        echo "Environment: ${{ github.environment }}"
 
     - name: Upload package to PyPI
       run: |

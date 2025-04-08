@@ -175,20 +175,6 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  print_env:
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
-    name: Print Environment Name
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Checkout OpenFL repository
-      uses: actions/checkout@v4
-    - name: Print environment name
-      run: |
-        echo "Environment: ${{ github.environment }}"
-        echo "Pypi token: ${{ secrets.PYPI_API_TOKEN }}"
-
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
     if: |
@@ -215,5 +201,5 @@ jobs:
     uses: ./.github/workflows/publish_nightly_package.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
-    secrets:
-      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      environment: dev
+    secrets: inherit
