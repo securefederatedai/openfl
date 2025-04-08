@@ -56,7 +56,7 @@ jobs:
 
     - name: Print environment name
       run: |
-        echo "Environment: ${{ github.workflow }}"
+        echo "Environment: ${{ github.environment }}"
 
     - name: Upload package to PyPI
       run: |

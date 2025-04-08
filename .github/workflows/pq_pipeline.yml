@@ -186,7 +186,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Print environment name
       run: |
-        echo "Environment: ${{ github.workflow }}"
+        echo "Environment: ${{ github.environment }}"
 
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
