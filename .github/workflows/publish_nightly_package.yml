@@ -9,6 +9,9 @@ on:
       commit_id:
         required: false
         type: string
+    secrets:
+      PYPI_API_TOKEN:
+        required: true
   workflow_dispatch:
     inputs:
       commit_id:
