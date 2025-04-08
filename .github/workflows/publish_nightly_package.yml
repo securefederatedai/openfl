@@ -29,7 +29,9 @@ jobs:
   publish_package:
     name: Publish Nightly Package
     runs-on: ubuntu-22.04
-    environment: dev
+    environment:
+      name: pypi
+      url: https://pypi.org/p/openfl-nightly/
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -51,12 +53,22 @@ jobs:
 
     - name: Build package
       run: |
-        python3 -m pip install setuptools wheel twine --upgrade build
+        python3 -m pip install --upgrade build
         python3 -m build
-        python3 setup.py sdist bdist_wheel
-        echo "Package built successfully!"
 
-    - name: Upload package to PyPI
-      run: |
-        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
-        echo "Package published successfully!"
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        verbose: true
+
+    # - name: Build package
+    #   run: |
+    #     python3 -m pip install setuptools wheel twine --upgrade build
+    #     python3 -m build
+    #     python3 setup.py sdist bdist_wheel
+    #     echo "Package built successfully!"
+
+    # - name: Upload package to PyPI
+    #   run: |
+    #     python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+    #     echo "Package published successfully!"
