@@ -178,8 +178,7 @@ jobs:
   # publish nightly package to PyPI (only run on schedule)
   publish_package:
     if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai')
     name: Publish Nightly Package to PyPI
     permissions:
       id-token: write

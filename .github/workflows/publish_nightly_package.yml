@@ -39,11 +39,6 @@ jobs:
       with:
         ref: ${{ env.COMMIT_ID }}
 
-    - name: Print environment name
-      run: |
-        echo ${{ secrets.PYPI_API_TOKEN }}
-        echo "Environment: ${{ github.environment }}"
-
     - name: Modify setup.py for nightly build
       run: |
         echo "Creating package..."
