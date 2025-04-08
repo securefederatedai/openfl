@@ -190,7 +190,7 @@ def print_federated_runtime_score(nb_name):
     # Open and read the log file
     with open(dir_res_file, "r") as file:
         for line in file:
-            if search_string in line:
+            if search_string.lower() in line.lower():
                 last_occurrence = line
 
     # Extract the value from the last occurrence
