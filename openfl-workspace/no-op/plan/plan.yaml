@@ -1,0 +1,29 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    rounds_to_train : 0
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template: openfl.federated.data.loader.NoOpDataLoader
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : openfl.federated.task.runner.NoOpTaskRunner
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

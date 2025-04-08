@@ -44,6 +44,9 @@ def model_proto_to_bytes_and_metadata(model_proto):
                 f"Round numbers in model are inconsistent: {round_number} "
                 f"and {tensor_proto.round_number}"
             )
+
+    if round_number is None:
+        round_number = 0
     return bytes_dict, metadata_dict, round_number
 
 
