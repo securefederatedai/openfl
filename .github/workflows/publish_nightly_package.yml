@@ -52,10 +52,10 @@ jobs:
         python3 -m build
         python3 setup.py sdist bdist_wheel
         echo "Package built successfully!"
-        echo ${{ secrets.PYPI_API_TOKEN }}
 
     - name: Print environment name
       run: |
+        echo ${{ secrets.PYPI_API_TOKEN }}
         echo "Environment: ${{ github.environment }}"
 
     - name: Upload package to PyPI
