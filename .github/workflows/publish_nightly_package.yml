@@ -19,9 +19,6 @@ on:
 env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 
-permissions:
-  id-token: write
-
 jobs:
   publish_package:
     name: Publish Nightly Package
@@ -53,7 +50,6 @@ jobs:
 
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@release/v1
-      continue-on-error: true
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
