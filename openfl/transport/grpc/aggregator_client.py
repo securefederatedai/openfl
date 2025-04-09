@@ -291,6 +291,25 @@ class AggregatorGRPCClient:
 
     @_resend_data_on_reconnection
     @_atomic_connection
+    def ping(self):
+        """Ping the aggregator to check connectivity."""
+        logger.info("Aggregator ping...")
+        header = create_header(
+            sender=self.collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
+        request = aggregator_pb2.PingRequest(header=header)
+        response = self.stub.Ping(request)
+        if response:
+            self.validate_response(response)
+            logger.info("Aggregator pong!")
+        else:
+            logger.warning("Aggregator ping failed...")
+
+    @_resend_data_on_reconnection
+    @_atomic_connection
     def get_tasks(self):
         """Get tasks from the aggregator.
 
