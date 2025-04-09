@@ -17,6 +17,6 @@ runs:
       id: install_dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install openfl-nightly
+        pip install .
         pip install -r test-requirements.txt
       shell: bash
