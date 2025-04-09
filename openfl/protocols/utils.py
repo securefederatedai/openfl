@@ -313,7 +313,7 @@ def datastream_to_proto(proto, stream):
         npbytes.extend(chunk.npbytes)
 
     if len(npbytes) > 0:
-        proto.ParseFromString(npbytes)
+        proto.ParseFromString(bytes(npbytes))
         return proto
     else:
         raise RuntimeError(f"Received empty stream message of type {type(proto)}")

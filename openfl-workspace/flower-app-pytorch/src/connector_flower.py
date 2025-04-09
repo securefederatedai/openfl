@@ -7,9 +7,15 @@ import sys
 import signal
 
 from src.grpc.connector.flower.interop_client import FlowerInteropClient
+from src.util import is_safe_path
 
 import os
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
+
+flwr_home = os.path.join(os.getcwd(), "save/.flwr")
+if not is_safe_path(flwr_home):
+    raise ValueError("Invalid path for FLWR_HOME")
+
+os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class ConnectorFlower:
