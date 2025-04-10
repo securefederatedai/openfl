@@ -94,7 +94,7 @@ def plan(context):
     "-i",
     "--init_model_path",
     required=False,
-    help="Path to initial model protobuf file.",
+    help="Path to initial model. It can be a protobuf or native format.",
     type=ClickPath(exists=True),
 )
 def initialize(
@@ -202,7 +202,7 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
     Args:
         plan: The federation plan object
         input_shape: The input shape to the model
-        init_model_path: Path to initial model protobuf file
+        init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
@@ -214,8 +214,16 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     if init_model_path and isfile(init_model_path):
         logger.info(f"Loading initial model from {init_model_path}")
-        model_proto = utils.load_proto(init_model_path)
-        init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        try:
+            model_proto = utils.load_proto(init_model_path)
+            init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        except Exception:
+            try:
+                task_runner.load_native(init_model_path)
+                init_tensor_dict = task_runner.get_tensor_dict(False)
+            except Exception as e:
+                logger.error(f"Failed to load native model: {e}")
+                raise RuntimeError(f"Failed to load model from the provided path.")
     else:
         init_tensor_dict = task_runner.get_tensor_dict(False)
 
