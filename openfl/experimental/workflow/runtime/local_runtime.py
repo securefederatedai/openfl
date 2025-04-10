@@ -632,7 +632,6 @@ class LocalRuntime(Runtime):
             f, parent_func = ctx.execute_task_args[:2]
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
-            f_name = f.__name__
 
     def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.
