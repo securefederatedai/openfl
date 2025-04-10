@@ -149,6 +149,7 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
     if h.hexdigest() != expected_hash:
         raise SystemError("ZIP File hash doesn't match expected file hash.")
 
+
 def validate_folder_hash(folder_path, expected_hash, chunk_size=8192):
     """Validate SHA384 hash for all files in the specified folder.
 
@@ -165,19 +166,19 @@ def validate_folder_hash(folder_path, expected_hash, chunk_size=8192):
         FileNotFound: If the folder does not exist.
         NotADirectoryError: If the path is not a directory.
     """
-   # Check if the folder exists
+    # Check if the folder exists
     if not os.path.exists(folder_path):
         raise FileNotFoundError(f"The folder {folder_path} does not exist.")
-    
+
     # Check if the path is a folder
     if not os.path.isdir(folder_path):
         raise NotADirectoryError(f"The path {folder_path} is not a directory.")
-     
+
     h = hashlib.sha384()
     for root, _, files in os.walk(folder_path):
         for file in sorted(files):
             file_path = os.path.join(root, file)
-            with open(file_path, 'rb') as file:
+            with open(file_path, "rb") as file:
                 # Reading is buffered, so we can read smaller chunks.
                 while True:
                     chunk = file.read(chunk_size)
@@ -186,7 +187,8 @@ def validate_folder_hash(folder_path, expected_hash, chunk_size=8192):
                     h.update(chunk)
 
     if h.hexdigest() != expected_hash:
-        raise SystemError('Folder hash doesn\'t match expected hash.')
+        raise SystemError("Folder hash doesn't match expected hash.")
+
 
 def tqdm_report_hook():
     """Visualize downloading.
