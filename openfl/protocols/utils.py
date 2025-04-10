@@ -34,6 +34,7 @@ def model_proto_to_bytes_and_metadata(model_proto):
                 "int_to_float": proto.int_to_float,
                 "int_list": proto.int_list,
                 "bool_list": proto.bool_list,
+                "dtype": proto.dtype,
             }
             for proto in tensor_proto.transformer_metadata
         ]
@@ -115,25 +116,16 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
     """
     metadata_protos = []
     for metadata in transformer_metadata:
-        if metadata.get("int_to_float") is not None:
-            int_to_float = metadata.get("int_to_float")
-        else:
-            int_to_float = {}
-
-        if metadata.get("int_list") is not None:
-            int_list = metadata.get("int_list")
-        else:
-            int_list = []
-
-        if metadata.get("bool_list") is not None:
-            bool_list = metadata.get("bool_list")
-        else:
-            bool_list = []
+        int_to_float = metadata.get("int_to_float", {})
+        int_list = metadata.get("int_list", [])
+        bool_list = metadata.get("bool_list", [])
+        dtype = metadata.get("dtype", "")
         metadata_protos.append(
             base_pb2.MetadataProto(
                 int_to_float=int_to_float,
                 int_list=int_list,
                 bool_list=bool_list,
+                dtype=dtype,
             )
         )
 
