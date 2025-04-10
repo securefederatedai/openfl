@@ -29,6 +29,7 @@ def named_tensor():
     metadata.int_to_float[1] = 1.
     metadata.int_list.extend([1, 8])
     metadata.bool_list.append(True)
+    metadata.dtype = "float32"
 
     return tensor
 
