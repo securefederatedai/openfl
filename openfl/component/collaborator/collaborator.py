@@ -153,6 +153,10 @@ class Collaborator:
             client=self.client,
         )
 
+    def ping(self):
+        """Ping the Aggregator."""
+        self.client.ping()
+
     def run(self):
         """Run the collaborator."""
         # Experiment begin
