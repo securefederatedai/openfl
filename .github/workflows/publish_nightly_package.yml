@@ -52,6 +52,7 @@ jobs:
     - name: Build package
       run: |
         python3 -m pip install setuptools wheel twine --upgrade build
+        python3 -m pip install .
         python3 -m build
         echo "Package built successfully!"
 
