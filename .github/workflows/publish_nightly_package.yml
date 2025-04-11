@@ -50,6 +50,7 @@ jobs:
         sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
 
     - name: Build package
+      id: build_package
       run: |
         python3 -m pip install setuptools wheel twine --upgrade build
         python3 -m pip install .
@@ -57,6 +58,23 @@ jobs:
         WHL_FILE=$(ls dist/*.whl)
         echo "Wheel file: $WHL_FILE"
         echo "Package built successfully!"
+        echo "::set-output name=wheel_file::$WHL_FILE"  # Set the output variable
+
+    - name: Install built package
+      id: install_package_using_wheel
+      run: |
+        python3 -m pip uninstall -y openfl openfl-nightly
+        python3 -m pip install ${{ steps.build_package.outputs.wheel_file }}
+        echo "Installed the built wheel file successfully!"
+
+    - name: Run Task Runner E2E test
+      id: run_tests
+      run: |
+        pip list| grep openfl
+        python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+        -m task_runner_basic --model_name "keras/mnist" \
+        --num_rounds 1 --num_collaborators 2
+        echo "Verified the package installation successfully!"
 
     # - name: Upload package to PyPI
     #   run: |
