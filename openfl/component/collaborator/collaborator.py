@@ -179,9 +179,7 @@ class Collaborator:
             # Run tasks
             logs = {}
             for task in tasks:
-                self.callbacks.on_task_begin(round_num)
                 metrics = self.do_task(task, round_num)
-                self.callbacks.on_task_end(round_num)
                 logs.update(metrics)
 
             # Round end
@@ -242,6 +240,7 @@ class Collaborator:
         input_tensor_dict = {
             k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
         }
+        self.callbacks.on_task_begin(round_number)
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
@@ -253,6 +252,8 @@ class Collaborator:
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
+
+        self.callbacks.on_task_end(round_number)
 
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
