@@ -58,13 +58,15 @@ jobs:
         WHL_FILE=$(ls dist/*.whl)
         echo "Wheel file: $WHL_FILE"
         echo "Package built successfully!"
-        echo "::set-output name=wheel_file::$WHL_FILE"  # Set the output variable
+        echo "OPENFL_NIGHTLY_WHL_FILE=$WHL_FILE" >> $GITHUB_ENV
 
     - name: Install built package
       id: install_package_using_wheel
       run: |
+        echo ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
         python3 -m pip uninstall -y openfl openfl-nightly
-        python3 -m pip install ${{ steps.build_package.outputs.wheel_file }}
+        python3 -m pip install ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
+        python3 -m pip install -r test-requirements.txt
         echo "Installed the built wheel file successfully!"
 
     - name: Run Task Runner E2E test
