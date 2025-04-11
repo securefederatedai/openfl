@@ -223,7 +223,7 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
                 init_tensor_dict = task_runner.get_tensor_dict(False)
             except Exception as e:
                 logger.error(f"Failed to load native model: {e}")
-                raise RuntimeError(f"Failed to load model from the provided path.")
+                raise
     else:
         init_tensor_dict = task_runner.get_tensor_dict(False)
 
