@@ -49,11 +49,13 @@ class XGBoostTaskRunner(TaskRunner):
         the global model and required tensor keys for XGBoost tasks.
 
         Attributes:
-            global_model (xgb.Booster): The global XGBoost model.
+            bst (xgb.Booster): gradient-boosted tree model for XGBoost.
+            global_model (np.ndarray): The numpy array containing global XGBoost tree.
             required_tensorkeys_for_function (dict): A dictionary to store required tensor keys
                 for each function.
         """
         super().__init__(**kwargs)
+        self.bst = None
         self.global_model = None
         self.required_tensorkeys_for_function = {}
 
@@ -337,6 +339,21 @@ class XGBoostTaskRunner(TaskRunner):
             global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
             self.bst = xgb.Booster()
             self.bst.load_model(global_model_byte_array)
+
+    def load_native(
+        self,
+        filepath,
+        **kwargs,
+    ):
+        """
+        Load XGBooster from a file specified by filepath.
+
+        Args:
+            filepath (str): Path to XGB booster file.
+            **kwargs: Additional keyword arguments.
+        """
+        self.bst = xgb.Booster()
+        self.bst.load_model(filepath)
 
     def save_native(
         self,
