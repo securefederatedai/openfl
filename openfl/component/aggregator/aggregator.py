@@ -1139,9 +1139,9 @@ class Aggregator:
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        logger.info("Saving round %s model...", self.round_number + 1)
-        self._save_model(self.round_number + 1, self.last_state_path)
         self.round_number += 1
+        logger.info("Saving round %s model...", self.round_number)
+        self._save_model(self.round_number, self.last_state_path)
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
