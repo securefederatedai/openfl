@@ -55,14 +55,12 @@ jobs:
         python3 -m pip install setuptools wheel twine --upgrade build
         python3 -m pip install .
         python3 -m build
-        WHL_FILE=$(ls dist/*.whl)
-        echo "OPENFL_NIGHTLY_WHL_FILE=$WHL_FILE" >> $GITHUB_ENV
+        echo "OPENFL_NIGHTLY_WHL_FILE=$(ls dist/*.whl)" >> $GITHUB_ENV
         echo "Package built successfully!"
 
     - name: Install built package
       id: install_package_using_wheel
       run: |
-        echo ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
         python3 -m pip uninstall -y openfl openfl-nightly
         python3 -m pip install ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
         python3 -m pip install -r test-requirements.txt
@@ -77,13 +75,13 @@ jobs:
         --num_rounds 1 --num_collaborators 2
         echo "Verified the package installation successfully!"
 
-    - name: Upload package to PyPI
-      run: |
-        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
-        echo "Package published successfully!"
+    # - name: Upload package to PyPI
+    #   run: |
+    #     python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+    #     echo "Package published successfully!"
 
     - name: Print package information
       run: |
-        echo "Version: $(pip list | grep openfl)" >> $GITHUB_STEP_SUMMARY
-        echo "Commit ID: ${{ env.COMMIT_ID }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** $(pip list | grep openfl)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit ID:** ${{ env.COMMIT_ID }}" >> $GITHUB_STEP_SUMMARY
         echo "Package information printed successfully!"
