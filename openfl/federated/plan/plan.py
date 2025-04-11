@@ -137,6 +137,7 @@ class Plan:
             plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
             Plan._load_collaborator_data_paths(plan, data_config_path)
+            plan.verify()
 
             if resolve:
                 plan.resolve()
@@ -273,6 +274,7 @@ class Plan:
         self.collaborator_ = None  # collaborator object
         self.aggregator_ = None  # aggregator object
         self.assigner_ = None  # assigner object
+        self.connector_ = None  # OpenFL Connector object
 
         self.loader_ = None  # data loader object
         self.runner_ = None  # task runner object
@@ -330,6 +332,16 @@ class Plan:
 
         return self.assigner_
 
+    def get_connector(self):
+        """Get OpenFL Connector object."""
+        defaults = self.config.get("connector")
+        logger.info("Connector defaults: %s", defaults)
+
+        if self.connector_ is None and defaults:
+            self.connector_ = Plan.build(**defaults)
+
+        return self.connector_
+
     def get_tasks(self):
         """Get federation tasks."""
         tasks = self.config.get("tasks", {})
@@ -382,6 +394,10 @@ class Plan:
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
 
+        connector = self.get_connector()
+        if connector is not None:
+            defaults[SETTINGS]["connector"] = connector
+
         # TODO: Load callbacks from plan.
 
         if self.aggregator_ is None:
@@ -403,8 +419,13 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
-        template = "openfl.component.aggregator.straggler_handling.CutoffTimePolicy"
-        defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
+        defaults = self.config.get(
+            "straggler_handling_policy",
+            {
+                TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                SETTINGS: {},
+            },
+        )
 
         if self.straggler_policy_ is None:
             # Prepare a partial function for the straggler policy
@@ -657,3 +678,29 @@ class Plan:
         except Exception as e:
             logger.error(f"Failed to create or save model proto: {e}")
             raise
+
+    def verify(self):
+        """
+        This function checks for inconsistencies in the plan config, for example, checks if two
+        non-compatible features are enabled at the same time.
+        """
+        if self.config["aggregator"][SETTINGS].get("secure_aggregation"):
+            # TODO: Secure aggregation requires all collaborators to participate in all rounds and
+            # can not tolerate dropouts. Hence, if `secure_aggregation: true` in aggregator, there
+            # should be no `straggler_handling_policy` defined or use `WaitForAllPolicy` (default
+            # straggler handling policy).
+            straggler_handling_policy = self.config.get(
+                "straggler_handling_policy",
+                {
+                    TEMPLATE: "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+                    SETTINGS: {},
+                },
+            )
+            if straggler_handling_policy.get(TEMPLATE) not in [
+                "openfl.component.WaitForAllPolicy",
+                "openfl.component.aggregator.WaitForAllPolicy",
+                "openfl.component.aggregator.straggler_handling.WaitForAllPolicy",
+            ]:
+                raise Exception(
+                    "Only WaitForAllPolicy straggler handling is supported with secure aggregation."
+                )

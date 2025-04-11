@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "app-pytorch"
+version = "1.0.0"
+description = ""
+license = "Apache-2.0"
+dependencies = [
+    "flwr>=1.15.0,<1.17.0",
+    "flwr-datasets[vision]>=0.5.0",
+    "torch==2.5.1",
+    "torchvision==0.20.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.flwr.app]
+publisher = "openfl-dev"
+
+[tool.flwr.app.components]
+serverapp = "app_pytorch.server_app:app"
+clientapp = "app_pytorch.client_app:app"
+
+[tool.flwr.app.config]
+num-server-rounds = 3
+fraction-fit = 0.5
+local-epochs = 1
+
+[tool.flwr.federations]
+default = "local-poc"
+
+[tool.flwr.federations.local-poc]
+address = "127.0.0.1:9093" # this connects to flower --exec-api-address
+insecure = true

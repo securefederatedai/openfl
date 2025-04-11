@@ -190,13 +190,13 @@ def print_federated_runtime_score(nb_name):
     # Open and read the log file
     with open(dir_res_file, "r") as file:
         for line in file:
-            if search_string in line:
+            if search_string.lower() in line.lower():
                 last_occurrence = line
 
     # Extract the value from the last occurrence
     if last_occurrence:
         match = re.search(
-            r"Aggregated model validation score = (\d+\.\d+)", last_occurrence
+            r"Aggregated model validation score = (\d+\.\d+)", last_occurrence, re.IGNORECASE
         )
         if match:
             aggregated_model_score = match.group(1)

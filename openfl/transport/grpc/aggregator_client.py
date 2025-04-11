@@ -291,6 +291,25 @@ class AggregatorGRPCClient:
 
     @_resend_data_on_reconnection
     @_atomic_connection
+    def ping(self):
+        """Ping the aggregator to check connectivity."""
+        logger.info("Aggregator ping...")
+        header = create_header(
+            sender=self.collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
+        request = aggregator_pb2.PingRequest(header=header)
+        response = self.stub.Ping(request)
+        if response:
+            self.validate_response(response)
+            logger.info("Aggregator pong!")
+        else:
+            logger.warning("Aggregator ping failed...")
+
+    @_resend_data_on_reconnection
+    @_atomic_connection
     def get_tasks(self):
         """Get tasks from the aggregator.
 
@@ -369,8 +388,8 @@ class AggregatorGRPCClient:
         self,
         round_number,
         task_name,
-        data_size,
-        named_tensors,
+        data_size=None,
+        named_tensors=None,
     ):
         """
         Send task results to the aggregator.
@@ -400,3 +419,28 @@ class AggregatorGRPCClient:
         # convert (potentially) long list of tensors into stream
         response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
         self.validate_response(response)
+
+    @_atomic_connection
+    @_resend_data_on_reconnection
+    def send_message_to_server(self, openfl_message, collaborator_name):
+        """
+        Forwards a converted message from the local GRPC server (LGS) to the OpenFL server and
+        returns the response.
+
+        Args:
+            openfl_message: The converted message from the LGS to be sent to the OpenFL server.
+            collaborator_name: The name of the collaborator.
+
+        Returns:
+            The response from the OpenFL server
+        """
+        header = create_header(
+            sender=collaborator_name,
+            receiver=self.aggregator_uuid,
+            federation_uuid=self.federation_uuid,
+            single_col_cert_common_name=self.single_col_cert_common_name,
+        )
+        openfl_message.header.CopyFrom(header)
+        openfl_response = self.stub.InteropRelay(openfl_message)
+        self.validate_response(openfl_response)
+        return openfl_response
