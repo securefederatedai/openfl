@@ -122,7 +122,6 @@ class XGBoostTaskRunner(TaskRunner):
         output_tensor_dict = {TensorKey(metric.name, origin, round_num, True, tags): metric.value}
 
         # Empty list represents metrics that should only be stored locally
-        print(output_tensor_dict)
         return output_tensor_dict, {}
 
     def train_task(
