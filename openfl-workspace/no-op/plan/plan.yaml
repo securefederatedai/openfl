@@ -13,11 +13,11 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template: openfl.federated.data.loader.NoOpDataLoader
+  template: src.data_loader.NoOpDataLoader
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : openfl.federated.task.runner.NoOpTaskRunner
+  template : src.task_runner.NoOpTaskRunner
 
 network :
   defaults : plan/defaults/network.yaml
