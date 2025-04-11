@@ -84,8 +84,6 @@ jobs:
 
     - name: Print package information
       run: |
-        echo "## Package Information" >> $GITHUB_STEP_SUMMARY
         echo "Version: $(pip list | grep openfl)" >> $GITHUB_STEP_SUMMARY
-        echo "Build Date: $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
         echo "Commit ID: ${{ env.COMMIT_ID }}" >> $GITHUB_STEP_SUMMARY
         echo "Package information printed successfully!"
