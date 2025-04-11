@@ -93,14 +93,16 @@ class CodeAnalyzer:
         inside_block = False
         for idx, line in enumerate(lines):
             stripped_line = line.strip()
-            if "__all__" in line:
+            if "__all__" in line or stripped_line.startswith("#"):
                 continue
-            if any(x in line for x in [runtime_class] + instance_name + argument_names):
+            if "import" in line and runtime_class in line:
+                lines[idx] = f"# {line}"
+            if any(x in line for x in instance_name + argument_names):
                 inside_block = True
+            # Comment end of instantiation block
             if inside_block:
                 lines[idx] = f"# {line}"
-                # Check if the current line marks the end of instantiation block
-                if stripped_line.endswith(")"):
+                if stripped_line.endswith((")", "}", "]")):
                     inside_block = False
         with open(self.script_path, "w") as file:
             file.writelines(lines)
