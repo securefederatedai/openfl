@@ -19,7 +19,7 @@ from openfl.utilities import LocalTensor, TensorKey, change_tags
 class TensorDB:
     """The TensorDB stores a tensor key and the data that it corresponds to.
 
-    It is built on top of a pandas dataframe for it's easy insertion, retreival
+    It is built on top of a pandas dataframe for it's easy insertion, retrieval
     and aggregation capabilities. Each collaborator and aggregator has its own
     TensorDB.
 
@@ -43,6 +43,7 @@ class TensorDB:
         self.tensor_db = pd.DataFrame(
             {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
         )
+        self.secondary_db = self.tensor_db
         self._bind_convenience_methods()
 
         self.mutex = Lock()
@@ -93,6 +94,13 @@ class TensorDB:
             (self.tensor_db["round"].astype(int) > current_round - remove_older_than)
             | self.tensor_db["report"]
         ].reset_index(drop=True)
+        self.secondary_db = self.tensor_db[
+            ~self.tensor_db["tags"].apply(
+                lambda x: any(
+                    keyword in item for item in x for keyword in ["collaborator", "metric"]
+                )
+            )
+        ].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert a tensor into TensorDB (dataframe).
@@ -124,7 +132,18 @@ class TensorDB:
                     )
                 )
 
-            self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True)
+            if len(entries_to_add) > 0:
+                new_data = pd.concat([*entries_to_add], ignore_index=True)
+                self.tensor_db = pd.concat([self.tensor_db, new_data], ignore_index=True)
+                new_data = new_data[
+                    ~new_data["tags"].apply(
+                        lambda x: any(
+                            keyword in item for item in x for keyword in ["collaborator", "metric"]
+                        )
+                    )
+                ].reset_index(drop=True)
+                if len(new_data) > 0:
+                    self.secondary_db = pd.concat([self.secondary_db, new_data], ignore_index=True)
 
     def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """Perform a lookup of the tensor_key in the TensorDB.
@@ -139,17 +158,27 @@ class TensorDB:
         tensor_name, origin, fl_round, report, tags = tensor_key
 
         # TODO come up with easy way to ignore compression
-        df = self.tensor_db[
-            (self.tensor_db["tensor_name"] == tensor_name)
-            & (self.tensor_db["origin"] == origin)
-            & (self.tensor_db["round"] == fl_round)
-            & (self.tensor_db["report"] == report)
-            & (self.tensor_db["tags"] == tags)
-        ]
+        if any(keyword in item for item in tags for keyword in ["collaborator", "metric"]):
+            df = self.tensor_db[
+                (self.tensor_db["tensor_name"] == tensor_name)
+                & (self.tensor_db["origin"] == origin)
+                & (self.tensor_db["round"] == fl_round)
+                & (self.tensor_db["report"] == report)
+                & (self.tensor_db["tags"] == tags)
+            ]
+        else:
+            df = self.secondary_db[
+                (self.secondary_db["tensor_name"] == tensor_name)
+                & (self.secondary_db["origin"] == origin)
+                & (self.secondary_db["round"] == fl_round)
+                & (self.secondary_db["report"] == report)
+                & (self.secondary_db["tags"] == tags)
+            ]
+
 
         if len(df) == 0:
             return None
-        return np.array(df["nparray"].iloc[0])
+        return np.asarray(df["nparray"].iloc[0])
 
     def get_tensors_by_round_and_tags(self, fl_round: int, tags: tuple) -> dict:
         """Retrieve all tensors that match the specified round and tags.
@@ -231,7 +260,7 @@ class TensorDB:
             & (self.tensor_db["tags"] == tags)
         ]["nparray"]
         if len(raw_df) > 0:
-            return np.array(raw_df.iloc[0]), {}
+            return np.asarray(raw_df.iloc[0]), {}
 
         for col in collaborator_names:
             new_tags = change_tags(tags, add_field=col)
@@ -277,7 +306,7 @@ class TensorDB:
         agg_nparray = aggregation_function(local_tensors, db_iterator, tensor_name, fl_round, tags)
         self.cache_tensor({tensor_key: agg_nparray})
 
-        return np.array(agg_nparray)
+        return np.asarray(agg_nparray)
 
     def _iterate(self, order_by: str = "round", ascending: bool = False) -> Iterator[pd.Series]:
         """Returns an iterator over the rows of the TensorDB, sorted by a
