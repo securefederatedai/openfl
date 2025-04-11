@@ -11,7 +11,7 @@ python src/setup_data.py --num_collaborators $MAX_NUMBER_OF_COLLABORATORS --tota
 
 ## Known Issues
 
-An error has been observed on Cascade Lake CPUs: "CPU implementation of Conv3D currently only supports the NHWC tensor format." 
+An error has been observed on 2nd Generation Intel® Xeon® Scalable Processors (codenamed Cascade Lake): "CPU implementation of Conv3D currently only supports the NHWC tensor format." 
 
 ### Workarounds:
 1. Use a more recent CPU, such as 3rd Generation Intel® Xeon® Scalable Processors (codenamed Ice Lake), which supports the required tensor format.
