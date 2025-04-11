@@ -75,6 +75,6 @@ class MetricWriter(Callback):
 
         if self._summary_writer:
             self._summary_writer.close()
-            
+
     def on_round_begin(self, round_num: int, logs=None):
         self._round_start_time = time.monotonic()

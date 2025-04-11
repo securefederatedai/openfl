@@ -1,6 +1,6 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from openfl.utilities import TensorKey
+
 
 class Callback:
     """Base class for callbacks.

@@ -3,7 +3,7 @@
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 from openfl.callbacks.metric_writer import MetricWriter
-from openfl.utilities import TensorKey
+
 
 class CallbackList(Callback):
     """An ensemble of callbacks.
