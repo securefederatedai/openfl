@@ -43,7 +43,7 @@ class CodeAnalyzer:
                 f"{self.script_name}.py",
             )
         ).resolve()
-        self.__comment_flow_execution()
+        self.__comment_runtime_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -84,17 +84,49 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __comment_flow_execution(self) -> None:
-        """Comment out lines containing '.run()' in the specified Python script"""
-        run_statement = ".run()"
+    def __comment_runtime_script(self) -> None:
+        """Comment out lines related to FederatedRuntime instantiation and its arguments."""
+        runtime_class = "FederatedRuntime"
+        instance_name, argument_names = self._find_federated_runtime_instantiation()
+        with open(self.script_path, "r") as file:
+            lines = file.readlines()
+        inside_block = False
+        for idx, line in enumerate(lines):
+            stripped_line = line.strip()
+            if "__all__" in line:
+                continue
+            if any(x in line for x in [runtime_class] + instance_name + argument_names):
+                inside_block = True
+            if inside_block:
+                lines[idx] = f"# {line}"
+                # Check if the current line marks the end of instantiation block
+                if stripped_line.endswith(")"):
+                    inside_block = False
+        with open(self.script_path, "w") as file:
+            file.writelines(lines)
 
-        with self.script_path.open("r") as f:
-            data = f.readlines()
-        for idx, line in enumerate(data):
-            if run_statement in line:
-                data[idx] = f"# {line}"
-        with self.script_path.open("w") as f:
-            f.writelines(data)
+    def _find_federated_runtime_instantiation(self) -> List[str]:
+        """Identify and return instance and argument names of the FederatedRuntime instantiation."""
+        instance_name = []
+        arguments_name = []
+        with open(self.script_path, "r") as file:
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                if (
+                    isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "FederatedRuntime"
+                ):
+                    instance_name = [
+                        target.id for target in node.targets if isinstance(target, ast.Name)
+                    ]
+                    for keyword in node.value.keywords:
+                        value = keyword.value
+                        if isinstance(value, ast.Name):
+                            arguments_name.append(value.id)
+
+        return instance_name, arguments_name
 
     def __import_generated_script(self) -> None:
         """
