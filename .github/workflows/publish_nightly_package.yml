@@ -75,10 +75,10 @@ jobs:
         --num_rounds 1 --num_collaborators 2
         echo "Verified the package installation successfully!"
 
-    # - name: Upload package to PyPI
-    #   run: |
-    #     python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
-    #     echo "Package published successfully!"
+    - name: Upload package to PyPI
+      run: |
+        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+        echo "Package published successfully!"
 
     - name: Print package information
       run: |
