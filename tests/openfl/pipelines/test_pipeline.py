@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
+from openfl.pipelines.pipeline import NumpyArrayToBytes
 from openfl.pipelines.pipeline import TransformationPipeline
 from openfl.pipelines.pipeline import Transformer
 from openfl.protocols import base_pb2
@@ -46,14 +46,14 @@ def test_transformer_backward():
 
 
 def test_f32natb_is_lossy():
-    """Test that Float32NumpyArrayToBytes object creates with lossy = False."""
-    t = Float32NumpyArrayToBytes()
+    """Test that NumpyArrayToBytes object creates with lossy = False."""
+    t = NumpyArrayToBytes()
     assert t.lossy is False
 
 
 def test_f32natb_forward(named_tensor):
-    """Test that Float32NumpyArrayToBytes.forward works correctly."""
-    t = Float32NumpyArrayToBytes()
+    """Test that NumpyArrayToBytes.forward works correctly."""
+    t = NumpyArrayToBytes()
     proto = named_tensor.transformer_metadata.pop()
     metadata = {'int_to_float': proto.int_to_float,
                 'int_list': proto.int_list,
@@ -69,8 +69,8 @@ def test_f32natb_forward(named_tensor):
 
 
 def test_f32natb_backward(named_tensor):
-    """Test that Float32NumpyArrayToBytes.backward works correctly."""
-    t = Float32NumpyArrayToBytes()
+    """Test that NumpyArrayToBytes.backward works correctly."""
+    t = NumpyArrayToBytes()
     proto = named_tensor.transformer_metadata.pop()
     metadata = {'int_to_float': proto.int_to_float,
                 'int_list': proto.int_list,
@@ -88,7 +88,7 @@ def test_f32natb_backward(named_tensor):
 
 def test_transformation_pipeline_forward(named_tensor):
     """Test that TransformationPipeline.forward works correctly."""
-    transformer = Float32NumpyArrayToBytes()
+    transformer = NumpyArrayToBytes()
     tp = TransformationPipeline([transformer])
     proto = named_tensor.transformer_metadata.pop()
     metadata = {'int_to_float': proto.int_to_float,
@@ -108,7 +108,7 @@ def test_transformation_pipeline_forward(named_tensor):
 
 def test_transformation_pipeline_backward(named_tensor):
     """Test that TransformationPipeline.backward works correctly."""
-    transformer = Float32NumpyArrayToBytes()
+    transformer = NumpyArrayToBytes()
     tp = TransformationPipeline([transformer])
     proto = named_tensor.transformer_metadata.pop()
     metadata = {'int_to_float': proto.int_to_float,
@@ -127,7 +127,7 @@ def test_transformation_pipeline_backward(named_tensor):
 
 def test_transformation_pipeline_is_lossy_false(named_tensor):
     """Test that TransformationPipeline.is_lossy returns False if all transformers is not lossy."""
-    transformer = Float32NumpyArrayToBytes()
+    transformer = NumpyArrayToBytes()
     tp = TransformationPipeline([transformer])
 
     is_lossy = tp.is_lossy()
@@ -137,8 +137,8 @@ def test_transformation_pipeline_is_lossy_false(named_tensor):
 
 def test_transformation_pipeline_is_lossy(named_tensor):
     """Test that TransformationPipeline.is_lossy returns False if any transformer is lossy."""
-    transformer1 = Float32NumpyArrayToBytes()
-    transformer2 = Float32NumpyArrayToBytes()
+    transformer1 = NumpyArrayToBytes()
+    transformer2 = NumpyArrayToBytes()
     transformer2.lossy = True
     tp = TransformationPipeline([transformer1, transformer2])
 

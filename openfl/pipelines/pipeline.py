@@ -48,51 +48,6 @@ class Transformer:
         raise NotImplementedError
 
 
-class Float32NumpyArrayToBytes(Transformer):
-    """Transformer class for converting float32 Numpy arrays to bytes
-    arrays."""
-
-    def __init__(self):
-        """Initialize Float32NumpyArrayToBytes."""
-        self.lossy = False
-
-    def forward(self, data: np.ndarray, **kwargs):
-        """Convert a float32 Numpy array to bytes.
-
-        Args:
-            data: The float32 Numpy array to be converted.
-            **kwargs: Additional keyword arguments for the conversion.
-
-        Returns:
-            data_bytes: The data converted to bytes.
-            metadata: The metadata for the conversion.
-        """
-        # TODO: Warn when this casting is being performed.
-        if data.dtype != np.float32:
-            data = data.astype(np.float32)
-        array_shape = data.shape
-        # Better call it array_shape?
-        metadata = {"int_list": list(array_shape)}
-        data_bytes = data.tobytes(order="C")
-        return data_bytes, metadata
-
-    def backward(self, data, metadata, **kwargs):
-        """Convert bytes back to a float32 Numpy array.
-
-        Args:
-            data: The data in bytes.
-            metadata: The metadata for the conversion.
-
-        Returns:
-            The data converted back to a float32 Numpy array.
-        """
-        array_shape = tuple(metadata["int_list"])
-        flat_array = np.frombuffer(data, dtype=np.float32)
-        # For integer parameters we probably should unpack arrays
-        # with shape (1,)
-        return np.reshape(flat_array, newshape=array_shape, order="C")
-
-
 class NumpyArrayToBytes(Transformer):
     """Transformer for converting generic Numpy arrays to bytes."""
 
