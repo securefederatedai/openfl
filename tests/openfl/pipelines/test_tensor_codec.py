@@ -52,7 +52,8 @@ def test_compress(tensor_key, named_tensor):
     tensor_codec = TensorCodec(NoCompressionPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -72,7 +73,8 @@ def test_compress_lossless(tensor_key, named_tensor):
     tensor_codec = TensorCodec(NoCompressionPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -92,7 +94,8 @@ def test_compress_not_lossy_lossless(tensor_key, named_tensor):
     tensor_codec = TensorCodec(SKCPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -112,7 +115,8 @@ def test_compress_not_require_lossless(tensor_key, named_tensor):
     tensor_codec = TensorCodec(SKCPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -143,7 +147,8 @@ def test_decompress_no_tags(tensor_key, named_tensor):
     tensor_codec = TensorCodec(NoCompressionPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     with pytest.raises(AssertionError):
         tensor_codec.decompress(
@@ -160,7 +165,8 @@ def test_decompress_require_lossless_no_compressed_in_tags(tensor_key, named_ten
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     with pytest.raises(AssertionError):
         tensor_codec.decompress(
@@ -177,7 +183,8 @@ def test_decompress_call_lossless_pipeline_with_require_lossless(tensor_key, nam
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     tensor_codec.lossless_pipeline = mock.Mock()
     tensor_codec.decompress(
@@ -196,7 +203,8 @@ def test_decompress_call_compression_pipeline(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     tensor_codec.compression_pipeline = mock.Mock()
     tensor_codec.decompress(
@@ -215,7 +223,8 @@ def test_decompress_lossy_compressed_in_tags(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     decompressed_tensor_key, decompressed_nparray = tensor_codec.decompress(
         tensor_key, named_tensor.data_bytes, metadata
@@ -232,7 +241,8 @@ def test_decompress_compressed_in_tags(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     decompressed_tensor_key, decompressed_nparray = tensor_codec.decompress(
         tensor_key, named_tensor.data_bytes, metadata
@@ -245,7 +255,8 @@ def test_generate(tensor_key, named_tensor):
     tensor_codec = TensorCodec(NoCompressionPipeline())
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -267,7 +278,8 @@ def test_generate_delta_assert_model_in_tags(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -287,7 +299,8 @@ def test_apply_delta_agg(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
@@ -310,7 +323,8 @@ def test_apply_delta_col(tensor_key, named_tensor):
     )
     metadata = [{'int_to_float': proto.int_to_float,
                  'int_list': proto.int_list,
-                 'bool_list': proto.bool_list
+                 'bool_list': proto.bool_list,
+                 'dtype': proto.dtype,
                  } for proto in named_tensor.transformer_metadata]
     array_shape = tuple(metadata[0]['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
