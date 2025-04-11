@@ -7,7 +7,7 @@
 import sys
 from logging import getLogger
 from os import makedirs
-from os.path import isfile
+from os.path import isfile, splitext
 from pathlib import Path
 from shutil import copyfile, rmtree
 
@@ -214,10 +214,12 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     if init_model_path and isfile(init_model_path):
         logger.info(f"Loading initial model from {init_model_path}")
-        try:
+        file_extension = splitext(init_model_path)[1]
+
+        if file_extension == ".pbuf":
             model_proto = utils.load_proto(init_model_path)
             init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
-        except Exception:
+        else:
             try:
                 task_runner.load_native(init_model_path)
                 init_tensor_dict = task_runner.get_tensor_dict(False)
