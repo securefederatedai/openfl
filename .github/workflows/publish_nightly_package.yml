@@ -54,9 +54,11 @@ jobs:
         python3 -m pip install setuptools wheel twine --upgrade build
         python3 -m pip install .
         python3 -m build
+        WHL_FILE=$(ls dist/*.whl)
+        echo "Wheel file: $WHL_FILE"
         echo "Package built successfully!"
 
-    - name: Upload package to PyPI
-      run: |
-        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
-        echo "Package published successfully!"
+    # - name: Upload package to PyPI
+    #   run: |
+    #     python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+    #     echo "Package published successfully!"
