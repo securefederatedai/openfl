@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module consists of custom exceptions for end to end testing"""
@@ -17,6 +17,9 @@ class PlanModificationException(Exception):
     """Exception for plan modification"""
     pass
 
+class PlanReadException(Exception):
+    """Exception for plan read"""
+    pass
 
 class WorkspaceCertificationException(Exception):
     """Exception for workspace certification"""
@@ -115,4 +118,14 @@ class TensorDBException(Exception):
 
 class GaNDLFConfigSegException(Exception):
     """Exception for GaNDLF config segmentation file"""
+    pass
+
+
+class FlowerAppException(Exception):
+    """Exception for Flower app"""
+    pass
+
+
+class ProcessKillException(Exception):
+    """Exception for process kill"""
     pass

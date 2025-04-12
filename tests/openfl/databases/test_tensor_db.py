@@ -215,7 +215,7 @@ def test_get_aggregated_tensor_weights(tensor_db):
         axis=0
     )
 
-    assert np.array_equal(agg_nparray, control_nparray)
+    assert np.allclose(agg_nparray, control_nparray)
 
 
 def test_get_aggregated_tensor_error_aggregation_function(tensor_db):

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-"""Federated Boostrap Aggregation for XGBoost module."""
+"""Federated Bootstrap Aggregation for XGBoost module."""
 
 import json
 

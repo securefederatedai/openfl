@@ -193,7 +193,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
         device: CUDA device id or "cpu"
     """
     print(f"Loading model and optimizer state dict for round {round_num-1}")
-    model_prevround = Net()  # instanciate a new model
+    model_prevround = Net()  # instantiate a new model
     model_prevround = model_prevround.to(device)
     optimizer_prevround = default_optimizer(model_prevround, optimizer_like=optimizer)
     if os.path.isfile(
@@ -288,7 +288,7 @@ def save_current_round_model_and_optimizer_for_next_round_testing(
     Save the model and optimizer state dictionary
     of a collaboartor ("collaborator_name")
     in a given round ("round_num") into a pickle file
-    for later retieving and verifying its correctness.
+    for later retrieving and verifying its correctness.
     This provide the user the ability to verify the fields
     in the model and optimizer state dictionary and
     may provide confidence on the results of privacy auditing.

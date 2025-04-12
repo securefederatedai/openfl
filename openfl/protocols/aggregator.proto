@@ -9,9 +9,11 @@ import "openfl/protocols/base.proto";
 
 
 service Aggregator {
+  rpc Ping(PingRequest) returns (PingResponse) {}
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
   rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
   rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
+  rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
 
 message MessageHeader {
@@ -19,6 +21,14 @@ message MessageHeader {
   string receiver = 2;
   string federation_uuid = 3;
   string single_col_cert_common_name = 4;
+}
+
+message PingRequest {
+  MessageHeader header = 1;
+}
+
+message PingResponse {
+  MessageHeader header = 1;
 }
 
 message GetTasksRequest {
@@ -68,4 +78,10 @@ message TaskResults {
 
 message SendLocalTaskResultsResponse {
   MessageHeader header = 1;
+}
+
+message InteropMessage {
+  MessageHeader header = 1;
+  DataStream message = 2;
+  map<string, string> metadata = 3;
 }

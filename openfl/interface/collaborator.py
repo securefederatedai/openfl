@@ -84,6 +84,60 @@ def start_(plan, collaborator_name, data_config):
     plan.get_collaborator(collaborator_name).run()
 
 
+@collaborator.command(name="ping")
+@option(
+    "-p",
+    "--plan",
+    required=False,
+    help="Path to an FL plan.",
+    default="plan/plan.yaml",
+    type=ClickPath(exists=True),
+    show_default=True,
+)
+@option(
+    "-d",
+    "--data_config",
+    required=False,
+    help="The dataset shard configuration file.",
+    default="plan/data.yaml",
+    type=ClickPath(exists=True),
+    show_default=True,
+)
+@option(
+    "-n",
+    "--collaborator_name",
+    required=True,
+    help="The certified common name of the collaborator.",
+)
+def ping_(plan, collaborator_name, data_config):
+    """Ping the aggregator without starting any tasks."""
+
+    if plan and is_directory_traversal(plan):
+        echo("Federated learning plan path is out of the openfl workspace scope.")
+        sys.exit(1)
+    if data_config and is_directory_traversal(data_config):
+        echo("The data set/shard configuration file path is out of the openfl workspace scope.")
+        sys.exit(1)
+
+    fl_plan = Plan.parse(
+        plan_config_path=Path(plan).absolute(),
+        data_config_path=Path(data_config).absolute(),
+    )
+
+    agg_addr = fl_plan.config["network"]["settings"]["agg_addr"]
+    agg_port = fl_plan.config["network"]["settings"]["agg_port"]
+    use_tls = fl_plan.config["network"]["settings"]["use_tls"]
+    protocol = "TLS" if use_tls else "TCP"
+
+    logger.info(
+        f"🧿 Testing connectivity with the Aggregator at {agg_addr}:{agg_port} via {protocol}..."
+    )
+    fl_plan.get_collaborator(collaborator_name).ping()
+
+    logger.info(f"The Aggregator is reachable at {agg_addr}:{agg_port}")
+    logger.info(f"{protocol} connection established.")
+
+
 @collaborator.command(name="create")
 @option(
     "-n",

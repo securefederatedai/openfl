@@ -11,14 +11,13 @@ from threading import Lock
 from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
-from openfl.component.aggregator.straggler_handling import CutoffTimePolicy, StragglerPolicy
+from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.secagg.setup import Setup as secagg_setup
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ class Aggregator:
         last_state_path,
         assigner,
         use_delta_updates=True,
-        straggler_handling_policy: StragglerPolicy = CutoffTimePolicy,
+        straggler_handling_policy: StragglerPolicy = WaitForAllPolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
@@ -169,9 +168,6 @@ class Aggregator:
         self.best_state_path = best_state_path
         self.last_state_path = last_state_path
 
-        # TODO: Remove. Used in deprecated interactive and native APIs
-        self.best_tensor_dict: dict = {}
-        self.last_tensor_dict: dict = {}
         # these enable getting all tensors for a task
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
@@ -193,8 +189,6 @@ class Aggregator:
             origin="aggregator",
         )
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
-
         if initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
@@ -206,21 +200,12 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
-            self.secagg = secagg_setup(self.uuid, self.authorized_cols, self.tensor_db)
+            from openfl.utilities.secagg.bootstrap import SecAggSetup
 
-        # Callbacks
-        self.callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_memory_profiler=log_memory_usage,
-            add_metric_writer=write_logs,
-            tensor_db=self.tensor_db,
-            origin="aggregator",
-            collaborators=self.authorized_cols,
-            aggregator_uuid=self.uuid,
-        )
+            self.secagg = SecAggSetup(self.uuid, self.authorized_cols, self.tensor_db)
+
         if self.persistent_db and self._recover():
             logger.info("Recovered state of aggregator")
 
@@ -559,7 +544,6 @@ class Aggregator:
 
     def get_aggregated_tensor(
         self,
-        collaborator_name,
         tensor_name,
         round_number,
         report,
@@ -573,7 +557,6 @@ class Aggregator:
         that matches the request.
 
         Args:
-            collaborator_name (str): Requested tensor key collaborator name.
             tensor_name (str): Name of the tensor.
             round_number (int): Actual round number.
             report (bool): Whether to report.
@@ -586,11 +569,6 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        logger.debug(
-            f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
-            f"for collaborator {collaborator_name}"
-        )
-
         if "compressed" in tags or require_lossless:
             compress_lossless = True
         else:
@@ -754,7 +732,7 @@ class Aggregator:
         """
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
-            secagg_setup = self._secure_aggregation_setup(collaborator_name, named_tensors)
+            secagg_setup = self.secagg.process_secagg_setup_tensors(named_tensors)
             # Task results processing is not required if the tensors belong to
             # secure aggregation setup stage.
             if secagg_setup:
@@ -773,6 +751,7 @@ class Aggregator:
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
+
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
@@ -840,10 +819,9 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        with self.lock:
-            self._is_collaborator_done(collaborator_name, round_number)
-
-            self._end_of_round_with_stragglers_check()
+        # Check if collaborator or round is done.
+        self._is_collaborator_done(collaborator_name, round_number)
+        self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -893,7 +871,7 @@ class Aggregator:
             }
             for proto in named_tensor.transformer_metadata
         ]
-        # The tensor has already been transfered to aggregator,
+        # The tensor has already been transferred to aggregator,
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
             named_tensor.name,
@@ -903,13 +881,6 @@ class Aggregator:
             tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
-        # Secure aggregation setup stage key
-        if "secagg" in tags:
-            nparray = json.loads(raw_bytes)
-            self.tensor_db.cache_tensor({tensor_key: nparray})
-            logger.debug("Created TensorKey: %s", tensor_key)
-
-            return tensor_key, nparray
 
         assert "compressed" in tags or "lossy_compressed" in tags, (
             f"Named tensor {tensor_key} is not compressed"
@@ -1066,7 +1037,7 @@ class Aggregator:
         all_collaborators_for_task = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
-        # Leave out straggler for the round even if they've paritally
+        # Leave out straggler for the round even if they've partially
         # completed given tasks
         collaborators_for_task = []
         collaborators_for_task = [
@@ -1102,13 +1073,11 @@ class Aggregator:
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             # Check if secure aggregation is enabled, set aggregation function.
-            agg_function = (
-                task_agg_function
-                if "metric" not in tags
-                else SecureWeightedAverage()
-                if self._secure_aggregation_enabled
-                else WeightedAverage()
-            )
+            agg_function = task_agg_function
+            if "metric" in tags:
+                agg_function = WeightedAverage()
+            elif self._secure_aggregation_enabled:
+                agg_function = SecureWeightedAverage()
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
                 collaborator_weight_dict,
@@ -1181,6 +1150,8 @@ class Aggregator:
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+        self.collaborator_tasks_results = {}
+        self.collaborator_task_weight = {}
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -1259,45 +1230,3 @@ class Aggregator:
                 collaborator_name,
             )
             self.quit_job_sent_to.append(collaborator_name)
-
-    def _secure_aggregation_setup(self, collaborator_name, named_tensors):
-        """
-        Set up secure aggregation for the given collaborator and named tensors.
-
-        This method processes named tensors that are part of the secure
-        aggregation setup stages. It saves the processed tensors to the local
-        tensor database and checks if all collaborators have sent their data
-        for the current key. If all collaborators have sent their data, it
-        proceeds with aggregation for the key.
-
-        Args:
-            collaborator_name (str): The name of the collaborator sending the
-                tensors.
-            named_tensors (list): A list of named tensors to be processed.
-
-        Returns:
-            bool: True if the setup is complete or if the tensor does not
-                belong to secure aggregation setup, otherwise waits for all
-                collaborators.
-        """
-        secagg_setup = False
-        for named_tensor in named_tensors:
-            # Check if the tensor belongs to one from secure aggregation
-            # setup stages.
-            if "secagg" not in tuple(named_tensor.tags):
-                continue
-            else:
-                secagg_setup = True
-                # Process and save tensor to local tensor db.
-                self._process_named_tensor(named_tensor, collaborator_name)
-                tensor_name = named_tensor.name
-                # Check if all collaborators have sent their data for the
-                # current key.
-                all_collaborators_sent = self.secagg.check_tensors_received(tensor_name)
-                if not all_collaborators_sent:
-                    continue
-                # If all collaborators have sent their data, proceed with
-                # aggregation for the key.
-                self.secagg.aggregate_tensor(tensor_name)
-
-        return secagg_setup

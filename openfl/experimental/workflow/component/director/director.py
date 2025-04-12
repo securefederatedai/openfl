@@ -231,7 +231,7 @@ class Director:
                 # Stop Iteration if all jobs have quit and the queue is empty
                 break
             else:
-                # Yeild none if the queue is empty but the experiment is still running.
+                # Yield none if the queue is empty but the experiment is still running.
                 yield None
 
     def get_experiment_data(self, experiment_name: str) -> Path:

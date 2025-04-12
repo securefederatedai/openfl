@@ -94,7 +94,7 @@ def start_docker_container_with_federation_run(
         else:
             local_participant_path = participant.workspace_path
 
-            docker_participant_path = f"/{constants.DFLT_DOCKERIZE_IMAGE_NAME}"
+            docker_participant_path = f"/{constants.DFLT_WORKSPACE_NAME}"
 
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
@@ -114,7 +114,7 @@ def start_docker_container_with_federation_run(
         log.debug(f"Environment variables for {participant.name}: {environment}")
 
         # Prepare the commands to run based on the participant
-        log_file = f"{docker_participant_path}/{participant.name}.log"
+        log_file = f"{docker_participant_path}/logs/{participant.name}.log"
 
         if participant.name == "aggregator":
             start_agg = constants.AGG_START_CMD

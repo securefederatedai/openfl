@@ -23,26 +23,34 @@ def setup_logger(log_level=logging.INFO, log_file=None):
             Defaults to logging.INFO.
         log_file (str, optional): The file to which log messages should be written.
     """
+    # Create a logger instance
+    logger = logging.getLogger()
+
+    # Add a custom log level for METRIC
     metric = 25
     add_log_level("METRIC", metric)
 
     if isinstance(log_level, str):
         log_level = log_level.upper()
 
-    root = logging.getLogger()
-    root.setLevel(log_level)
+    # Set the log level for the logger
+    logger.setLevel(log_level)
 
-    formatter = logging.Formatter("%(message)s")
+    console = Console(width=160)
+    console_handler = RichHandler(console=console)
+
+    # Console handler includes date and log level, do not add it again
+    console_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(console_handler)
+
+    # Create a file handler if log_file is provided
     if log_file:
+        file_formatter = logging.Formatter(
+            "[%(asctime)s] [%(filename)s:%(lineno)d] %(levelname)s %(message)s",
+            datefmt="%H:%M:%S",
+        )
         file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        root.addHandler(file_handler)
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
 
-    console = Console(width=160, force_terminal=True)
-    rich_handler = RichHandler(
-        rich_tracebacks=True,
-        markup=True,
-        console=console,
-    )
-    rich_handler.setFormatter(formatter)
-    root.addHandler(rich_handler)
+    return logger

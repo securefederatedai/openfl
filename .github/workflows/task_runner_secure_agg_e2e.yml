@@ -5,14 +5,25 @@ name: Task_Runner_Secure_Agg_E2E  # Please do not modify the name as it is used 
 
 on:
   workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
 jobs:
   test_secure_aggregation:
     name: Secure Aggregation (torch/mnist, 3.10)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
@@ -25,11 +36,9 @@ jobs:
         id: checkout_openfl
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # needed for detecting changes
-          submodules: "true"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.COMMIT_ID }}
 
-      - name: Install Secure Aggregation dependies
+      - name: Install Secure Aggregation dependencies
         run: |
           python -m pip install pycryptodome
           

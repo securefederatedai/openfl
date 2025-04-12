@@ -1,0 +1,20 @@
+# Copyright (C) 2020-2025 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator:
+  defaults: plan/defaults/aggregator.yaml
+  template: openfl.experimental.workflow.component.Aggregator
+  settings:
+    rounds_to_train: 1
+
+collaborator:
+  defaults: plan/defaults/collaborator.yaml
+  template: openfl.experimental.workflow.component.Collaborator
+  settings: {}
+
+federated_flow:
+  template: {}
+  settings: {}
+
+network:
+  defaults: plan/defaults/network.yaml

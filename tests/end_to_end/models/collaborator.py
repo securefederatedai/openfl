@@ -1,12 +1,13 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
 import logging
+import tempfile
 
-import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.ssh_helper as ssh
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class Collaborator():
         self.workspace_path = workspace_path
         self.container_id = container_id
         self.res_file = None # Result file to track the logs
+        self.start_process = None # Process associated with the aggregator start command
 
     def generate_sign_request(self):
         """
@@ -115,53 +117,60 @@ class Collaborator():
             raise e
         return True
 
-    def start(self, res_file):
+    def start(self):
         """
         Start the collaborator
-        Args:
-            res_file (str): Result file to track the logs
         Returns:
-            str: Path to the log file
+            bool: True if successful, else raise exception
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
             error_msg = f"Failed to start {self.collaborator_name}"
-            fh.run_command(
-                constants.COL_START_CMD.format(self.collaborator_name),
-                error_msg=error_msg,
-                container_id=self.container_id,
-                workspace_path=self.workspace_path,
-                run_in_background=True,
-                bg_file=res_file,
-            )
-            log.info(
-                f"Started {self.name} and tracking the logs in {res_file}."
-            )
-            self.res_file = res_file
-        except Exception as e:
-            log.error(f"{error_msg}: {e}")
-            raise e
-        return res_file
 
-    def install_dependencies(self):
-        """
-        Install the dependencies for the collaborator
-        Returns:
-            bool: True if successful, else False
-        """
-        try:
-            cmd = f"pip install -r requirements.txt"
-            error_msg = f"Failed to install dependencies for {self.collaborator_name}"
-            return_code, output, error = fh.run_command(
-                cmd,
-                error_msg=error_msg,
-                container_id=self.container_id,
-                workspace_path=self.workspace_path,
+            # Note: LOG_FILE does not take absolute path, hence using relative path
+            log_file = os.path.join("logs", f"{self.collaborator_name}.log")
+            self.res_file = os.path.join(self.workspace_path, log_file)
+
+            command = ["fx", "collaborator", "start", "-n", self.collaborator_name]
+            log.info(f"Command for {self.name}: {command}")
+
+            # Set the log file path for the collaborator process
+            env = os.environ.copy()
+            env["LOG_FILE"] = log_file
+
+            # open file in append mode, so that restarting scenarios can be handled
+            bg_file = open(os.path.join(tempfile.mkdtemp(), "tmp.log"), "a", buffering=1)
+            self.start_process = ssh.run_command_background(
+                cmd=command,
+                work_dir=self.workspace_path,
+                redirect_to_file=bg_file,
+                check_sleep=60,
+                env=env
+            )
+
+            log.info(
+                f"Started {self.name} and tracking the logs in {self.res_file}."
             )
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e
         return True
+
+    def kill_process(self):
+        """
+        Kill the process of the collaborator and wait for it to finish
+        """
+        try:
+            if self.start_process:
+                self.start_process.kill()
+                self.start_process.wait()
+                self.start_process = None
+            else:
+                log.warning(f"No process found for {self.collaborator_name}")
+
+        except Exception as e:
+            log.error(f"Failed to kill the process: {e}")
+            raise ex.ProcessKillException(f"Failed to kill the process: {e}")
 
     def import_workspace(self):
         """
