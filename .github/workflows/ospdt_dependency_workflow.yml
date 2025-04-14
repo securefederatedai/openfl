@@ -84,6 +84,6 @@ jobs:
     - name: Upload Excel License Report
       uses: actions/upload-artifact@v4
       with:
-        name: openfl_dependency_report
+        name: OpenFL_Dependency_report
         path: ${{ env.OUTPUT_DIR }}/${{ env.EXCEL_FILE }}
         if-no-files-found: error

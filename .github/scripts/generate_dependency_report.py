@@ -7,16 +7,16 @@ import json
 import pandas as pd
 from pathlib import Path
 import sys
-import re
-from urllib.parse import urlparse
+pass
+pass
 
 def determine_origin(pkg_info: dict) -> str:
     """
     Enhanced origin detection with comprehensive pattern matching
-    
+
     Args:
         pkg_info: Dictionary containing package info from SPDX
-        
+
     Returns:
         str: Detected origin (e.g., 'PyPI', 'Ubuntu', 'DockerHub')
     """
@@ -27,11 +27,11 @@ def determine_origin(pkg_info: dict) -> str:
     # Check for Python packages
     if any(x in name for x in ['python', 'pip', 'pypi', 'wheel', 'setuptools']):
         return 'PyPI'
-    
+
     # Check for system packages
     if any(x in name for x in ['ubuntu', 'debian', 'apt', 'dpkg', 'libc']):
         return 'Ubuntu'
-    
+
     # Check download location patterns
     if 'github.com' in download_loc:
         return 'GitHub'
@@ -39,13 +39,13 @@ def determine_origin(pkg_info: dict) -> str:
         return 'DockerHub'
     if 'pypi.org' in download_loc or 'pypi.python.org' in download_loc:
         return 'PyPI'
-    
+
     # Check supplier information
     if 'ubuntu' in supplier:
         return 'Ubuntu'
     if 'debian' in supplier:
         return 'Debian'
-    
+
     # Fallback to PyPI as default
     return 'PyPI'
 
@@ -63,7 +63,17 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
         # Process packages, remove duplicates and filter out openfl:latest
         seen_components = set()
         packages = []
-        
+
+        # Add Ubuntu as the first component
+        packages.append({
+            "Dockerfile": "openfl-docker/Dockerfile.base",
+            "Component": "Ubuntu",
+            "Origin": "Ubuntu",
+            "License": "GPL-2.0",
+            "Distributed by you?": "N",
+            "Comments": "Base image"
+        })
+
         for pkg in data.get("packages", []):
             component_name = pkg.get("name", "Unknown")
             if component_name.lower() not in ['openfl', 'openfl:latest'] and component_name not in seen_components:
@@ -77,10 +87,13 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
                     "Comments": ""
                 })
 
-        # Create Component List DataFrame and sort alphabetically
+        # Create Component List DataFrame and sort alphabetically (keeping Ubuntu first)
         component_df = pd.DataFrame(packages)
-        component_df = component_df.sort_values(by='Component', key=lambda x: x.str.lower())
-        
+        if len(component_df) > 1:
+            # Sort all rows except the first one (Ubuntu)
+            sorted_df = component_df.iloc[1:].sort_values(by='Component', key=lambda x: x.str.lower())
+            component_df = pd.concat([component_df.iloc[[0]], sorted_df])
+
         if component_df.empty:
             print("Warning: No package data found in SPDX report")
             component_df = pd.DataFrame([{"Status": "No package data found in scan"}])
@@ -102,24 +115,24 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
                 "Comments": "This is for reference to create workload by user"
             }
         ]
-        
+
         container_df = pd.DataFrame(container_data)
 
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
             # Write Container List sheet
             container_df.to_excel(
-                writer, 
-                index=False, 
+                writer,
+                index=False,
                 sheet_name='Container List'
             )
-            
+
             # Write Component List sheet
             component_df.to_excel(
-                writer, 
-                index=False, 
+                writer,
+                index=False,
                 sheet_name='Component List'
             )
-            
+
             # Auto-adjust column widths for both sheets
             for sheet_name in writer.sheets:
                 worksheet = writer.sheets[sheet_name]
@@ -133,7 +146,7 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
 
     except Exception as e:
         print(f"Error processing SPDX data: {str(e)}", file=sys.stderr)
-        
+
         error_df = pd.DataFrame([{
             "Error": str(e),
             "InputFile": str(spdx_path),
@@ -144,12 +157,12 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Convert SPDX JSON to Excel format')
     parser.add_argument('input_json', help='Path to SPDX JSON file')
     parser.add_argument('output_excel', help='Path for output Excel file')
-    
+
     args = parser.parse_args()
-    
+
     success = convert_spdx_to_excel(Path(args.input_json), Path(args.output_excel))
     sys.exit(0 if success else 1)
