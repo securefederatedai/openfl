@@ -16,6 +16,21 @@ def determine_origin(pkg_info: dict) -> str:
 
     Args:
         pkg_info: Dictionary containing package info from SPDX
+	Expected format:
+	{
+		"name": "PyYAML",
+		"SPDXID": "SPDXRef-Package-2525510643a08a59",
+		"versionInfo": "6.0.2",
+		"supplier": "NOASSERTION",
+		"downloadLocation": "NONE",
+		"filesAnalyzed": true,
+		"packageVerificationCode": {}
+		"licenseConcluded": "MIT",
+		"licenseDeclared": "MIT",
+		"externalRefs": [],
+		"primaryPackagePurpose": "LIBRARY",
+		"annotations": []
+	}
 
     Returns:
         str: Detected origin (e.g., 'PyPI', 'Ubuntu', 'DockerHub')
