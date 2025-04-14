@@ -8,3 +8,5 @@ defusedxml==0.7.1
 matplotlib==3.10.1
 fpdf2==2.8.2
 papermill==2.6.0
+pyfakefs==5.8.0
+torch==2.4.1

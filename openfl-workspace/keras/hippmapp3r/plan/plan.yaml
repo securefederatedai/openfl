@@ -22,6 +22,7 @@ data_loader :
   template : src.dataloader.KerasHippmapp3rsynth
   settings :
     batch_size : 1
+    input_shape : [160, 160, 128]
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
