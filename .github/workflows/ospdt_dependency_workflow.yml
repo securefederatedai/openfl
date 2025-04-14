@@ -13,7 +13,6 @@ env:
   TAG: ${{ github.event.inputs.version || 'latest' }}
   OUTPUT_DIR: trivy_output
   SPDX_JSON: openfl_trivy_output.json
-  EXCEL_FILE: OpenFL_Dependency.xlsx
   CACHE_VERSION: v1
 
 jobs:
@@ -68,6 +67,16 @@ jobs:
           --output ${{ env.OUTPUT_DIR }}/${{ env.SPDX_JSON }} \
           ${{ env.IMAGE_NAME }}:${{ env.TAG }} || echo "Trivy scan completed with exit code $?"
 
+    - name: Generate filename
+      id: filename
+      run: |
+        CURRENT_DATE=$(date +'%Y-%m-%d')
+        if [ "${{ env.TAG }}" = "latest" ]; then
+          echo "EXCEL_FILE=OpenFL_Dependency_$CURRENT_DATE.xlsx" >> $GITHUB_ENV
+        else
+          echo "EXCEL_FILE=OpenFL_Dependency_${{ env.TAG }}_$CURRENT_DATE.xlsx" >> $GITHUB_ENV
+        fi
+        
     - name: Convert SPDX JSON to Excel
       run: |
         python .github/scripts/generate_dependency_report.py \
