@@ -5,7 +5,6 @@
 """Plan module."""
 
 import inspect
-import os
 from hashlib import sha384
 from importlib import import_module, reload
 from logging import getLogger
@@ -15,7 +14,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.experimental.workflow.interface.cli.cli_helper import WORKSPACE
 from openfl.experimental.workflow.transport import AggregatorGRPCClient, AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
@@ -98,8 +96,6 @@ class Plan:
     @staticmethod
     def parse(
         plan_config_path: Path,
-        cols_config_path: Path = None,
-        data_config_path: Path = None,
         resolve=True,
     ) -> "Plan":
         """Parse the Federated Learning plan.
@@ -107,11 +103,6 @@ class Plan:
         Args:
             plan_config_path (string): The filepath to the federated learning
                                        plan
-            cols_config_path (string): The filepath to the federation
-                                       collaborator list [optional]
-            data_config_path (string): The filepath to the federation
-                                       collaborator data configuration
-                                       [optional]
         Returns:
             A federated learning plan object
         """
@@ -125,35 +116,6 @@ class Plan:
             for section in plan.config.keys():
                 if plan.config[section].get(SETTINGS) is None:
                     plan.config[section][SETTINGS] = {}
-
-            # walk the top level keys and load 'defaults' in sorted order
-            for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].pop(DEFAULTS, None)
-
-                if defaults is not None:
-                    defaults = WORKSPACE / "workspace" / defaults
-
-                    plan.files.append(defaults)
-
-                    if resolve:
-                        Plan.logger.info(
-                            f"Loading DEFAULTS for section [red]{section}[/] "
-                            f"from file [red]{defaults}[/].",
-                            extra={"markup": True},
-                        )
-
-                    defaults = Plan.load(Path(defaults))
-
-                    if SETTINGS in defaults:
-                        # override defaults with section settings
-                        defaults[SETTINGS].update(plan.config[section][SETTINGS])
-                        plan.config[section][SETTINGS] = defaults[SETTINGS]
-
-                    defaults.update(plan.config[section])
-
-                    plan.config[section] = defaults
-
-            plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
             if resolve:
                 plan.resolve()
@@ -249,7 +211,6 @@ class Plan:
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
         self.authorized_cols = []  # authorized collaborator list
-        self.cols_data_paths = {}  # collaborator data paths dict
 
         self.collaborator_ = None  # collaborator object
         self.aggregator_ = None  # aggregator object
@@ -424,12 +385,6 @@ class Plan:
         Returns:
             AggregatorGRPCClient: gRPC client for the specified collaborator.
         """
-        if tls and not (root_certificate and private_key and certificate):
-            common_name = collaborator_name
-            root_certificate = "cert/cert_chain.crt"
-            certificate = f"cert/client/col_{common_name}.crt"
-            private_key = f"cert/client/col_{common_name}.key"
-
         client_args = self.config["network"][SETTINGS]
 
         # patch certificates
@@ -472,12 +427,6 @@ class Plan:
         Returns:
             AggregatorGRPCServer: gRPC server of the aggregator instance.
         """
-        if tls and not (root_certificate and private_key and certificate):
-            common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
-            root_certificate = "cert/cert_chain.crt"
-            certificate = f"cert/server/agg_{common_name}.crt"
-            private_key = f"cert/server/agg_{common_name}.key"
-
         server_args = self.config["network"][SETTINGS]
 
         # patch certificates
@@ -573,10 +522,8 @@ class Plan:
         private_attrs_callable = private_attrs_kwargs = None
         private_attributes = {}
 
-        data_yaml = "plan/data.yaml"
-
-        if config or (os.path.exists(data_yaml) and os.path.isfile(data_yaml)):
-            d = Plan.load(config) if config else Plan.load(Path(data_yaml).absolute())
+        if config:
+            d = Plan.load(config)
 
             if d and d.get(private_attr_name, None):
                 callable_func = d.get(private_attr_name, {}).get("callable_func")
