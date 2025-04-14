@@ -1138,14 +1138,14 @@ class Aggregator:
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
-        # End of round callbacks.
-        # todo handle case when aggregator restarted before callback was successful
-        self.callbacks.on_round_end(self.round_number, logs)
-
         # Save the latest model
         self.round_number += 1
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
+
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
 
         # resetting stragglers for task for a new round
         self.stragglers = []
