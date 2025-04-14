@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from openfl.federated.task.runner import TaskRunner
+import numpy as np
 
 class NoOpTaskRunner(TaskRunner):
     """No-op Task Runner Class.
@@ -23,7 +24,7 @@ class NoOpTaskRunner(TaskRunner):
         return []
 
     def get_tensor_dict(self, with_opt_vars):
-        return {}
+        return {'dummy_tensor': np.float32(1)}
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
         pass
