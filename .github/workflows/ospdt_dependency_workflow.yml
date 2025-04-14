@@ -4,31 +4,86 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to tag the Docker image with'
+        description: 'Tag of the OpenFL Docker image (e.g., latest)'
         required: false
         default: 'latest'
 
 env:
-  VERSION: ${{ github.ref == 'refs/heads/develop' && 'latest' || '1.7' }}
-
-permissions:
-  contents: read
-  packages: write
+  IMAGE_NAME: openfl
+  TAG: ${{ github.event.inputs.version || 'latest' }}
+  OUTPUT_DIR: trivy_output
+  SPDX_JSON: openfl_trivy_output.json
+  EXCEL_FILE: OpenFL_Dependency.xlsx
+  CACHE_VERSION: v1
 
 jobs:
-
-  set-images:
+  scan-openfl:
+    name: generate-dependency-report
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
-    - name: Build and Push OpenFL Base Image
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas openpyxl
+
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install -y trivy
+
+    - name: Build OpenFL image
       uses: docker/build-push-action@v6
       with:
         context: .
         file: openfl-docker/Dockerfile.base
+        tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        load: true
+
+    - name: Run Trivy license scan
+      run: |
+        mkdir -p ${{ env.OUTPUT_DIR }}
+        trivy image --scanners license --format spdx-json \
+          --output ${{ env.OUTPUT_DIR }}/${{ env.SPDX_JSON }} \
+          ${{ env.IMAGE_NAME }}:${{ env.TAG }} || echo "Trivy scan completed with exit code $?"
+
+    - name: Convert SPDX JSON to Excel
+      run: |
+        python .github/scripts/generate_dependency_report.py \
+          ${{ env.OUTPUT_DIR }}/${{ env.SPDX_JSON }} \
+          ${{ env.OUTPUT_DIR }}/${{ env.EXCEL_FILE }}
+
+    - name: Upload SPDX JSON Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: openfl_spdx_report
+        path: ${{ env.OUTPUT_DIR }}/${{ env.SPDX_JSON }}
+        if-no-files-found: error
+
+    - name: Upload Excel License Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: openfl_dependency_report
+        path: ${{ env.OUTPUT_DIR }}/${{ env.EXCEL_FILE }}
+        if-no-files-found: error
