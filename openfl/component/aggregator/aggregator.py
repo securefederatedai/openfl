@@ -1145,7 +1145,7 @@ class Aggregator:
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
-        self.callbacks.on_round_end(self.round_number, logs)
+        self.callbacks.on_round_end(self.round_number - 1, logs)
 
         # resetting stragglers for task for a new round
         self.stragglers = []
