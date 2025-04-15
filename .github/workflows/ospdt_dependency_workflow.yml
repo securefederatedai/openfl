@@ -1,3 +1,25 @@
+# OSPDT Dependency Workflow
+# This GitHub Actions workflow generates a dependency report for the OpenFL Docker image.
+# It performs the following steps:
+# 1. Checks out the repository.
+# 2. Sets up Python 3.12 and caches pip packages.
+# 3. Installs necessary dependencies (pandas, openpyxl).
+# 4. Installs Trivy for scanning Docker images.
+# 5. Builds the OpenFL Docker image.
+# 6. Runs a Trivy license scan on the Docker image and outputs the result in SPDX JSON format.
+# 7. Generates a filename for the Excel report based on the current date and image tag.
+# 8. Converts the SPDX JSON report to an Excel file using a Python script.
+# 9. Uploads the SPDX JSON report as an artifact.
+# 10. Uploads the Excel license report as an artifact.
+#
+# Trigger: Manual trigger with an optional input for the Docker image tag.
+# Environment Variables:
+# - IMAGE_NAME: Name of the Docker image.
+# - TAG: Tag of the Docker image, defaulting to 'latest'.
+# - OUTPUT_DIR: Directory for Trivy output.
+# - SPDX_JSON: Filename for the SPDX JSON output.
+# - CACHE_VERSION: Version for caching pip packages.
+
 name: OSPDT Dependency Workflow
 
 on:

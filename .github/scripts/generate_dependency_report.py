@@ -82,8 +82,8 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
             "Dockerfile": "openfl-docker/Dockerfile.base",
             "Component": "Ubuntu",
             "Origin": "Ubuntu",
-            "License": "GPL-2.0",
-            "Distributed by you?": "N",
+            "License": "Collection of licences",
+            "Distributed by you?": "No",
             "Comments": "Base image"
         })
 
@@ -122,10 +122,10 @@ def convert_spdx_to_excel(spdx_path: Path, excel_path: Path) -> bool:
             },
             {
                 "Container": "OpenFL Workspace Image",
-                "Dockerfile": "Dockerfile.workspace",
+                "Dockerfile": "openfl-docker/Dockerfile.workspace",
                 "Container Distribution": "N/A",
                 "Dockerfile Distribution": "Distributed as a part of code",
-                "Comments": "This is for reference to create workload by user"
+                "Comments": "Reference for users to create the workload."
             }
         ]
 
