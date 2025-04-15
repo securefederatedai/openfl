@@ -237,8 +237,8 @@ class Aggregator:
                 to_proto_tensor_dict, committed_round_number, self.compression_pipeline
             )
             # round number is the current round which is still in process
-            #  i.e. committed_round_number + 1
-            self.round_number = committed_round_number + 1
+            #  i.e. committed_round_number
+            self.round_number = committed_round_number
             logger.info(
                 "Recovery - loaded round number %s and best score %s",
                 self.round_number,
@@ -1135,17 +1135,18 @@ class Aggregator:
         for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
             logs.update(self._compute_validation_related_task_metrics(task_name))
 
-        # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
-
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
+
         # Save the latest model
+        self.round_number += 1
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
 
-        self.round_number += 1
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
