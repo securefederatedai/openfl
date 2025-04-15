@@ -238,7 +238,7 @@ class Aggregator:
             )
             # round number is the current round which is still in process
             #  i.e. committed_round_number
-            self.round_number = committed_round_number
+            self.round_number = committed_round_number + 1
             logger.info(
                 "Recovery - loaded round number %s and best score %s",
                 self.round_number,
@@ -1143,9 +1143,9 @@ class Aggregator:
         self.callbacks.on_round_end(self.round_number, logs)
 
         # Save the latest model
-        self.round_number += 1
         logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
+        self.round_number += 1
 
         # resetting stragglers for task for a new round
         self.stragglers = []
