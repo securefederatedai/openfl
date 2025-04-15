@@ -500,7 +500,7 @@ class Plan:
         return defaults
 
     def get_private_attr(
-        self, private_attr_name=None, config=None
+        self, private_attr_name, config
     ) -> Tuple[Optional[dict], Optional[dict], dict]:
         """
         Retrieves private attributes defined in a configuration or data file.
@@ -522,41 +522,38 @@ class Plan:
         private_attrs_callable = private_attrs_kwargs = None
         private_attributes = {}
 
-        if config:
-            d = Plan.load(config)
+        d = Plan.load(config)
 
-            if d and d.get(private_attr_name, None):
-                callable_func = d.get(private_attr_name, {}).get("callable_func")
-                private_attributes = d.get(private_attr_name, {}).get("private_attributes")
-                if callable_func and private_attributes:
-                    logger = getLogger(__name__)
-                    logger.warning(
-                        f"Warning: {private_attr_name} private attributes "
-                        "will be initialized via callable and "
-                        "attributes directly specified "
-                        "will be ignored"
-                    )
+        if d and d.get(private_attr_name, None):
+            callable_func = d.get(private_attr_name, {}).get("callable_func")
+            private_attributes = d.get(private_attr_name, {}).get("private_attributes")
+            if callable_func and private_attributes:
+                logger = getLogger(__name__)
+                logger.warning(
+                    f"Warning: {private_attr_name} private attributes "
+                    "will be initialized via callable and "
+                    "attributes directly specified "
+                    "will be ignored"
+                )
 
-                if callable_func is not None:
-                    private_attrs_callable = {
-                        "template": d.get(private_attr_name)["callable_func"]["template"]
-                    }
+            if callable_func is not None:
+                private_attrs_callable = {
+                    "template": d.get(private_attr_name)["callable_func"]["template"]
+                }
 
-                    private_attrs_kwargs = self.import_kwargs_modules(
-                        d.get(private_attr_name)["callable_func"]
-                    )["settings"]
+                private_attrs_kwargs = self.import_kwargs_modules(
+                    d.get(private_attr_name)["callable_func"]
+                )["settings"]
 
-                    if isinstance(private_attrs_callable, dict):
-                        private_attrs_callable = Plan.import_(**private_attrs_callable)
-                elif private_attributes:
-                    private_attributes = Plan.import_(
-                        d.get(private_attr_name)["private_attributes"]
-                    )
-                elif not callable(private_attrs_callable):
-                    raise TypeError(
-                        f"private_attrs_callable should be callable object "
-                        f"or be import from code part, get {private_attrs_callable}"
-                    )
+                if isinstance(private_attrs_callable, dict):
+                    private_attrs_callable = Plan.import_(**private_attrs_callable)
+            elif private_attributes:
+                private_attributes = Plan.import_(d.get(private_attr_name)["private_attributes"])
+            elif not callable(private_attrs_callable):
+                raise TypeError(
+                    f"private_attrs_callable should be callable object "
+                    f"or be import from code part, get {private_attrs_callable}"
+                )
 
         return (
             private_attrs_callable,
