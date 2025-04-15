@@ -34,35 +34,35 @@ jobs:
       run: |
         echo "Commit ID used: ${{ steps.set_commit_id.outputs.commit_id }}" >> $GITHUB_STEP_SUMMARY
 
-  # wf_mnist_local_runtime:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: Workflow MNIST Local Runtime
-  #   needs: set_commit_id_for_all_jobs
-  #   uses: ./.github/workflows/workflow_interface_101_mnist.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  wf_mnist_local_runtime:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow MNIST Local Runtime
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # wf_watermark_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: Workflow Watermarking Federated Runtime E2E
-  #   needs: wf_mnist_local_runtime
-  #   uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  wf_watermark_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Watermarking Federated Runtime E2E
+    needs: wf_mnist_local_runtime
+    uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # wf_secagg_e2e:
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch')
-  #   name: Workflow Secure Aggregation Federated Runtime E2E
-  #   needs: wf_watermark_e2e
-  #   uses: ./.github/workflows/wf_secagg_fed_runtime.yml
-  #   with:
-  #     commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+  wf_secagg_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Secure Aggregation Federated Runtime E2E
+    needs: wf_watermark_e2e
+    uses: ./.github/workflows/wf_secagg_fed_runtime.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
   task_runner_e2e:
     if: |
