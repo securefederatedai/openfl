@@ -259,7 +259,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         return aggregator_pb2.GetAggregatedTensorResponse(
             header=header,
-            round_number=request.round_number,
             tensor=named_tensor,
         )
 

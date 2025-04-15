@@ -63,8 +63,7 @@ message GetAggregatedTensorRequest {
 // we'll actually send this as a data stream
 message GetAggregatedTensorResponse {
   MessageHeader header = 1;
-  int32 round_number = 2;
-  NamedTensor tensor = 3;
+  NamedTensor tensor = 2;
 }
 
 // we'll actually send this as a data stream
