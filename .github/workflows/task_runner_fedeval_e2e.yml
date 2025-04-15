@@ -36,23 +36,31 @@ env:
   CALLING_WORKFLOW: ${{ inputs.calling_workflow || github.workflow }} # use calling workflow name
 
 jobs:
-  set_calling_workflow:
-    name: Set calling workflow
+  set_wf_and_model:
+    name: Set calling workflow and models to run
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     outputs:
-      calling_workflow: ${{ steps.set_calling_workflow.outputs.calling_workflow }}
+      calling_workflow: ${{ steps.set_wf_and_model.outputs.calling_workflow }}
+      models: ${{ steps.set_wf_and_model.outputs.models }}
     steps:
       - name: Set calling workflow
-        id: set_calling_workflow
+        id: set_wf_and_model
         run: |
           echo "calling_workflow=${{ env.CALLING_WORKFLOW }}" >> "$GITHUB_OUTPUT"
+          if [ "${{ env.CALLING_WORKFLOW }}" != "pr" ]; then
+            echo "Run all the models for non PR scenario"
+            echo "models=[\"keras/mnist\", \"keras/torch/mnist\", \"keras/jax/mnist\", \"torch/mnist\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo "Run only keras/mnist model for PR scenario"
+            echo "models=[\"keras/mnist\"]" >> "$GITHUB_OUTPUT"
+          fi
 
   test_with_tls:
     name: With TLS
-    needs: set_calling_workflow
+    needs: set_wf_and_model
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -62,7 +70,7 @@ jobs:
       matrix:
         # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
         # Thus these models are excluded from the matrix for now.
-        model_name: ["torch/mnist", "keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
+        model_name: ${{ fromJson(needs.set_wf_and_model.outputs.models) }}
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -97,10 +105,10 @@ jobs:
 
   test_without_tls:
     name: Without TLS
-    needs: set_calling_workflow
+    needs: set_wf_and_model
     if: |
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')) && (needs.set_calling_workflow.outputs.calling_workflow != 'pr')
+      (github.event_name == 'workflow_dispatch')) && (needs.set_wf_and_model.outputs.calling_workflow != 'pr')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -142,10 +150,10 @@ jobs:
 
   test_without_client_auth:
     name: Without Client Auth
-    needs: set_calling_workflow
+    needs: set_wf_and_model
     if: |
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')) && (needs.set_calling_workflow.outputs.calling_workflow != 'pr')
+      (github.event_name == 'workflow_dispatch')) && (needs.set_wf_and_model.outputs.calling_workflow != 'pr')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
