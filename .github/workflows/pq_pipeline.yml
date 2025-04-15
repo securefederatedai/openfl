@@ -73,6 +73,7 @@ jobs:
     uses: ./.github/workflows/task_runner_basic_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+      calling_workflow: "pq"
 
   task_runner_resiliency_e2e:
     if: |
@@ -93,6 +94,7 @@ jobs:
     uses: ./.github/workflows/task_runner_fedeval_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+      calling_workflow: "pq"
 
   task_runner_secure_agg_e2e:
     if: |
