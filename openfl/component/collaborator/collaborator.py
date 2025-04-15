@@ -209,37 +209,17 @@ class Collaborator:
         kwargs = self.task_config[task_name]["kwargs"]
 
         # this would return a list of what tensors we require as TensorKeys
-        required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
+        # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
+        # round_offset) so we need to update these keys to their "absolute values"
+        required_tensorkeys = self.task_runner.get_required_tensorkeys_for_function(
             func_name, **kwargs
         )
-
-        # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
-        # round_offset)
-        # so we need to update these keys to their "absolute values"
-        required_tensorkeys = []
-        for (
-            tname,
-            origin,
-            rnd_num,
-            report,
-            tags,
-        ) in required_tensorkeys_relative:
-            if origin == "GLOBAL":
-                origin = self.aggregator_uuid
-            else:
-                origin = self.collaborator_name
-
-            # rnd_num is the relative round. So if rnd_num is -1, get the
-            # tensor from the previous round
-            required_tensorkeys.append(
-                TensorKey(tname, origin, rnd_num + round_number, report, tags)
-            )
-
-        # print('Required tensorkeys = {}'.format(
-        # [tk[0] for tk in required_tensorkeys]))
-        input_tensor_dict = {
-            k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
-        }
+        input_tensor_dict = {}
+        for tensor_key in required_tensorkeys:
+            fetch_from = self.aggregator_uuid if tensor_key.origin == "GLOBAL" else self.collaborator_name
+            tensor_key = tensor_key._replace(origin=fetch_from)
+            array = self.get_data_for_tensorkey(tensor_key)
+            input_tensor_dict.update({tensor_key.tensor_name: array})
 
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
