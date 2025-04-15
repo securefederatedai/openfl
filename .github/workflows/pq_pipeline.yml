@@ -175,11 +175,11 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  # publish nightly package to PyPI (only run on schedule)
+  # publish nightly package to PyPI
+  # enable this job only for securefederatedai and not forked repos
   publish_package:
     if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'securefederatedai'
     name: Publish Nightly Package to PyPI
     permissions:
       id-token: write

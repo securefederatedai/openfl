@@ -1,0 +1,29 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    rounds_to_train : 0
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template: src.data_loader.NoOpDataLoader
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.task_runner.NoOpTaskRunner
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
