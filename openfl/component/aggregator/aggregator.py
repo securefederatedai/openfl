@@ -380,7 +380,7 @@ class Aggregator:
 
         if file_path == self.best_state_path:
             self.best_tensor_dict = tensor_dict
-        
+
         if file_path == self.last_state_path:
             # Transaction to persist/delete all data needed to increment the round
             if self.persistent_db:
@@ -396,7 +396,7 @@ class Aggregator:
                     round_number,
                 )
             self.last_tensor_dict = tensor_dict
-            
+
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
         )
@@ -1171,7 +1171,7 @@ class Aggregator:
             self._save_model(self.round_number, self.last_state_path)
         else:
             logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
-            
+
         self.round_number += 1
 
         # resetting stragglers for task for a new round
