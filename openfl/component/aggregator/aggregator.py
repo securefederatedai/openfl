@@ -342,14 +342,14 @@ class Aggregator:
         Returns:
             None
         """
-        # Skip saving model if running in evaluation mode
+        # Skip saving model files during evaluation runs
         if self.assigner.is_task_group_evaluation():
             logger.info(
                 "Skipping model save for round %s in evaluation mode.",
                 round_number,
             )
             return
-        
+            
         # Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
             self.model, compression_pipeline=self.compression_pipeline
@@ -372,8 +372,21 @@ class Aggregator:
                     round_number,
                 )
                 return
+        
+        # Always maintain best_tensor_dict in memory for evaluation runs
         if file_path == self.best_state_path:
             self.best_tensor_dict = tensor_dict
+            
+        # If in evaluation mode, skip persisting to disk but maintain important state
+        if self.assigner.is_task_group_evaluation():
+            logger.info(
+                "Skipping model file write for round %s in evaluation mode.",
+                round_number,
+            )
+            if file_path == self.last_state_path:
+                self.last_tensor_dict = tensor_dict
+            return
+            
         if file_path == self.last_state_path:
             # Transaction to persist/delete all data needed to increment the round
             if self.persistent_db:
@@ -389,6 +402,7 @@ class Aggregator:
                     round_number,
                 )
             self.last_tensor_dict = tensor_dict
+            
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
         )
@@ -1112,11 +1126,12 @@ class Aggregator:
                 if "validate_agg" in tags:
                     # Compare the accuracy of the model, potentially save it.
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        logger.info(
-                            f"Round {round_number}: saved the best model with score {agg_results:f}"
-                        )
                         self.best_model_score = agg_results
-                        self._save_model(round_number, self.best_state_path)
+                        if not self.assigner.is_task_group_evaluation():
+                            logger.info(f"Round {round_number}: saved the best model with score {agg_results:f}")
+                            self._save_model(round_number, self.best_state_path)
+                        else:
+                            logger.info(f"Round {round_number}: updated best score to {agg_results:f} (model not saved in evaluation mode)")
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
