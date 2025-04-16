@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import zipfile
-from typing import Union, Optional
+from typing import Optional, Union
 
 from openfl.federated import Plan
 from openfl.federated.data.loader import DataLoader
@@ -41,21 +41,22 @@ def get_dataloader(
     # Model owner initialization path - used during fx plan initialize and fx model save
     if prefer_minimal:
         return _get_minimal_dataloader(plan, input_shape)
-    
+
     # Collaborator path - used when actually running the federation
     else:
         return _get_collaborator_dataloader(plan, collaborator_index)
 
 
-def _get_minimal_dataloader(plan: Plan, input_shape: Optional[Union[list, dict]] = None) -> DataLoader:
+def _get_minimal_dataloader(
+    plan: Plan, input_shape: Optional[Union[list, dict]] = None
+) -> DataLoader:
     """Get a minimal dataloader for model initialization on the model owner/aggregator.
-    
     This doesn't require actual data to be present and won't attempt to validate data paths.
-    
+
     Args:
         plan: The plan object
         input_shape: Optional input shape specification
-        
+
     Returns:
         DataLoader: A minimal dataloader suitable for model initialization
     """
@@ -70,7 +71,7 @@ def _get_minimal_dataloader(plan: Plan, input_shape: Optional[Union[list, dict]]
         for key, value in plan.config["data_loader"]["settings"].items():
             setattr(data_loader, key, value)
         return data_loader
-    
+
     # If we don't have an input shape, we need to fall back to the first entry in data.yaml
     # This is not ideal but maintains backward compatibility
     return _get_collaborator_dataloader(plan, 0)
@@ -78,13 +79,13 @@ def _get_minimal_dataloader(plan: Plan, input_shape: Optional[Union[list, dict]]
 
 def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> DataLoader:
     """Get a dataloader for an actual collaborator with real data.
-    
+
     This will check for data path existence and handle seed data if provided.
-    
+
     Args:
         plan: The plan object
         collaborator_index: Which collaborator's data to use
-        
+
     Returns:
         DataLoader: A dataloader configured for the specified collaborator
     """
@@ -104,12 +105,12 @@ def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> Dat
     # Handle seed data if provided in the plan
     if "seed_data" in plan.config["data_loader"]["settings"]:
         seed_data_zip = plan.config["data_loader"]["settings"]["seed_data"]
-        
+
         # Extract seed data if the zip file exists
         if os.path.isfile(seed_data_zip):
             # Create the data directory if it doesn't exist
             os.makedirs(data_path, exist_ok=True)
-            
+
             # Always extract seed data when it's provided
             # This ensures fresh data even if the directory already exists
             with zipfile.ZipFile(seed_data_zip, "r") as zip_ref:
