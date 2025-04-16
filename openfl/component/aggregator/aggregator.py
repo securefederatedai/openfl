@@ -1109,10 +1109,15 @@ class Aggregator:
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         self.best_model_score = agg_results
                         if not self.assigner.is_task_group_evaluation():
-                            logger.info(f"Round {round_number}: saved the best model with score {agg_results:f}")
+                            logger.info(
+                                f"Round {round_number}: saved the best model with score {agg_results:f}"
+                            )
                             self._save_model(round_number, self.best_state_path)
                         else:
-                            logger.info(f"Round {round_number}:(model not saved in evaluation mode)")
+                            logger.info(
+                                f"Round {round_number}: updated best score to {agg_results:f} "
+                                "(model not saved in evaluation mode)"
+                            )
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
