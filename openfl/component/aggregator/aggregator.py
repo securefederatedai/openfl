@@ -342,7 +342,7 @@ class Aggregator:
         Returns:
             None
         """
- 	# Skip saving model if running in evaluation mode
+        # Skip saving model if running in evaluation mode
         if self.assigner.is_task_group_evaluation():
             logger.info(
                 "Skipping model save for round %s in evaluation mode.",
