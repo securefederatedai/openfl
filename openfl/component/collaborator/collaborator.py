@@ -266,8 +266,9 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
+        logger.info("Sending task results to aggregator")
         metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
-
+        logger.info("Task results sent to aggregator")
         return metrics
 
     def get_data_for_tensorkey(self, tensor_key):
