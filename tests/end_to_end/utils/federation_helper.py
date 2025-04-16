@@ -1029,7 +1029,7 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
     else:
         try:
             last_value = None
-            with open(metric_file, 'r') as file:
+            with open(agg_metric_file, 'r') as file:
                 for line in file:
                     if constants.AGG_METRIC_MODEL_ACCURACY_KEY in line:
                         # Extract the value after the key
