@@ -121,13 +121,6 @@ def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> Dat
                 f"Seed data specified ({seed_data_zip}) but file not found"
             )
 
-    # Verify data path exists before trying to load data
-    if not os.path.isdir(data_path):
-        raise FileNotFoundError(
-            f"Data directory {data_path} for collaborator '{collaborator_name}' does not exist. "
-            f"Please create this directory or provide seed_data in the plan configuration."
-        )
-
     # Get the actual dataloader from the plan
     data_loader = plan.get_data_loader(collaborator_name)
     return data_loader
