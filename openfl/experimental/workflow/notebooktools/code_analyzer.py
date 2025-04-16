@@ -87,48 +87,27 @@ class CodeAnalyzer:
     def __comment_runtime_script(self) -> None:
         """Comment out lines related to FederatedRuntime instantiation and its arguments."""
         runtime_class = "FederatedRuntime"
-        instance_name, argument_names = self._find_federated_runtime_instantiation()
+        instantiation_info = self.__extract_class_instantiation_info(runtime_class)
+        instance_name = instantiation_info.get("instance_name", [])
+        argument_names = list(instantiation_info["kwargs"].values())[:-1]
+
         with open(self.script_path, "r") as file:
             lines = file.readlines()
         inside_block = False
         for idx, line in enumerate(lines):
             stripped_line = line.strip()
-            if "import" in line and runtime_class in line:
+            if ("import" in line and runtime_class in line) or ".run()" in line:
                 lines[idx] = f"# {line}"
             if stripped_line.startswith("__all__") or any(
                 x in line for x in instance_name + argument_names
             ):
                 inside_block = True
-            # Comment end of instantiation block
             if inside_block:
                 lines[idx] = f"# {line}"
                 if stripped_line.endswith((")", "}", "]")):
                     inside_block = False
         with open(self.script_path, "w") as file:
             file.writelines(lines)
-
-    def _find_federated_runtime_instantiation(self) -> List[str]:
-        """Identify and return instance and argument names of the FederatedRuntime instantiation."""
-        instance_name = []
-        arguments_name = []
-        with open(self.script_path, "r") as file:
-            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
-        tree = ast.parse(code)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-                if (
-                    isinstance(node.value.func, ast.Name)
-                    and node.value.func.id == "FederatedRuntime"
-                ):
-                    instance_name = [
-                        target.id for target in node.targets if isinstance(target, ast.Name)
-                    ]
-                    for keyword in node.value.keywords:
-                        value = keyword.value
-                        if isinstance(value, ast.Name):
-                            arguments_name.append(value.id)
-
-        return instance_name, arguments_name
 
     def __import_generated_script(self) -> None:
         """
@@ -195,26 +174,32 @@ class CodeAnalyzer:
                 return attr
         raise ValueError("No flow class found that inherits from FLSpec")
 
-    def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:
-        """Provided name of the class returns expected arguments and it's
-        values in form of dictionary.
+    def __extract_class_instantiation_info(self, class_name) -> Dict[str, Any]:
+        """Provided name of the class, returns the instance name and its initialization
+        arguments (positional and keyword) in the form of a dictionary
         Args:
             class_name (str): The name of the class.
 
         Returns:
-            Dict[str, Any]: A dictionary containing the expected arguments and their values.
+            Dict[str, Any]: A dictionary containing 'args', 'kwargs', and 'instance_name'.
         """
-        instantiation_args = {"args": {}, "kwargs": {}}
+        instantiation_args = {"args": {}, "kwargs": {}, "instance_name": []}
 
-        with open(self.script_path, "r") as s:
-            tree = ast.parse(s.read())
+        with open(self.script_path, "r") as file:
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                if node.func.id == class_name:
+                    # We found an instantiation of the class
+                    instantiation_args["args"] = self._extract_positional_args(node.args)
+                    instantiation_args["kwargs"] = self._extract_keyword_args(node.keywords)
 
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-                    if node.func.id == class_name:
-                        # We found an instantiation of the class
-                        instantiation_args["args"] = self._extract_positional_args(node.args)
-                        instantiation_args["kwargs"] = self._extract_keyword_args(node.keywords)
+                    for parent in ast.walk(tree):
+                        if isinstance(parent, ast.Assign) and parent.value == node:
+                            for target in parent.targets:
+                                if isinstance(target, ast.Name):
+                                    instantiation_args["instance_name"].append(target.id)
 
         return instantiation_args
 
@@ -319,7 +304,7 @@ class CodeAnalyzer:
         """
         flow_class_name = self.__get_class_name(parent_class)
         expected_arguments = self.__get_class_arguments(flow_class_name)
-        init_args = self.__extract_class_initializing_args(flow_class_name)
+        init_args = self.__extract_class_instantiation_info(flow_class_name)
 
         return {
             "flow_class_name": flow_class_name,
