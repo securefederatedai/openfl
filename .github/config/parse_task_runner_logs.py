@@ -46,9 +46,9 @@ def run_trufflehog(log_file):
     """
     try:
         # Run TruffleHog with JSON output and capture the output
-        cmd = f'trufflehog filesystem {log_file} --no-update --json'
+        cmd = ["trufflehog", "filesystem", log_file, "--no-update", "--json"]
         result = subprocess.run(
-            cmd, capture_output=True, shell=True, text=True, timeout=30, check=True
+            cmd, capture_output=True, text=True, timeout=30, check=True
         )
         # Extract the last JSON object from the output
         lines = result.stderr.strip().split("\n")
