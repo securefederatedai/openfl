@@ -73,11 +73,9 @@ def get_dataloader(
     collaborator_name = collaborator_names[collaborator_index]
     collaborator_data_path = plan.cols_data_paths[collaborator_name]
 
-    # Skip data path check when prefer_minimal=True and we're likely running on the aggregator
-    # This handles the plan initialization case where aggregator shouldn't check client data paths
-    is_aggregator_initialization = prefer_minimal and input_shape is not None
-    
-    if not is_aggregator_initialization:
+    # Skip data path check when prefer_minimal=True (which happens during plan initialization)
+    # Collaborators will always use prefer_minimal=False and thus will check their data paths
+    if not prefer_minimal:
         # use seed_data provided by data_loader config if available
         if "seed_data" in plan.config["data_loader"]["settings"] and not os.path.isdir(
             collaborator_data_path
