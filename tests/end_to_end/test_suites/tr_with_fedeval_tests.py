@@ -53,7 +53,7 @@ def test_eval_federation_via_native(request, fx_federation_tr):
         num_rounds=1,
     ), "Evaluation federation completion failed"
 
-    metric_file = os.path.join(new_fed_obj.aggregator.worspace_path, "logs", "aggregator_metrics.txt")
+    metric_file = os.path.join(new_fed_obj.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
     best_model_score_eval = fed_helper.get_best_agg_score(agg_metric_file=metric_file)
     log.info(f"Model score post {request.config.num_rounds} rounds: {best_model_score}")
 
@@ -103,7 +103,7 @@ def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws)
         num_rounds=1,
     ), "Evaluation federation completion failed"
 
-    metric_file = os.path.join(new_fed_obj.aggregator.worspace_path, "logs", "aggregator_metrics.txt")
+    metric_file = os.path.join(new_fed_obj.aggregator.workspace_path, "logs", "aggregator_metrics.txt")
     best_model_score_eval = fed_helper.get_best_agg_score(agg_metric_file=metric_file)
     log.info(f"Model score post {request.config.num_rounds} rounds: {best_model_score}")
 
