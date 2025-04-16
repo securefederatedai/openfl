@@ -1028,19 +1028,20 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
         return db_helper.get_key_value_from_db("best_score", database_file)
     else:
         try:
-            last_value = None
             with open(agg_metric_file, 'r') as file:
                 for line in file:
                     if constants.AGG_METRIC_MODEL_ACCURACY_KEY in line:
                         # Extract the value after the key
                         parts = line.strip().split()
                         if len(parts) > 1:
-                            last_value = parts[-1]  # Assuming the value is the last part of the line
-                            break
+                            value = parts[-1]
+                            # Consider only the numeric part of the value
+                            value = re.sub(r'[^\d.-]', '', value)
+                            return float(value)
+            raise ValueError(f"Key '{constants.AGG_METRIC_MODEL_ACCURACY_KEY}' not found in the file {agg_metric_file}")
         except Exception as e:
             log.error(f"Failed to read the metrics file: {e}")
             raise e
-        return last_value
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
