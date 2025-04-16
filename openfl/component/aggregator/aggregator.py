@@ -342,7 +342,15 @@ class Aggregator:
         Returns:
             None
         """
-        # Extract the model from TensorDB and set it to the new model
+ 	# Skip saving model if running in evaluation mode
+        if self.assigner.is_task_group_evaluation():
+            logger.info(
+                "Skipping model save for round %s in evaluation mode.",
+                round_number,
+            )
+            return
+        
+	# Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
             self.model, compression_pipeline=self.compression_pipeline
         )
