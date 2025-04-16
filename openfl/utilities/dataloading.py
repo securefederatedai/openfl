@@ -73,14 +73,19 @@ def get_dataloader(
     collaborator_name = collaborator_names[collaborator_index]
     collaborator_data_path = plan.cols_data_paths[collaborator_name]
 
-    # use seed_data provided by data_loader config if available
-    if "seed_data" in plan.config["data_loader"]["settings"] and not os.path.isdir(
-        collaborator_data_path
-    ):
-        os.makedirs(collaborator_data_path)
-        sample_data_zip_file = plan.config["data_loader"]["settings"]["seed_data"]
-        with zipfile.ZipFile(sample_data_zip_file, "r") as zip_ref:
-            zip_ref.extractall(collaborator_data_path)
+    # Skip data path check when prefer_minimal=True and we're likely running on the aggregator
+    # This handles the plan initialization case where aggregator shouldn't check client data paths
+    is_aggregator_initialization = prefer_minimal and input_shape is not None
+    
+    if not is_aggregator_initialization:
+        # use seed_data provided by data_loader config if available
+        if "seed_data" in plan.config["data_loader"]["settings"] and not os.path.isdir(
+            collaborator_data_path
+        ):
+            os.makedirs(collaborator_data_path)
+            sample_data_zip_file = plan.config["data_loader"]["settings"]["seed_data"]
+            with zipfile.ZipFile(sample_data_zip_file, "r") as zip_ref:
+                zip_ref.extractall(collaborator_data_path)
 
     data_loader = plan.get_data_loader(collaborator_name)
 
