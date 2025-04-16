@@ -350,7 +350,7 @@ class Aggregator:
             )
             return
         
-	# Extract the model from TensorDB and set it to the new model
+        # Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
             self.model, compression_pipeline=self.compression_pipeline
         )
