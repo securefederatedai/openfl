@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import zipfile
-from typing import Union
+from typing import Union, Optional
 
 from openfl.federated import Plan
 from openfl.federated.data.loader import DataLoader
@@ -17,16 +17,13 @@ def get_dataloader(
 ) -> DataLoader:
     """Get dataloader instance from plan
 
-    NOTE: if `prefer_minimal` is False, cwd must be the workspace directory
-    because we need to construct dataloader from actual collaborator data path
-    with actual data present.
-
     Args:
         plan (Plan):
             plan object linked with the dataloader
         prefer_minimal (bool ?):
             prefer to use MockDataLoader which can be used to more easily
             instantiate task_runner without any initial data.
+            This is typically used when running on the model owner/aggregator.
             Default to `False`.
         input_shape (list | dict ?):
             input_shape denoted by list notation `[a,b,c, ...]` or in case
@@ -41,50 +38,96 @@ def get_dataloader(
     Returns:
         data_loader (DataLoader): DataLoader instance
     """
-
-    # if specified, try to use minimal dataloader
+    # Model owner initialization path - used during fx plan initialize and fx model save
     if prefer_minimal:
-        # if input_shape not given, try to ascertain input_shape from plan
-        if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
-            input_shape = plan.config["data_loader"]["settings"]["input_shape"]
+        return _get_minimal_dataloader(plan, input_shape)
+    
+    # Collaborator path - used when actually running the federation
+    else:
+        return _get_collaborator_dataloader(plan, collaborator_index)
 
-        # input_shape is resolved; we can use the minimal dataloader intended
-        # for util contexts which does not need a full dataloader with data
-        if input_shape:
-            data_loader: DataLoader = MockDataLoader(input_shape)
-            # generically inherit all attributes from data_loader.settings
-            for key, value in plan.config["data_loader"]["settings"].items():
-                setattr(data_loader, key, value)
-            return data_loader
 
-    # Fallback; try to get a dataloader by constructing it from the collaborator
-    # data directory path present in the the current workspace
+def _get_minimal_dataloader(plan: Plan, input_shape: Optional[Union[list, dict]] = None) -> DataLoader:
+    """Get a minimal dataloader for model initialization on the model owner/aggregator.
+    
+    This doesn't require actual data to be present and won't attempt to validate data paths.
+    
+    Args:
+        plan: The plan object
+        input_shape: Optional input shape specification
+        
+    Returns:
+        DataLoader: A minimal dataloader suitable for model initialization
+    """
+    # Try to get input_shape from plan if not provided
+    if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
+        input_shape = plan.config["data_loader"]["settings"]["input_shape"]
 
+    # If we have an input shape, we can create a mock dataloader
+    if input_shape:
+        data_loader: DataLoader = MockDataLoader(input_shape)
+        # Inherit all attributes from data_loader.settings
+        for key, value in plan.config["data_loader"]["settings"].items():
+            setattr(data_loader, key, value)
+        return data_loader
+    
+    # If we don't have an input shape, we need to fall back to the first entry in data.yaml
+    # This is not ideal but maintains backward compatibility
+    return _get_collaborator_dataloader(plan, 0)
+
+
+def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> DataLoader:
+    """Get a dataloader for an actual collaborator with real data.
+    
+    This will check for data path existence and handle seed data if provided.
+    
+    Args:
+        plan: The plan object
+        collaborator_index: Which collaborator's data to use
+        
+    Returns:
+        DataLoader: A dataloader configured for the specified collaborator
+    """
     collaborator_names = list(plan.cols_data_paths)
-    collatorators_count = len(collaborator_names)
+    collaborator_count = len(collaborator_names)
 
-    if collaborator_index >= collatorators_count:
+    if collaborator_index >= collaborator_count:
         raise Exception(
-            f"Unable to construct full dataloader from collab_index={collaborator_index} "
-            f"when the plan has {collatorators_count} as total collaborator count. "
+            f"Unable to construct dataloader for index={collaborator_index} "
+            f"when the plan has {collaborator_count} total collaborators. "
             f"Please check plan/data.yaml file for current collaborator entries."
         )
 
     collaborator_name = collaborator_names[collaborator_index]
-    collaborator_data_path = plan.cols_data_paths[collaborator_name]
+    data_path = plan.cols_data_paths[collaborator_name]
 
-    # Skip data path check when prefer_minimal=True (which happens during plan initialization)
-    # Collaborators will always use prefer_minimal=False and thus will check their data paths
-    if not prefer_minimal:
-        # use seed_data provided by data_loader config if available
-        if "seed_data" in plan.config["data_loader"]["settings"] and not os.path.isdir(
-            collaborator_data_path
-        ):
-            os.makedirs(collaborator_data_path)
-            sample_data_zip_file = plan.config["data_loader"]["settings"]["seed_data"]
-            with zipfile.ZipFile(sample_data_zip_file, "r") as zip_ref:
-                zip_ref.extractall(collaborator_data_path)
+    # Handle seed data if provided in the plan
+    if "seed_data" in plan.config["data_loader"]["settings"]:
+        seed_data_zip = plan.config["data_loader"]["settings"]["seed_data"]
+        
+        # Extract seed data if the zip file exists
+        if os.path.isfile(seed_data_zip):
+            # Create the data directory if it doesn't exist
+            os.makedirs(data_path, exist_ok=True)
+            
+            # Always extract seed data when it's provided
+            # This ensures fresh data even if the directory already exists
+            with zipfile.ZipFile(seed_data_zip, "r") as zip_ref:
+                zip_ref.extractall(data_path)
+        else:
+            # Warn if seed data was specified but file doesn't exist
+            import logging
+            logging.getLogger(__name__).warning(
+                f"Seed data specified ({seed_data_zip}) but file not found"
+            )
 
+    # Verify data path exists before trying to load data
+    if not os.path.isdir(data_path):
+        raise FileNotFoundError(
+            f"Data directory {data_path} for collaborator '{collaborator_name}' does not exist. "
+            f"Please create this directory or provide seed_data in the plan configuration."
+        )
+
+    # Get the actual dataloader from the plan
     data_loader = plan.get_data_loader(collaborator_name)
-
     return data_loader
