@@ -1011,15 +1011,36 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file: str) -> float:
+def get_best_agg_score(database_file=None, agg_metric_file=None):
     """
-    Get the best aggregated score from the database file
+    Get the best aggregated score from the database file or aggregator metrics file
     Args:
-        database_file (str): Database file
+        database_file (str): Database file. Optional.
+        agg_metric_file (str): Aggregator metrics file. Optional.
     Returns:
         float: Best aggregated score
     """
-    return db_helper.get_key_value_from_db("best_score", database_file)
+    # If both the params are not present, raise exception
+    if not database_file and not agg_metric_file:
+        raise ValueError("Either database_file or agg_metric_file should be provided")
+
+    if database_file:
+        return db_helper.get_key_value_from_db("best_score", database_file)
+    else:
+        try:
+            last_value = None
+            with open(metric_file, 'r') as file:
+                for line in file:
+                    if constants.AGG_METRIC_MODEL_ACCURACY_KEY in line:
+                        # Extract the value after the key
+                        parts = line.strip().split()
+                        if len(parts) > 1:
+                            last_value = parts[-1]  # Assuming the value is the last part of the line
+                            break
+        except Exception as e:
+            log.error(f"Failed to read the metrics file: {e}")
+            raise e
+        return last_value
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
