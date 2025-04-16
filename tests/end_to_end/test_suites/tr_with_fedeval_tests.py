@@ -36,7 +36,7 @@ def test_eval_federation_via_native(request, fx_federation_tr):
 
     # Set the best model path in request. It is used during plan initialization for evaluation step
     request.config.best_model_path = os.path.join(fx_federation_tr.aggregator.workspace_path, "save", "best.pbuf")
-    
+
     best_model_score = fed_helper.get_best_agg_score(database_file=fx_federation_tr.aggregator.tensor_db_file)
     log.info(f"Model score post {request.config.num_rounds} rounds: {best_model_score}")
 
@@ -59,7 +59,7 @@ def test_eval_federation_via_native(request, fx_federation_tr):
 
     # verify that the model score is similar to the previous model score max of 0.001% difference
     assert abs(best_model_score - best_model_score_eval) <= TOLERANCE, "Model score is not similar to the previous score"
-    
+
     # If we reach here, the evaluation federation ran successfully
     log.info("Evaluation federation completed successfully")
 
@@ -95,7 +95,7 @@ def test_eval_federation_via_dockerized_workspace(request, fx_federation_tr_dws)
 
     # Start the evaluation federation
     assert fed_helper.run_federation_for_dws(new_fed_obj, use_tls=request.config.use_tls)
-    
+
     # Verify the completion of the evaluation federation run
     assert fed_helper.verify_federation_run_completion(
         new_fed_obj,

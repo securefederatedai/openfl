@@ -20,6 +20,7 @@ import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 log = logging.getLogger(__name__)
 home_dir = Path().home()
@@ -1027,21 +1028,12 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
     if database_file:
         return db_helper.get_key_value_from_db("best_score", database_file)
     else:
-        try:
-            with open(agg_metric_file, 'r') as file:
-                for line in file:
-                    if constants.AGG_METRIC_MODEL_ACCURACY_KEY in line:
-                        # Extract the value after the key
-                        parts = line.strip().split()
-                        if len(parts) > 1:
-                            value = parts[-1]
-                            # Consider only the numeric part of the value
-                            value = re.sub(r'[^\d.-]', '', value)
-                            return float(value)
-            raise ValueError(f"Key '{constants.AGG_METRIC_MODEL_ACCURACY_KEY}' not found in the file {agg_metric_file}")
-        except Exception as e:
-            log.error(f"Failed to read the metrics file: {e}")
-            raise e
+        json_file = convert_to_json(agg_metric_file)
+        best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
+        if best_score:
+            return float(best_score)
+        else:
+            raise ValueError("Best score not found in the aggregator metrics file")
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
