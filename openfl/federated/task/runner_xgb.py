@@ -97,9 +97,9 @@ class XGBoostTaskRunner(TaskRunner):
         """
         data = self.data_loader.get_valid_dmatrix()
 
-        # during agg validation, self.bst will still be None. during local validation,
-        # it will have a value - no need to rebuild
-        if self.bst is None:
+        # during agg validation, rebuild self.bst from global model. during local validation,
+        # continue with trained self.bst, no need to rebuild
+        if kwargs["apply"] != "local":
             self.rebuild_model(input_tensor_dict)
 
         # if self.bst is still None after rebuilding, then there was no initial global model, so
