@@ -1116,7 +1116,7 @@ class Aggregator:
                             self._save_model(round_number, self.best_state_path)
                         else:
                             logger.info(
-                                f"Round {round_number}: updated best score to {agg_results:f} "
+                                f"Round {round_number}: best score observed {agg_results:f} "
                                 "(model not saved in evaluation mode)"
                             )
             if "trained" in tags:
