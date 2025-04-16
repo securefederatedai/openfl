@@ -11,11 +11,8 @@ from tests.end_to_end.utils.tr_common_fixtures import (
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 from tests.end_to_end.utils.tr_workspace import create_tr_workspace, create_tr_dws_workspace
-from tests.end_to_end.utils import exceptions as ex
 
 log = logging.getLogger(__name__)
-
-TOLERANCE = 0.00001
 
 @pytest.mark.task_runner_basic
 def test_eval_federation_via_native(request, fx_federation_tr):
