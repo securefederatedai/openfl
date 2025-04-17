@@ -323,6 +323,7 @@ jobs:
 
   test_straggler_check:
     name: With TLS (torch/mnist_straggler_check, 3.10)
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
@@ -362,6 +363,7 @@ jobs:
 
   test_eden_compression:
     name: With TLS (torch/mnist_eden_compression, 3.10)
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     if: |
