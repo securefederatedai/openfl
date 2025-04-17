@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 SETTINGS = "settings"
 TEMPLATE = "template"
-DEFAULTS = "defaults"
 AUTO = "auto"
 
 
@@ -246,12 +245,11 @@ class Plan:
                 int(self.hash[:8], 16) % (60999 - 49152) + 49152
             )
 
-    def get_aggregator(self, director_config=None) -> "Aggregator":
+    def get_aggregator(self, director_config) -> "Aggregator":
         """Get federation aggregator.
 
         Args:
             director_config: Path to director config file.
-                Defaults to None
 
         Returns:
             self.aggregator_ (Aggregator): The federation aggregator.
@@ -294,12 +292,12 @@ class Plan:
     def get_collaborator(
         self,
         collaborator_name,
+        envoy_config,
         root_certificate=None,
         private_key=None,
         certificate=None,
         client=None,
         tls=True,
-        envoy_config=None,
     ) -> "Collaborator":
         """Get collaborator.
 
@@ -309,6 +307,7 @@ class Plan:
 
         Args:
             collaborator_name (str): Name of the collaborator.
+            envoy_config (Path): Path to envoy_config.yaml.
             root_certificate (str, optional): Root certificate for the
                 collaborator. Defaults to None.
             private_key (str, optional): Private key for the collaborator.
@@ -318,8 +317,6 @@ class Plan:
             client (Client, optional): Client for the collaborator. Defaults
                 to None.
             tls (bool): Whether to use TLS for the connection.
-            envoy_config (Path): Path to envoy_config.yaml. Defaults
-                to None.
 
         Returns:
             self.collaborator_ (Collaborator): The collaborator instance.
@@ -403,11 +400,11 @@ class Plan:
 
     def get_server(
         self,
+        director_config,
         root_certificate=None,
         private_key=None,
         certificate=None,
         tls=True,
-        director_config=None,
         **kwargs,
     ) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance.
@@ -415,13 +412,12 @@ class Plan:
         Args:
             root_certificate (str, optional): Root certificate for the server.
                 Defaults to None.
+            director_config (Path): Path to director_config.yaml.
             private_key (str, optional): Private key for the server. Defaults
                 to None.
             certificate (str, optional): Certificate for the server. Defaults
                 to None.
             tls (bool): Whether to use TLS for the connection.
-            director_config (Path): Path to director_config.yaml. Defaults
-                to None.
             **kwargs: Additional keyword arguments.
 
         Returns:
