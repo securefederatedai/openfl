@@ -1216,7 +1216,7 @@ class Aggregator:
             self.collaborators_done.append(collaborator_name)
             logger.info(
                 f"Round {self.round_number}: Collaborators that have completed all tasks: "
-                f"{self.collaborators_done}"
+                f"{sorted(self.collaborators_done)}"
             )
 
     def stop(self, failed_collaborator: str = None) -> None:
