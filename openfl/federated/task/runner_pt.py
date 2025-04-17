@@ -420,10 +420,14 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = torch.load(filepath)  # nosec B614
-        self.load_state_dict(pickle_dict[model_state_dict_key])
-        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        pickle_dict = torch.load(filepath, weights_only=True)  # nosec B614
 
+        if model_state_dict_key in pickle_dict and optimizer_state_dict_key in pickle_dict:
+            self.load_state_dict(pickle_dict[model_state_dict_key])
+            self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        else:
+            self.load_state_dict(pickle_dict)
+    
     def save_native(
         self,
         filepath,

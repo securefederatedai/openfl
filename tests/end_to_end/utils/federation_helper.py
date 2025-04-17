@@ -20,6 +20,7 @@ import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 log = logging.getLogger(__name__)
 home_dir = Path().home()
@@ -1011,15 +1012,28 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file: str) -> float:
+def get_best_agg_score(database_file=None, agg_metric_file=None):
     """
-    Get the best aggregated score from the database file
+    Get the best aggregated score from the database file or aggregator metrics file
     Args:
-        database_file (str): Database file
+        database_file (str): Database file. Optional.
+        agg_metric_file (str): Aggregator metrics file. Optional.
     Returns:
         float: Best aggregated score
     """
-    return db_helper.get_key_value_from_db("best_score", database_file)
+    # If both the params are not present, raise exception
+    if not database_file and not agg_metric_file:
+        raise ValueError("Either database_file or agg_metric_file should be provided")
+
+    if database_file:
+        return db_helper.get_key_value_from_db("best_score", database_file)
+    else:
+        json_file = convert_to_json(agg_metric_file)
+        best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
+        if best_score:
+            return float(best_score)
+        else:
+            raise ValueError("Best score not found in the aggregator metrics file")
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):

@@ -57,3 +57,4 @@ COL_END_MSG = "Received shutdown signal"
 
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 EXCEPTION = "Exception"
+AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
