@@ -349,7 +349,10 @@ def _verify_completion_for_participant(
             reverse_index = num_collaborators + 5
 
         # Get the required lines from the log file
-        content = lines[-reverse_index:]
+        if len(lines) >= reverse_index:
+            content = lines[-reverse_index:]
+        else:
+            content = lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
