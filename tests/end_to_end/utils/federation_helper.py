@@ -340,9 +340,16 @@ def _verify_completion_for_participant(
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
 
-        # Get the no of lines (based on the number of collaborators) to verify the completion message
-        reverse_index = 10 if (num_collaborators < 5) else (num_collaborators + 5)
-        content = list(filter(str.rstrip, lines))[-reverse_index:] if len(lines) >= reverse_index else lines
+        # Get the desired no of lines from the log file
+        if num_collaborators < 5:
+            reverse_index = 10
+        else:
+            # For more than 5 collaborators, set the index to 10 + number of collaborators
+            # This is to ensure that we get the completion message for all the collaborators
+            reverse_index = num_collaborators + 5
+
+        # Get the required lines from the log file
+        content = lines[-reverse_index:]
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
