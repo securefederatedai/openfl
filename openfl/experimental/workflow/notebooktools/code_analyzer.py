@@ -43,7 +43,7 @@ class CodeAnalyzer:
                 f"{self.script_name}.py",
             )
         ).resolve()
-        self.__comment_runtime_script()
+        self.__comment_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -84,30 +84,105 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __comment_runtime_script(self) -> None:
-        """Comment out lines related to FederatedRuntime instantiation and its arguments."""
+    def __comment_script(self) -> None:
+        """Modifies the given python script by commenting out and updating relevant code"""
         runtime_class = "FederatedRuntime"
         instantiation_info = self.__extract_class_instantiation_info(runtime_class)
         instance_name = instantiation_info.get("instance_name", [])
-        argument_names = list(instantiation_info["kwargs"].values())[:-1]
 
         with open(self.script_path, "r") as file:
-            lines = file.readlines()
-        inside_block = False
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+
+        script_with_class_commented = self.__comment_class_instantiation(code, runtime_class)
+        script_with_all_updated = self.__update_all_declaration(
+            script_with_class_commented, instance_name
+        )
+        updated_script = self.__comment_run_instance(script_with_all_updated, instance_name)
+
+        with open(self.script_path, "w") as file:
+            file.write(updated_script)
+
+    def __comment_class_instantiation(self, script_code: str, class_name: str) -> str:
+        """
+        Comments out instantiation of a specific class in the provided script
+        Args:
+            script_code (str): Script content to be analyzed
+            class_name (str): The name of the class
+
+        Returns:
+            str: The modified script with the specified class instantiations commented out
+        """
+        tree = ast.parse(script_code)
+        lines = script_code.splitlines()
+        lines_to_comment = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                call = node.value
+                if isinstance(call.func, ast.Name) and call.func.id == class_name:
+                    start = node.lineno - 1
+                    end = node.end_lineno - 1
+                    for i in range(start, end + 1):
+                        lines_to_comment.add(i)
+        modified_lines = [
+            f"# {line}" if idx in lines_to_comment else line for idx, line in enumerate(lines)
+        ]
+        updated_script = "\n".join(modified_lines)
+
+        return updated_script
+
+    def __comment_run_instance(self, script_code: str, instance_name: List[str]) -> str:
+        """
+        Comments out lines containing run_statement or any specified instance name
+        Args:
+            script_code(str): Script content to be analyzed
+            instance_name (List[str]): The name of the instance
+
+        Returns:
+            str: The modified script with matching lines commented out
+        """
+        lines = script_code.splitlines()
         for idx, line in enumerate(lines):
             stripped_line = line.strip()
-            if ("import" in line and runtime_class in line) or ".run()" in line:
+            if stripped_line.startswith("#"):
+                continue
+            if ".run()" in line or any(name in line for name in instance_name):
                 lines[idx] = f"# {line}"
-            if stripped_line.startswith("__all__") or any(
-                x in line for x in instance_name + argument_names
-            ):
-                inside_block = True
-            if inside_block:
-                lines[idx] = f"# {line}"
-                if stripped_line.endswith((")", "}", "]")):
-                    inside_block = False
-        with open(self.script_path, "w") as file:
-            file.writelines(lines)
+        updated_script = "\n".join(lines)
+
+        return updated_script
+
+    def __update_all_declaration(self, script_code: str, instance_name: List[str]) -> str:
+        """
+        Updates the __all__ declaration by removing specified instance from the list
+        Args:
+            script_code(str): Script content to be analyzed
+            instance_name (List[str]): The name of the instance
+
+        Returns:
+            str: The modified script with the updated __all__ declaration
+        """
+        tree = ast.parse(script_code)
+        lines = script_code.splitlines()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "__all__":
+                        if isinstance(node.value, ast.List):
+                            current_elements = [
+                                elt.s for elt in node.value.elts if isinstance(elt, ast.Constant)
+                            ]
+                            updated_elements = [
+                                elt for elt in current_elements if elt not in instance_name
+                            ]
+                            updated_line = f"__all__ = {updated_elements}"
+                            start = node.lineno - 1
+                            end = node.end_lineno - 1
+                            lines[start] = updated_line
+                            # Remove extra lines
+                            del lines[start + 1 : end + 1]
+        modified_script = "\n".join(lines)
+
+        return modified_script
 
     def __import_generated_script(self) -> None:
         """
@@ -174,14 +249,15 @@ class CodeAnalyzer:
                 return attr
         raise ValueError("No flow class found that inherits from FLSpec")
 
-    def __extract_class_instantiation_info(self, class_name) -> Dict[str, Any]:
-        """Provided name of the class, returns the instance name and its initialization
-        arguments (positional and keyword) in the form of a dictionary
+    def __extract_class_instantiation_info(self, class_name: str) -> Dict[str, Any]:
+        """
+        Extracts the instance name and its initialization arguments (both positional and keyword)
+        for the given class
         Args:
-            class_name (str): The name of the class.
+            class_name (str): The name of the class
 
         Returns:
-            Dict[str, Any]: A dictionary containing 'args', 'kwargs', and 'instance_name'.
+            Dict[str, Any]: A dictionary containing 'args', 'kwargs', and 'instance_name'
         """
         instantiation_args = {"args": {}, "kwargs": {}, "instance_name": []}
 
@@ -189,17 +265,14 @@ class CodeAnalyzer:
             code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
         tree = ast.parse(code)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-                if node.func.id == class_name:
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                if isinstance(node.value.func, ast.Name) and node.value.func.id == class_name:
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            instantiation_args["instance_name"].append(target.id)
                     # We found an instantiation of the class
-                    instantiation_args["args"] = self._extract_positional_args(node.args)
-                    instantiation_args["kwargs"] = self._extract_keyword_args(node.keywords)
-
-                    for parent in ast.walk(tree):
-                        if isinstance(parent, ast.Assign) and parent.value == node:
-                            for target in parent.targets:
-                                if isinstance(target, ast.Name):
-                                    instantiation_args["instance_name"].append(target.id)
+                    instantiation_args["args"] = self._extract_positional_args(node.value.args)
+                    instantiation_args["kwargs"] = self._extract_keyword_args(node.value.keywords)
 
         return instantiation_args
 
