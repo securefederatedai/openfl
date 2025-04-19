@@ -1,5 +1,7 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+import logging
 import os
 import zipfile
 from typing import Optional, Union
@@ -106,9 +108,7 @@ def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> Dat
     if "seed_data" in plan.config["data_loader"]["settings"]:
         seed_data_zip = plan.config["data_loader"]["settings"]["seed_data"]
 
-        # Extract seed data if the zip file exists
         if os.path.isfile(seed_data_zip):
-            # Create the data directory if it doesn't exist
             os.makedirs(data_path, exist_ok=True)
 
             # Always extract seed data when it's provided
@@ -116,9 +116,6 @@ def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> Dat
             with zipfile.ZipFile(seed_data_zip, "r") as zip_ref:
                 zip_ref.extractall(data_path)
         else:
-            # Warn if seed data was specified but file doesn't exist
-            import logging
-
             logging.getLogger(__name__).warning(
                 f"Seed data specified ({seed_data_zip}) but file not found"
             )
