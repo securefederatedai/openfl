@@ -419,9 +419,13 @@ class GaNDLFTaskRunner(TaskRunner):
                 dict in picked file. Defaults to 'optimizer_state_dict'.
             **kwargs: Additional keyword arguments.
         """
-        pickle_dict = pt.load(filepath)  # nosec B614
-        self.model.load_state_dict(pickle_dict[model_state_dict_key])
-        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        pickle_dict = pt.load(filepath, weights_only=True)  # nosec B614
+
+        if model_state_dict_key in pickle_dict and optimizer_state_dict_key in pickle_dict:
+            self.load_state_dict(pickle_dict[model_state_dict_key])
+            self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        else:
+            self.load_state_dict(pickle_dict)
 
     def save_native(
         self,
