@@ -615,7 +615,6 @@ class LocalRuntime(Runtime):
             f, parent_func = ctx.execute_task_args[:2]
             if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
                 not_at_transition_point = False
-            f_name = f.__name__
 
     def execute_collab_steps(self, ctx: Any, f_name: str):
         """Execute collaborator steps until at transition point.
