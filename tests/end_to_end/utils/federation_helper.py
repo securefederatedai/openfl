@@ -295,6 +295,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             _verify_completion_for_participant,
             participant,
             num_rounds,
+            num_collaborators=len(fed_obj.collaborators),
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -309,13 +310,14 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
 
 
 def _verify_completion_for_participant(
-    participant, num_rounds, time_for_each_round=100
+    participant, num_rounds, num_collaborators, time_for_each_round=100
 ):
     """
     Verify the completion of the process for the participant
     Args:
         participant (object): Participant object
         num_rounds (int): Number of rounds
+        num_collaborators (int): Number of collaborators
         time_for_each_round (int): Time for each round
     Returns:
         bool: True if successful, else False
@@ -338,8 +340,19 @@ def _verify_completion_for_participant(
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
 
-        # Below change is done to handle warnings coming in end of runs
-        content = list(filter(str.rstrip, lines))[-10:] if len(lines) >= 10 else lines
+        # Get the desired no of lines from the log file
+        if num_collaborators < 5:
+            reverse_index = 10
+        else:
+            # For more than 5 collaborators, set the index to 10 + number of collaborators
+            # This is to ensure that we get the completion message for all the collaborators
+            reverse_index = num_collaborators + 5
+
+        # Get the required lines from the log file
+        if len(lines) >= reverse_index:
+            content = lines[-reverse_index:]
+        else:
+            content = lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")

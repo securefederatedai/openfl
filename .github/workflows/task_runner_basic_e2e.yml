@@ -323,13 +323,10 @@ jobs:
 
   test_straggler_check:
     name: With TLS (torch/mnist_straggler_check, 3.10)
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false) ||
-      (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_straggler_check')
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_straggler_check'
 
     env:
       MODEL_NAME: "torch/mnist_straggler_check"
@@ -362,12 +359,10 @@ jobs:
 
   test_eden_compression:
     name: With TLS (torch/mnist_eden_compression, 3.10)
+    needs: input_selection
     runs-on: ubuntu-22.04
     timeout-minutes: 30
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')) || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_eden_compression')
+    if: contains(github.event.pull_request.labels.*.name, 'eden_compression') || (needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_eden_compression')
 
     env:
       MODEL_NAME: "torch/mnist_eden_compression"
