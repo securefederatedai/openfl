@@ -28,7 +28,7 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 The roadmap for the upcoming releases is provided for informational purposes only. It is intended to offer visibility into our current planning and priorities. However, please note that the features and timelines outlined here are not commitments and are subject to change. We are continuously evaluating and adjusting our plans to best meet the needs of our users and the evolving technological landscape.
 
-### 1.9 (May '2025)
+### 1.9 (May '25)
 In the upcoming 1.9 release, our focus shifts to improving the resilience and scalability of the core OpenFL framework. Key initiatives include:
 - Improved gRPC connection resilience
 - Preparations for scaling to 10-s/100-s of collaborators
@@ -38,6 +38,9 @@ In the upcoming 1.9 release, our focus shifts to improving the resilience and sc
 - Support for data loading from object storage (S3)
   * This also includes enhanced dataset abstractions, with emphasis on integrity, composition and reuse
 - Support for Federated Analytics via TaskRunner API
+- Additional TaskRunner API utilities for validating the Aggregator/Collaborator infrastructure before executing the FL plan:
+  * A new `fx collaborator ping` command to test collaborator/aggregator connectivity without starting any FL tasks or accessing private data
+  * A [`no-op`](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/no-op) workspace template that can be configured and distributed just for the purposes of establishing and testing connectivity and PKI
 
 As a stretch goal, we are beginning preparations for the production-readiness of Workflow API (FederatedRuntime) via:
   * Improved controls of the types of data allowed across the network
