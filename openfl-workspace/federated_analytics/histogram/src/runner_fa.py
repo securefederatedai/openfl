@@ -79,7 +79,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
 
         return model
 
-    def analysis(self, col_name, round_num, **kwargs):
+    def analytics(self, col_name, round_num, **kwargs):
         """
         Return analytics result as tensors.
 
@@ -91,8 +91,8 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Returns:
             dict: A dictionary of analysis results.
         """
-        results = self.analysis_task(**kwargs)
-        tags = ("analysis",)
+        results = self.analytics_task(**kwargs)
+        tags = ("analytics",)
         origin = col_name
         output_metric_dict = {
             TensorKey(metric_name, origin, round_num, False, tags): metric_value
@@ -210,11 +210,11 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
             output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
-        self.required_tensorkeys_for_function["analysis"] = [
+        self.required_tensorkeys_for_function["analytics"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict
         ]
-        self.required_tensorkeys_for_function["analysis"] += [
+        self.required_tensorkeys_for_function["analytics"] += [
             TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict
         ]

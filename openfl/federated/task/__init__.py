@@ -10,7 +10,6 @@ from openfl.federated.task.runner import TaskRunner  # NOQA
 
 if util.find_spec("keras") is not None:
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA
-    from openfl.federated.task.runner_fa import FederatedAnalyticsTaskRunner  # NOQA
 if util.find_spec("torch") is not None:
     from openfl.federated.task.runner_pt import PyTorchTaskRunner  # NOQA
 if util.find_spec("xgboost") is not None:

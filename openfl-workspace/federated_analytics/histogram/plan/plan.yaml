@@ -8,7 +8,7 @@ aggregator :
     init_state_path : save/init.pbuf
     best_state_path : save/best.pbuf
     last_state_path : save/result.json
-    rounds_to_train : 1
+    rounds_to_train : 1 # Number of training rounds (set to 1 for Federated Analytics).
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
@@ -36,16 +36,16 @@ assigner :
   template : openfl.component.RandomGroupedAssigner
   settings :
     task_groups  :
-      - name       : analysis
+      - name       : analytics
         percentage : 1.0
         tasks      :
-          - analysis
+          - analytics
 
 tasks :
-  analysis:
-    function : analysis
+  analytics:
+    function : analytics
     aggregation_type: 
-      template: src.histogram.Histogram
+      template: src.aggregatehistogram.AggregateHistogram
       
     kwargs   :
       columns: ['sepal length (cm)', 'sepal width (cm)']

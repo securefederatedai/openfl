@@ -4,7 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 
-from openfl.federated import FederatedAnalyticsTaskRunner
+from src.runner_fa import FederatedAnalyticsTaskRunner
 import numpy as np
 
 class IrisHistogram(FederatedAnalyticsTaskRunner):
@@ -14,8 +14,8 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
     -------
     __init__(**kwargs)
         Initializes the IrisHistogram instance with the provided keyword arguments.
-    analysis(columns, **kwargs)
-        Performs analysis on the specified columns and returns a dictionary of histograms.
+    analytics(columns, **kwargs)
+        Performs analytics on the specified columns and returns a dictionary of histograms.
     compute_hist(df, col_name)
         Computes the histogram for a specified column in the dataframe.
     """
@@ -24,9 +24,9 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def analysis_task(self, columns, **kwargs):
+    def analytics_task(self, columns, **kwargs):
         """
-        Perform analysis on the specified columns and compute histograms.
+        Perform analytics on the specified columns and compute histograms.
         Args:
             columns (list): List of column names to analyze.
             **kwargs: Additional keyword arguments.

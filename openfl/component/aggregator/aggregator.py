@@ -344,11 +344,11 @@ class Aggregator:
         Returns:
             None
         """
-        analysis_result = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analysis",))
-        if len(analysis_result) > 0:
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analytics",))
+        if len(analytics_result) > 0:
             with open(file_path, "w") as jsonfile:
                 json_data = {}
-                for tensorkey, values in analysis_result.items():
+                for tensorkey, values in analytics_result.items():
                     if isinstance(values, np.ndarray):
                         values = values.tolist()
                     json_data[tensorkey.tensor_name] = values

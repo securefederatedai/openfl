@@ -1,13 +1,11 @@
 # Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-
-from openfl.federated import FederatedAnalyticsDataLoader
+from openfl.federated.data.loader import DataLoader
 from sklearn.datasets import load_iris
 import pandas as pd
 
 
-class IRISInMemory(FederatedAnalyticsDataLoader):
+class IRISInMemory(DataLoader):
     """Data Loader for IRIS Dataset."""
 
     def __init__(self, batch_size, data_path, **kwargs):
@@ -73,3 +71,11 @@ class IRISInMemory(FederatedAnalyticsDataLoader):
         if not isinstance(columns, list):
             raise ValueError("Columns parameter must be a list")
         return self.data_shard[columns]
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            tuple: The shape of an example feature array.
+        """
+        pass

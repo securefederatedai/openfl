@@ -13,7 +13,7 @@ from openfl.federated.task import TaskRunner  # NOQA
 
 if util.find_spec("keras") is not None:
     from openfl.federated.data import KerasDataLoader
-    from openfl.federated.task import FederatedAnalyticsTaskRunner, KerasTaskRunner
+    from openfl.federated.task import KerasTaskRunner
 if util.find_spec("torch") is not None:
     os.environ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib"
     from openfl.federated.data import PyTorchDataLoader
@@ -21,8 +21,6 @@ if util.find_spec("torch") is not None:
 if util.find_spec("xgboost") is not None:
     from openfl.federated.data import XGBoostDataLoader
     from openfl.federated.task import XGBoostTaskRunner
-
-from openfl.federated.data import FederatedAnalyticsDataLoader
 
 __all__ = [
     "Plan",

@@ -9,7 +9,7 @@ import numpy as np
 from openfl.interface.aggregation_functions.core import AggregationFunction
 
 
-class Histogram(AggregationFunction):
+class AggregateHistogram(AggregationFunction):
     """Histogram aggregation."""
 
     def call(self, local_tensors, *_) -> np.ndarray:
