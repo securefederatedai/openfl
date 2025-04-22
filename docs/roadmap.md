@@ -28,29 +28,32 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 The roadmap for the upcoming releases is provided for informational purposes only. It is intended to offer visibility into our current planning and priorities. However, please note that the features and timelines outlined here are not commitments and are subject to change. We are continuously evaluating and adjusting our plans to best meet the needs of our users and the evolving technological landscape.
 
-### 1.8 (March '2025)
-In this release, we intend to continue streamlining the OpenFL APIs, provide additional security options, and enhance ML/FL framework interoperability:
-- Removing the Python Native API and Interactive API
-- Further decoupling the Runtime from the FLSpec in Workflow API (see the design proposal [here](https://github.com/securefederatedai/openfl/discussions/1317))
-- ML frameworks integration (PyTorch 2.5 support, additional Keras back-ends)
-- Additional enhancements to Federated Evaluation with OpenFL, including:
-  * Dynamic switching from learning to evaluation mode via TaskRunner API within the same federation, without re-distributing the FL plan
-  * Workflow API tutorial for Federated Evaluation
-- PoC for [Secure Aggregation](https://eprint.iacr.org/2017/281.pdf) support
-- Design proposal for a configurable communication layer (enabling REST API support, in addition to gRPC)
-- (TBA) A leap forward in terms of FL framework interoperability (stay tuned for announcements)
-
-### 1.9 (TBA)
-In the upcoming 1.9 release, our focus is going to be on significantly accelerating the API consolidation and enhancing OpenFL's privacy and security features. Key initiatives include:
-- Production readiness of Workflow API (FederatedRuntime):
-  * Provide a plan agreement mechanism for all experiment participants
-  * Improved controls of the types of data that gets sent across the network
-  * Support branching in Workflow API (in line with the Metaflow API)
-  * Streamlined support for TLS in distributed deployments
-  * Enhanced straggler handling
-  * ... and finally, removing the experimental tag on the Workflow API feature!
-- Support data loading from S3
-  * This also includes enhanced DataSet and DataSource abstractions
+### 1.9 (May '25)
+In the upcoming 1.9 release, our focus shifts to improving the resilience and scalability of the core OpenFL framework. Key initiatives include:
+- Improved gRPC connection resilience
+- Preparations for scaling to 10-s/100-s of collaborators
+- First-class support for federated LLM fine-tuning
+- Comprehensive FL plan consistency verifications to prevent incompatible configurations
+- Experimental support for REST API as an alternative to the existing gRPC communication layer
+- Support for data loading from object storage (S3)
+  * This also includes enhanced dataset abstractions, with emphasis on integrity, composition and reuse
 - Support for Federated Analytics via TaskRunner API
-- Support for remote attestation of OpenFL nodes running in a TEE
+- Additional TaskRunner API utilities for validating the Aggregator/Collaborator infrastructure before executing the FL plan:
+  * A new `fx collaborator ping` command to test collaborator/aggregator connectivity without starting any FL tasks or accessing private data
+  * A [`no-op`](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/no-op) workspace template that can be configured and distributed just for the purposes of establishing and testing connectivity and PKI
+
+As a stretch goal, we are beginning preparations for the production-readiness of Workflow API (FederatedRuntime) via:
+  * Improved controls of the types of data allowed across the network
+  * Plan agreement mechanism for all experiment participants
+  * Branching support in Workflow API (in line with the Metaflow API)
+  * Streamlined TLS setup for distributed deployments (via FederatedRuntime)
+  * Enhanced handling of straggler collaborators
+
+### 1.10 (TBA)
+We expect Workflow API to be the "star" of the 1.10 release, along with several other interoperability and security enhancements:
+- Promote Workflow API as a core OpenFL feature, removing the experimental tag
+- Integrate custom changes to support Flower workloads to core Aggregator and Collaborator components
+- Support for semi-automated remote attestation of OpenFL nodes running in a TEE (starting with TaskRunner API)
 - Design proposal for a SecureFederatedRuntime for Workflow API
+- PoC for running OpenFL federations with CoCo for broader TEE frameworks support, beyond SGX
+- ... (more details to be shared soon)
