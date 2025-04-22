@@ -69,9 +69,11 @@ def _get_minimal_dataloader(
     # If we have an input shape, we can create a mock dataloader
     if input_shape:
         data_loader: DataLoader = MockDataLoader(input_shape)
-        # Inherit all attributes from data_loader.settings
+        # Inherit all attributes from data_loader.settings except input_shape
+        # to avoid overriding the explicitly provided input_shape
         for key, value in plan.config["data_loader"]["settings"].items():
-            setattr(data_loader, key, value)
+            if key != "input_shape":
+                setattr(data_loader, key, value)
         return data_loader
 
     # If we don't have an input shape, we need to fall back to the first entry in data.yaml
