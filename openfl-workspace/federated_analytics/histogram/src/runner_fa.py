@@ -80,8 +80,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Returns:
             weights_dict (dict): The weight dictionary.
         """
-        weights_dict = {}
-        return weights_dict
+        return {}
 
     @staticmethod
     def _get_weights_names(obj):
