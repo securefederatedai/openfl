@@ -5,19 +5,12 @@
 """
 Base classes for Federated Analytics.
 
-You may copy this file as the starting point of your own keras model.
+This file can serve as a template for creating your own Federated Analytics experiments.
 """
-
-import copy
-from warnings import catch_warnings, simplefilter
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import TensorKey
 from openfl.utilities.split import split_tensor_dict_for_holdouts
-
-with catch_warnings():
-    simplefilter(action="ignore")
-    import keras
 
 import logging
 
@@ -36,48 +29,11 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # Dummy model initialization
-        self.model = self.build_dummy_model((28, 28, 1), **kwargs)
+        self.model = None
 
         self.model_tensor_names = []
         self.required_tensorkeys_for_function = {}
         self.initialize_tensorkeys_for_functions()
-
-    def build_dummy_model(
-        self,
-        input_shape,
-        conv_kernel_size=(4, 4),
-        conv_strides=(2, 2),
-        conv1_channels_out=16,
-        **kwargs,
-    ):
-        """
-        Define the Dummy model architecture.
-        This is just a placeholder model and will not be used for training in this experiment.
-
-        Args:
-            input_shape (numpy.ndarray): The shape of the data
-            num_classes (int): The number of classes of the dataset
-
-        Returns:
-            keras.models.Sequential: The model defined in Keras
-
-        """
-
-        model = keras.models.Sequential()
-
-        model.add(
-            keras.layers.Conv2D(
-                conv1_channels_out,
-                kernel_size=conv_kernel_size,
-                strides=conv_strides,
-                activation="relu",
-                input_shape=input_shape,
-            )
-        )
-
-        model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-
-        return model
 
     def analytics(self, col_name, round_num, **kwargs):
         """
@@ -125,19 +81,6 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
             weights_dict (dict): The weight dictionary.
         """
         weights_dict = {}
-        weight_names = FederatedAnalyticsTaskRunner._get_weights_names(obj)
-        if isinstance(obj, keras.optimizers.Optimizer):
-            weights_dict = {
-                weight_names[i] + suffix: weight.numpy()
-                for i, weight in enumerate(copy.deepcopy(obj.variables))
-            }
-        else:
-            weight_name_index = 0
-            for layer in obj.layers:
-                if weight_name_index < len(weight_names) and len(layer.get_weights()) > 0:
-                    for weight in layer.get_weights():
-                        weights_dict[weight_names[weight_name_index] + suffix] = weight
-                        weight_name_index += 1
         return weights_dict
 
     @staticmethod
@@ -151,13 +94,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Returns:
             weight_names (list): The weight name list.
         """
-        if isinstance(obj, keras.optimizers.Optimizer):
-            weight_names = [weight.name for weight in obj.variables]
-        else:
-            weight_names = [
-                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
-            ]
-        return weight_names
+        return []
 
     def get_tensor_dict(self, with_opt_vars, suffix=""):
         """
@@ -170,13 +107,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Returns:
             model_weights (dict): The tensor dictionary.
         """
-        model_weights = self._get_weights_dict(self.model, suffix)
-        if with_opt_vars:
-            opt_weights = self._get_weights_dict(self.model.optimizer, suffix)
-            model_weights.update(opt_weights)
-            if len(opt_weights) == 0:
-                logger.debug("WARNING: We didn't find variables for the optimizer.")
-        return model_weights
+        return self._get_weights_dict(self.model, suffix)
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called

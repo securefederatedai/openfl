@@ -344,7 +344,9 @@ class Aggregator:
         Returns:
             None
         """
-        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(round_number, ("analytics",))
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            round_number, ("analytics",)
+        )
         if len(analytics_result) > 0:
             with open(file_path, "w") as jsonfile:
                 json_data = {}

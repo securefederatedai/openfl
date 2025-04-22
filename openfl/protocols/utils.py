@@ -44,6 +44,9 @@ def model_proto_to_bytes_and_metadata(model_proto):
                 f"Round numbers in model are inconsistent: {round_number} "
                 f"and {tensor_proto.round_number}"
             )
+    if round_number is None:
+        # For Federated Analytics, we are using a placeholder model with no tensors
+        round_number = 0
     return bytes_dict, metadata_dict, round_number
 
 
