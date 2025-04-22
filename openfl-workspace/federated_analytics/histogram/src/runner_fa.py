@@ -40,7 +40,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Return analytics result as tensors.
 
         Args:
-            col_name (str): The column name for the analysis.
+            col_name (str): collaborator name.
             round_num (int): The current round number.
             **kwargs: Additional parameters for analysis.
 
@@ -56,7 +56,7 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         }
         return output_metric_dict, output_metric_dict
 
-    def analysis_task(self, **kwargs):
+    def analytics_task(self, **kwargs):
         """
         Perform analytics on the provided data.
         This method should be implemented by subclasses to perform specific analysis tasks.
