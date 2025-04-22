@@ -8,11 +8,11 @@
 class MockDataLoader:
     """Placeholder dataloader for when data is not available"""
 
-    def __init__(self, feature_shape):
-        self.feature_shape = feature_shape
+    def __init__(self, input_shape):
+        self.input_shape = input_shape
 
     def get_feature_shape(self):
-        return self.feature_shape
+        return self.input_shape
 
     def get_train_data_size(self):
         return 0
