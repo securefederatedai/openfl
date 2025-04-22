@@ -47,14 +47,14 @@ class S3DataSource(DataSource):
         bucket_name = parsed.netloc
         prefix = parsed.path.lstrip("/")  # Remove leading slash
 
-        num_files = 0
         paginator = self._s3_client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
             if "Contents" in page:
                 for obj in page["Contents"]:
-                    full_s3_path = f"s3://{bucket_name}/{obj['Key']}"
-                    num_files += 1
-                    yield full_s3_path
+                    obj_key = obj["Key"]
+                    if obj_key.endswith("/"):  # Ignore directories
+                        continue
+                    yield f"s3://{bucket_name}/{obj_key}"
 
     def _get_s3_etag(self, obj_path: str):
         parsed = urlparse(obj_path)
@@ -76,6 +76,9 @@ class S3DataSource(DataSource):
         else:
             data = self._read_s3_object(path)
             return self.hash_func(data).hexdigest()
+
+    def read_blob(self, path):
+        return self._read_s3_object(path)
 
     @classmethod
     def from_dict(cls, ds_dict: dict):

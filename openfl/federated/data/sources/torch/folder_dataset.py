@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 import torch
 
@@ -44,10 +44,17 @@ class FolderDataset(torch.utils.data.Dataset):
         # Build the dataset
         self.samples = self._load_samples()
 
-    @abstractmethod
-    def _load_samples(self) -> List[Tuple[str, str]]:
+    def _get_label(self, file_path):
+        """Get the label for a given file path."""
+        label_name = file_path.split("/")[-2] if len(file_path.split("/")) > 1 else None
+        return self.label_mapper.get_label_index(label_name)
+
+    def _load_samples(self):
         """Loads all file paths and their inferred labels"""
-        pass
+        return [
+            (file_path, self._get_label(file_path))
+            for file_path in self.datasource.enumerate_files()
+        ]
 
     @abstractmethod
     def load_file(self, file_path):

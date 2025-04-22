@@ -9,12 +9,13 @@ from typing import List, Tuple
 import pytest
 import boto3
 from moto import mock_aws
+import torch
+from torchvision.transforms import ToTensor
 
 import io
-from openfl.federated.data.sources.data_source import DataSourceType
+from openfl.federated.data.sources.data_source import DataSource
 from openfl.federated.data.sources.local_data_source import LocalDataSource
-from openfl.federated.data.sources.torch.folder_dataset import LabelMapper
-from openfl.federated.data.sources.torch.local_folder import LocalFolder
+from openfl.federated.data.sources.torch.folder_dataset import FolderDataset, LabelMapper
 from openfl.federated.data.sources.torch.verifiable_map_style_dataset import VerifiableMapStyleDataset
 
 from openfl.federated.data.sources.torch.verifiable_map_style_image_folder import VerifiableImageFolder
@@ -50,12 +51,21 @@ def split_to_base_and_relative_paths(data_sources_paths: List[str]) -> Tuple[str
     relative_paths = [os.path.relpath(path, base_path) for path in absolute_paths]
     return base_path, relative_paths
 
-class LocalTextFolder(LocalFolder):
-    """Custom dataset that loads all images from a local directory tree and assigns labels based on folder names."""
+class TextFolder(FolderDataset):
+
+    def __init__(self, datasource: DataSource, label_mapper: LabelMapper, transform=None):
+        """
+        Args:
+            datasource (DataSource): DataSource object representing the data source.
+            label_mapper (LabelMapper): LabelMapper object to map class names to indices.
+            transform (callable, optional): Transformations to apply to loaded data.
+        """
+        self.datasource = datasource
+        super().__init__(label_mapper, transform=transform)
+
     def load_file(self, file_path):
         """Load a file from the dataset."""
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
+        return self.datasource.read_blob(file_path).decode("utf-8")
 
 class MockVerifiableMapStyle(VerifiableMapStyleDataset):
 
@@ -66,10 +76,7 @@ class MockVerifiableMapStyle(VerifiableMapStyleDataset):
     def create_datasets(self):
         datasources = []
         for data_source in self.verifiable_dataset_info.data_sources:
-            if data_source.type == DataSourceType.LOCAL:
-                datasources.append(LocalTextFolder(base_path=data_source.get_source_full_path(), label_mapper=self.label_mapper, transform=self.transform))
-            else:
-                raise ValueError(f"Unknown or unsupported storage type: {data_source.type}")
+            datasources.append(TextFolder(data_source, label_mapper=self.label_mapper, transform=self.transform))
         return datasources
 
 
@@ -311,6 +318,28 @@ def test_s3_image_folder_map_style_datasource_verify(mock_s3_image_buckets):
             assert verifiable_map_style[i][1] == verifiable_map_style.datasets[0][i]["label"]
         else:
             assert verifiable_map_style[i][0] == verifiable_map_style.datasets[1][i - 6]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[1][i - 6]["label"]
+
+def test_s3_image_folder_map_style_datasource_verify_w_transform(mock_s3_image_buckets):
+    ds1, ds2 = mock_s3_image_buckets
+    datasources = [S3DataSource(uri=ds1), S3DataSource(uri=ds2)]
+    verifiable_dataset_info = VerifiableDatasetInfo(
+        data_sources=datasources,
+        label="Test VerifiableMapStyleDataset",
+        metadata={"test": "test"}
+    )
+    dataset_info_json = verifiable_dataset_info.to_json()
+    verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json)["root_hash"])
+    verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, transform=ToTensor(), verify_dataset_items=True)
+    assert len(verifiable_map_style) == 12
+    assert len(verifiable_map_style.datasets) == len(datasources)
+
+    for i in range(len(verifiable_map_style)):
+        if i < 6:
+            assert torch.equal(verifiable_map_style[i][0], verifiable_map_style.datasets[0][i]["data"])
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[0][i]["label"]
+        else:
+            assert torch.equal(verifiable_map_style[i][0], verifiable_map_style.datasets[1][i - 6]["data"])
             assert verifiable_map_style[i][1] == verifiable_map_style.datasets[1][i - 6]["label"]
 
 def test_s3_image_folder_map_style_datasource_labels(mock_s3_image_buckets):
