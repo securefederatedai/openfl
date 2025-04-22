@@ -10,8 +10,6 @@ import time
 from threading import Lock
 from typing import List, Optional
 
-import numpy as np
-
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
@@ -184,11 +182,15 @@ class Aggregator:
         self.model = None  # Initialize the model attribute to None
 
         # Callbacks
+        federate_analytics_callback = callbacks_module.FederateAnalyticsCallback()
+        callbacks.append(federate_analytics_callback)
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
             origin="aggregator",
+            last_state_path=self.last_state_path,
         )
 
         if initial_tensor_dict:
@@ -344,19 +346,6 @@ class Aggregator:
         Returns:
             None
         """
-        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
-            round_number, ("analytics",)
-        )
-        if len(analytics_result) > 0:
-            with open(file_path, "w") as jsonfile:
-                json_data = {}
-                for tensorkey, values in analytics_result.items():
-                    if isinstance(values, np.ndarray):
-                        values = values.tolist()
-                    json_data[tensorkey.tensor_name] = values
-                json.dump(json_data, jsonfile, indent=4)
-            return
-
         # Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
             self.model, compression_pipeline=self.compression_pipeline
@@ -1168,7 +1157,10 @@ class Aggregator:
         self.callbacks.on_round_end(self.round_number, logs)
 
         # Save the latest model
-        if not self.assigner.is_task_group_evaluation():
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        if len(analytics_result) == 0 and not self.assigner.is_task_group_evaluation():
             logger.info("Saving round %s model...", self.round_number)
             self._save_model(self.round_number, self.last_state_path)
         else:
