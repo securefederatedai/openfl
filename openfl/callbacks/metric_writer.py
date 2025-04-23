@@ -20,10 +20,10 @@ class MetricWriter(Callback):
         use_tensorboard: If True, writes scalar summaries to TensorBoard under `log_dir`.
     """
 
-    def __init__(self, log_dir: str = "./logs/", use_tensorboard: bool = True):
+    def __init__(self, log_dir: str = "./logs/"):
         super().__init__()
         self.log_dir = log_dir
-        self.use_tensorboard = use_tensorboard
+        self.use_tensorboard = bool(os.environ.get("TENSORBOARD", False))
 
         self._log_file_handle = None
         self._summary_writer = None
