@@ -224,8 +224,22 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     extra_args = f"--gandlf_config {gandlf_seg_file}"
     extra_args += f" -i {initial_model_path}" if initial_model_path else ""
 
-    model_owner.initialize_plan(
-        agg_domain_name=agg_domain_name, extra_args=extra_args
+    # model_owner.initialize_plan(
+    #     agg_domain_name=agg_domain_name, extra_args=extra_args
+    # )
+    cmd = f"fx plan initialize -a {agg_domain_name} {extra_args} --feature_shape '[28,28,1]'"
+    error_msg="Failed to initialize the plan"
+    return_code, output, error = fh.run_command(
+        cmd,
+        workspace_path=model_owner.workspace_path,
+        error_msg=error_msg,
+    )
+    fh.verify_cmd_output(
+        output,
+        return_code,
+        error,
+        error_msg,
+        f"Initialized the plan for the workspace {model_owner.workspace_name}"
     )
 
     # Update cols.yaml file with the collaborator names
