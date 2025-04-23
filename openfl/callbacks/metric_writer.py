@@ -15,9 +15,11 @@ logger = logging.getLogger(__name__)
 class MetricWriter(Callback):
     """Log scalar metrics at the end of each round.
 
+    This callback logs scalar metrics to a file and optionally to TensorBoard.
+    To enable TensorBoard logging, set the environment variable `TENSORBOARD=1`.
+
     Attributes:
         log_dir: Path to write logs as lines of JSON. Defaults to `./logs`.
-        use_tensorboard: If True, writes scalar summaries to TensorBoard under `log_dir`.
     """
 
     def __init__(self, log_dir: str = "./logs/"):
