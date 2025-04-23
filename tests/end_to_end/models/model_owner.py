@@ -203,7 +203,7 @@ class ModelOwner():
         """
         try:
             log.info("Initializing the plan. It will take some time to complete..")
-            cmd = f"fx plan initialize -a {agg_domain_name} {extra_args}"
+            cmd = f"fx plan initialize -a {agg_domain_name} {extra_args} --input_shape '[28,28,1]'"
             error_msg="Failed to initialize the plan"
             return_code, output, error = fh.run_command(
                 cmd,
