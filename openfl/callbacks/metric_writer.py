@@ -23,7 +23,7 @@ class MetricWriter(Callback):
     def __init__(self, log_dir: str = "./logs/"):
         super().__init__()
         self.log_dir = log_dir
-        self.use_tensorboard = bool(os.environ.get("TENSORBOARD", False))
+        self.use_tensorboard = bool(int(os.environ.get("TENSORBOARD", 0)))
 
         self._log_file_handle = None
         self._summary_writer = None
