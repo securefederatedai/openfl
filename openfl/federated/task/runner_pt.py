@@ -427,7 +427,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
         else:
             self.load_state_dict(pickle_dict)
-    
+
     def save_native(
         self,
         filepath,

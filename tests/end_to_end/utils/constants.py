@@ -47,8 +47,8 @@ AGG_COL_RESULT_FILE = "{0}/{1}/workspace/{1}.log"  # example - /tmp/my_federatio
 DFLT_WORKSPACE_NAME = "workspace"
 
 # Memory logs related
-AGG_MEM_USAGE_JSON = "{}/aggregator/workspace/logs/aggregator_memory_usage.json"  # example - /tmp/my_federation/aggregator/workspace/logs/aggregator_memory_usage.json
-COL_MEM_USAGE_JSON = "{0}/{1}/workspace/logs/{1}_memory_usage.json"  # example - /tmp/my_federation/collaborator1/workspace/logs/collaborator1_memory_usage.json
+AGG_MEM_USAGE_TXT = "{}/aggregator/workspace/logs/aggregator_memory_usage.txt"  # example - /tmp/my_federation/aggregator/workspace/logs/aggregator_memory_usage.txt
+COL_MEM_USAGE_TXT = "{0}/{1}/workspace/logs/{1}_memory_usage.txt"  # example - /tmp/my_federation/collaborator1/workspace/logs/collaborator1_memory_usage.txt
 
 AGG_START_CMD = "fx aggregator start"
 AGG_END_MSG = "Experiment Completed"
