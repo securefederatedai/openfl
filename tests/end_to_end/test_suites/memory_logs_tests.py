@@ -66,7 +66,7 @@ def _log_memory_usage(request, fed_obj):
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_TXT.format(fed_obj.workspace_path)
+    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_LOGFILE.format(fed_obj.workspace_path)
 
     assert os.path.exists(
         aggregator_memory_usage_file
@@ -84,7 +84,7 @@ def _log_memory_usage(request, fed_obj):
 
     # check memory usage entries for each collaborator
     for collaborator in fed_obj.collaborators:
-        collaborator_memory_usage_file = constants.COL_MEM_USAGE_TXT.format(
+        collaborator_memory_usage_file = constants.COL_MEM_USAGE_LOGFILE.format(
             fed_obj.workspace_path, collaborator.name
         )
         assert os.path.exists(
