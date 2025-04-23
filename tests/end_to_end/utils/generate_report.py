@@ -16,7 +16,7 @@ class PDF(FPDF):
     def chapter_title(self, title):
         self.add_page()
         self.set_font("Helvetica", "B", 14)  # Set font to bold for title
-        self.cell(0, 10, title, 0, new_x=XPos.LMARGIN, new_y=YPos.NEXT) 
+        self.cell(0, 10, title, 0, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def chapter_body(self, body):
         self.set_font("Helvetica", "", 12)
