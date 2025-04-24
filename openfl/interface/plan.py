@@ -75,7 +75,7 @@ def plan(context):
     cls=InputSpec,
     required=False,
     help="""
-    The input spec of the model. Required when init_model_path is not provided.
+    The input spec of the model.
 
     May be provided as a list for single input head: ``--input-shape [3,32,32]``,
 
@@ -201,7 +201,7 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     Args:
         plan: The federation plan object
-        input_shape: The input shape to the model (required)
+        input_shape: The input shape to the model
         init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:

@@ -66,16 +66,19 @@ def _get_minimal_dataloader(
     if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
         input_shape = plan.config["data_loader"]["settings"]["input_shape"]
 
-    # Create a mock dataloader with the input shape
-    data_loader: DataLoader = MockDataLoader(input_shape)
+    if input_shape:
+        # Create a mock dataloader with the input shape
+        data_loader: DataLoader = MockDataLoader(input_shape)
 
-    # Inherit all attributes from data_loader.settings except input_shape
-    # to avoid overriding the explicitly provided shape
-    for key, value in plan.config["data_loader"]["settings"].items():
-        if key != "input_shape":  # Skip input_shape to preserve the one used for initialization
-            setattr(data_loader, key, value)
+        # Inherit all attributes from data_loader.settings except input_shape
+        # to avoid overriding the explicitly provided shape
+        for key, value in plan.config["data_loader"]["settings"].items():
+            if key != "input_shape":  # Skip input_shape to preserve the one used for initialization
+                setattr(data_loader, key, value)
 
-    return data_loader
+        return data_loader
+    # If no input shape is provided, fallback to read it from collaborator data path
+    return _get_collaborator_dataloader(plan, 0)
 
 
 def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> DataLoader:

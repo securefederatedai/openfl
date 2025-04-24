@@ -22,8 +22,7 @@ data_loader :
   defaults : plan/defaults/data_loader.yaml
   template : src.dataloader.TemplateDataLoader
   settings :
-    input_shape: [3, 224, 224]
-    num_classes: 10
+    {}
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

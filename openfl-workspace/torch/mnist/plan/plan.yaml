@@ -26,8 +26,7 @@ data_loader:
   settings:
     batch_size: 64
     collaborator_count: 2
-    input_shape: [1, 28, 28]
-    num_classes: 10
+    num_classes        : 10
   template: src.dataloader.PyTorchMNISTInMemory
 network:
   defaults: plan/defaults/network.yaml
