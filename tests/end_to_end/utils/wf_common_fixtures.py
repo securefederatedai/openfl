@@ -66,7 +66,8 @@ def fx_local_federated_workflow(request):
     backend = request.config.backend if hasattr(request.config, 'backend') else None
     if backend:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
+    else:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
     # Return the federation fixture
     return workflow_local_fixture(
@@ -134,7 +135,8 @@ def fx_local_federated_workflow_prvt_attr(request):
     backend = request.config.backend if hasattr(request.config, 'backend') else None
     if backend:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
+    else:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
     # Return the federation fixture
     return workflow_local_fixture(
