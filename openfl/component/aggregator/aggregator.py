@@ -91,6 +91,7 @@ class Aggregator:
         persist_checkpoint=True,
         persistent_db_path=None,
         secure_aggregation=False,
+        enable_remote_attestation=False,
     ):
         """Initializes the Aggregator.
 
@@ -146,6 +147,7 @@ class Aggregator:
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.connector = connector
+        self.enable_remote_attestation = enable_remote_attestation
 
         self.quit_job_sent_to = []
 

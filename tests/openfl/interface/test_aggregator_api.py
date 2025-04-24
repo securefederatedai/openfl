@@ -26,6 +26,12 @@ def test_aggregator_start(mock_parse):
         'assigner': {
             'settings': {
                 'selected_task_group': 'learning'
+
+            }
+        },
+        'aggregator': {
+            'settings': {
+                'enable_remote_attestation': False
             }
         }
     }

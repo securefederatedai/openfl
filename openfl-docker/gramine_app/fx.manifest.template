@@ -71,4 +71,5 @@ sgx.allowed_files = [
   "file:{{ workspace_root }}/plan/cols.yaml",
   "file:{{ workspace_root }}/plan/data.yaml",
   "file:{{ workspace_root }}/plan/plan.yaml",
+  "file:{{ workspace_root }}/attestation",
 ]
