@@ -18,7 +18,3 @@ federated_flow:
 
 network:
   defaults: plan/defaults/network.yaml
-
-data_loader:
-  settings:
-    input_shape: [3, 224, 224]
