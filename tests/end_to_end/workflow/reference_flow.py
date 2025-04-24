@@ -8,18 +8,34 @@ from tests.end_to_end.utils.exceptions import ReferenceFlowException
 import io
 import math
 import logging
+import torch.nn as nn
+import torch.optim as optim
 import inspect
 from types import MethodType
 
 log = logging.getLogger(__name__)
 
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.linear1 = nn.Linear(60, 100)
+        self.linear2 = nn.Linear(100, 10)
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = self.linear2(x)
+        return x
+
+
 class TestFlowReference(FLSpec):
     """
-    Testflow to validate 
+    Testflow to validate
     - Whether aggregator attributes are modified in collaborator steps, AND
     - Whether collaborator attributes are unique
     """
-    __test__ = False # to prevent pytest from trying to discover tests in the class
+
+    __test__ = False  # to prevent pytest from trying to discover tests in the class
 
     @aggregator
     def start(self):
@@ -33,7 +49,7 @@ class TestFlowReference(FLSpec):
     @aggregator
     def test_create_agg_attr(self):
         """
-        Create different types of objects.
+        Create different types of attributes.
         """
         self.agg_attr_int = 10
         self.agg_attr_str = "Test string data"
@@ -41,7 +57,8 @@ class TestFlowReference(FLSpec):
         self.agg_attr_dict = {key: key for key in range(5)}
         self.agg_attr_math = math.sqrt(2)
         self.agg_attr_complex_num = complex(2, 3)
-        self.agg_attr_log = logging.getLogger("Test logger data in aggregator")
+
+        self.collaborators = self.runtime.collaborators
 
         # Store aggregator attributes for validation in join step
         self.agg_attr_id_store = {}
@@ -50,8 +67,6 @@ class TestFlowReference(FLSpec):
         for attr in agg_attr_list:
             self.agg_attr_id_store[attr] = id(getattr(self, attr))
             self.agg_attr_val_store[attr] = getattr(self, attr)
-        
-        self.collaborators = self.runtime.collaborators
 
         self.next(
             self.test_create_collab_attr,
@@ -62,10 +77,9 @@ class TestFlowReference(FLSpec):
     @collaborator
     def test_create_collab_attr(self):
         """
-        Modify the attributes of aggregator to validate the references.
-        Create different types of objects.
+        Modify the attributes of aggregator
+        Create different types of collaborator attributes
         """
-
         self.agg_attr_int += self.index
         self.agg_attr_str = self.agg_attr_str + " " + self.input
         self.agg_attr_list.append(self.index)
@@ -85,12 +99,17 @@ class TestFlowReference(FLSpec):
             "Test logger data in collaborator " + self.input
         )
 
+        self.collab_attr_model = Net()
+        self.collab_attr_optimizer = optim.SGD(
+            self.collab_attr_model.parameters(), lr=1e-3, momentum=1e-2
+        )
+
         self.next(self.test_create_more_collab_attr)
 
     @collaborator
     def test_create_more_collab_attr(self):
         """
-        Create different types of objects.
+        Create different types of collaborator attributes.
         """
 
         self.collab_attr_int_two = 30 + self.index
@@ -104,19 +123,45 @@ class TestFlowReference(FLSpec):
             "Test logger data in collaborator" + self.input
         )
 
-        self.next(self.join)
+        self.next(
+            self.join,
+            include=[
+                "collab_attr_int_one",
+                "collab_attr_str_one",
+                "collab_attr_list_one",
+                "collab_attr_dict_one",
+                "collab_attr_file_one",
+                "collab_attr_math_one",
+                "collab_attr_complex_num_one",                
+                "collab_attr_log_one",
+                "collab_attr_model",
+                "collab_attr_optimizer",
+                "collab_attr_int_two",
+                "collab_attr_str_two",
+                "collab_attr_list_two",
+                "collab_attr_dict_two",
+                "collab_attr_file_two",
+                "collab_attr_math_two",
+                "collab_attr_complex_num_two",
+                "collab_attr_log_two"
+            ],
+        )
 
     @aggregator
     def join(self, inputs):
         """
         Validate attributes
         """
-        # Validate aggregator attribute identities are not modified
+        # Validate aggregator attribute are not modified in collaborator steps
         agg_validation_result = validate_agg_attr_ref(self)
+
+        # Validate collaborators are not sharing attributes
         col_validation_result = validate_collab_attr_ref(inputs)
-        
-        assert agg_validation_result and col_validation_result, f"Testflow Reference failed"
-            
+
+        assert (
+            agg_validation_result and col_validation_result
+        ), f" ... Testflow Reference failed"
+
         self.next(self.end)
 
     @aggregator
@@ -146,12 +191,19 @@ def filter_attrs(attr_list):
         list: A list of valid attribute names.
     """
     valid_attrs = []
-    reserved_words = ["checkpoint", "execute_next", "execute_task_args", "collaborators", "runtime"]
+    reserved_words = [
+        "checkpoint",
+        "execute_next",
+        "execute_task_args",
+        "collaborators",
+        "runtime",
+    ]
     for attr in attr_list:
         if not attr[0].startswith("_") and attr[0] not in reserved_words:
             if not isinstance(attr[1], MethodType):
                 valid_attrs.append(attr[0])
     return valid_attrs
+
 
 def validate_agg_attr_ref(agg_obj):
     """
@@ -164,10 +216,14 @@ def validate_agg_attr_ref(agg_obj):
     for attr in agg_attrs:
         if agg_obj.agg_attr_val_store.get(attr) != getattr(agg_obj, attr):
             validation = False
-            log.info(f"FAILED. Aggregator attribute {attr} is modified")
-            log.info(f"...VALUE of {attr}: {agg_obj.agg_attr_val_store.get(attr)} != {getattr(agg_obj, attr)}")
-            log.info(f"...ID of {attr}: {agg_obj.agg_attr_id_store.get(attr)} != {id(getattr(agg_obj, attr))}")
-    
+            print(f"FAILED. Aggregator attribute {attr} is modified")
+            print(
+                f"...VALUE of {attr}: {agg_obj.agg_attr_val_store.get(attr)} != {getattr(agg_obj, attr)}"
+            )
+            print(
+                f"...ID of {attr}: {agg_obj.agg_attr_id_store.get(attr)} != {id(getattr(agg_obj, attr))}"
+            )
+
     return validation
 
 
@@ -187,5 +243,5 @@ def validate_collab_attr_ref(collab_obj_list):
                     log.info(
                         f"FAILED. Identity matched between {cur_collab_obj.input} and {next_colab_obj.input} for {attr_name}"
                     )
-                    
+
     return validation
