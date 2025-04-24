@@ -14,6 +14,8 @@ collaborator :
 data_loader :
   defaults : plan/defaults/data_loader.yaml
   template: src.data_loader.NoOpDataLoader
+  settings :
+    input_shape : [1, 1, 1]  # Minimal shape for no-op
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

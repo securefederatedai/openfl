@@ -106,18 +106,18 @@ class TestDataloading:
         # Check that the plan's input shape is used
         assert dataloader.input_shape == [1, 28, 28]
 
-    def test_get_minimal_dataloader_fallback(self, mock_plan):
-        """Test _get_minimal_dataloader falls back to _get_collaborator_dataloader
-          when no input_shape."""
+    def test_get_minimal_dataloader_missing_input_shape(self, mock_plan):
+        """Test _get_minimal_dataloader raises exception when no input_shape is available."""
         # Remove input_shape from plan config
         mock_plan.config["data_loader"]["settings"].pop("input_shape")
 
-        with mock.patch('openfl.utilities.dataloading._get_collaborator_dataloader') as mock_collab:
-            # Mock return value to avoid actual implementation
-            mock_collab.return_value = mock.MagicMock()
-
+        # Should raise ValueError when no input_shape is provided
+        with pytest.raises(ValueError) as exc_info:
             _get_minimal_dataloader(mock_plan, None)
-            mock_collab.assert_called_once_with(mock_plan, 0)
+
+        # Verify the error message mentions input_shape requirement
+        assert "input_shape is required" in str(exc_info.value)
+        assert "fx plan initialize" in str(exc_info.value)
 
     def test_get_collaborator_dataloader_invalid_index(self, mock_plan):
         """Test _get_collaborator_dataloader raises exception for invalid collaborator index."""

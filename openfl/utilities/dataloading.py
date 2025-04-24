@@ -50,35 +50,33 @@ def get_dataloader(
 
 
 def _get_minimal_dataloader(
-    plan: Plan, input_shape: Optional[Union[list, dict]] = None
+    plan: Plan, 
+    input_shape: Optional[Union[list, dict]] = None
 ) -> DataLoader:
     """Get a minimal dataloader for model initialization on the model owner/aggregator.
     This doesn't require actual data to be present and won't attempt to validate data paths.
 
     Args:
         plan: The plan object
-        input_shape: Optional input shape specification
+        input_shape: Input shape specification
 
     Returns:
         DataLoader: A minimal dataloader suitable for model initialization
     """
-    # Try to get input_shape from plan if not provided
+    # Try to get input_shape from plan if not provided explicitly
     if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
         input_shape = plan.config["data_loader"]["settings"]["input_shape"]
 
-    # If we have an input shape, we can create a mock dataloader
-    if input_shape:
-        data_loader: DataLoader = MockDataLoader(input_shape)
-        # Inherit all attributes from data_loader.settings except input_shape
-        # to avoid overriding the explicitly provided shape
-        for key, value in plan.config["data_loader"]["settings"].items():
-            if key != "input_shape":  # Skip input_shape to preserve the one used for initialization
-                setattr(data_loader, key, value)
-        return data_loader
-
-    # If we don't have an input shape, we need to fall back to the first entry in data.yaml
-    # This is not ideal but maintains backward compatibility
-    return _get_collaborator_dataloader(plan, 0)
+    # Create a mock dataloader with the input shape
+    data_loader: DataLoader = MockDataLoader(input_shape)
+    
+    # Inherit all attributes from data_loader.settings except input_shape
+    # to avoid overriding the explicitly provided shape
+    for key, value in plan.config["data_loader"]["settings"].items():
+        if key != "input_shape":  # Skip input_shape to preserve the one used for initialization
+            setattr(data_loader, key, value)
+    
+    return data_loader
 
 
 def _get_collaborator_dataloader(plan: Plan, collaborator_index: int = 0) -> DataLoader:

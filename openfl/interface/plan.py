@@ -75,7 +75,7 @@ def plan(context):
     cls=InputSpec,
     required=False,
     help="""
-    The input spec of the model.
+    The input spec of the model. Required when init_model_path is not provided.
 
     May be provided as a list for single input head: ``--input-shape [3,32,32]``,
 
@@ -201,13 +201,27 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     Args:
         plan: The federation plan object
-        input_shape: The input shape to the model
+        input_shape: The input shape to the model (required)
         init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
     """
-    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+    # Validate input_shape is always provided (directly or in plan config)
+    if not input_shape:
+        # Check if input_shape is in plan config
+        if not "input_shape" in plan.config["data_loader"]["settings"]:
+            raise ValueError(
+                "input_shape is required. "
+                "Please provide input_shape parameter to 'fx plan initialize' or "
+                "define 'input_shape' in data_loader.settings in plan.yaml."
+            )
+    
+    data_loader = get_dataloader(
+        plan, 
+        prefer_minimal=True, 
+        input_shape=input_shape
+    )
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
     round_number = 0
