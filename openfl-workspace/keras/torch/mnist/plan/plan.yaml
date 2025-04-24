@@ -24,8 +24,6 @@ data_loader :
     collaborator_count : 2
     data_group_name    : mnist
     batch_size         : 256
-    input_shape        : [1, 28, 28]
-    num_classes       : 10
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
