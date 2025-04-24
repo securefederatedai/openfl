@@ -34,29 +34,34 @@ jobs:
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
-      - name: Run Trivy code vulnerability scanner (JSON)
-        continue-on-error: true
+      - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
-          trivy fs \
-            --quiet \
-            --format json \
-            --output trivy-code-results.json \
-            --ignore-unfixed \
-            --vuln-type os,library \
-            --severity CRITICAL,HIGH,MEDIUM .
+          trivy --quiet fs \
+          --format json \
+          --output trivy-code-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM \
+          .
 
-      - name: Upload Trivy Code JSON
+      - name: Display Trivy code Scan Results
+        if: failure()
+        run: |
+          echo "Trivy Scan Results:"
+          cat trivy-code-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+
+      - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-code-report-${{ env.COMMIT_ID }}
+          name: trivy-code-report-json
           path: trivy-code-results.json
 
-      - name: Build Docker Image
+      - name: Build an image from Dockerfile
         run: |
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
-      - name: Trivy scan for Docker image (JSON)
-        id: trivy-image-json
+      - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
+        id: trivy-scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
@@ -67,32 +72,40 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.trivyignore'
-        continue-on-error: true
 
-      - name: Upload Trivy Docker JSON
+      - name: Display Trivy Docker Scan Results
+        if: failure()
+        run: |
+          if [ -s trivy-docker-results.json ]; then
+            echo "Trivy Scan Results:"
+            cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+          else
+            echo "Trivy scan results file is empty or not found."
+          fi
+
+      - name: Upload final Trivy Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-docker-report-${{ env.COMMIT_ID }}
+          name: trivy-docker-report-json
           path: trivy-docker-results.json
 
-      - name: Trivy scan for code (SPDX)
-        continue-on-error: true
+      - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
         run: |
-          trivy fs \
-            --quiet \
-            --format spdx-json \
-            --output trivy-code-spdx-results.json \
-            --ignore-unfixed \
-            --vuln-type os,library \
-            --severity CRITICAL,HIGH,MEDIUM .
+          trivy --quiet fs \
+          --format spdx-json \
+          --output trivy-code-spdx-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM \
+          .
 
-      - name: Upload Trivy SPDX Code
+      - name: Upload SPDX Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-code-spdx-${{ env.COMMIT_ID }}
+          name: trivy-code-spdx-report-json
           path: trivy-code-spdx-results.json
 
-      - name: Trivy scan for Docker image (SPDX)
+      - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
         uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
@@ -103,12 +116,11 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.trivyignore'
-        continue-on-error: true
 
-      - name: Upload Trivy SPDX Docker
+      - name: Upload SPDX Docker Vulnerability Scan
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-docker-spdx-${{ env.COMMIT_ID }}
+          name: trivy-docker-spdx-report-json
           path: trivy-docker-spdx-results.json
 
       - name: Generate Vulnerability Summary
@@ -120,41 +132,38 @@ jobs:
           echo "Repository: ${{ github.repository }}" >> vulnerability-summary.md
           echo "Commit: ${{ env.COMMIT_ID }}" >> vulnerability-summary.md
           echo "" >> vulnerability-summary.md
-
-          HAS_VULNS=false
-
+          
           if [ -s trivy-code-results.json ]; then
-            COUNT=$(jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[]] | length' trivy-code-results.json)
-            if [ "$COUNT" -gt 0 ]; then
-              HAS_VULNS=true
-              echo "### Code Vulnerabilities Detected: $COUNT" >> vulnerability-summary.md
-              echo "| Severity | ID | Package | Version | Description |" >> vulnerability-summary.md
-              echo "|----------|----|---------|---------|-------------|" >> vulnerability-summary.md
-              jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | 
-                "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-code-results.json >> vulnerability-summary.md
+            VULN_COUNT=$(jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[]] | length' trivy-code-results.json)
+            if [ "$VULN_COUNT" -gt 0 ]; then
+              echo "### Code Vulnerabilities Detected: $VULN_COUNT" >> vulnerability-summary.md
+              echo "" >> vulnerability-summary.md
+              echo "| Severity | Vulnerability ID | Package | Version | Description |" >> vulnerability-summary.md
+              echo "|----------|------------------|---------|---------|-------------|" >> vulnerability-summary.md
+              jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-code-results.json >> vulnerability-summary.md
+              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
             fi
           fi
 
           if [ -s trivy-docker-results.json ]; then
-            COUNT=$(jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[]] | length' trivy-docker-results.json)
-            if [ "$COUNT" -gt 0 ]; then
-              HAS_VULNS=true
-              echo "### Docker Image Vulnerabilities Detected: $COUNT" >> vulnerability-summary.md
-              echo "| Severity | ID | Package | Version | Description |" >> vulnerability-summary.md
-              echo "|----------|----|---------|---------|-------------|" >> vulnerability-summary.md
-              jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] |
-                "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-docker-results.json >> vulnerability-summary.md
+            VULN_COUNT=$(jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[]] | length' trivy-docker-results.json)
+            if [ "$VULN_COUNT" -gt 0 ]; then
+              echo "### Docker Image Vulnerabilities Detected: $VULN_COUNT" >> vulnerability-summary.md
+              echo "" >> vulnerability-summary.md
+              echo "| Severity | Vulnerability ID | Package | Version | Description |" >> vulnerability-summary.md
+              echo "|----------|------------------|---------|---------|-------------|" >> vulnerability-summary.md
+              jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-docker-results.json >> vulnerability-summary.md
+              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
             fi
           fi
 
-          echo "has_vulnerabilities=$HAS_VULNS" >> $GITHUB_OUTPUT
           cat vulnerability-summary.md
 
-      - name: Upload Summary Markdown
+      - name: Upload Vulnerability Summary
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: vulnerability-summary-${{ env.COMMIT_ID }}
+          name: vulnerability-summary
           path: vulnerability-summary.md
 
       - name: Extract Code Owners
@@ -164,12 +173,24 @@ jobs:
           if [ -f "CODEOWNERS" ]; then
             OWNERS=$(grep -v "^#" CODEOWNERS | grep -o '@[^ ]*' | sort -u | tr '\n' ',' | sed 's/,$//')
             echo "owners=$OWNERS" >> $GITHUB_OUTPUT
+            echo "Found code owners: $OWNERS"
           else
+            echo "No CODEOWNERS file found, using default recipients"
             echo "owners=" >> $GITHUB_OUTPUT
           fi
 
+      - name: Read vulnerability summary into output
+        id: read_summary
+        if: always()
+        run: |
+          {
+            echo "summary<<EOF"
+            cat vulnerability-summary.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
       - name: Send Email Notification
-        if: always() && (steps.summary.outputs.has_vulnerabilities == 'true' || failure())
+        if: always()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
@@ -177,14 +198,10 @@ jobs:
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: >
-            ${{ 
-              (failure() && '🚨 Scan Failed: ') || 
-              (steps.summary.outputs.has_vulnerabilities == 'true' && '⚠️ Vulnerabilities Found: ') ||
-              '✅ Scan Completed: '
-            }}Security Scan for ${{ github.repository }}
+            ${{ steps.summary.outputs.has_vulnerabilities == 'true' && '⚠️ Vulnerabilities Found:' || '✅ Scan Completed:' }} Security Scan for ${{ github.repository }}
           body: |
             <p>View <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">workflow run</a> | <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ env.COMMIT_ID }}">commit</a></p>
-            ${{ fileContents('vulnerability-summary.md') }}
+            ${{ steps.read_summary.outputs.summary }}
             <p>Download full reports from workflow artifacts.</p>
           to: ${{ steps.codeowners.outputs.owners || secrets.SECURITY_EMAIL_RECIPIENTS }}
           from: GitHub Actions <noreply@github.com>
