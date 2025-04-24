@@ -210,16 +210,16 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
     # Validate input_shape is always provided (directly or in plan config)
     if not input_shape:
         # Check if input_shape is in plan config
-        if not "input_shape" in plan.config["data_loader"]["settings"]:
+        if "input_shape" not in plan.config["data_loader"]["settings"]:
             raise ValueError(
                 "input_shape is required. "
                 "Please provide input_shape parameter to 'fx plan initialize' or "
                 "define 'input_shape' in data_loader.settings in plan.yaml."
             )
-    
+
     data_loader = get_dataloader(
-        plan, 
-        prefer_minimal=True, 
+        plan,
+        prefer_minimal=True,
         input_shape=input_shape
     )
     task_runner = plan.get_task_runner(data_loader)

@@ -43,14 +43,14 @@ def get_dataloader(
     # Model owner initialization path - used during fx plan initialize and fx model save
     if prefer_minimal:
         return _get_minimal_dataloader(plan, input_shape)
-    
+
     # Collaborator path - used when actually running the federation
     else:
         return _get_collaborator_dataloader(plan, collaborator_index)
 
 
 def _get_minimal_dataloader(
-    plan: Plan, 
+    plan: Plan,
     input_shape: Optional[Union[list, dict]] = None
 ) -> DataLoader:
     """Get a minimal dataloader for model initialization on the model owner/aggregator.
@@ -69,13 +69,13 @@ def _get_minimal_dataloader(
 
     # Create a mock dataloader with the input shape
     data_loader: DataLoader = MockDataLoader(input_shape)
-    
+
     # Inherit all attributes from data_loader.settings except input_shape
     # to avoid overriding the explicitly provided shape
     for key, value in plan.config["data_loader"]["settings"].items():
         if key != "input_shape":  # Skip input_shape to preserve the one used for initialization
             setattr(data_loader, key, value)
-    
+
     return data_loader
 
 
