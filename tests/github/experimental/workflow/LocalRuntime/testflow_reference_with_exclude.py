@@ -255,17 +255,14 @@ if __name__ == "__main__":
     for idx, collaborator_name in enumerate(collaborator_names):
         collaborators.append(Collaborator(name=collaborator_name))
 
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
+
     local_runtime = LocalRuntime(
-        aggregator=aggregator,
-        collaborators=collaborators,
+        aggregator=aggregator, collaborators=collaborators, backend=backend
     )
-
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "ray":
-            local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend="ray"
-            )
-
+    
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReferenceWithExclude(checkpoint=True)
