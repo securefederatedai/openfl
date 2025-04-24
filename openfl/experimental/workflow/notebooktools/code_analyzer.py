@@ -85,7 +85,10 @@ class CodeAnalyzer:
         return Path(output_path).joinpath(export_filename).resolve()
 
     def __comment_script(self) -> None:
-        """Modifies the given python script by commenting out and updating relevant code"""
+        """Modifies the given python script by commenting out following code:
+        - occurences of flflow.run()
+        - instance of FederatedRuntime
+        """
         runtime_class = "FederatedRuntime"
         instantiation_info = self.__extract_class_instantiation_info(runtime_class)
         instance_name = instantiation_info.get("instance_name", [])
@@ -93,35 +96,32 @@ class CodeAnalyzer:
         with open(self.script_path, "r") as file:
             code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
 
-        script_with_class_commented = self.__comment_class_instantiation(code, runtime_class)
-        script_with_all_updated = self.__update_all_declaration(
-            script_with_class_commented, instance_name
-        )
-        updated_script = self.__comment_run_instance(script_with_all_updated, instance_name)
+        code = self.__comment_flow_execution(code)
+        code = self.__comment_class_instance(code, instance_name)
 
         with open(self.script_path, "w") as file:
-            file.write(updated_script)
+            file.write(code)
 
-    def __comment_class_instantiation(self, script_code: str, class_name: str) -> str:
+    def __comment_class_instance(self, script_code: str, instance_name: List[str]) -> str:
         """
-        Comments out instantiation of a specific class in the provided script
+        Comments out specified class instance in the provided script
         Args:
             script_code (str): Script content to be analyzed
-            class_name (str): The name of the class
+            instance_name (List[str]): The name of the instance
 
         Returns:
-            str: The modified script with the specified class instantiations commented out
+            str: The updated script with the specified instance lines commented out
         """
         tree = ast.parse(script_code)
         lines = script_code.splitlines()
         lines_to_comment = set()
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-                call = node.value
-                if isinstance(call.func, ast.Name) and call.func.id == class_name:
-                    start = node.lineno - 1
-                    end = node.end_lineno - 1
-                    for i in range(start, end + 1):
+            if isinstance(node, (ast.Assign, ast.Expr)):
+                if any(
+                    isinstance(subnode, ast.Name) and subnode.id in instance_name
+                    for subnode in ast.walk(node)
+                ):
+                    for i in range(node.lineno - 1, node.end_lineno):
                         lines_to_comment.add(i)
         modified_lines = [
             f"# {line}" if idx in lines_to_comment else line for idx, line in enumerate(lines)
@@ -130,59 +130,24 @@ class CodeAnalyzer:
 
         return updated_script
 
-    def __comment_run_instance(self, script_code: str, instance_name: List[str]) -> str:
+    def __comment_flow_execution(self, script_code: str) -> str:
         """
-        Comments out lines containing run_statement or any specified instance name
+        Comment out lines containing '.run()' in the specified Python script
         Args:
             script_code(str): Script content to be analyzed
-            instance_name (List[str]): The name of the instance
 
         Returns:
-            str: The modified script with matching lines commented out
+            str: The modified script with run_statement commented out
         """
+        run_statement = ".run()"
         lines = script_code.splitlines()
         for idx, line in enumerate(lines):
             stripped_line = line.strip()
-            if stripped_line.startswith("#"):
-                continue
-            if ".run()" in line or any(name in line for name in instance_name):
+            if not stripped_line.startswith("#") and run_statement in stripped_line:
                 lines[idx] = f"# {line}"
         updated_script = "\n".join(lines)
 
         return updated_script
-
-    def __update_all_declaration(self, script_code: str, instance_name: List[str]) -> str:
-        """
-        Updates the __all__ declaration by removing specified instance from the list
-        Args:
-            script_code(str): Script content to be analyzed
-            instance_name (List[str]): The name of the instance
-
-        Returns:
-            str: The modified script with the updated __all__ declaration
-        """
-        tree = ast.parse(script_code)
-        lines = script_code.splitlines()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id == "__all__":
-                        if isinstance(node.value, ast.List):
-                            current_elements = [
-                                elt.s for elt in node.value.elts if isinstance(elt, ast.Constant)
-                            ]
-                            updated_elements = [
-                                elt for elt in current_elements if elt not in instance_name
-                            ]
-                            updated_line = f"__all__ = {updated_elements}"
-                            start = node.lineno - 1
-                            end = node.end_lineno - 1
-                            lines[start] = updated_line
-                            # Remove extra lines
-                            del lines[start + 1 : end + 1]
-        modified_script = "\n".join(lines)
-
-        return modified_script
 
     def __import_generated_script(self) -> None:
         """
