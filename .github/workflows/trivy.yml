@@ -199,10 +199,10 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: >
             ${{ steps.summary.outputs.has_vulnerabilities == 'true' && '⚠️ Vulnerabilities Found:' || '✅ Scan Completed:' }} Security Scan for ${{ github.repository }}
-          body: |
+          html_body: |
             <p>View <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">workflow run</a> | <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ env.COMMIT_ID }}">commit</a></p>
             ${{ steps.read_summary.outputs.summary }}
             <p>Download full reports from workflow artifacts.</p>
           to: ${{ steps.codeowners.outputs.owners || secrets.SECURITY_EMAIL_RECIPIENTS }}
           from: GitHub Actions <noreply@github.com>
-          content_type: text/html
+
