@@ -50,8 +50,7 @@ def get_dataloader(
 
 
 def _get_minimal_dataloader(
-    plan: Plan,
-    input_shape: Optional[Union[list, dict]] = None
+    plan: Plan, input_shape: Optional[Union[list, dict]] = None
 ) -> DataLoader:
     """Get a minimal dataloader for model initialization on the model owner/aggregator.
     This doesn't require actual data to be present and won't attempt to validate data paths.

@@ -217,11 +217,7 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
                 "define 'input_shape' in data_loader.settings in plan.yaml."
             )
 
-    data_loader = get_dataloader(
-        plan,
-        prefer_minimal=True,
-        input_shape=input_shape
-    )
+    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
     round_number = 0

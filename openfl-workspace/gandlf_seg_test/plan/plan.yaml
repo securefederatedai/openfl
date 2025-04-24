@@ -24,7 +24,6 @@ data_loader :
   template : openfl.federated.data.loader_gandlf.GaNDLFDataLoaderWrapper
   settings :
     feature_shape : [32, 32, 32]
-    input_shape : [32, 32, 32]
 
 task_runner :
   template : openfl.federated.task.runner_gandlf.GaNDLFTaskRunner
