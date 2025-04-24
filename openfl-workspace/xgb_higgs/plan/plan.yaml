@@ -23,7 +23,7 @@ data_loader :
   defaults : plan/defaults/data_loader.yaml
   template : src.dataloader.HiggsDataLoader
   settings :
-        input_shape : 28
+    input_shape : 28
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

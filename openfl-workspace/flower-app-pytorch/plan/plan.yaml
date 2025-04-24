@@ -33,7 +33,6 @@ data_loader :
   template : src.loader.FlowerDataLoader
   settings :
     collaborator_count : 2
-        input_shape: [3, 224, 224]
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

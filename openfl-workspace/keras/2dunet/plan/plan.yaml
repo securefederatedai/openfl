@@ -26,7 +26,6 @@ data_loader :
     percent_train: 0.8
     collaborator_count : 2
     data_group_name    : brats
-    input_shape        : [64, 64, 1]
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
