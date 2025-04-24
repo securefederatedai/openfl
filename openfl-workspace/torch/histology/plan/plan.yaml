@@ -24,6 +24,7 @@ data_loader :
     data_group_name    : histology
     batch_size         : 32
     input_shape        : [3, 224, 224]
+    num_classes        : 2
 
 task_runner:
   defaults : plan/defaults/task_runner.yaml
