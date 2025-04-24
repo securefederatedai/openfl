@@ -1,12 +1,10 @@
-# Copyright (C) 2020-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path : save/init.pbuf
-    best_state_path : save/best.pbuf
     last_state_path : save/result.json
     rounds_to_train : 1 # Number of training rounds (set to 1 for Federated Analytics).
 

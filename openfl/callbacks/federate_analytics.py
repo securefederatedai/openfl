@@ -8,9 +8,9 @@ from openfl.callbacks.callback import Callback
 logger = logging.getLogger(__name__)
 
 
-class FederateAnalyticsCallback(Callback):
+class SaveAnalyticsResults(Callback):
     """
-    FederateAnalyticsCallback is a custom callback class for federated analytics.
+    SaveAnalyticsResults is a custom callback class for federated analytics.
     This callback is triggered at the end of federated analytics to perform
     analytics-related operations, such as retrieving tensors tagged with "analytics"
     from a tensor database and saving them to a JSON file.

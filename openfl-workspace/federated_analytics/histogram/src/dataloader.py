@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from openfl.federated.data.loader import DataLoader
 from sklearn.datasets import load_iris

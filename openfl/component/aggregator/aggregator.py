@@ -182,7 +182,7 @@ class Aggregator:
         self.model = None  # Initialize the model attribute to None
 
         # Callbacks
-        federate_analytics_callback = callbacks_module.FederateAnalyticsCallback()
+        federate_analytics_callback = callbacks_module.SaveAnalyticsResults()
         callbacks.append(federate_analytics_callback)
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
@@ -1157,12 +1157,13 @@ class Aggregator:
         self.callbacks.on_round_end(self.round_number, logs)
 
         # Save the latest model
-        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
-            self.round_number, ("analytics",)
-        )
-        if len(analytics_result) == 0 and not self.assigner.is_task_group_evaluation():
+        if not self._has_analytics_results() and not self.assigner.is_task_group_evaluation():
             logger.info("Saving round %s model...", self.round_number)
             self._save_model(self.round_number, self.last_state_path)
+        elif self._has_analytics_results():
+            logger.info(
+                "Skipping model save for round %s due to federated analytics.", self.round_number
+            )
         else:
             logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
 
@@ -1187,6 +1188,18 @@ class Aggregator:
         self.tensor_db.clean_up(self.db_store_rounds)
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
+
+    def _has_analytics_results(self):
+        """
+        Check if the current round has analytics results.
+
+        Returns:
+            bool: True if the current round has analytics results, False otherwise.
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        return len(analytics_result) != 0
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
