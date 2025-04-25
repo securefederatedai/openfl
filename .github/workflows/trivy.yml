@@ -143,23 +143,29 @@ jobs:
         env:
           PYTHONIOENCODING: utf-8
 
-      - name: Convert report to HTML
-        id: convert-report
+      - name: Prepare HTML email content
+        id: prepare-email
         run: |
-          pip install markdown
-          python -c "import markdown; print(markdown.markdown(open('report.md').read()))" > report.html
-          echo "html_body=$(cat report.html)" >> $GITHUB_OUTPUT
+          # Install markdown processor
+          python -m pip install markdown
+
+          # Convert markdown to HTML and properly escape for GITHUB_OUTPUT
+          HTML_CONTENT=$(python -c "import markdown, json; print(json.dumps(markdown.markdown(open('report.md').read())))")
+          echo "html_body=${HTML_CONTENT}" >> $GITHUB_OUTPUT
 
       - name: Send email notification
         if: always() && (steps.report.outputs.has_vulnerabilities == 'true' || failure())
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
+          # Try connection_url format if server_address fails
+          connection_url: ${{ secrets.SMTP_CONNECTION_URL }}  # Format: "smtps://user:pass@host:port"
+          # Alternative if connection_url doesn't work:
+          # server_address: ${{ secrets.SMTP_SERVER }}
+          # server_port: ${{ secrets.SMTP_PORT }}
+          # username: ${{ secrets.SMTP_USERNAME }}
+          # password: ${{ secrets.SMTP_PASSWORD }}
           subject: ${{ steps.set-subject.outputs.subject }}
-          html_body: ${{ steps.convert-report.outputs.html_body }}
+          html_body: ${{ fromJSON(steps.prepare-email.outputs.html_body) }}
           to: ${{ steps.codeowners.outputs.emails }}
           from: OpenFL Security Bot <security@openfl.github>
           convert_markdown: false
