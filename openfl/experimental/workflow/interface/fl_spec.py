@@ -17,7 +17,6 @@ from openfl.experimental.workflow.utilities import (
     MetaflowInterface,
     SerializationError,
     aggregator_to_collaborator,
-    checkpoint,
     collaborator_to_aggregator,
     filter_attributes,
     generate_artifacts,

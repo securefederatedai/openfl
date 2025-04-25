@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch
 import torchvision
-import sys 
+import sys
 from copy import deepcopy
 
 from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator

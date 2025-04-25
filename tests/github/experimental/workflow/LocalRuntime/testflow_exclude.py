@@ -201,7 +201,7 @@ if __name__ == "__main__":
     local_runtime = LocalRuntime(
         aggregator=aggregator, collaborators=collaborators, backend=backend
     )
-    
+
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     flflow = TestFlowExclude(checkpoint=True)

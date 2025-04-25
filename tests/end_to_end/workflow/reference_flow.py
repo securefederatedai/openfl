@@ -132,7 +132,7 @@ class TestFlowReference(FLSpec):
                 "collab_attr_dict_one",
                 "collab_attr_file_one",
                 "collab_attr_math_one",
-                "collab_attr_complex_num_one",                
+                "collab_attr_complex_num_one",
                 "collab_attr_log_one",
                 "collab_attr_model",
                 "collab_attr_optimizer",
