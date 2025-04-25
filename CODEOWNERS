@@ -30,6 +30,6 @@
 /scripts/               aayush.garg@intel.com giribabu.bikki@intel.com karan.shah@intel.com patrick.foley@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
 
 # File level ownership
-CODEOWNERS              aayush.garg@intel.com giribabu.bikki@intel.com patrick.foley@intel.com preethi.asokan@intel.com rahul.garg@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+CODEOWNERS              akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
 
 test-requirements.txt   akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
