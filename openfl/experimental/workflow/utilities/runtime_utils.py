@@ -159,7 +159,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime", "exec
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
         chkpnt_reserved_words (list, optional): A list of reserved words to
-            exclude from checkpointing. Defaults to ["next", "runtime", "checkpoint"].
+            exclude from checkpointing. Defaults to ["next", "runtime", "execute_task_args"].
 
     Returns:
         step_stdout (io.StringIO): parent_func stdout
