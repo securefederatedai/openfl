@@ -17,7 +17,7 @@ jobs:
       security-events: write
       actions: read
       packages: read
-      issues: write  # Needed for creating issues if vulnerabilities found
+      issues: write
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 0
 
       # ============ SCANNING PHASE ============
-      - name: Run security scans
+      - name: Run filesystem scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: 'fs'
@@ -89,7 +89,7 @@ jobs:
               echo -e "\n| Severity | ID | Package | Version | Description |" >> report.md
               echo "|----------|----|---------|---------|-------------|" >> report.md
               jq -r '.Results[]?.Vulnerabilities[]? | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-fs-report.json >> report.md
-              echo "::set-output name=has_vulnerabilities::true"
+              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
             fi
           fi
 
@@ -103,7 +103,7 @@ jobs:
               echo -e "\n| Severity | ID | Package | Version | Description |" >> report.md
               echo "|----------|----|---------|---------|-------------|" >> report.md
               jq -r '.Results[]?.Vulnerabilities[]? | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-image-report.json >> report.md
-              echo "::set-output name=has_vulnerabilities::true"
+              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
             fi
           fi
 
@@ -116,19 +116,27 @@ jobs:
           cat report.md
 
       # ============ NOTIFICATION PHASE ============
+      - name: Set notification subject
+        id: set-subject
+        run: |
+          if [[ "${{ job.status }}" == "failure" ]]; then
+            echo "subject=🚨 OpenFL Security Scan Failed" >> $GITHUB_OUTPUT
+          elif [[ "${{ steps.report.outputs.has_vulnerabilities }}" == "true" ]]; then
+            echo "subject=⚠️ OpenFL Vulnerabilities Found" >> $GITHUB_OUTPUT
+          else
+            echo "subject=✅ OpenFL Security Scan Passed" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract CODEOWNERS emails
         id: codeowners
         run: |
-          # Install Python if not already present
           if ! command -v python &> /dev/null; then
             sudo apt-get update && sudo apt-get install -y python3
           fi
 
-          # Run the Python script
           OUTPUT=$(python .github/scripts/extract_emails.py)
           echo "Extracted emails: $OUTPUT"
           
-          # Parse JSON output and set outputs
           EMAILS=$(echo "$OUTPUT" | jq -r '.emails | join(",")')
           echo "emails=${EMAILS:-${{ secrets.SECURITY_EMAIL_RECIPIENTS }}}" >> $GITHUB_OUTPUT
           echo "codeowners_path=$(echo "$OUTPUT" | jq -r '.codeowners_path')" >> $GITHUB_OUTPUT
@@ -144,11 +152,7 @@ jobs:
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: ${{ 
-            (failure() && '🚨 OpenFL Security Scan Failed') || 
-            (steps.report.outputs.has_vulnerabilities == 'true' && '⚠️ OpenFL Vulnerabilities Found') || 
-            '✅ OpenFL Security Scan Passed'
-          }}
+          subject: ${{ steps.set-subject.outputs.subject }}
           body: file://report.md
           to: ${{ steps.codeowners.outputs.emails }}
           from: "OpenFL Security Bot <security@openfl.github>"
