@@ -181,9 +181,10 @@ class Aggregator:
 
         self.model = None  # Initialize the model attribute to None
 
-        # Callbacks
+        # Callback for FA. For FL the callback will not execute the code to save result for FA exepriment.
         federate_analytics_callback = callbacks_module.SaveAnalyticsResults()
         callbacks.append(federate_analytics_callback)
+        # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,

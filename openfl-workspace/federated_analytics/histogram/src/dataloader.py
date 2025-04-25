@@ -14,7 +14,7 @@ class IRISInMemory(DataLoader):
         # download data
         self._download_raw_data()
         # create shards
-        self.data_shard = self.load_mnist_data_shard(
+        self.data_shard = self.load_data_shard(
             shard_num=int(data_path), **kwargs
         )
 
@@ -44,7 +44,7 @@ class IRISInMemory(DataLoader):
 
         return pd.read_csv('./data/client.csv')
 
-    def load_mnist_data_shard(self, shard_num, collaborator_count, **kwargs):
+    def load_data_shard(self, shard_num, collaborator_count, **kwargs):
         """
         Load a specific shard of the MNIST dataset for a given collaborator.
         Args:

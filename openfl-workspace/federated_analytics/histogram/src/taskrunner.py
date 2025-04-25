@@ -35,10 +35,12 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
         """
         # query data
         data = self.data_loader.query(columns)
-        histogram = {}
+        histograms = {}
         for column in columns:
-            histogram[column] = self.compute_hist(data, column)
-        return histogram
+            hist, bins = self.compute_hist(data, column)
+            histograms[column + " histogram"] = hist
+            histograms[column + " bins"] = bins
+        return histograms
 
     def compute_hist(self, data, col_name):
         """
@@ -47,7 +49,7 @@ class IrisHistogram(FederatedAnalyticsTaskRunner):
             data (pandas.DataFrame): The DataFrame containing the data.
             col_name (str): The name of the column for which to compute the histogram.
         Returns:
-            numpy.ndarray: The computed histogram as an array.
+            tuple: A tuple containing the histogram and bin edges as numpy arrays.
         """
-        histogram, _ = np.histogram(data[col_name], bins=np.linspace(2.0, 10.0, 10))
-        return histogram
+        hist, bins = np.histogram(data[col_name], bins=np.linspace(2.0, 10.0, 10))
+        return hist, bins
