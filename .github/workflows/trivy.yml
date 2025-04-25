@@ -155,20 +155,17 @@ jobs:
 
       - name: Send email notification
         if: always() && (steps.report.outputs.has_vulnerabilities == 'true' || failure())
-        uses: dawidd6/action-send-mail@v3
+        uses: actions-hub/smtp@master
         with:
-          # Try connection_url format if server_address fails
-          #connection_url: ${{ secrets.SMTP_CONNECTION_URL }}  # Format: "smtps://user:pass@host:port"
-          # Alternative if connection_url doesn't work:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
+          server: ${{ secrets.SMTP_SERVER }}
+          port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: ${{ steps.set-subject.outputs.subject }}
           html_body: ${{ fromJSON(steps.prepare-email.outputs.html_body) }}
           to: ${{ steps.codeowners.outputs.emails }}
           from: OpenFL Security Bot <security@openfl.github>
-          convert_markdown: false
+          secure: true
 
       # ============ ARTIFACT UPLOADS ============
       - name: Upload scan artifacts
