@@ -32,6 +32,11 @@ jobs:
           ref: ${{ env.COMMIT_ID }}
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
       # ============ SCANNING PHASE ============
       - name: Run filesystem scan
         uses: aquasecurity/trivy-action@0.30.0
@@ -143,29 +148,34 @@ jobs:
         env:
           PYTHONIOENCODING: utf-8
 
-      - name: Prepare HTML email content
+      - name: Prepare email content
         id: prepare-email
         run: |
-          # Install markdown processor
+          # Convert markdown to HTML
           python -m pip install markdown
+          HTML_CONTENT=$(python -c "import markdown; print(markdown.markdown(open('report.md').read()))")
+          echo "html_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$HTML_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-          # Convert markdown to HTML and properly escape for GITHUB_OUTPUT
-          HTML_CONTENT=$(python -c "import markdown, json; print(json.dumps(markdown.markdown(open('report.md').read())))")
-          echo "html_body=${HTML_CONTENT}" >> $GITHUB_OUTPUT
-
-      - name: Send email notification
+      - name: Send email via Python script
         if: always() && (steps.report.outputs.has_vulnerabilities == 'true' || failure())
-        uses: actions-hub/smtp@master
-        with:
-          server: ${{ secrets.SMTP_SERVER }}
-          port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: ${{ steps.set-subject.outputs.subject }}
-          html_body: ${{ fromJSON(steps.prepare-email.outputs.html_body) }}
-          to: ${{ steps.codeowners.outputs.emails }}
-          from: OpenFL Security Bot <security@openfl.github>
-          secure: true
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          RECIPIENTS: ${{ steps.codeowners.outputs.emails }}
+        run: |
+          python .github/scripts/send_email.py \
+            --sender "security@openfl.github" \
+            --to "$RECIPIENTS" \
+            --subject "${{ steps.set-subject.outputs.subject }}" \
+            --body "${{ steps.prepare-email.outputs.html_body }}" \
+            --smtp-user "$SMTP_USER" \
+            --smtp-pwd "$SMTP_PASSWORD" \
+            --smtp-server "$SMTP_SERVER:$SMTP_PORT" \
+            --html-body
 
       # ============ ARTIFACT UPLOADS ============
       - name: Upload scan artifacts
