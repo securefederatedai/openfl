@@ -1,0 +1,19 @@
+#!/bin/bash
+
+sudo apt-get clean
+rm -rf /var/lib/apt/lists/*
+apt-get update
+
+sudo apt install -y software-properties-common unzip git wget vim
+sudo /usr/bin/add-apt-repository ppa:deadsnakes/ppa && /usr/bin/add-apt-repository ppa:git-core/ppa 
+sudo apt-get update
+sudo apt-get install -y gettext gcc make libz-dev libexpat1-dev libssl-dev \
+    libcurl4-openssl-dev \
+    python3.11 python3.11-distutils
+
+wget https://bootstrap.pypa.io/get-pip.py; python3 get-pip.py
+python3.11 -m pip install virtualenv
+
+apt-get update
+
+git clone https://github.com/securefederatedai/openfl.git
