@@ -54,3 +54,13 @@ az vmss list-instance-public-ips \
   --name vmss-{deploymentName} \
   --query "[].ipAddress"
 ```
+
+## Details
+- OpenFL is cloned at `/openfl`. Copy this directory to home to use without any permission issues.
+- When using `python3`, version 3.10 is used. Yo use 3.11, `python3.11` needs to be used.
+- The following tools, etc are installed during deployment
+  - vim
+  - git
+  - python3.11
+  - pip
+  - virtualenv [pip]
