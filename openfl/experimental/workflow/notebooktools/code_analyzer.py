@@ -43,7 +43,7 @@ class CodeAnalyzer:
                 f"{self.script_name}.py",
             )
         ).resolve()
-        self.__comment_script()
+        self.__modify_experiment_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -84,7 +84,7 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __comment_script(self) -> None:
+    def __modify_experiment_script(self) -> None:
         """Modifies the given python script by commenting out following code:
         - occurences of flflow.run()
         - instance of FederatedRuntime
