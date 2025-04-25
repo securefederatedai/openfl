@@ -1,0 +1,17 @@
+[
+    {
+        "ip": "ip_address",
+        "participants": ["director", "manager", "certifier"],
+        "pem_file": "key_file"
+    },
+    {
+        "ip": "ip_address",
+        "participants": ["Bangalore"],
+        "pem_file": "key_file"
+    },
+    {
+        "ip": "ip_address",
+        "participants": ["Chandler"],
+        "pem_file": "key_file"
+    }
+]
