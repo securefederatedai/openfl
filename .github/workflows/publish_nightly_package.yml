@@ -48,11 +48,11 @@ jobs:
       run: |
         echo "Creating package..."
         base_url="https://github.com/securefederatedai/openfl/tree/"
-        full_url="${base_url}${{ env.COMMIT_ID }}.0"
+        full_url="${base_url}${{ env.COMMIT_ID }}"
         echo "Repository URL: $full_url"
         version=$(grep -oP "(?<=version=')[^']+" setup.py)
         date_suffix=$(date +%Y%m%d)
-        new_version="${version}${date_suffix}"
+        new_version="${version}${date_suffix}.0"
         sed -i 's/name=.*/name="openfl-nightly",/' setup.py
         sed -i "s/version=.*/version='$new_version',/" setup.py
         sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
