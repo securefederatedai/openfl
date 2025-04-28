@@ -48,7 +48,7 @@ jobs:
       run: |
         echo "Creating package..."
         base_url="https://github.com/securefederatedai/openfl/tree/"
-        full_url="${base_url}${{ env.COMMIT_ID }}"
+        full_url="${base_url}${{ env.COMMIT_ID }}.0"
         echo "Repository URL: $full_url"
         version=$(grep -oP "(?<=version=')[^']+" setup.py)
         date_suffix=$(date +%Y%m%d)
@@ -82,12 +82,11 @@ jobs:
       run: |
         python3 -m pip uninstall -y openfl openfl-nightly
         if [ "${{ env.TEST_PYPI }}" == "true" ]; then
-              python3 -m pip install -i https://test.pypi.org/simple/ openfl-nightly==${{ env.NEW_VERSION }}
+          python3 -m pip install -i https://test.pypi.org/simple/ openfl-nightly==${{ env.NEW_VERSION }}
         else
           python3 -m pip install openfl-nightly==${{ env.NEW_VERSION }}
         fi
         python3 -m pip install -r test-requirements.txt
-        echo "Installed the built wheel file from Test PyPI successfully!"
     - name: Verify package installation with E2E test
       id: verify_package_installation
       run: |
