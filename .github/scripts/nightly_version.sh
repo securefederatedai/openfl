@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
+TEST_PYPI=$(grep -oP '^TEST_PYPI=\K.*' $GITHUB_ENV)
+
 if [ "$TEST_PYPI" ]; then
     old_version=$(curl -s https://test.pypi.org/pypi/openfl-nightly/json | python -c "import sys, json; print(json.load(sys.stdin)['info']['version']);")
 else
     old_version=$(curl -s https://pypi.org/pypi/openfl-nightly/json | python -c "import sys, json; print(json.load(sys.stdin)['info']['version']);")
 fi
 
-echo "OLD_VERSION=${old_version}" >> $GITHUB_ENV
+echo "Old version: $old_version"
 
 version=$(grep -oP "(?<=version=')[^']+" setup.py)
 date_suffix=$(date +%Y%m%d)
