@@ -70,7 +70,6 @@ jobs:
         echo "Package built successfully!"
 
     - name: Verify package installation with E2E test
-      id: verify_package_installation
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
         python3 -m pip uninstall -y openfl openfl-nightly
@@ -102,7 +101,6 @@ jobs:
         python3 -m pip install -r test-requirements.txt
 
     - name: Verify package installation with E2E test
-      id: verify_package_installation
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
