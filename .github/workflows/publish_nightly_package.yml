@@ -81,8 +81,7 @@ jobs:
 
     - name: Upload package to PyPI
       run: |
-        # python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
-        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --repository-url https://test.pypi.org/legacy/
+        python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
         echo "Package published successfully!"
 
     - name: Print package information
