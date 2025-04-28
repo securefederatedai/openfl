@@ -47,7 +47,7 @@ jobs:
     - name: Set version and other Metadata in setup.py
       run: |
         bash .github/scripts/nightly_version.sh
-        
+
     - name: Build package
       id: build_package
       run: |
@@ -57,7 +57,7 @@ jobs:
         echo "OPENFL_NIGHTLY_WHL_FILE=$(ls dist/*.whl)" >> $GITHUB_ENV
         echo "Package built successfully!"
 
-    - name: Verify package installation with E2E test
+    - name: Verify package installation before pushing to PyPI
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
         python3 -m pip uninstall -y openfl openfl-nightly
@@ -89,7 +89,7 @@ jobs:
         fi
         python3 -m pip install -r test-requirements.txt
 
-    - name: Verify package installation with E2E test
+    - name: Verify package installation after pushing to PyPI
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
