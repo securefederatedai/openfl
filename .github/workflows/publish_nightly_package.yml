@@ -52,7 +52,7 @@ jobs:
         echo "Repository URL: $full_url"
         version=$(grep -oP "(?<=version=')[^']+" setup.py)
         date_suffix=$(date +%Y%m%d)
-        new_version="${version}${date_suffix}-0"
+        new_version="${version}${date_suffix}0"
         sed -i 's/name=.*/name="openfl-nightly",/' setup.py
         sed -i "s/version=.*/version='$new_version',/" setup.py
         sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
