@@ -2,6 +2,7 @@
 set -e
 
 if [ ${TEST_PYPI} ]; then
+    echo "Using Test PyPI"
     old_version=$(curl -s https://test.pypi.org/pypi/openfl-nightly/json | python -c "import sys, json; print(json.load(sys.stdin)['info']['version']);")
 else
     old_version=$(curl -s https://pypi.org/pypi/openfl-nightly/json | python -c "import sys, json; print(json.load(sys.stdin)['info']['version']);")
@@ -13,15 +14,18 @@ version=$(grep -oP "(?<=version=')[^']+" setup.py)
 date_suffix=$(date +%Y%m%d)
 new_version="${version}${date_suffix}"
 
-# Truncate last digit of old_version and compare with new_version
-truncated_old_version=$(echo "${OLD_VERSION}" | sed 's/.$//')
-if [ "${truncated_old_version}" = "${new_version}" ]; then
+# Remove the last digit of old_version after the last character
+truncated_old_version=$(echo "${old_version}" | sed 's/.$//')
+echo "Truncated old version: $truncated_old_version"
+echo "New version: $new_version"
+if [ "${truncated_old_version}" == "${new_version}" ]; then
     # Increment the last digit of old_version
-    last_digit=$(echo "${OLD_VERSION}" | grep -o '.$')
+    last_digit=$(echo "${old_version}" | grep -o '.$')
     incremented_last_digit=$((last_digit + 1))
     new_version="${new_version}${incremented_last_digit}"
 else
     # Append 0 as the last digit
+    echo "No version present for current date"
     new_version="${new_version}0"
 fi
 
