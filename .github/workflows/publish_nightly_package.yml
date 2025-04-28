@@ -74,6 +74,7 @@ jobs:
         echo "OpenFL version is $(pip list | grep openfl)" 
         python3 -m pip uninstall -y openfl openfl-nightly
         python3 -m pip install ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
+        python3 -m pip install -r test-requirements.txt
         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
         -m task_runner_basic --model_name "keras/mnist" \
         --num_rounds 1 --num_collaborators 1
