@@ -42,15 +42,17 @@ jobs:
     - name: Modify setup.py for nightly build
       run: |
         echo "Creating package..."
-        echo "Github ref: ${{ github.ref }}"
-        echo "github sha: ${{ github.sha }}"
-        echo "source code": ${{ github.head_ref }}.${{ github.sha }}
+        base_url="https://github.com/securefederatedai/openfl/tree/"
+        full_url="${base_url}${{ env.COMMIT_ID }}"
+        echo "Repository URL: $full_url"
         version=$(grep -oP "(?<=version=')[^']+" setup.py)
         date_suffix=$(date +%Y%m%d)
         new_version="${version}${date_suffix}"
         sed -i 's/name=.*/name="openfl-nightly",/' setup.py
         sed -i "s/version=.*/version='$new_version',/" setup.py
         sed -i 's/Development Status :: 5 - Production\/Stable/Development Status :: 4 - Beta/' setup.py
+        sed -i "s/'Source Code': '.*'/'Source Code': '$full_url',/" setup.py
+        cat setup.py
 
     - name: Build package
       id: build_package
