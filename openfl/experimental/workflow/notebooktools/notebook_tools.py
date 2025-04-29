@@ -118,11 +118,8 @@ class NotebookTools:
         """
         data_config = self._initialize_plan_yaml(plan_path)
         data_config["federated_flow"].update(flow_config["federated_flow"])
-        if director_fqdn:
-            network_settings = Plan.parse(plan_path).config["network"]
-            data_config["network"] = network_settings
-            data_config["network"]["settings"]["agg_addr"] = director_fqdn
-            data_config["network"]["settings"]["tls"] = tls
+        data_config["network"]["settings"]["agg_addr"] = director_fqdn
+        data_config["network"]["settings"]["tls"] = tls
 
         return data_config
 
