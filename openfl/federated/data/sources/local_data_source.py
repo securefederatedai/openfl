@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """This module contains the LocalDataSource class."""
 
@@ -61,7 +61,7 @@ class LocalDataSource(DataSource):
                                 f"Total dataset size: {total_size_gb:.2f} GB exceeds "
                                 f"{self.max_dataset_size} GB"
                             )
-                    yield file_path
+                    yield str(file_path)
 
         elif full_path.is_file():
             if self.max_dataset_size > 0:
@@ -72,7 +72,7 @@ class LocalDataSource(DataSource):
                         f"Total dataset size: {total_size_gb:.2f} GB exceeds "
                         f"{self.max_dataset_size} GB"
                     )
-            yield full_path
+            yield str(full_path)
 
     def compute_file_hash(self, path: str) -> str:
         """Compute the hash of the file. Return hash on hexstring format."""
@@ -81,6 +81,11 @@ class LocalDataSource(DataSource):
             for byte_block in iter(lambda: file.read(65536), b""):
                 hash_obj.update(byte_block)
         return hash_obj.hexdigest()
+
+    def read_blob(self, path: str) -> bytes:
+        """Read a blob from the data source."""
+        with open(path, "rb") as file:
+            return file.read()
 
     @classmethod
     def from_dict(cls, ds_dict: dict, base_path):
