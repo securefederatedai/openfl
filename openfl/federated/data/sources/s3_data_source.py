@@ -16,6 +16,7 @@ class S3DataSource(DataSource):
 
     def __init__(
         self,
+        name,
         uri: str,
         endpoint=None,
         access_key_env_name=None,
@@ -23,7 +24,7 @@ class S3DataSource(DataSource):
         secret_name=None,
         hash_func=None,
     ):
-        super().__init__(DataSourceType.S3)
+        super().__init__(DataSourceType.S3, name)
         self.uri = uri
         self.endpoint = endpoint
         self.access_key_env_name = access_key_env_name
@@ -88,6 +89,7 @@ class S3DataSource(DataSource):
         else:
             hash_func = None
         return cls(
+            name=ds_dict["name"],
             uri=ds_dict["uri"],
             endpoint=ds_dict.get("endpoint", None),
             access_key_env_name=ds_dict.get("access_key_env_name", None),
