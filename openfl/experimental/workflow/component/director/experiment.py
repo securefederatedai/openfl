@@ -172,11 +172,11 @@ class Experiment:
 
         logger.info("🧿 Created an Aggregator Server for %s experiment.", self.name)
         aggregator_grpc_server = plan.get_server(
+            director_config,
             root_certificate=root_certificate,
             certificate=certificate,
             private_key=private_key,
             tls=tls,
-            director_config=director_config,
         )
         return aggregator_grpc_server
 
