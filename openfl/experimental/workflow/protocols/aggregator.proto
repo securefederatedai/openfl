@@ -1,16 +1,16 @@
-// Copyright (C) 2020-2023 Intel Corporation
+// Copyright (C) 2020-2025 Intel Corporation
 // Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 syntax = "proto3";
 
 package openfl.experiment.aggregator;
 
-import "openfl/protocols/base.proto";
+import "openfl/experimental/workflow/protocols/base.proto";
 
 
 service Aggregator {
-  rpc SendTaskResults(TaskResultsRequest) returns (TaskResultsResponse) {}
-  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
+  rpc SendTaskResults(stream ExpDataStream) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (stream ExpDataStream);
   rpc CallCheckpoint(CheckpointRequest) returns (CheckpointResponse) {}
 }
 
