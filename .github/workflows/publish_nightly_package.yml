@@ -70,7 +70,7 @@ jobs:
 
     - name: Upload package to PyPI
       run: |
-        if [ "${{ env.TEST_PYPI }}" ]; then
+        if [ "${{ env.TEST_PYPI }}" = true]; then
           python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --repository-url https://test.pypi.org/legacy/
           echo "Package published to Test PyPI successfully!"
         else
@@ -82,7 +82,7 @@ jobs:
       id: install_package_using_wheel
       run: |
         python3 -m pip uninstall -y openfl openfl-nightly
-        if [ "${{ env.TEST_PYPI }}" ]; then
+        if [ "${{ env.TEST_PYPI }}" = true ]; then
           python3 -m pip install -i https://test.pypi.org/simple/ openfl-nightly==${{ env.NEW_VERSION }}
         else
           python3 -m pip install openfl-nightly==${{ env.NEW_VERSION }}

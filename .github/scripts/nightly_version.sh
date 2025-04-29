@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if [ "${TEST_PYPI}" == "true" ]; then
+if [ "${TEST_PYPI}" = true ]; then
     echo "Using Test PyPI"
     old_version=$(curl -s https://test.pypi.org/pypi/openfl-nightly/json | python -c "import sys, json; print(json.load(sys.stdin)['info']['version']);")
 else
