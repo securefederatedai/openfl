@@ -26,6 +26,7 @@ on:
 env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
   TEST_PYPI: ${{ inputs.test_pypi || false }} # use test_pypi from the calling workflow
+  PYTHON_VERSION: "3.10"
 
 permissions:
   id-token: write
@@ -44,6 +45,12 @@ jobs:
       with:
         ref: ${{ env.COMMIT_ID }}
 
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
     - name: Set version and other Metadata in setup.py
       run: |
         bash .github/scripts/nightly_version.sh
