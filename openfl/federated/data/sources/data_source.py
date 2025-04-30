@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base class for different types of data sources."""
@@ -52,8 +52,19 @@ class DataSource(ABC):
         """
         Enumerate all files in the data source.
 
+        Yields:
+            str: The file path.
+        """
+        pass
+
+    @abstractmethod
+    def read_blob(self, path: str) -> bytes:
+        """
+        Read a blob from the data source.
+        Args:
+            path (str): Path to the file.
         Returns:
-            list: A list of objects
+            bytes: The file's content.
         """
         pass
 
