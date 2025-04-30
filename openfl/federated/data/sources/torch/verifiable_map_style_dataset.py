@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
@@ -46,4 +46,14 @@ class VerifiableMapStyleDataset(torch.utils.data.Dataset):
 
     @abstractmethod
     def create_datasets(self):
+        """
+        Create datasets from the data sources.
+
+        This method should be implemented by subclasses to generate a list of datasets
+        based on the provided data sources in the `VerifiableDatasetInfo` object.
+
+        Returns:
+            list: A list of datasets, where each dataset is expected to be an iterable
+                  containing items in the form of dictionaries with keys "data", "label", "path".
+        """
         pass

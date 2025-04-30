@@ -200,10 +200,10 @@ class Envoy:
 
         col = plan.get_collaborator(
             self.name,
+            self.envoy_config,
             self.root_certificate,
             self.private_key,
             self.certificate,
-            envoy_config=self.envoy_config,
             tls=self.tls,
         )
         col.run()
