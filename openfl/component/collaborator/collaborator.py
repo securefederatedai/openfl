@@ -179,6 +179,7 @@ class Collaborator:
             # Run tasks
             logs = {}
             for task in tasks:
+                logger.info("Task: `%s`", task.name)
                 metrics = self.do_task(task, round_num)
                 logs.update(metrics)
 
@@ -194,19 +195,14 @@ class Collaborator:
         """Perform the specified task.
 
         Args:
-            task (list_of_str): List of tasks.
-            round_number (int): Actual round number.
+            task: Task proto.
+            round_number (int): Round number.
 
         Returns:
             A dictionary of reportable metrics of the current collaborator for the task.
         """
-        # map this task to an actual function name and kwargs
-        if isinstance(task, str):
-            task_name = task
-        else:
-            task_name = task.name
-        func_name = self.task_config[task_name]["function"]
-        kwargs = self.task_config[task_name]["kwargs"]
+        func_name = self.task_config[task.name]["function"]
+        kwargs = self.task_config[task.name]["kwargs"]
 
         # this would return a list of what tensors we require as TensorKeys
         # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
@@ -227,7 +223,8 @@ class Collaborator:
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
-        logger.debug("Using TaskRunner subclassing API")
+
+        self.callbacks.on_task_begin(round_number)
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -249,7 +246,7 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        metrics = self.send_task_results(global_output_tensor_dict, round_number, task_name)
+        metrics = self.send_task_results(global_output_tensor_dict, round_number, task.name)
 
         return metrics
 
