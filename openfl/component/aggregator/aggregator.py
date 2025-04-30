@@ -433,7 +433,7 @@ class Aggregator:
         Returns:
             int: Sleep time.
         """
-        # Decrease sleep period for finer discretezation
+        # Decrease sleep period for finer discretization
         return 10
 
     def _time_to_quit(self):
@@ -545,13 +545,28 @@ class Aggregator:
             # Check if minimum collaborators reported results
             self._end_of_round_with_stragglers_check()
 
+    def _check_tags(self, tags: tuple[str, ...], allowed_col: str) -> bool:
+        """
+        Check if all tags are either the allowed collaborator or unauthorized.
+
+        This function verifies that no tag (except the explicitly allowed one)
+        belongs to the list of authorized collaborators.
+
+        Args:
+            tags (tuple[str, ...]): The set of tags to check.
+            allowed_col (str): The only authorized collaborator allowed in the tags.
+
+        Returns:
+            bool: True if all tags are valid, False if an unauthorized collaborator
+            (other than allowed_col) is found.
+        """
+        for tag in tags:
+            if tag in self.authorized_cols and tag != allowed_col:
+                return False
+        return True
+
     def get_aggregated_tensor(
-        self,
-        tensor_name,
-        round_number,
-        report,
-        tags,
-        require_lossless,
+        self, tensor_name, round_number, report, tags, require_lossless, requested_by
     ):
         """
         RPC called by collaborator.
@@ -565,6 +580,7 @@ class Aggregator:
             report (bool): Whether to report.
             tags (tuple[str, ...]): Tags.
             require_lossless (bool): Whether to require lossless.
+            requested_by (str): Request originator name.
 
         Returns:
             named_tensor (protobuf) :  NamedTensor, the tensor requested by the collaborator.
@@ -577,9 +593,14 @@ class Aggregator:
         else:
             compress_lossless = False
 
+        if not self._check_tags(tags, requested_by):
+            logger.error(
+                "Tag check failed: unauthorized tags detected. Only '%s' is allowed.", requested_by
+            )
+            return NamedTensor()
+
         # TODO the TensorDB doesn't support compressed data yet.
-        #  The returned tensor will
-        # be recompressed anyway.
+        # The returned tensor will be recompressed anyway.
         if "compressed" in tags:
             tags = change_tags(tags, remove_field="compressed")
         if "lossy_compressed" in tags:
@@ -1148,16 +1169,16 @@ class Aggregator:
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
+
         # Save the latest model
         if not self.assigner.is_task_group_evaluation():
             logger.info("Saving round %s model...", self.round_number)
             self._save_model(self.round_number, self.last_state_path)
         else:
             logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
-
-        # End of round callbacks.
-        # todo handle case when aggregator restarted before callback was successful
-        self.callbacks.on_round_end(self.round_number, logs)
 
         self.round_number += 1
 
@@ -1171,8 +1192,6 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
-            # End of experiment callbacks.
-            self.callbacks.on_experiment_end()
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
