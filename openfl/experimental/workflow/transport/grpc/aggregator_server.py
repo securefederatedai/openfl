@@ -129,15 +129,14 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802
-        """<FIND OUT WHAT COMMENT TO PUT HERE>.
+        """Processes a request from a collaborator to retrieve the results of a locally
+        executed task.
 
         Args:
             request: The gRPC message request
             context: The gRPC context
         """
-        proto = aggregator_pb2.TaskResultsRequest()
-        proto = datastream_to_proto(proto, request)
-
+        proto = datastream_to_proto(aggregator_pb2.TaskResultsRequest(), request)
         self.validate_collaborator(proto, context)
         self.check_request(proto)
         collaborator_name = proto.header.sender
