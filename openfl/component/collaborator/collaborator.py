@@ -251,7 +251,6 @@ class Collaborator:
 
         self.callbacks.on_task_begin(task.name, round_number)
 
-        self.callbacks.on_task_begin(round_number)
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
