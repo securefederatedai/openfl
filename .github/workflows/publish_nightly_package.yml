@@ -14,7 +14,7 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      commit_id:
+      specific_commit_id:
         required: false
         type: string
         description: "Commit ID to use for the nightly build"
@@ -24,7 +24,7 @@ on:
         description: "Use Test PyPI instead of PyPI"
 
 env:
-  COMMIT_ID: ${{ github.event.inputs.commit_id || github.sha }} # use commit_id from the calling workflow or dispatch
+  COMMIT_ID: ${{ inputs.commit_id || inputs.specific_commit_id || github.sha }} # use commit_id from the calling workflow
   TEST_PYPI: ${{ github.event.inputs.test_pypi || false }} # use test_pypi from the calling workflow or dispatch
 
 permissions:
