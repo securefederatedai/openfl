@@ -12,6 +12,7 @@ import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, base_pb2, utils
 from openfl.protocols.aggregator_client_interface import AggregatorClientInterface
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 
 logger = logging.getLogger(__name__)
@@ -419,8 +420,7 @@ class AggregatorGRPCClient(AggregatorClientInterface):
             tensors=named_tensors,
         )
 
-        # convert (potentially) long list of tensors into stream
-        response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
+        response = self.stub.SendLocalTaskResults(request)
         self.validate_response(response)
 
     @_atomic_connection
