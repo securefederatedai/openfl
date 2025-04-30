@@ -331,7 +331,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             completed=status,
             flspec_obj=flspec_obj,
         )
-        return proto_to_datastream(response)
+        for chunk in proto_to_datastream(response):
+            await context.write(chunk)
 
     async def GetExperimentStdout(
         self, request, context
