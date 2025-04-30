@@ -87,7 +87,7 @@ class FlowerTaskRunner(TaskRunner):
                 "--insecure",
                 "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
             ]
-        
+
         self.logger.info("Starting Flower SuperNode process...")
         supernode_process = subprocess.Popen(command, shell=False)
         interop_server.handle_signals(supernode_process)
@@ -98,7 +98,7 @@ class FlowerTaskRunner(TaskRunner):
                 time.sleep(0.5)
 
             time.sleep(1) # Add a small delay after confirming the port is open
-            
+
             self.logger.info("Starting Flower ClientApp process...")
             flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
             interop_server.handle_signals(flwr_clientapp_process)
