@@ -12,7 +12,7 @@ service Aggregator {
   rpc Ping(PingRequest) returns (PingResponse) {}
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
   rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
-  rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
+  rpc SendLocalTaskResults(TaskResults) returns (SendLocalTaskResultsResponse) {}
   rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
 

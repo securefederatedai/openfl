@@ -10,7 +10,7 @@ from time import sleep
 
 import grpc
 
-from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.transport.grpc.common import create_grpc_server, create_header, synchronized
 
 logger = logging.getLogger(__name__)
@@ -264,7 +264,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
     @synchronized
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
-        """Request a model download from aggregator.
+        """Store collaborator task results on the aggregator.
 
         This method handles a request from a collaborator to send the results
         of a local task.
@@ -278,23 +278,14 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.SendLocalTaskResultsResponse: The response to the
                 request.
         """
-        try:
-            proto = aggregator_pb2.TaskResults()
-            proto = utils.datastream_to_proto(proto, request)
-        except RuntimeError:
-            raise RuntimeError(
-                "Empty stream message, reestablishing connection from client to resume training..."
-            )
+        self.validate_collaborator(request, context)
+        self.check_request(request)
 
-        self.validate_collaborator(proto, context)
-        # all messages get sanity checked
-        self.check_request(proto)
-
-        collaborator_name = proto.header.sender
-        task_name = proto.task_name
-        round_number = proto.round_number
-        data_size = proto.data_size
-        named_tensors = proto.tensors
+        collaborator_name = request.header.sender
+        task_name = request.task_name
+        round_number = request.round_number
+        data_size = request.data_size
+        named_tensors = request.tensors
         self.aggregator.send_local_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
