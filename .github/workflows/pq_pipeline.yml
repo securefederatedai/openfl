@@ -200,6 +200,6 @@ jobs:
       run_bandit
     ]
     uses: ./.github/workflows/publish_nightly_package.yml
+    secrets: inherit
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
-    secrets: inherit
