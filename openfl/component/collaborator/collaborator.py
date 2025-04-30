@@ -216,7 +216,9 @@ class Collaborator:
         )
         input_tensor_dict = {}
         for tensor_key in required_tensorkeys:
-            fetch_from = self.aggregator_uuid if tensor_key.origin == "GLOBAL" else self.collaborator_name
+            fetch_from = (
+                self.aggregator_uuid if tensor_key.origin == "GLOBAL" else self.collaborator_name
+            )
             tensor_key = tensor_key._replace(origin=fetch_from)
             array = self.get_data_for_tensorkey(tensor_key)
             input_tensor_dict.update({tensor_key.tensor_name: array})
