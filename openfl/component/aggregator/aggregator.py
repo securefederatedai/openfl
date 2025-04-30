@@ -1169,16 +1169,16 @@ class Aggregator:
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
-        # End of round callbacks.
-        # todo handle case when aggregator restarted before callback was successful
-        self.callbacks.on_round_end(self.round_number, logs)
-
         # Save the latest model
         if not self.assigner.is_task_group_evaluation():
             logger.info("Saving round %s model...", self.round_number)
             self._save_model(self.round_number, self.last_state_path)
         else:
             logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
+
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
 
         self.round_number += 1
 
@@ -1192,6 +1192,8 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
+            # End of experiment callbacks.
+            self.callbacks.on_experiment_end()
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
