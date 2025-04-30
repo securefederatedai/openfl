@@ -173,7 +173,7 @@ class Collaborator:
                 continue
 
             # Round begin
-            logger.info("Received Tasks: %s", tasks)
+            logger.info("Round: %d Received Tasks: %s", round_num, tasks)
             self.callbacks.on_round_begin(round_num)
 
             # Run tasks

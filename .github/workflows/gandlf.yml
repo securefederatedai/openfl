@@ -41,6 +41,7 @@ jobs:
         pip install torch==2.3.1+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
         pip install paramiko
         pip install .
+        pip install -r test-requirements.txt
 
     - name: Create gandlf and results directories
       run: |
