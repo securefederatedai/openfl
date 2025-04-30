@@ -26,6 +26,7 @@ on:
 env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
   TEST_PYPI: ${{ inputs.test_pypi || false }} # use test_pypi from the calling workflow
+  PYTHON_VERSION: "3.10"
 
 permissions:
   id-token: write
@@ -44,10 +45,15 @@ jobs:
       with:
         ref: ${{ env.COMMIT_ID }}
 
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
     - name: Set version and other Metadata in setup.py
       run: |
         bash .github/scripts/nightly_version.sh
-
     - name: Build package
       id: build_package
       run: |
@@ -56,7 +62,6 @@ jobs:
         python3 -m build
         echo "OPENFL_NIGHTLY_WHL_FILE=$(ls dist/*.whl)" >> $GITHUB_ENV
         echo "Package built successfully!"
-
     - name: Verify package installation before pushing to PyPI
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
@@ -67,7 +72,6 @@ jobs:
         -m task_runner_basic --model_name "keras/mnist" \
         --num_rounds 1 --num_collaborators 1
         echo "Verified the package installation successfully!"
-
     - name: Upload package to PyPI
       run: |
         if [ "${{ env.TEST_PYPI }}" == "true" ]; then
@@ -77,7 +81,6 @@ jobs:
           python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
           echo "Package published to PyPI successfully!"
         fi
-
     - name: Install built package
       id: install_package_using_wheel
       run: |
@@ -88,7 +91,6 @@ jobs:
           python3 -m pip install openfl-nightly==${{ env.NEW_VERSION }}
         fi
         python3 -m pip install -r test-requirements.txt
-
     - name: Verify package installation after pushing to PyPI
       run: |
         echo "OpenFL version is $(pip list | grep openfl)" 
@@ -96,7 +98,6 @@ jobs:
         -m task_runner_basic --model_name "keras/mnist" \
         --num_rounds 1 --num_collaborators 1
         echo "Verified the package installation successfully!"
-
     - name: Print package information
       run: |
         echo "**Version:** $(pip list | grep openfl)" >> $GITHUB_STEP_SUMMARY
