@@ -28,7 +28,7 @@ jobs:
     - name: Set commit ID
       id: set_commit_id
       run: |
-        echo "commit_id=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        echo "commit_id=d27b952a93d263fcb48315dc4e6e025f1c798718" >> $GITHUB_OUTPUT
 
     - name: Print commit ID to summary
       run: |
