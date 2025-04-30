@@ -88,6 +88,7 @@ Round
 
    openfl
    fx
+   infosec-orverview
    troubleshooting
 
 .. toctree::

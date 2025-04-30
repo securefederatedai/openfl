@@ -10,6 +10,7 @@
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6599/badge)](https://bestpractices.coreinfrastructure.org/projects/6599)
+[![Product Quality Pipeline](https://github.com/securefederatedai/openfl/actions/workflows/pq_pipeline.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/pq_pipeline.yml)
 <a href="https://scan.coverity.com/projects/securefederatedai-openfl">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/29040/badge.svg"/>

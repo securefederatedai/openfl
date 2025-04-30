@@ -83,6 +83,3 @@ jobs:
     - name: Workflow - Collaborator Subset (Ray Backend)
       run: |
         python tests/github/experimental/workflow/LocalRuntime/testflow_subset_of_collaborators.py ray
-    - name: Test Experimental Aggregator Based Workflow API
-      run: |
-        python -m tests.github.experimental.workflow.AggregatorBasedWorkflow.test_experimental_agg_based_workflow --custom_template tests/github/experimental/workflow/AggregatorBasedWorkflow/testcase_datastore_cli --fed_workspace aggregator --col col1 --col col2  --rounds-to-train 1
