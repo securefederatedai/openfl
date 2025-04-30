@@ -24,7 +24,7 @@ on:
         description: "Use Test PyPI instead of PyPI"
 
 env:
-  COMMIT_ID: ${{ inputs.commit_id || inputs.specific_commit_id || github.sha }} # use commit_id from the calling workflow
+  COMMIT_ID: ${{ inputs.commit_id }} # use commit_id from the calling workflow
   TEST_PYPI: ${{ github.event.inputs.test_pypi || false }} # use test_pypi from the calling workflow or dispatch
 
 permissions:
