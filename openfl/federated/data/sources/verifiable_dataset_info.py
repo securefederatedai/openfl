@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """This module contains the VerifiableDatasetInfo class."""
@@ -9,6 +9,7 @@ from typing import List
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 from openfl.federated.data.sources.local_data_source import LocalDataSource
+from openfl.federated.data.sources.s3_data_source import S3DataSource
 
 
 class VerifiableDatasetInfo:
@@ -85,18 +86,30 @@ class VerifiableDatasetInfo:
         return self._verify_file_verbose(file_path, file_hash)
 
     def to_json(self):
-        if len(self.data_sources) == 1 and isinstance(self.data_sources[0], LocalDataSource):
+        if len(self.data_sources) == 1:
             return self._to_json_v1()
         return self._to_json_v2()
 
     def _to_json_v1(self):
+        if self.data_sources[0].type == DataSourceType.LOCAL:
+            path = str(self.data_sources[0].get_source_full_path())
+        elif self.data_sources[0].type == DataSourceType.S3:
+            path = self.data_sources[0].uri
+        else:
+            raise ValueError(f"Unknown storage type: {self.data_sources[0].type}")
+
         dataset_dict = {
             "dataset_id": self.create_dataset_hash(),
-            "mount_absolute_path": str(self.data_sources[0].get_source_full_path()),
+            "mount_absolute_path": path,
             "label": self.label,
             "metadata": self.metadata,
             "dataset_format": "concise_dataset",
         }
+        if self.data_sources[0].type == DataSourceType.S3:
+            s3_dict = self.data_sources[0].to_dict()
+            s3_dict.pop("uri")
+            dataset_dict.update(s3_dict)
+
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
     def _to_json_v2(self):
@@ -110,12 +123,22 @@ class VerifiableDatasetInfo:
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
     def _from_dict_v1(data_dict, base_path=None):
-        return VerifiableDatasetInfo(
-            [LocalDataSource(source_path=".", base_path=base_path)],
-            label=data_dict["label"],
-            metadata=data_dict["metadata"],
-            root_hash=data_dict["dataset_id"],
-        )
+        if "endpoint" in data_dict:
+            s3_dict = data_dict
+            s3_dict["uri"] = data_dict["mount_absolute_path"]
+            return VerifiableDatasetInfo(
+                [S3DataSource.from_dict(ds_dict=s3_dict)],
+                label=data_dict["label"],
+                metadata=data_dict["metadata"],
+                root_hash=data_dict["dataset_id"],
+            )
+        else:
+            return VerifiableDatasetInfo(
+                [LocalDataSource(source_path=".", base_path=base_path)],
+                label=data_dict["label"],
+                metadata=data_dict["metadata"],
+                root_hash=data_dict["dataset_id"],
+            )
 
     @staticmethod
     def _from_dict_v2(data_dict, base_path=None):
@@ -126,6 +149,8 @@ class VerifiableDatasetInfo:
         for datasource in data_dict["data_sources"]:
             if datasource["type"] == DataSourceType.LOCAL.value:
                 data_source = LocalDataSource.from_dict(ds_dict=datasource, base_path=base_path)
+            elif datasource["type"] == DataSourceType.S3.value:
+                data_source = S3DataSource.from_dict(ds_dict=datasource)
             else:
                 raise ValueError(f"Unknown storage type: {datasource['type']}")
             data_sources.append(data_source)

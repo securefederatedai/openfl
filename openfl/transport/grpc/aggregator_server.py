@@ -236,7 +236,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         if self.use_connector:
             context.abort(
                 grpc.StatusCode.UNIMPLEMENTED,
-                "This method is not available in framework interopability mode.",
+                "This method is not available in framework interoperability mode.",
             )
 
         self.validate_collaborator(request, context)
@@ -248,6 +248,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request.report,
             tuple(request.tags),
             request.require_lossless,
+            request.header.sender,
         )
 
         header = create_header(
@@ -306,7 +307,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
-
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
     def InteropRelay(self, request, context):
@@ -323,7 +323,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         if not self.use_connector:
             context.abort(
                 grpc.StatusCode.UNIMPLEMENTED,
-                "InteropRelay is only available in federated interopability mode.",
+                "InteropRelay is only available in federated interoperability mode.",
             )
 
         self.validate_collaborator(request, context)
