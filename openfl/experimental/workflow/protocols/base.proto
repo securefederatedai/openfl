@@ -3,9 +3,7 @@
 
 syntax = "proto3";
 
-
-// handles large size data
-message ExpDataStream {
-  uint32 size = 1; // size, in bytes, of the data sent in npbytes
-  bytes npbytes = 2; // actual data
+message WorkflowDataStream {
+  uint32 size = 1;
+  bytes npbytes = 2;
 }

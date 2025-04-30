@@ -1,13 +1,9 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Proto utils."""
 
-import logging
-
 from openfl.experimental.workflow.protocols import base_pb2
-
-logger = logging.getLogger(__name__)
 
 
 def datastream_to_proto(proto, stream):
@@ -16,7 +12,6 @@ def datastream_to_proto(proto, stream):
     Args:
         proto: The protobuf to be filled with the data stream.
         stream: The data stream.
-        logger (optional): The logger for logging information.
 
     Returns:
         proto: The protobuf filled with the data stream.
@@ -37,7 +32,6 @@ def proto_to_datastream(proto, max_buffer_size=(2 * 1024 * 1024)):
 
     Args:
         proto: The protobuf to be converted into a data stream.
-        logger: The logger for logging information.
         max_buffer_size (optional): The maximum buffer size for the data
             stream. Defaults to 2*1024*1024.
 
@@ -50,5 +44,5 @@ def proto_to_datastream(proto, max_buffer_size=(2 * 1024 * 1024)):
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i : i + buffer_size]
-        reply = base_pb2.ExpDataStream(npbytes=chunk, size=len(chunk))
+        reply = base_pb2.WorkflowDataStream(npbytes=chunk, size=len(chunk))
         yield reply

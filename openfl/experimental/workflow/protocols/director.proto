@@ -19,7 +19,7 @@ service Director {
     //Runtime RPCs
     rpc SetNewExperiment(stream ExperimentInfo) returns (SetNewExperimentResponse) {}
     rpc GetEnvoys(GetEnvoysRequest) returns (GetEnvoysResponse) {}
-    rpc GetFlowState(GetFlowStateRequest) returns (stream ExpDataStream) {}
+    rpc GetFlowState(GetFlowStateRequest) returns (stream WorkflowDataStream) {}
     rpc ConnectRuntime(SendRuntimeRequest) returns (RuntimeRequestResponse) {}
     rpc GetExperimentStdout(GetExperimentStdoutRequest) returns (stream GetExperimentStdoutResponse) {}
 }

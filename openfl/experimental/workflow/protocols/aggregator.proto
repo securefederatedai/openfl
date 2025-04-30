@@ -9,8 +9,8 @@ import "openfl/experimental/workflow/protocols/base.proto";
 
 
 service Aggregator {
-  rpc SendTaskResults(stream ExpDataStream) returns (TaskResultsResponse) {}
-  rpc GetTasks(GetTasksRequest) returns (stream ExpDataStream);
+  rpc SendTaskResults(stream WorkflowDataStream) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (stream WorkflowDataStream) {}
   rpc CallCheckpoint(CheckpointRequest) returns (CheckpointResponse) {}
 }
 
