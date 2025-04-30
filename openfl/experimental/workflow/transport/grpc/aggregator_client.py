@@ -317,7 +317,7 @@ class AggregatorGRPCClient:
             stream_buffer=stream_buffer,
         )
 
-        response = self.stub.CallCheckpoint(request)
+        response = self.stub.CallCheckpoint(proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
 
         return response.header

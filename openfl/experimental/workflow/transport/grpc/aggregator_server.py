@@ -180,12 +180,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request: The gRPC message request
             context: The gRPC context
         """
-        self.validate_collaborator(request, context)
-        self.check_request(request)
-        collaborator_name = request.header.sender
-        execution_environment = request.execution_environment
-        function = request.function
-        stream_buffer = request.stream_buffer
+        proto = datastream_to_proto(aggregator_pb2.CheckpointRequest(), request)
+        self.validate_collaborator(proto, context)
+        self.check_request(proto)
+        collaborator_name = proto.header.sender
+        execution_environment = proto.execution_environment
+        function = proto.function
+        stream_buffer = proto.stream_buffer
 
         self.aggregator.call_checkpoint(
             collaborator_name, execution_environment, function, stream_buffer
