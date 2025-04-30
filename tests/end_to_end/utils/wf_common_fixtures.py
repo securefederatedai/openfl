@@ -4,9 +4,12 @@
 import pytest
 import collections
 import numpy as np
+import logging
 
 from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
+
+log = logging.getLogger(__name__)
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 workflow_local_fixture = collections.namedtuple(
@@ -65,6 +68,7 @@ def fx_local_federated_workflow(request):
 
     workflow_backend = request.config.workflow_backend if hasattr(request.config, 'workflow_backend') else None
     if workflow_backend:
+        log.info(f"Using workflow backend: {workflow_backend}")
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=workflow_backend)
     else:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
