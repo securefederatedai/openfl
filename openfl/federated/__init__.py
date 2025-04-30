@@ -17,7 +17,9 @@ if util.find_spec("keras") is not None:
 if util.find_spec("torch") is not None:
     os.environ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib"
     import sys
+
     import typing_extensions
+
     sys.modules["pip._vendor.typing_extensions"] = typing_extensions
     from openfl.federated.data import PyTorchDataLoader
     from openfl.federated.task import PyTorchTaskRunner
