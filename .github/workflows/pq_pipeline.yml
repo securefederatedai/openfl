@@ -33,6 +33,7 @@ jobs:
     - name: Print commit ID to summary
       run: |
         echo "Commit ID used: ${{ steps.set_commit_id.outputs.commit_id }}" >> $GITHUB_STEP_SUMMARY
+        echo ${{ steps.set_commit_id.outputs.commit_id }}
 
   wf_mnist_local_runtime:
     if: |
