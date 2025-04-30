@@ -6,7 +6,6 @@
 import json
 import logging
 import queue
-import time
 from threading import Lock
 from typing import List, Optional
 
@@ -591,17 +590,8 @@ class Aggregator:
             agg_tensor_key = tensor_key
 
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
-
-        start_retrieving_time = time.time()
-        while nparray is None:
-            logger.debug("Waiting for tensor_key %s", agg_tensor_key)
-            time.sleep(5)
-            nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
-            if (time.time() - start_retrieving_time) > 60:
-                break
-
         if nparray is None:
-            raise ValueError(f"Aggregator does not have an aggregated tensor for {tensor_key}")
+            raise ValueError(f"Aggregator does not have `{tensor_key}`")
 
         # quite a bit happens in here, including compression, delta handling,
         # etc...
