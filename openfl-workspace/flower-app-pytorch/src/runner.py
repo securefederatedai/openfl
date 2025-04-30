@@ -52,12 +52,12 @@ class FlowerTaskRunner(TaskRunner):
 
         self.shutdown_requested = False  # Flag to signal shutdown
 
-    def start_client_adapter(self, local_grpc_server, **kwargs):
+    def start_client_adapter(self, interop_server, **kwargs):
         """
         Start the local gRPC server and the Flower SuperNode.
 
         Args:
-            local_grpc_server: The local gRPC server instance.
+            interop_server: The local gRPC server instance.
             **kwargs: Additional parameters, including 'local_server_port'.
         """
         local_server_port = kwargs.get('local_server_port')
@@ -66,10 +66,10 @@ class FlowerTaskRunner(TaskRunner):
             self.shutdown_requested = True
 
         # Set the callback for ending the experiment
-        local_grpc_server.set_end_experiment_callback(message_callback)
-        local_grpc_server.start_server(local_server_port)
+        interop_server.set_end_experiment_callback(message_callback)
+        interop_server.start_server(local_server_port)
 
-        local_server_port = local_grpc_server.get_port()
+        local_server_port = interop_server.get_port()
 
         command = [
             "flower-supernode",
@@ -90,7 +90,7 @@ class FlowerTaskRunner(TaskRunner):
         
         self.logger.info("Starting Flower SuperNode process...")
         supernode_process = subprocess.Popen(command, shell=False)
-        local_grpc_server.handle_signals(supernode_process)
+        interop_server.handle_signals(supernode_process)
 
         if self.SGX_enabled:
             # Check if port is open before starting the client app
@@ -101,20 +101,20 @@ class FlowerTaskRunner(TaskRunner):
             
             self.logger.info("Starting Flower ClientApp process...")
             flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
-            local_grpc_server.handle_signals(flwr_clientapp_process)
+            interop_server.handle_signals(flwr_clientapp_process)
 
         self.logger.info("Press CTRL+C to stop the server and SuperNode process.")
 
-        while not local_grpc_server.termination_event.is_set():
+        while not interop_server.termination_event.is_set():
             if self.shutdown_requested:
                 if self.SGX_enabled:
                     self.logger.info("Terminating Flower ClientApp process...")
-                    local_grpc_server.terminate_supernode_process(flwr_clientapp_process)
+                    interop_server.terminate_supernode_process(flwr_clientapp_process)
                     flwr_clientapp_process.wait()
 
                 self.logger.info("Shutting down the server and SuperNode process...")
-                local_grpc_server.terminate_supernode_process(supernode_process)
-                local_grpc_server.stop_server()
+                interop_server.terminate_supernode_process(supernode_process)
+                interop_server.stop_server()
             time.sleep(0.1)
 
 
