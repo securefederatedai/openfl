@@ -1,11 +1,10 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
-from pathlib import Path
 from typing import Any, Dict
 
-from torch.utils.data import Dataset
+import torch
 
 
 class LabelMapper:
@@ -32,30 +31,30 @@ class LabelMapper:
         return self.idx_to_label.get(index, None)
 
 
-class LocalFolder(Dataset):
-    def __init__(self, base_path, label_mapper: LabelMapper, transform=None):
+class FolderDataset(torch.utils.data.Dataset):
+    def __init__(self, label_mapper: LabelMapper, transform=None):
         """
         Args:
-            base_path (str or Path): Root directory containing labeled subdirectories.
             label_mapper (LabelMapper): LabelMapper object to map class names to indices.
-            transform (callable, optional): Transformations to apply to loaded data.
+            transform (callable, optional): Transformations to apply to images.
         """
-        self.base_path = Path(base_path).resolve()
         self.transform = transform
-        self.samples = []
         self.label_mapper = label_mapper
 
         # Build the dataset
-        self._load_samples()
+        self.samples = self._load_samples()
+
+    def _get_label(self, file_path):
+        """Get the label for a given file path."""
+        label_name = file_path.split("/")[-2] if len(file_path.split("/")) > 1 else None
+        return self.label_mapper.get_label_index(label_name)
 
     def _load_samples(self):
-        """Recursively find all files and assign labels based on the directory name."""
-        for file_path in self.base_path.rglob("*"):  # Search for all files in subdirectories
-            if file_path.is_file():
-                # Get parent directory as label
-                label_name = file_path.parent.name
-                label_idx = self.label_mapper.get_label_index(label_name)  # Use common mapping
-                self.samples.append((file_path, label_idx))
+        """Loads all file paths and their inferred labels"""
+        return [
+            (file_path, self._get_label(file_path))
+            for file_path in self.datasource.enumerate_files()
+        ]
 
     @abstractmethod
     def load_file(self, file_path):

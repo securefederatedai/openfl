@@ -2,13 +2,11 @@
 # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 aggregator:
-  defaults: plan/defaults/aggregator.yaml
   template: openfl.experimental.workflow.component.Aggregator
   settings:
     rounds_to_train: 1
 
 collaborator:
-  defaults: plan/defaults/collaborator.yaml
   template: openfl.experimental.workflow.component.Collaborator
   settings: {}
 
@@ -17,4 +15,10 @@ federated_flow:
   settings: {}
 
 network:
-  defaults: plan/defaults/network.yaml
+  template: openfl.federation.Network
+  settings:
+    agg_addr: auto
+    agg_port: auto
+    tls: True
+    client_reconnect_interval: 5
+    disable_client_auth: False
