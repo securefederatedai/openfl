@@ -218,37 +218,32 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             quit=time_to_quit,
         )
 
-    def GetAggregatedTensor(self, request, context):  # NOQA:N802
-        """Request a job from aggregator.
-
-        This method handles a request from a collaborator for an aggregated
-        tensor.
+    def GetAggregatedTensors(self, request, context):
+        """Request aggregated tensors from the aggregator.
 
         Args:
-            request (aggregator_pb2.GetAggregatedTensorRequest): The request
-                from the collaborator.
+            request (aggregator_pb2.GetAggregatedTensorsRequest): The request
+                from the collaborator comprising a list of TensorSpec objects.
             context (grpc.ServicerContext): The context of the request.
 
         Returns:
-            aggregator_pb2.GetAggregatedTensorResponse: The response to the
-                request.
+            aggregator_pb2.GetAggregatedTensorsResponse: The response to the
+                request, containing the aggregated tensors as list of `NamedTensor`s.
         """
-        if self.use_connector:
-            context.abort(
-                grpc.StatusCode.UNIMPLEMENTED,
-                "This method is not available in framework interoperability mode.",
-            )
-
         self.validate_collaborator(request, context)
         self.check_request(request)
 
-        named_tensor = self.aggregator.get_aggregated_tensor(
-            request.tensor_name,
-            request.round_number,
-            request.report,
-            tuple(request.tags),
-            request.require_lossless,
-            request.header.sender,
+        # Parse.
+        named_tensors = (
+            self.aggregator.get_aggregated_tensor(
+                ts.tensor_name,
+                ts.round_number,
+                ts.report,
+                tuple(ts.tags),
+                ts.require_lossless,
+                request.header.sender,
+            )
+            for ts in request.tensor_specs
         )
 
         header = create_header(
@@ -257,11 +252,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
-
-        return aggregator_pb2.GetAggregatedTensorResponse(
-            header=header,
-            tensor=named_tensor,
-        )
+        return aggregator_pb2.GetAggregatedTensorsResponse(header=header, tensors=named_tensors)
 
     @synchronized
     def SendLocalTaskResults(self, request, context):  # NOQA:N802

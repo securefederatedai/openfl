@@ -341,23 +341,16 @@ class AggregatorGRPCClient:
 
     @_resend_data_on_reconnection
     @_atomic_connection
-    def get_aggregated_tensor(
+    def get_aggregated_tensors(
         self,
-        tensor_name,
-        round_number,
-        report,
-        tags,
+        tensor_keys,
         require_lossless,
     ):
         """
-        Get aggregated tensor from the aggregator.
+        Get aggregated tensors from the aggregator.
 
         Args:
-            collaborator_name (str): The name of the collaborator.
-            tensor_name (str): The name of the tensor.
-            round_number (int): The round number.
-            report (str): The report.
-            tags (List[str]): The tags.
+            tensor_keys (list): A list of tensor keys to fetch from aggregator.
             require_lossless (bool): Whether lossless compression is required.
 
         Returns:
@@ -370,17 +363,24 @@ class AggregatorGRPCClient:
             single_col_cert_common_name=self.single_col_cert_common_name,
         )
 
-        request = aggregator_pb2.GetAggregatedTensorRequest(
+        request = aggregator_pb2.GetAggregatedTensorsRequest(
             header=header,
-            tensor_name=tensor_name,
-            round_number=round_number,
-            report=report,
-            tags=tags,
-            require_lossless=require_lossless,
+            tensor_specs=[
+                aggregator_pb2.TensorSpec(
+                    tensor_name=k.tensor_name,
+                    round_number=k.round_number,
+                    report=k.report,
+                    tags=k.tags,
+                    require_lossless=require_lossless,
+                )
+                for k in tensor_keys
+            ],
         )
-        response = self.stub.GetAggregatedTensor(request)
+
+        response = self.stub.GetAggregatedTensors(request)
         self.validate_response(response)
-        return response.tensor
+        named_tensors = response.tensors
+        return named_tensors
 
     @_resend_data_on_reconnection
     @_atomic_connection

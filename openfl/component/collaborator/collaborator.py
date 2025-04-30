@@ -207,19 +207,36 @@ class Collaborator:
         # this would return a list of what tensors we require as TensorKeys
         # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
         # round_offset) so we need to update these keys to their "absolute values"
-        required_tensorkeys = self.task_runner.get_required_tensorkeys_for_function(
-            func_name, **kwargs
-        )
-        input_tensor_dict = {}
-        for tensor_key in required_tensorkeys:
-            fetch_from = (
-                self.aggregator_uuid if tensor_key.origin == "GLOBAL" else self.collaborator_name
-            )
-            tensor_key = tensor_key._replace(origin=fetch_from)
-            array = self.get_data_for_tensorkey(tensor_key)
-            input_tensor_dict.update({tensor_key.tensor_name: array})
+        tensor_keys = self.task_runner.get_required_tensorkeys_for_function(func_name, **kwargs)
+        global_keys, local_keys = [], []
+        for tensor_key in tensor_keys:
+            if tensor_key.origin == "GLOBAL":
+                tensor_key = tensor_key._replace(
+                    origin=self.aggregator_uuid, round_number=round_number
+                )
+                global_keys.append(tensor_key)
 
-        self.callbacks.on_task_begin(round_number)
+            elif tensor_key.origin == "LOCAL":
+                tensor_key = tensor_key._replace(
+                    origin=self.collaborator_name, round_number=round_number
+                )
+                local_keys.append(tensor_key)
+
+        # Prepare input tensor dict for this task
+        self.fetch_tensors_from_aggregator(global_keys)
+        input_tensor_dict = {}
+        for tk in local_keys:
+            value = self.tensor_db.get_tensor_from_cache(tk)
+            if value is None:
+                raise ValueError(f"Value corresponding to local tensor `{tk}` not found.")
+            input_tensor_dict[tk.tensor_name] = value
+
+        for tk in global_keys:
+            value = self.tensor_db.get_tensor_from_cache(tk)
+            if value is None:
+                raise ValueError(f"Value corresponding to global tensor `{tk}` not found.")
+            input_tensor_dict[tk.tensor_name] = value
+
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
@@ -250,138 +267,27 @@ class Collaborator:
 
         return metrics
 
-    def get_data_for_tensorkey(self, tensor_key):
-        """Resolve the tensor corresponding to the requested tensorkey.
+    def fetch_tensors_from_aggregator(self, tensor_keys: List[TensorKey]):
+        """Fetches tensors from the aggregator and stores them locally.
+
+        This function checks if the tensors are already cached in the local database
+        and fetches them from the aggregator if not. The fetched tensors are then
+        cached in the local database.
 
         Args:
-            tensor_key (namedtuple): Tensorkey that will be resolved locally or
-            remotely. May be the product of other tensors.
-
-        Returns:
-            nparray: The decompressed tensor associated with the requested
-                tensor key.
+            tensor_keys (list): List of TensorKeys to fetch.
         """
-        # try to get from the store
-        tensor_name, origin, round_number, report, tags = tensor_key
-        logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
-        nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
-
-        # if None and origin is our client, request it from the client
-        if nparray is None:
-            if origin == self.collaborator_name:
-                logger.info(
-                    f"Attempting to find locally stored {tensor_name} tensor from prior round..."
-                )
-                prior_round = round_number - 1
-                while prior_round >= 0:
-                    nparray = self.tensor_db.get_tensor_from_cache(
-                        TensorKey(tensor_name, origin, prior_round, report, tags)
-                    )
-                    if nparray is not None:
-                        logger.debug(
-                            f"Found tensor {tensor_name} in local TensorDB for round {prior_round}"
-                        )
-                        return nparray
-                    prior_round -= 1
-                logger.info(f"Cannot find any prior version of tensor {tensor_name} locally...")
-            # Determine whether there are additional compression related
-            # dependencies.
-            # Typically, dependencies are only relevant to model layers
-            tensor_dependencies = self.tensor_codec.find_dependencies(
-                tensor_key, self.use_delta_updates
-            )
-            logger.debug(
-                "Unable to get tensor from local store..."
-                "attempting to retrieve from client len tensor_dependencies"
-                f" tensor_key {tensor_key}"
-            )
-            if len(tensor_dependencies) > 0:
-                # Resolve dependencies
-                # tensor_dependencies[0] corresponds to the prior version
-                # of the model.
-                # If it exists locally, should pull the remote delta because
-                # this is the least costly path
-                prior_model_layer = self.tensor_db.get_tensor_from_cache(tensor_dependencies[0])
-                if prior_model_layer is not None:
-                    uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
-                        tensor_dependencies[1]
-                    )
-                    new_model_tk, nparray = self.tensor_codec.apply_delta(
-                        tensor_dependencies[1],
-                        uncompressed_delta,
-                        prior_model_layer,
-                        creates_model=True,
-                    )
-                    self.tensor_db.cache_tensor({new_model_tk: nparray})
-                else:
-                    logger.info(
-                        "Could not find previous model layer.Fetching latest layer from aggregator"
-                    )
-                    # The original model tensor should be fetched from aggregator
-                    nparray = self.get_aggregated_tensor_from_aggregator(
-                        tensor_key, require_lossless=True
-                    )
-            elif "model" in tags:
-                # Pulling the model for the first time
-                nparray = self.get_aggregated_tensor_from_aggregator(
-                    tensor_key, require_lossless=True
-                )
-            else:
-                # we should try fetching the tensor from aggregator
-                tensor_name, origin, round_number, report, tags = tensor_key
-                tags = (self.collaborator_name,) + tags
-                tensor_key = (tensor_name, origin, round_number, report, tags)
-                logger.info(
-                    "Could not find previous model layer."
-                    f"Fetching latest layer from aggregator {tensor_key}"
-                )
-                nparray = self.get_aggregated_tensor_from_aggregator(
-                    tensor_key, require_lossless=True
-                )
-        else:
-            logger.debug("Found tensor %s in local TensorDB", tensor_key)
-
-        return nparray
-
-    def get_aggregated_tensor_from_aggregator(self, tensor_key, require_lossless=False):
-        """
-        Return the decompressed tensor associated with the requested tensor key.
-
-        If the key requests a compressed tensor (in the tag), the tensor will
-        be decompressed before returning.
-        If the key specifies an uncompressed tensor (or just omits a compressed
-        tag), the decompression operation will be skipped.
-
-        Args:
-            tensor_key (namedtuple): The requested tensor.
-            require_lossless (bool): Should compression of the tensor be
-                allowed in flight? For the initial model, it may affect
-                convergence to apply lossy compression. And metrics shouldn't
-                be compressed either.
-
-        Returns:
-            nparray : The decompressed tensor associated with the requested
-                tensor key.
-        """
-        tensor_name, origin, round_number, report, tags = tensor_key
-
-        logger.debug("Requesting aggregated tensor %s", tensor_key)
-        tensor = self.client.get_aggregated_tensor(
-            tensor_name,
-            round_number,
-            report,
-            tags,
-            require_lossless,
+        tensor_dict = {}
+        tensor_keys = list(
+            filter(lambda k: self.tensor_db.get_tensor_from_cache(k) is None, tensor_keys)
         )
+        if len(tensor_keys) > 0:
+            logger.info("Fetching %d tensors from the aggregator", len(tensor_keys))
+            named_tensors = self.client.get_aggregated_tensors(tensor_keys, require_lossless=True)
+            arrays = [self.named_tensor_to_nparray(named_tensor) for named_tensor in named_tensors]
+            tensor_dict = dict(zip(tensor_keys, arrays))
 
-        # this translates to a numpy array and includes decompression, as
-        # necessary
-        nparray = self.named_tensor_to_nparray(tensor)
-
-        # cache this tensor
-        self.tensor_db.cache_tensor({tensor_key: nparray})
-
-        return nparray
+        self.tensor_db.cache_tensor(tensor_dict)
 
     def send_task_results(self, tensor_dict, round_number, task_name) -> dict:
         """Send task results to the aggregator.
