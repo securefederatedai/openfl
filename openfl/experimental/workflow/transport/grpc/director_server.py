@@ -13,10 +13,9 @@ import grpc
 from grpc import aio, ssl_server_credentials
 
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
-from openfl.experimental.workflow.protocols.utils import proto_to_datastream
 from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
-from openfl.protocols.utils import get_headers
+from openfl.protocols.utils import get_headers, proto_to_datastream
 
 logger = logging.getLogger(__name__)
 

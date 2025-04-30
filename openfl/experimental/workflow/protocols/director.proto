@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package openfl.experimental.workflow.director;
 
-import "openfl/experimental/workflow/protocols/base.proto";
+import "openfl/protocols/base.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
@@ -19,7 +19,7 @@ service Director {
     //Runtime RPCs
     rpc SetNewExperiment(stream ExperimentInfo) returns (SetNewExperimentResponse) {}
     rpc GetEnvoys(GetEnvoysRequest) returns (GetEnvoysResponse) {}
-    rpc GetFlowState(GetFlowStateRequest) returns (stream WorkflowDataStream) {}
+    rpc GetFlowState(GetFlowStateRequest) returns (stream DataStream) {}
     rpc ConnectRuntime(SendRuntimeRequest) returns (RuntimeRequestResponse) {}
     rpc GetExperimentStdout(GetExperimentStdoutRequest) returns (stream GetExperimentStdoutResponse) {}
 }

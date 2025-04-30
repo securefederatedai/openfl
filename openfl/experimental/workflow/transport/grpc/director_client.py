@@ -11,8 +11,8 @@ import grpc
 from grpc._channel import _MultiThreadedRendezvous as DataStream
 
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
-from openfl.experimental.workflow.protocols.utils import datastream_to_proto
 from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
+from openfl.protocols.utils import datastream_to_proto
 
 from .grpc_channel_options import channel_options
 

@@ -13,8 +13,8 @@ from time import sleep
 from grpc import StatusCode, server, ssl_server_credentials
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
-from openfl.experimental.workflow.protocols.utils import datastream_to_proto, proto_to_datastream
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
+from openfl.protocols.utils import datastream_to_proto, proto_to_datastream
 
 logger = logging.getLogger(__name__)
 

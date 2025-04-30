@@ -5,13 +5,13 @@ syntax = "proto3";
 
 package openfl.experiment.aggregator;
 
-import "openfl/experimental/workflow/protocols/base.proto";
+import "openfl/protocols/base.proto";
 
 
 service Aggregator {
-  rpc SendTaskResults(stream WorkflowDataStream) returns (TaskResultsResponse) {}
-  rpc GetTasks(GetTasksRequest) returns (stream WorkflowDataStream) {}
-  rpc CallCheckpoint(stream WorkflowDataStream) returns (CheckpointResponse) {}
+  rpc SendTaskResults(stream DataStream) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (stream DataStream) {}
+  rpc CallCheckpoint(stream DataStream) returns (CheckpointResponse) {}
 }
 
 message MessageHeader {
