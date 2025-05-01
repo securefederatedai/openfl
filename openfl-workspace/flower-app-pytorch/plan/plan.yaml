@@ -22,7 +22,7 @@ connector :
     flwr_run_params :
       flwr_app_name : "app-pytorch"
       federation_name : "local-poc"
-      patch: True
+      sgx_enabled: False
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
@@ -39,7 +39,7 @@ task_runner :
   template : src.runner.FlowerTaskRunner
   settings :
     flwr_app_name: app-pytorch
-    patch: True
+    sgx_enabled: False
 
 network :
   defaults : plan/defaults/network.yaml
