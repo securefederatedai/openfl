@@ -59,7 +59,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         self.interop_client = (
             self.aggregator.connector.get_interop_client() if self.use_connector else None
-            )
+        )
 
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 

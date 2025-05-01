@@ -1174,7 +1174,7 @@ class Aggregator:
 
         logs = {}
         if not self.connector:
-        # Compute all validation related metrics
+            # Compute all validation related metrics
             for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
                 logs.update(self._compute_validation_related_task_metrics(task_name))
 
@@ -1187,7 +1187,9 @@ class Aggregator:
                 logger.info("Saving round %s model...", self.round_number)
                 self._save_model(self.round_number, self.last_state_path)
             else:
-                logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
+                logger.info(
+                    "Skipping model save for round %s in evaluation mode.", self.round_number
+                )
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
