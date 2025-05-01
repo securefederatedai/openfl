@@ -55,17 +55,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.certificate = certificate
         self.private_key = private_key
 
-        if hasattr(self.aggregator, "is_connector_available"):
-            self.use_connector = self.aggregator.is_connector_available()
-        else:
-            self.use_connector = False
+        self.use_connector = self.aggregator.connector is not None
 
-        if self.use_connector:
-            self.interop_client = (
-                self.aggregator.get_interop_client()
-            )  # Initialize the interoperability client
-        else:
-            self.interop_client = None
+        self.interop_client = (
+            self.aggregator.connector.get_interop_client() if self.use_connector else None
+            )
 
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
@@ -344,7 +338,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         """Starts the aggregator gRPC server."""
 
         if self.use_connector:
-            self.aggregator.start_connector()
+            self.aggregator.connector.start()
 
         server = create_grpc_server(
             self.uri,
@@ -364,6 +358,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sleep(5)
 
         if self.use_connector:
-            self.aggregator.stop_connector()
+            self.aggregator.connector.stop()
 
         server.stop(0)

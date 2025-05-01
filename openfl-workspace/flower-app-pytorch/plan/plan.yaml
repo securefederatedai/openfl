@@ -3,7 +3,7 @@
 
 aggregator :
   defaults : plan/defaults/aggregator.yaml
-  template : src.aggregator.AggregatorFlower
+  template : openfl.component.Aggregator
   settings :
     rounds_to_train : 1 # DO NOT EDIT. This is to indicate OpenFL communication rounds
     persist_checkpoint : false
