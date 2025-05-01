@@ -34,10 +34,10 @@ class FlowerTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.SGX_enabled = kwargs.get('SGX_enabled')
+        self.sgx_enabled = kwargs.get('sgx_enabled')
         if self.data_loader is None:
             flwr_app_name = kwargs.get('flwr_app_name')
-            if self.SGX_enabled:
+            if self.sgx_enabled:
                 install_flower_FAB(flwr_app_name)
             return
 
@@ -80,7 +80,7 @@ class FlowerTaskRunner(TaskRunner):
             "--node-config", f"data-path='{self.data_path}'"
         ]
 
-        if self.SGX_enabled:
+        if self.sgx_enabled:
             command += ["--isolation", "process"]
             flwr_clientapp_command = [
                 "flwr-clientapp",
@@ -92,7 +92,7 @@ class FlowerTaskRunner(TaskRunner):
         supernode_process = subprocess.Popen(command, shell=False)
         interop_server.handle_signals(supernode_process)
 
-        if self.SGX_enabled:
+        if self.sgx_enabled:
             # Check if port is open before starting the client app
             while not is_port_open('127.0.0.1', local_server_port):
                 time.sleep(0.5)
@@ -107,7 +107,7 @@ class FlowerTaskRunner(TaskRunner):
 
         while not interop_server.termination_event.is_set():
             if self.shutdown_requested:
-                if self.SGX_enabled:
+                if self.sgx_enabled:
                     self.logger.info("Terminating Flower ClientApp process...")
                     interop_server.terminate_supernode_process(flwr_clientapp_process)
                     flwr_clientapp_process.wait()
