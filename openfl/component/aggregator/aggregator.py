@@ -40,7 +40,7 @@ class Aggregator:
         uuid (int): Aggregator UUID.
         federation_uuid (str): Federation UUID.
         assigner: Object assigning tasks to collaborators.
-        connector (optional): Object responsible for managing interopability 
+        connector (optional): Object responsible for managing interopability
             with other frameworks. Defaults to None
         quit_job_sent_to (list): Collaborators sent a quit job.
         tensor_db (TensorDB): Object for tensor database.
@@ -1201,7 +1201,8 @@ class Aggregator:
                 self._save_model(self.round_number, self.last_state_path)
             elif self._has_analytics_results():
                 logger.info(
-                    "Skipping model save for round %s due to federated analytics.", self.round_number
+                    "Skipping model save for round %s due to federated analytics.",
+                    self.round_number,
                 )
             else:
                 logger.info(
