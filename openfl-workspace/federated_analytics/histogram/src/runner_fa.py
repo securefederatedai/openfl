@@ -29,7 +29,16 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        # Dummy model initialization
+        # Dummy model initialization. Dummy models and weights are used here as placeholders
+        # to ensure compatibility with the core OpenFL framework, which currently assumes
+        # the presence of a model for federated learning tasks.
+        #
+        # This approach is necessary to support Federated Analytics use cases, which do not
+        # involve traditional model training, until OpenFL is refactored to accommodate
+        # broader use cases beyond learning.
+        #
+        # For more details, refer to the discussion at:
+        # https://github.com/securefederatedai/openfl/discussions/1385#discussioncomment-13009961.
         self.model = None
 
         self.model_tensor_names = []

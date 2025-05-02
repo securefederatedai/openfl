@@ -73,9 +73,9 @@ class IRISInMemory(DataLoader):
         return self.data_shard[columns]
 
     def get_feature_shape(self):
-        """Returns the shape of an example feature array.
+        """This function is not required and is kept for compatibility.
 
         Returns:
-            tuple: The shape of an example feature array.
+            None
         """
         pass
