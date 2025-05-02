@@ -1224,7 +1224,7 @@ class Aggregator:
         analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
             self.round_number, ("analytics",)
         )
-        return len(analytics_result) != 0
+        return len(analytics_result) > 0
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
