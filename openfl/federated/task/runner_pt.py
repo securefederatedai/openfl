@@ -46,10 +46,14 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
-        if device:
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        elif isinstance(device, str):
+            self.device = torch.device(device)
+        elif isinstance(device, torch.device):
             self.device = device
         else:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            raise ValueError("Device must be None, a string, or a torch.device object.")
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
