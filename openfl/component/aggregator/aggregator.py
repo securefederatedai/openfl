@@ -1255,7 +1255,7 @@ class Aggregator:
                         values = values.tolist()
                     analytics_result_json[tensorkey.tensor_name] = values
                 json.dump(analytics_result_json, jsonfile, indent=4)
-            logger.info(f"Analytics result: {analytics_result_json}")
+            logger.debug(f"Analytics result: {analytics_result_json}")
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
