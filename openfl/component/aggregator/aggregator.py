@@ -38,6 +38,8 @@ class Aggregator:
         uuid (int): Aggregator UUID.
         federation_uuid (str): Federation UUID.
         assigner: Object assigning tasks to collaborators.
+        connector (optional): Object responsible for managing interopability 
+            with other frameworks. Defaults to None
         quit_job_sent_to (list): Collaborators sent a quit job.
         tensor_db (TensorDB): Object for tensor database.
         db_store_rounds* (int): Rounds to store in TensorDB.
