@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.callback_list import CallbackList
