@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
@@ -9,6 +9,8 @@ import queue
 import time
 from threading import Lock
 from typing import List, Optional
+
+import numpy as np
 
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
@@ -181,12 +183,21 @@ class Aggregator:
 
         self.model = None  # Initialize the model attribute to None
 
+        # Callback for FA. For FL the callback will not execute the code to
+        # save result for FA experiment.
+        callbacks.append(
+            callbacks_module.LambdaCallback(
+                on_round_end=lambda round_num, logs=None: self.save_analytics_result()
+            )
+        )
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
             origin="aggregator",
+            last_state_path=self.last_state_path,
         )
 
         if initial_tensor_dict:
@@ -1170,9 +1181,13 @@ class Aggregator:
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        if not self.assigner.is_task_group_evaluation():
+        if not self._has_analytics_results() and not self.assigner.is_task_group_evaluation():
             logger.info("Saving round %s model...", self.round_number)
             self._save_model(self.round_number, self.last_state_path)
+        elif self._has_analytics_results():
+            logger.info(
+                "Skipping model save for round %s due to federated analytics.", self.round_number
+            )
         else:
             logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
 
@@ -1203,6 +1218,44 @@ class Aggregator:
         self.tensor_db.clean_up(self.db_store_rounds)
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
+
+    def _has_analytics_results(self):
+        """
+        Check if the current round has analytics results.
+
+        Returns:
+            bool: True if the current round has analytics results, False otherwise.
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        return len(analytics_result) > 0
+
+    def save_analytics_result(self):
+        """
+        Save analytics results to a JSON file.
+        This method retrieves tensors tagged with "analytics" for the current round
+        from the tensor database and saves them as a JSON file at the path specified
+        by `self.last_state_path`. The tensor values are converted to lists if they
+        are NumPy arrays.
+        The saved JSON file contains a dictionary where the keys are tensor names
+        and the values are the corresponding tensor data.
+        Logs the saved analytics result for reference.
+        Returns:
+            None
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        if len(analytics_result) > 0 and self.last_state_path:
+            with open(self.last_state_path, "w") as jsonfile:
+                analytics_result_json = {}
+                for tensorkey, values in analytics_result.items():
+                    if isinstance(values, np.ndarray):
+                        values = values.tolist()
+                    analytics_result_json[tensorkey.tensor_name] = values
+                json.dump(analytics_result_json, jsonfile, indent=4)
+            logger.debug(f"Analytics result: {analytics_result_json}")
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
