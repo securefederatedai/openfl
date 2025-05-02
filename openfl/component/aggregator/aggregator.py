@@ -10,6 +10,8 @@ import time
 from threading import Lock
 from typing import List, Optional
 
+import numpy as np
+
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
@@ -183,8 +185,11 @@ class Aggregator:
 
         # Callback for FA. For FL the callback will not execute the code to
         # save result for FA experiment.
-        federate_analytics_callback = callbacks_module.SaveAnalyticsResults()
-        callbacks.append(federate_analytics_callback)
+        callbacks.append(
+            callbacks_module.LambdaCallback(
+                on_round_end=lambda round_num, logs=None: self.save_analytics_result()
+            )
+        )
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
@@ -1225,6 +1230,32 @@ class Aggregator:
             self.round_number, ("analytics",)
         )
         return len(analytics_result) > 0
+
+    def save_analytics_result(self):
+        """
+        Save analytics results to a JSON file.
+        This method retrieves tensors tagged with "analytics" for the current round
+        from the tensor database and saves them as a JSON file at the path specified
+        by `self.last_state_path`. The tensor values are converted to lists if they
+        are NumPy arrays.
+        The saved JSON file contains a dictionary where the keys are tensor names
+        and the values are the corresponding tensor data.
+        Logs the saved analytics result for reference.
+        Returns:
+            None
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        if len(analytics_result) > 0 and self.last_state_path:
+            with open(self.last_state_path, "w") as jsonfile:
+                analytics_result_json = {}
+                for tensorkey, values in analytics_result.items():
+                    if isinstance(values, np.ndarray):
+                        values = values.tolist()
+                    analytics_result_json[tensorkey.tensor_name] = values
+                json.dump(analytics_result_json, jsonfile, indent=4)
+            logger.info(f"Analytics result: {analytics_result_json}")
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
