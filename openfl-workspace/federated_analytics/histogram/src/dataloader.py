@@ -46,13 +46,13 @@ class IRISInMemory(DataLoader):
 
     def load_data_shard(self, shard_num, collaborator_count, **kwargs):
         """
-        Load a specific shard of the MNIST dataset for a given collaborator.
+        Load a specific shard of dataset for a given collaborator.
         Args:
             shard_num (int): The shard number to load.
             collaborator_count (int): The total number of collaborators.
             **kwargs: Additional keyword arguments.
         Returns:
-            pandas.DataFrame: The shard of the MNIST dataset corresponding to the given shard number.
+            pandas.DataFrame: The shard of dataset corresponding to the given shard number.
         """
 
         return self._load_data().iloc[shard_num-1::collaborator_count]
