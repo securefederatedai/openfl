@@ -105,4 +105,10 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         return []
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
+        """
+        This function is not required and is kept for compatibility.
+
+        Returns:
+            None
+        """
         pass

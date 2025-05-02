@@ -73,7 +73,8 @@ class IRISInMemory(DataLoader):
         return self.data_shard[columns]
 
     def get_feature_shape(self):
-        """This function is not required and is kept for compatibility.
+        """
+        This function is not required and is kept for compatibility.
 
         Returns:
             None
