@@ -1,0 +1,128 @@
+---
+# Publish nightly package to PyPI
+
+name: Publish Nightly Package to PyPI
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+    secrets:
+      PYPI_API_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+        description: "Commit ID to use for the nightly build"
+      test_pypi:
+        required: false
+        type: boolean
+        description: "Use Test PyPI instead of PyPI"
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+  TEST_PYPI: ${{ inputs.test_pypi || false }} # use test_pypi from the calling workflow
+  PYTHON_VERSION: "3.10"
+
+permissions:
+  id-token: write
+
+jobs:
+  publish_package:
+    name: Publish Nightly Package
+    runs-on: ubuntu-22.04
+    environment: dev
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.COMMIT_ID }}
+
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set version and other Metadata in setup.py
+      run: |
+        bash .github/scripts/nightly_version.sh
+
+    - name: Build package
+      id: build_package
+      run: |
+        python3 -m pip install setuptools wheel twine --upgrade build
+        python3 -m pip install .
+        python3 -m build
+        echo "OPENFL_NIGHTLY_WHL_FILE=$(ls dist/*.whl)" >> $GITHUB_ENV
+        echo "Package built successfully!"
+
+    - name: Verify package installation before pushing to PyPI
+      run: |
+        echo "OpenFL version is $(pip list | grep openfl)" 
+        python3 -m pip uninstall -y openfl openfl-nightly
+        python3 -m pip install ${{ env.OPENFL_NIGHTLY_WHL_FILE }}
+        python3 -m pip install -r test-requirements.txt
+        python3 -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+        -m task_runner_basic --model_name "keras/mnist" \
+        --num_rounds 1 --num_collaborators 1
+        echo "Verified the package installation successfully!"
+
+    - name: Upload package to PyPI
+      run: |
+        if [ "${{ env.TEST_PYPI }}" == "true" ]; then
+          python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }} --repository-url https://test.pypi.org/legacy/
+          echo "Package published to Test PyPI successfully!"
+        else
+          python3 -m twine upload dist/openfl_nightly* --verbose -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+          echo "Package published to PyPI successfully!"
+        fi
+
+    - name: Install built package
+      id: install_package_using_wheel
+      run: |
+        python3 -m pip uninstall -y openfl openfl-nightly
+        # Install the package with retry logic
+        MAX_ATTEMPTS=5
+        WAIT_TIME_IN_SEC=20
+        if [ "${{ env.TEST_PYPI }}" == "true" ]; then
+          PIP_CMD="python3 -m pip install -i https://test.pypi.org/simple/ openfl-nightly==${{ env.NEW_VERSION }}"
+        else
+          PIP_CMD="python3 -m pip install openfl-nightly==${{ env.NEW_VERSION }}"
+        fi
+        for i in $(seq 1 $MAX_ATTEMPTS); do
+          if $PIP_CMD; then
+            echo "Successfully installed openfl-nightly using command '$PIP_CMD'"
+            break
+          else
+            echo "Attempt $i/$MAX_ATTEMPTS failed. Retrying in $WAIT_TIME_IN_SEC seconds..."
+            sleep $WAIT_TIME_IN_SEC
+          fi
+        done
+        # Check if the package was installed successfully
+        if ! python3 -m pip show openfl-nightly > /dev/null; then
+          echo "Failed to install openfl-nightly after $MAX_ATTEMPTS attempts."
+          exit 1
+        fi
+        python3 -m pip install -r test-requirements.txt
+
+    - name: Verify package installation after pushing to PyPI
+      run: |
+        echo "OpenFL version is $(pip list | grep openfl)" 
+        python3 -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+        -m task_runner_basic --model_name "keras/mnist" \
+        --num_rounds 1 --num_collaborators 1
+        echo "Verified the package installation successfully!"
+
+    - name: Print package information
+      run: |
+        echo "**Version:** $(pip list | grep openfl)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit ID:** ${{ env.COMMIT_ID }}" >> $GITHUB_STEP_SUMMARY
+        echo "Package information printed successfully!"

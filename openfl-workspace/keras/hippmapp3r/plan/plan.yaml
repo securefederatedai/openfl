@@ -1,0 +1,66 @@
+# Copyright (C) 2020-2025 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/last.pbuf
+    rounds_to_train : 10
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    use_delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.dataloader.KerasHippmapp3rsynth
+  settings :
+    batch_size : 1
+    input_shape : [160, 160, 128]
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.taskrunner.KerasHippmapp3r
+
+network :
+  defaults : plan/defaults/network.yaml
+  settings :
+    agg_port : 54678
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  defaults : plan/defaults/tasks_keras.yaml
+  aggregated_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 1
+      apply      : global
+      metrics    :
+        - dice_coefficient
+
+  locally_tuned_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 1
+      apply      : local
+      metrics    :
+        - dice_coefficient
+
+  train:
+    function : train_task
+    kwargs   :
+      batch_size : 1
+      epochs     : 1
+      metrics    :
+      - loss
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

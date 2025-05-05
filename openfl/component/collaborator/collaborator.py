@@ -153,6 +153,10 @@ class Collaborator:
             client=self.client,
         )
 
+    def ping(self):
+        """Ping the Aggregator."""
+        self.client.ping()
+
     def run(self):
         from tictoc import bench_dict, timer
         """Run the collaborator."""
@@ -175,7 +179,7 @@ class Collaborator:
                 continue
             bench_dict[self.collaborator_name].step('sleep time')
             # Round begin
-            logger.info("Received Tasks: %s", tasks)
+            logger.info("Round: %d Received Tasks: %s", round_num, tasks)
             self.callbacks.on_round_begin(round_num)
             bench_dict[self.collaborator_name].step('on round begin')
 
@@ -253,7 +257,7 @@ class Collaborator:
         input_tensor_dict = {
             k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
         }
-
+        self.callbacks.on_task_begin(round_number)
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
@@ -265,6 +269,9 @@ class Collaborator:
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
+
+        self.callbacks.on_task_end(round_number)
+
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
         if self._secure_aggregation_enabled:

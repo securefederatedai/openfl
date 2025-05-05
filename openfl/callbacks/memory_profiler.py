@@ -34,7 +34,7 @@ class MemoryProfiler(Callback):
 
         logger.info(f"Round {round_num}: Memory usage: {info}")
         if self.log_dir:
-            with open(os.path.join(self.log_dir, f"{origin}_memory_usage.json"), "a") as f:
+            with open(os.path.join(self.log_dir, f"{origin}_memory_usage.txt"), "a") as f:
                 f.write(json.dumps(info) + "\n")
 
 

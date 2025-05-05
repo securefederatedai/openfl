@@ -7,7 +7,7 @@
 import sys
 from logging import getLogger
 from os import makedirs
-from os.path import isfile
+from os.path import isfile, splitext
 from pathlib import Path
 from shutil import copyfile, rmtree
 
@@ -94,7 +94,7 @@ def plan(context):
     "-i",
     "--init_model_path",
     required=False,
-    help="Path to initial model protobuf file.",
+    help="Path to initial model. It can be a protobuf or native format.",
     type=ClickPath(exists=True),
 )
 def initialize(
@@ -202,7 +202,7 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
     Args:
         plan: The federation plan object
         input_shape: The input shape to the model
-        init_model_path: Path to initial model protobuf file
+        init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
@@ -214,8 +214,18 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     if init_model_path and isfile(init_model_path):
         logger.info(f"Loading initial model from {init_model_path}")
-        model_proto = utils.load_proto(init_model_path)
-        init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        file_extension = splitext(init_model_path)[1]
+
+        if file_extension == ".pbuf":
+            model_proto = utils.load_proto(init_model_path)
+            init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        else:
+            try:
+                task_runner.load_native(init_model_path)
+                init_tensor_dict = task_runner.get_tensor_dict(False)
+            except Exception as e:
+                logger.error(f"Failed to load native model: {e}")
+                raise
     else:
         init_tensor_dict = task_runner.get_tensor_dict(False)
 

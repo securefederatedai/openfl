@@ -1,13 +1,13 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os
 import tempfile
 
-import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.ssh_helper as ssh
 
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ class Aggregator():
         self.container_id = container_id
         self.tensor_db_file = os.path.join(self.workspace_path, "local_state", "tensor.db")
         self.res_file = None # Result file to track the logs
+        self.start_process = None # Process associated with the aggregator start command
 
     def generate_sign_request(self):
         """
@@ -70,16 +71,24 @@ class Aggregator():
             log_file = os.path.join("logs", "aggregator.log")
             self.res_file = os.path.join(self.workspace_path, log_file)
 
-            command = f"LOG_FILE={log_file} {constants.AGG_START_CMD}"
+            command = ["fx", "aggregator", "start"]
             if self.eval_scope:
-                command += " --task_group evaluation"
-            fh.run_command(
-                command,
-                error_msg=error_msg,
-                container_id=self.container_id,
-                workspace_path=self.workspace_path,
-                run_in_background=True,
-                bg_file=os.path.join(tempfile.mkdtemp(), "tmp.log"), # this file is simply to keep the process running
+                command.append("--task_group")
+                command.append("evaluation")
+            log.info(f"Command for {self.name}: {command}")
+
+            # Set the log file path for the aggregator process
+            env = os.environ.copy()
+            env["LOG_FILE"] = log_file
+
+            # open file in append mode, so that restarting scenarios can be handled
+            bg_file = open(os.path.join(tempfile.mkdtemp(), "tmp.log"), "a", buffering=1)
+            self.start_process = ssh.run_command_background(
+                cmd=command,
+                work_dir=self.workspace_path,
+                redirect_to_file=bg_file,
+                check_sleep=60,
+                env=env
             )
 
             log.info(
@@ -89,6 +98,21 @@ class Aggregator():
             log.error(f"{error_msg}: {e}")
             raise e
         return True
+
+    def kill_process(self):
+        """
+        Kill the process of the aggregator and wait for it to finish
+        """
+        try:
+            if self.start_process:
+                self.start_process.kill()
+                self.start_process.wait()
+                self.start_process = None
+            else:
+                log.warning("No process found for aggregator")
+        except Exception as e:
+            log.error(f"Failed to kill the process: {e}")
+            raise ex.ProcessKillException(f"Failed to kill the process: {e}")
 
     def modify_data_file(self, data_file, col_name, index):
         """

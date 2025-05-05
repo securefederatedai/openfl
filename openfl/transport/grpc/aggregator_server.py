@@ -55,17 +55,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.certificate = certificate
         self.private_key = private_key
 
-        if hasattr(self.aggregator, "is_connector_available"):
-            self.use_connector = self.aggregator.is_connector_available()
-        else:
-            self.use_connector = False
+        self.interop_mode = self.aggregator.connector is not None
 
-        if self.use_connector:
-            self.interop_client = (
-                self.aggregator.get_interop_client()
-            )  # Initialize the interoperability client
-        else:
-            self.interop_client = None
+        self.interop_client = (
+            self.aggregator.connector.get_interop_client() if self.interop_mode else None
+        )
 
         self.root_certificate_refresher_cb = root_certificate_refresher_cb
 
@@ -138,6 +132,30 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             f"Expected: {self.aggregator.single_col_cert_common_name}, Actual: {request.header.single_col_cert_common_name}"  # noqa: E501
         )
 
+    def Ping(self, request, context):  # NOQA:N802
+        """Ping endpoint of the Aggregator server.
+
+        This method handles a ping request from a collaborator.
+
+        Args:
+            request (aggregator_pb2.PingRequest): The ping request from the
+                collaborator.
+            context (grpc.ServicerContext): The context of the request.
+
+        Returns:
+            aggregator_pb2.PingResponse: The response to the ping request.
+        """
+        self.validate_collaborator(request, context)
+        self.check_request(request)
+        header = create_header(
+            sender=self.aggregator.uuid,
+            receiver=request.header.sender,
+            federation_uuid=self.aggregator.federation_uuid,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+        )
+
+        return aggregator_pb2.PingResponse(header=header)
+
     def GetTasks(self, request, context):  # NOQA:N802
         """Request a job from aggregator.
 
@@ -209,10 +227,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.GetAggregatedTensorResponse: The response to the
                 request.
         """
-        if self.use_connector:
+        if self.interop_mode:
             context.abort(
                 grpc.StatusCode.UNIMPLEMENTED,
-                "This method is not available in framework interopability mode.",
+                "This method is not available in framework interoperability mode.",
             )
 
         self.validate_collaborator(request, context)
@@ -224,6 +242,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request.report,
             tuple(request.tags),
             request.require_lossless,
+            request.header.sender,
         )
 
         header = create_header(
@@ -282,7 +301,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             federation_uuid=self.aggregator.federation_uuid,
             single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
-
         return aggregator_pb2.SendLocalTaskResultsResponse(header=header)
 
     def InteropRelay(self, request, context):
@@ -296,10 +314,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.InteropRelay: The response to the
             request.
         """
-        if not self.use_connector:
+        if not self.interop_mode:
             context.abort(
                 grpc.StatusCode.UNIMPLEMENTED,
-                "InteropRelay is only available in federated interopability mode.",
+                "InteropRelay is only available in federated interoperability mode.",
             )
 
         self.validate_collaborator(request, context)
@@ -319,8 +337,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
     def serve(self):
         """Starts the aggregator gRPC server."""
 
-        if self.use_connector:
-            self.aggregator.start_connector()
+        if self.interop_mode:
+            self.aggregator.connector.start()
 
         server = create_grpc_server(
             self.uri,
@@ -339,7 +357,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         while not self.aggregator.all_quit_jobs_sent():
             sleep(5)
 
-        if self.use_connector:
-            self.aggregator.stop_connector()
+        if self.interop_mode:
+            self.aggregator.connector.stop()
 
         server.stop(0)
