@@ -33,3 +33,9 @@ ignore = [
 [tool.ruff.lint.isort]
 force-single-line = false
 known-first-party = ["openfl"]
+
+[tool.coverage.run]
+omit = [
+    # omit pytorch-generated files in /tmp
+    "/tmp/*",
+]
