@@ -9,7 +9,7 @@ matplotlib==3.10.1
 fpdf2==2.8.2
 papermill==2.6.0
 pyfakefs==5.8.0
-torch==2.4.1
+torch==2.7.0
 boto3==1.37.19
 moto==5.1.1
-torchvision==0.19.1
+torchvision==0.22.0
