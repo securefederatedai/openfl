@@ -9,9 +9,6 @@ aggregator:
     last_state_path: save/last.pbuf
     rounds_to_train: 2
     write_logs: false
-    #callbacks:
-    #- src.call_backs.my_callback
-
   template: openfl.component.aggregator.Aggregator
   defaults : plan/defaults/aggregator.yaml
 assigner :

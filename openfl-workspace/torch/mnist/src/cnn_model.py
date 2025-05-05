@@ -45,7 +45,7 @@ class DigitRecognizerCNN(nn.Module):
             fc2 (nn.Linear): Second fully connected layer with 500 input features and 10 output features.
         """
         super(DigitRecognizerCNN, self).__init__(**kwargs)
-        self.model = models.resnet18(pretrained=True)
+        self.model = models.resnet50(pretrained=True)
         self.fc2 = nn.Linear(1000, 10)  # Update the number of output features to 10
 
     def forward(self, x):

@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
-from openfl.databases import PersistentTensorDB, TensorDB
+from openfl.databases import PersistentTensorDB, TensorDB, TRY_CHANGE
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
@@ -201,7 +201,7 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self._secure_aggregation_enabled = False
+        self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
             from openfl.utilities.secagg.bootstrap import SecAggSetup
 
@@ -834,7 +834,6 @@ class Aggregator:
                 self.metric_queue.put(metrics)
 
             task_results.append(tensor_key)
-        
 
         self.collaborator_tasks_results[task_key] = task_results
 
@@ -1170,8 +1169,10 @@ class Aggregator:
             bench_dict['global'].step('save tictoc')
             
         if self.round_number % 3 == 0:
-            import pickle
             self.tensor_db.tensor_db.to_pickle(f'tensor_db_{str(self.round_number).zfill(2)}.pkl')
+            if TRY_CHANGE:
+                self.tensor_db.secondary_db.to_pickle(f'secondary_tensor_db_{str(self.round_number).zfill(2)}.pkl')
+            bench_dict['global'].step('save_db')
 
         self.round_number += 1
         # resetting stragglers for task for a new round
