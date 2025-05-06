@@ -17,6 +17,7 @@ from openfl.experimental.workflow.utilities.runtime_utils import (
     filter_attributes,
     generate_artifacts,
     parse_attrs,
+    validate_data_types,
 )
 from openfl.experimental.workflow.utilities.stream_redirect import (
     RedirectStdStream,

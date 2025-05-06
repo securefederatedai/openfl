@@ -22,6 +22,7 @@ from openfl.experimental.workflow.utilities import (
     filter_attributes,
     generate_artifacts,
     should_transfer,
+    validate_data_types,
 )
 
 
@@ -127,16 +128,16 @@ class FLSpec:
     def run(self) -> None:
         """Starts the execution of the flow."""
         # Submit flow to Runtime
-        if str(self._runtime) == "LocalRuntime":
+        if str(self.runtime) == "LocalRuntime":
             self._run_local()
-        elif str(self._runtime) == "FederatedRuntime":
+        elif str(self.runtime) == "FederatedRuntime":
             self._run_federated()
         else:
             raise Exception("Runtime not implemented")
 
     def _run_local(self) -> None:
         """Executes the flow using LocalRuntime."""
-        self._setup_initial_state()
+        self._setup_initial_state_local()
         try:
             # Execute all Participant (Aggregator & Collaborator) tasks and
             # retrieve the final attributes
@@ -164,7 +165,7 @@ class FLSpec:
         for name, attr in final_attributes:
             setattr(self, name, attr)
 
-    def _setup_initial_state(self) -> None:
+    def _setup_initial_state_local(self) -> None:
         """
         Sets up the flow's initial state, initializing private attributes for
         collaborators and aggregators.
@@ -176,6 +177,7 @@ class FLSpec:
         self._foreach_methods = []
         FLSpec._reset_clones()
         FLSpec._create_clones(self, self.runtime.collaborators)
+
         # Initialize collaborator private attributes
         self.runtime.initialize_collaborators()
         if self._checkpoint:
@@ -334,7 +336,7 @@ class FLSpec:
         parent = inspect.stack()[1][3]
         parent_func = getattr(self, parent)
 
-        if str(self._runtime) == "LocalRuntime":
+        if str(self.runtime) == "LocalRuntime":
             # Checkpoint current attributes (if checkpoint==True)
             checkpoint(self, parent_func)
 
@@ -343,10 +345,15 @@ class FLSpec:
         if aggregator_to_collaborator(f, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
-        # Remove included / excluded attributes from next task
-        filter_attributes(self, f, **kwargs)
+        if kwargs:
+            # Remove unwanted attributes from next task
+            filter_attributes(self, f, **kwargs)
+            if self.runtime.prohibited_data_types or self.runtime.allowed_data_types:
+                validate_data_types(
+                    self.runtime.prohibited_data_types, self.runtime.allowed_data_types, **kwargs
+                )
 
-        if str(self._runtime) == "FederatedRuntime":
+        if str(self.runtime) == "FederatedRuntime":
             if f.collaborator_step and not f.aggregator_step:
                 self._foreach_methods.append(f.__name__)
 
@@ -359,6 +366,6 @@ class FLSpec:
                 kwargs,
             )
 
-        elif str(self._runtime) == "LocalRuntime":
+        elif str(self.runtime) == "LocalRuntime":
             # update parameters required to execute execute_task function
             self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]
