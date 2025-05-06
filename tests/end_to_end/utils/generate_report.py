@@ -6,19 +6,20 @@ import matplotlib.pyplot as plt
 import json
 from scipy.stats import linregress
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 
 class PDF(FPDF):
     def header(self):
-        self.set_font("Arial", "B", 14)
+        self.set_font("Helvetica", "B", 14)
 
     def chapter_title(self, title):
         self.add_page()
-        self.set_font("Arial", "B", 14)  # Set font to bold for title
-        self.cell(0, 10, title, 0, 1, "L")
+        self.set_font("Helvetica", "B", 14)  # Set font to bold for title
+        self.cell(0, 10, title, 0, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def chapter_body(self, body):
-        self.set_font("Arial", "", 12)
+        self.set_font("Helvetica", "", 12)
         self.multi_cell(0, 10, body)
 
 

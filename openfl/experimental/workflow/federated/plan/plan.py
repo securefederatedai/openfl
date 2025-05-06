@@ -5,7 +5,6 @@
 """Plan module."""
 
 import inspect
-import os
 from hashlib import sha384
 from importlib import import_module, reload
 from logging import getLogger
@@ -15,7 +14,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.experimental.workflow.interface.cli.cli_helper import WORKSPACE
 from openfl.experimental.workflow.transport import AggregatorGRPCClient, AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
@@ -25,7 +23,6 @@ if TYPE_CHECKING:
 
 SETTINGS = "settings"
 TEMPLATE = "template"
-DEFAULTS = "defaults"
 AUTO = "auto"
 
 
@@ -98,8 +95,6 @@ class Plan:
     @staticmethod
     def parse(
         plan_config_path: Path,
-        cols_config_path: Path = None,
-        data_config_path: Path = None,
         resolve=True,
     ) -> "Plan":
         """Parse the Federated Learning plan.
@@ -107,11 +102,6 @@ class Plan:
         Args:
             plan_config_path (string): The filepath to the federated learning
                                        plan
-            cols_config_path (string): The filepath to the federation
-                                       collaborator list [optional]
-            data_config_path (string): The filepath to the federation
-                                       collaborator data configuration
-                                       [optional]
         Returns:
             A federated learning plan object
         """
@@ -125,35 +115,6 @@ class Plan:
             for section in plan.config.keys():
                 if plan.config[section].get(SETTINGS) is None:
                     plan.config[section][SETTINGS] = {}
-
-            # walk the top level keys and load 'defaults' in sorted order
-            for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].pop(DEFAULTS, None)
-
-                if defaults is not None:
-                    defaults = WORKSPACE / "workspace" / defaults
-
-                    plan.files.append(defaults)
-
-                    if resolve:
-                        Plan.logger.info(
-                            f"Loading DEFAULTS for section [red]{section}[/] "
-                            f"from file [red]{defaults}[/].",
-                            extra={"markup": True},
-                        )
-
-                    defaults = Plan.load(Path(defaults))
-
-                    if SETTINGS in defaults:
-                        # override defaults with section settings
-                        defaults[SETTINGS].update(plan.config[section][SETTINGS])
-                        plan.config[section][SETTINGS] = defaults[SETTINGS]
-
-                    defaults.update(plan.config[section])
-
-                    plan.config[section] = defaults
-
-            plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
             if resolve:
                 plan.resolve()
@@ -249,7 +210,6 @@ class Plan:
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
         self.authorized_cols = []  # authorized collaborator list
-        self.cols_data_paths = {}  # collaborator data paths dict
 
         self.collaborator_ = None  # collaborator object
         self.aggregator_ = None  # aggregator object
@@ -285,12 +245,11 @@ class Plan:
                 int(self.hash[:8], 16) % (60999 - 49152) + 49152
             )
 
-    def get_aggregator(self, director_config=None) -> "Aggregator":
+    def get_aggregator(self, director_config) -> "Aggregator":
         """Get federation aggregator.
 
         Args:
             director_config: Path to director config file.
-                Defaults to None
 
         Returns:
             self.aggregator_ (Aggregator): The federation aggregator.
@@ -333,12 +292,12 @@ class Plan:
     def get_collaborator(
         self,
         collaborator_name,
+        envoy_config,
         root_certificate=None,
         private_key=None,
         certificate=None,
         client=None,
         tls=True,
-        envoy_config=None,
     ) -> "Collaborator":
         """Get collaborator.
 
@@ -348,6 +307,7 @@ class Plan:
 
         Args:
             collaborator_name (str): Name of the collaborator.
+            envoy_config (Path): Path to envoy_config.yaml.
             root_certificate (str, optional): Root certificate for the
                 collaborator. Defaults to None.
             private_key (str, optional): Private key for the collaborator.
@@ -357,8 +317,6 @@ class Plan:
             client (Client, optional): Client for the collaborator. Defaults
                 to None.
             tls (bool): Whether to use TLS for the connection.
-            envoy_config (Path): Path to envoy_config.yaml. Defaults
-                to None.
 
         Returns:
             self.collaborator_ (Collaborator): The collaborator instance.
@@ -424,12 +382,6 @@ class Plan:
         Returns:
             AggregatorGRPCClient: gRPC client for the specified collaborator.
         """
-        if tls and not (root_certificate and private_key and certificate):
-            common_name = collaborator_name
-            root_certificate = "cert/cert_chain.crt"
-            certificate = f"cert/client/col_{common_name}.crt"
-            private_key = f"cert/client/col_{common_name}.key"
-
         client_args = self.config["network"][SETTINGS]
 
         # patch certificates
@@ -448,11 +400,11 @@ class Plan:
 
     def get_server(
         self,
+        director_config,
         root_certificate=None,
         private_key=None,
         certificate=None,
         tls=True,
-        director_config=None,
         **kwargs,
     ) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance.
@@ -460,24 +412,17 @@ class Plan:
         Args:
             root_certificate (str, optional): Root certificate for the server.
                 Defaults to None.
+            director_config (Path): Path to director_config.yaml.
             private_key (str, optional): Private key for the server. Defaults
                 to None.
             certificate (str, optional): Certificate for the server. Defaults
                 to None.
             tls (bool): Whether to use TLS for the connection.
-            director_config (Path): Path to director_config.yaml. Defaults
-                to None.
             **kwargs: Additional keyword arguments.
 
         Returns:
             AggregatorGRPCServer: gRPC server of the aggregator instance.
         """
-        if tls and not (root_certificate and private_key and certificate):
-            common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
-            root_certificate = "cert/cert_chain.crt"
-            certificate = f"cert/server/agg_{common_name}.crt"
-            private_key = f"cert/server/agg_{common_name}.key"
-
         server_args = self.config["network"][SETTINGS]
 
         # patch certificates
@@ -551,7 +496,7 @@ class Plan:
         return defaults
 
     def get_private_attr(
-        self, private_attr_name=None, config=None
+        self, private_attr_name, config
     ) -> Tuple[Optional[dict], Optional[dict], dict]:
         """
         Retrieves private attributes defined in a configuration or data file.
@@ -573,43 +518,38 @@ class Plan:
         private_attrs_callable = private_attrs_kwargs = None
         private_attributes = {}
 
-        data_yaml = "plan/data.yaml"
+        d = Plan.load(config)
 
-        if config or (os.path.exists(data_yaml) and os.path.isfile(data_yaml)):
-            d = Plan.load(config) if config else Plan.load(Path(data_yaml).absolute())
+        if d and d.get(private_attr_name, None):
+            callable_func = d.get(private_attr_name, {}).get("callable_func")
+            private_attributes = d.get(private_attr_name, {}).get("private_attributes")
+            if callable_func and private_attributes:
+                logger = getLogger(__name__)
+                logger.warning(
+                    f"Warning: {private_attr_name} private attributes "
+                    "will be initialized via callable and "
+                    "attributes directly specified "
+                    "will be ignored"
+                )
 
-            if d and d.get(private_attr_name, None):
-                callable_func = d.get(private_attr_name, {}).get("callable_func")
-                private_attributes = d.get(private_attr_name, {}).get("private_attributes")
-                if callable_func and private_attributes:
-                    logger = getLogger(__name__)
-                    logger.warning(
-                        f"Warning: {private_attr_name} private attributes "
-                        "will be initialized via callable and "
-                        "attributes directly specified "
-                        "will be ignored"
-                    )
+            if callable_func is not None:
+                private_attrs_callable = {
+                    "template": d.get(private_attr_name)["callable_func"]["template"]
+                }
 
-                if callable_func is not None:
-                    private_attrs_callable = {
-                        "template": d.get(private_attr_name)["callable_func"]["template"]
-                    }
+                private_attrs_kwargs = self.import_kwargs_modules(
+                    d.get(private_attr_name)["callable_func"]
+                )["settings"]
 
-                    private_attrs_kwargs = self.import_kwargs_modules(
-                        d.get(private_attr_name)["callable_func"]
-                    )["settings"]
-
-                    if isinstance(private_attrs_callable, dict):
-                        private_attrs_callable = Plan.import_(**private_attrs_callable)
-                elif private_attributes:
-                    private_attributes = Plan.import_(
-                        d.get(private_attr_name)["private_attributes"]
-                    )
-                elif not callable(private_attrs_callable):
-                    raise TypeError(
-                        f"private_attrs_callable should be callable object "
-                        f"or be import from code part, get {private_attrs_callable}"
-                    )
+                if isinstance(private_attrs_callable, dict):
+                    private_attrs_callable = Plan.import_(**private_attrs_callable)
+            elif private_attributes:
+                private_attributes = Plan.import_(d.get(private_attr_name)["private_attributes"])
+            elif not callable(private_attrs_callable):
+                raise TypeError(
+                    f"private_attrs_callable should be callable object "
+                    f"or be import from code part, get {private_attrs_callable}"
+                )
 
         return (
             private_attrs_callable,
