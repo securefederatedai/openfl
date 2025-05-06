@@ -1,13 +1,15 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import importlib
+import logging
 import os
 import zipfile
 from typing import Union
 
 from openfl.federated import Plan
 from openfl.federated.data.loader import DataLoader
-from openfl.utilities.mocks import MockDataLoader
 
+logger = logging.getLogger(__name__)
 
 def get_dataloader(
     plan: Plan,
@@ -25,13 +27,11 @@ def get_dataloader(
         plan (Plan):
             plan object linked with the dataloader
         prefer_minimal (bool ?):
-            prefer to use MockDataLoader which can be used to more easily
-            instantiate task_runner without any initial data.
+            prefer to initialize dataloader without loading actual data.
+            Used primarily for model initialization.
             Default to `False`.
         input_shape (list | dict ?):
-            input_shape denoted by list notation `[a,b,c, ...]` or in case
-            of multihead models, dict object with individual layer keys such
-            as `{"input_0": [a,b,...], "output_1": [x,y,z, ...]}`
+            Legacy parameter, now deprecated and will be ignored.
             Defaults to `None`.
         collaborator_index (int ?):
             which collaborator should be used for initializing dataloader
@@ -42,31 +42,43 @@ def get_dataloader(
         data_loader (DataLoader): DataLoader instance
     """
 
-    # if specified, try to use minimal dataloader
+    # If prefer_minimal is True, we attempt to create the dataloader without actual data
     if prefer_minimal:
-        # if input_shape not given, try to ascertain input_shape from plan
-        if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
-            input_shape = plan.config["data_loader"]["settings"]["input_shape"]
+        try:
+            # Get the dataloader template from plan
+            dataloader_template = plan.config["data_loader"]["template"]
+            # Dynamically import the dataloader class
+            module_name, class_name = dataloader_template.rsplit(".", 1)
+            try:
+                module = importlib.import_module(module_name)
+                dataloader_class = getattr(module, class_name)
+            except (ImportError, AttributeError) as e:
+                logger.error(f"Failed to import dataloader class: {e}")
+                raise ValueError(
+                    f"Cannot load data_loader class from template "
+                    f"'{dataloader_template}'"
+                ) from e
 
-        # input_shape is resolved; we can use the minimal dataloader intended
-        # for util contexts which does not need a full dataloader with data
-        if input_shape:
-            data_loader: DataLoader = MockDataLoader(input_shape)
-            # generically inherit all attributes from data_loader.settings
-            for key, value in plan.config["data_loader"]["settings"].items():
-                setattr(data_loader, key, value)
+            # Initialize dataloader with None as data_path to skip data loading
+            data_loader_settings = plan.config["data_loader"]["settings"].copy()
+            data_loader = dataloader_class(data_path=None, **data_loader_settings)
+            logger.info("Initialized minimal dataloader for model creation")
             return data_loader
+        except KeyError:
+            logger.error("Missing 'data_loader' or 'template' field in plan configuration")
+            raise ValueError("Invalid plan configuration: missing data_loader template")
+        except Exception as e:
+            logger.warning(f"Could not initialize minimal dataloader: {e}")
+            raise
 
-    # Fallback; try to get a dataloader by constructing it from the collaborator
-    # data directory path present in the the current workspace
-
+    # Regular dataloader initialization with actual data paths
     collaborator_names = list(plan.cols_data_paths)
-    collatorators_count = len(collaborator_names)
+    collaborators_count = len(collaborator_names)
 
-    if collaborator_index >= collatorators_count:
-        raise Exception(
+    if collaborator_index >= collaborators_count:
+        raise ValueError(
             f"Unable to construct full dataloader from collab_index={collaborator_index} "
-            f"when the plan has {collatorators_count} as total collaborator count. "
+            f"when the plan has {collaborators_count} as total collaborator count. "
             f"Please check plan/data.yaml file for current collaborator entries."
         )
 

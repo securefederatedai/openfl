@@ -70,21 +70,6 @@ def plan(context):
     help="The FQDN of the federation aggregator",
 )
 @option(
-    "-f",
-    "--input_shape",
-    cls=InputSpec,
-    required=False,
-    help="""
-    The input spec of the model.
-
-    May be provided as a list for single input head: ``--input-shape [3,32,32]``,
-
-    or as a dictionary for multihead models (must be passed in quotes):
-
-    ``--input-shape "{'input_0': [1, 240, 240, 4],'input_1': [1, 240, 240, 1]}"``.
-    """,
-)
-@option(
     "-g",
     "--gandlf_config",
     required=False,
@@ -103,7 +88,6 @@ def initialize(
     cols_config,
     data_config,
     aggregator_address,
-    input_shape,
     gandlf_config,
     init_model_path,
 ):
@@ -137,16 +121,10 @@ def initialize(
         plan.get_task_runner(data_loader=None)
     else:
         init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
-        # This is needed to bypass data being locally available
-        if input_shape is not None:
-            logger.info(
-                "Attempting to generate initial model weights with custom input shape "
-                f"{input_shape}"
-            )
 
         # Initialize tensor dictionary
         init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
-            plan, input_shape, init_model_path
+            plan, None, init_model_path
         )
 
         tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
@@ -201,13 +179,15 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
 
     Args:
         plan: The federation plan object
-        input_shape: The input shape to the model
+        input_shape: The input shape to the model (deprecated, will be ignored)
         init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
     """
-    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+    # Use the updated get_dataloader function which supports minimal initialization
+    # without requiring hardcoded class names
+    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=None)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
     round_number = 0

@@ -4,31 +4,39 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import KerasDataLoader
+
 from .mnist_utils import load_mnist_shard
 
 
 class KerasMNISTInMemory(KerasDataLoader):
     """Data Loader for MNIST Dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """
         Initialize.
 
         Args:
-            data_path: File path for the dataset
+            data_path: File path for the dataset. If None, initialize for model creation only.
             batch_size (int): The batch size for the data loader
             **kwargs: Additional arguments, passed to super init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
 
-        # TODO: We should be downloading the dataset shard into a directory
-        # TODO: There needs to be a method to ask how many collaborators and
-        #  what index/rank is this collaborator.
-        # Then we have a way to automatically shard based on rank and size of
-        # collaborator list.
+        # Set default values for model initialization
+        self.X_train = None
+        self.y_train = None
+        self.X_valid = None
+        self.y_valid = None
+        self.num_classes = 10  # MNIST has 10 classes
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
+
+        # Load actual data if a data path is provided
         try:
             int(data_path)
-        except:
+        except ValueError:
             raise ValueError(
                 "Expected `%s` to be representable as `int`, as it refers to the data shard " +
                 "number used by the collaborator.",
@@ -43,5 +51,40 @@ class KerasMNISTInMemory(KerasDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
-
         self.num_classes = num_classes
+
+    def get_num_classes(self):
+        """
+        Return the number of classes for the dataset.
+
+        Returns:
+            int: Number of classes for the dataset
+        """
+        return 10
+
+    def get_feature_shape(self):
+        """
+        Return the input shape for the model.
+
+        Returns:
+            list: The input shape for the model [28, 28, 1]
+        """
+        return [28, 28, 1]
+
+    def get_train_data_size(self):
+        """
+        Return the size of the training dataset.
+
+        Returns:
+            int: Size of the training dataset or 0 if not loaded
+        """
+        return 0 if self.X_train is None else len(self.X_train)
+
+    def get_valid_data_size(self):
+        """
+        Return the size of the validation dataset.
+
+        Returns:
+            int: Size of the validation dataset or 0 if not loaded
+        """
+        return 0 if self.X_valid is None else len(self.X_valid)
