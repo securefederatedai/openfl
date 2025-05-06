@@ -163,6 +163,8 @@ class ModelOwner():
 
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
             data["network"]["settings"]["use_tls"] = param_config.use_tls
+            if param_config.tr_rest_api:
+                data["task_runner"]["settings"]["transport_protocol"] = "rest"
             if param_config.secure_agg:
                 data["aggregator"]["settings"]["secure_aggregation"] = True
             with open(plan_file, "w+") as write_file:
