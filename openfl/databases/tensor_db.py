@@ -113,21 +113,23 @@ class TensorDB:
             None
         """
         entries_to_add = []
-        with self.mutex:
-            for tensor_key, nparray in tensor_key_dict.items():
-                tensor_name, origin, fl_round, report, tags = tensor_key
-                entries_to_add.append(
-            {
-                "tensor_name": tensor_name,
-                "origin": origin,
-                "round": fl_round,
-                "report": report,
-                "tags": tags,
-                "nparray": nparray,
-            })
 
-            if len(entries_to_add)>0:
-                new_data = pd.DataFrame(entries_to_add)
+        for tensor_key, nparray in tensor_key_dict.items():
+            tensor_name, origin, fl_round, report, tags = tensor_key
+            entries_to_add.append(
+                {
+                    "tensor_name": tensor_name,
+                    "origin": origin,
+                    "round": fl_round,
+                    "report": report,
+                    "tags": tags,
+                    "nparray": nparray,
+                }
+            )
+
+        if len(entries_to_add) > 0:
+            new_data = pd.DataFrame(entries_to_add)
+            with self.mutex:
                 self.tensor_db = pd.concat([self.tensor_db, new_data], ignore_index=True)
                 filtered_new_data = new_data[
                     ~new_data["tags"].apply(
@@ -137,7 +139,9 @@ class TensorDB:
                     )
                 ].reset_index(drop=True)
                 if len(filtered_new_data) > 0:
-                    self.secondary_db = pd.concat([self.secondary_db, filtered_new_data], ignore_index=True)
+                    self.secondary_db = pd.concat(
+                        [self.secondary_db, filtered_new_data], ignore_index=True
+                    )
 
     def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """Perform a lookup of the tensor_key in the TensorDB.
@@ -168,7 +172,6 @@ class TensorDB:
                 & (self.secondary_db["report"] == report)
                 & (self.secondary_db["tags"] == tags)
             ]
-
 
         if len(df) == 0:
             return None
