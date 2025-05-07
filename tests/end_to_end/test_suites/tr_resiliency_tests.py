@@ -311,13 +311,75 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
     log.info("All participants restarted successfully")
 
-    assert fed_helper.validate_round_increment(
-        fed_obj,
-        round_post_collab_restart,
-        db_file,
-        total_rounds,
+    assert 
+    (
+        round_post_all_restart := fed_helper.validate_round_increment(
+            fed_obj,
+            round_post_collab_restart,
+            db_file,
+            total_rounds,
+        )
     ), f"Expected current round to be ahead of {round_post_collab_restart} after all participants restart"
 
+    log.info("1st round of restarts done successfully")
+    # ======= 2 =========
+    # Restart aggregator 2
+    assert int_helper.restart_participants([fed_obj.aggregator])
+    log.info("2 - Aggregator restarted successfully")
+
+    assert (
+        round_post_agg_restart_2 := fed_helper.validate_round_increment(
+            fed_obj,
+            round_post_all_restart,
+            db_file,
+            total_rounds,
+        )
+    ), f"Expected current round to be ahead of {round_post_all_restart} after aggregator restart 2"
+
+    # Restart all participants 2
+    assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
+    log.info("2 - All participants restarted successfully")
+
+    assert 
+    (
+        round_post_all_restart_2 := fed_helper.validate_round_increment(
+            fed_obj,
+            round_post_agg_restart_2,
+            db_file,
+            total_rounds,
+        )
+    ), f"Expected current round to be ahead of {round_post_agg_restart_2} after all participants restart 2"
+    
+    log.info("2nd round of restarts done successfully")
+    # ======= 3 =========
+    # Restart aggregator 3
+    assert int_helper.restart_participants([fed_obj.aggregator])
+    log.info("3 - Aggregator restarted successfully")
+
+    assert (
+        round_post_agg_restart_3 := fed_helper.validate_round_increment(
+            fed_obj,
+            round_post_all_restart_2,
+            db_file,
+            total_rounds,
+        )
+    ), f"Expected current round to be ahead of {round_post_all_restart_2} after aggregator restart 3"
+
+    # Restart all participants 2
+    assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
+    log.info("3 - All participants restarted successfully")
+
+    assert 
+    (
+        round_post_all_restart_3 := fed_helper.validate_round_increment(
+            fed_obj,
+            round_post_agg_restart_3,
+            db_file,
+            total_rounds,
+        )
+    ), f"Expected current round to be ahead of {round_post_agg_restart_3} after all participants restart 3"
+
+    log.info("3rd round of restarts done successfully")
     log.info("Current round number is increasing after every restart as expected.")
 
 
