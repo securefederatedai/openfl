@@ -20,6 +20,7 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
+from openfl.utilities.model import get_model
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,11 @@ class Aggregator:
         callbacks.append(
             callbacks_module.LambdaCallback(
                 on_round_end=lambda round_num, logs=None: self.save_analytics_result()
+            )
+        )
+        callbacks.append(
+            callbacks_module.LambdaCallback(
+                on_round_end=lambda round_num, logs=None: self._save_native_model()
             )
         )
         # Callbacks
@@ -407,6 +413,22 @@ class Aggregator:
             tensor_dict, round_number, self.compression_pipeline
         )
         utils.dump_proto(self.model, file_path)
+
+    def _save_native_model(self):
+        """Saves the model in native format as defined by the respective Task Runner"""
+        task_runner = get_model()
+
+        if self.last_tensor_dict:
+            task_runner.set_tensor_dict(self.last_tensor_dict, with_opt_vars=False)
+            last_state_path_no_ext = self.last_state_path.replace(".pbuf", "")
+            last_state_native_path = task_runner.save_native(last_state_path_no_ext)
+            logger.info("Saved last model in native format:  🠆 %s", last_state_native_path)
+
+        if self.best_tensor_dict:
+            task_runner.set_tensor_dict(self.best_tensor_dict, with_opt_vars=False)
+            best_state_path_no_ext = self.best_state_path.replace(".pbuf", "")
+            best_state_native_path = task_runner.save_native(best_state_path_no_ext)
+            logger.info("Saved best model in native format:  🠆 %s", best_state_native_path)
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """
@@ -1225,6 +1247,7 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
+            # import pdb; pdb.set_trace()
             # End of experiment callbacks.
             self.callbacks.on_experiment_end()
         else:

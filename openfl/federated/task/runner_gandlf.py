@@ -440,7 +440,8 @@ class GaNDLFTaskRunner(TaskRunner):
         Uses pt.save().
 
         Args:
-            filepath (str): Path to pickle file to be created by pt.save().
+            filepath (str): Path to pickle file to be created by pt.save(). 
+                By default, model will be saved as `*.pt`
             model_state_dict_key (str, optional): Key for model state dict in
                 pickled file. Defaults to 'model_state_dict'.
             optimizer_state_dict_key (str, optional): Key for optimizer state
@@ -451,7 +452,11 @@ class GaNDLFTaskRunner(TaskRunner):
             model_state_dict_key: self.model.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
+        if "." not in filepath.split("/")[-1]:
+            filepath += ".pt"
+
         pt.save(pickle_dict, filepath)
+        return filepath
 
     def reset_opt_vars(self):
         """Reset optimizer variables."""
