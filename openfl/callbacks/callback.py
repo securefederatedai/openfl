@@ -55,17 +55,13 @@ class Callback:
         Subclasses need to implement actions to be taken here.
         """
 
-    def on_task_begin(
-        self,
-        round_num: int,
-        logs=None,
-    ):
+    def on_task_begin(self, task_name: str, round_num: int, logs=None):
         """Callback function to be executed at the beginning of a task.
 
         Subclasses need to implement actions to be taken here.
         """
 
-    def on_task_end(self, round_num: int, logs=None):
+    def on_task_end(self, task_name: str, round_num: int, logs=None):
         """Callback function to be executed at the end of a task.
 
         Subclasses need to implement actions to be taken here.
