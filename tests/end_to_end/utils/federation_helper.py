@@ -1116,7 +1116,7 @@ def is_aggregator_reachable(fed_obj):
             log.info(f"Last few lines in {collaborator.name} log file: {last_few_lines}")
 
             if "Failed to send data request to aggregator" in last_few_lines or "error code StatusCode.UNAVAILABLE" in last_few_lines:
-                log.warning(f"Aggregator is not reachable for {collaborator.name}")
+                log.warning(f"Aggregator is not reachable from {collaborator.name}")
                 reachable = False
 
     # Check if the aggregator is running
