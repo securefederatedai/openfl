@@ -126,7 +126,7 @@ jobs:
       - name: Run Work Flow Functional tests (Ray Backend)
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/wf_ray_backend_func_tests.py \
+          python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --workflow_backend ray
           echo "Work Flow Functional tests run completed"
 
