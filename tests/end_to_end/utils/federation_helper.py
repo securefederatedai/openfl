@@ -1080,6 +1080,12 @@ def validate_round_increment(fed_obj, inp_round, database_file, total_rounds, ti
 
         # If it is already 60 seconds, then fetch the aggregator and collaborator log files
         if time.time() - start_time > 60:
+            count = get_agg_running_proc_count()
+            if count > 1:
+                raise Exception("More than one aggregator processes found. Collaborators won't be able to connect to the aggregator.")
+            elif count == 0:
+                raise Exception("Aggregator process not found.")
+
             if not is_aggregator_reachable(fed_obj):
                 raise Exception("Aggregator is not reachable from one or more collaborators.")
 
@@ -1119,26 +1125,27 @@ def is_aggregator_reachable(fed_obj):
                 log.warning(f"Aggregator is not reachable from {collaborator.name}")
                 reachable = False
 
-    # Print aggregator processes
-    print_aggregator_processes()
-
     return reachable
 
 
-def print_aggregator_processes():
+def get_agg_running_proc_count():
     """
-    Function to print the aggregator processes.
+    Function to get the number of aggregator processes running on the system.
+    Returns:
+        int: Number of aggregator processes running
     """
+    count = 0
     agg_proc_to_check = "fx aggregator start"
     for proc in psutil.process_iter(['cmdline']):
         try:
             cmdline = proc.info['cmdline']
             if isinstance(cmdline, list) and agg_proc_to_check in ' '.join(cmdline):
                 log.info(f"Aggregator process found in {proc.info['cmdline']} with PID: {proc.pid}")
-            else:
-                log.warning(f"Aggregator process not found in {proc.info['cmdline']}")
+                count += 1
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             log.warning(f"Error while checking process {agg_proc_to_check} in {proc.info['cmdline']}")
+
+    return count
 
 
 def set_keras_backend(model_name):
