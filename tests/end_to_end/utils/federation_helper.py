@@ -1081,7 +1081,7 @@ def validate_round_increment(fed_obj, inp_round, database_file, total_rounds, ti
         # If it is already 60 seconds, then fetch the aggregator and collaborator log files
         if time.time() - start_time > 60:
             if not is_aggregator_reachable(fed_obj):
-                raise Exception("Aggregator is not reachable from one or more collaborators. Failing the test.")
+                raise Exception("Aggregator is not reachable from one or more collaborators.")
 
         time.sleep(sleep_interval)
     log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
@@ -1097,19 +1097,22 @@ def is_aggregator_reachable(fed_obj):
         bool: True if the aggregator is reachable, else False
     """
     reachable = True
+    lines_to_fetch = 5
     agg_log_file = os.path.join(fed_obj.aggregator.workspace_path, "logs", "aggregator.log")
-    # Fetch the last 5 lines from the log file
+
+    # This is an extra step to check aggregator log content
+    # Main check is done in collaborator log files
     with open(agg_log_file, "r") as file:
         lines = [line.strip() for line in file.readlines()]
-        last_few_lines = lines[-5:] if lines else ""
+        last_few_lines = lines[-lines_to_fetch:] if lines else ""
         log.info(f"Last few lines in aggregator log file: {last_few_lines}")
 
-    # Fetch the last 5 lines from collaborator log files
+    # Fetch last few lines from collaborator log files
     for collaborator in fed_obj.collaborators:
         col_log_file = os.path.join(collaborator.workspace_path, "logs", f"{collaborator.name}.log")
         with open(col_log_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-            last_few_lines = lines[-5:] if lines else ""
+            last_few_lines = lines[-lines_to_fetch:] if lines else ""
             log.info(f"Last few lines in {collaborator.name} log file: {last_few_lines}")
 
             if "Failed to send data request to aggregator" in last_few_lines or "error code StatusCode.UNAVAILABLE" in last_few_lines:
