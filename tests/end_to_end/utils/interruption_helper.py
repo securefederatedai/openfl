@@ -76,7 +76,7 @@ def stop_start_native_participant(participant, action):
         raise ex.ParticipantStopException(f"Invalid action {action}")
 
     # Irrespective of the action, kill the processes to ensure clean state
-    log.info(f"Killing the processes for {participant.name}, if running, to avoid conflicts")
+    log.info(f"Killing the processes, if running, for {participant.name} to avoid conflicts")
     participant.kill_process()
 
     if action == "stop":
