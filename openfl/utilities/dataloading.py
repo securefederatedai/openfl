@@ -26,31 +26,31 @@ def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
     Raises:
         ValueError: If required configuration is missing or dataloader class cannot be found
     """
-    try:
-        # Get the dataloader template from plan
-        dataloader_template = plan.config["data_loader"]["template"]
-        # Dynamically import the dataloader class
-        module_name, class_name = dataloader_template.rsplit(".", 1)
-        try:
-            module = importlib.import_module(module_name)
-            dataloader_class = getattr(module, class_name)
-        except (ImportError, AttributeError) as e:
-            logger.error(f"Failed to import dataloader class: {e}")
-            raise ValueError(
-                f"Cannot load data_loader class from template '{dataloader_template}'"
-            ) from e
-
-        # Initialize dataloader with None as data_path to skip data loading
-        data_loader_settings = plan.config["data_loader"]["settings"].copy()
-        data_loader = dataloader_class(data_path=None, **data_loader_settings)
-        logger.info("Initialized minimal dataloader for model creation")
-        return data_loader
-    except KeyError:
+    # Get the dataloader template from plan
+    if "data_loader" not in plan.config or "template" not in plan.config["data_loader"]:
         logger.error("Missing 'data_loader' or 'template' field in plan configuration")
         raise ValueError("Invalid plan configuration: missing data_loader template")
-    except Exception as e:
-        logger.warning(f"Could not initialize minimal dataloader: {e}")
-        raise
+
+    dataloader_template = plan.config["data_loader"]["template"]
+
+    # Dynamically import the dataloader class
+    module_name, class_name = dataloader_template.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    if not hasattr(module, class_name):
+        logger.error(f"Class {class_name} not found in module {module_name}")
+        raise ValueError(f"Cannot load data_loader class '{class_name}' from module '{module_name}'")
+
+    dataloader_class = getattr(module, class_name)
+
+    # Initialize dataloader with None as data_path to skip data loading
+    if "settings" not in plan.config["data_loader"]:
+        logger.error("Missing 'settings' field in data_loader configuration")
+        raise ValueError("Invalid plan configuration: missing data_loader settings")
+
+    data_loader_settings = plan.config["data_loader"]["settings"].copy()
+    data_loader = dataloader_class(data_path=None, **data_loader_settings)
+    logger.info("Initialized minimal dataloader for model creation")
+    return data_loader
 
 
 def initialize_dataloader(
