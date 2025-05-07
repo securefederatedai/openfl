@@ -3,14 +3,13 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import logging
+
+from keras.layers import Conv2D, Dense, Flatten
 from keras.models import Sequential
-from keras.layers import Conv2D
-from keras.layers import Dense
-from keras.layers import Flatten
 
 from openfl.federated import KerasTaskRunner
 
-import logging
 logger = logging.getLogger(__name__)
 
 class KerasCNN(KerasTaskRunner):

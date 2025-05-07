@@ -10,20 +10,31 @@ from .mnist_utils import load_mnist_shard
 class JAXMNISTInMemory(KerasDataLoader):
     """Data Loader for MNIST Dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """
         Initialize.
 
         Args:
-            data_path: File path for the dataset
+            data_path: File path for the dataset. If None, initialize for model creation only.
             batch_size (int): The batch size for the data loader
             **kwargs: Additional arguments, passed to super init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
 
+        # Set default values for model initialization
+        self.X_train = None
+        self.y_train = None
+        self.X_valid = None
+        self.y_valid = None
+        self.num_classes = 10  # MNIST has 10 classes
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
+
         try:
             int(data_path)
-        except:
+        except ValueError:
             raise ValueError(
                 "Expected `%s` to be representable as `int`, as it refers to the data shard " +
                 "number used by the collaborator.",

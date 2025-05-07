@@ -23,7 +23,11 @@ class KerasCNN(KerasTaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+        self.model = self.build_model(
+            self.data_loader.get_feature_shape(),
+            self.data_loader.get_num_classes(),
+            **kwargs
+        )
 
         self.initialize_tensorkeys_for_functions()
 

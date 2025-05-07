@@ -38,7 +38,9 @@ def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
     module = importlib.import_module(module_name)
     if not hasattr(module, class_name):
         logger.error(f"Class {class_name} not found in module {module_name}")
-        raise ValueError(f"Cannot load data_loader class '{class_name}' from module '{module_name}'")
+        raise ValueError(
+            f"Cannot load data_loader class '{class_name}' from module '{module_name}'"
+        )
 
     dataloader_class = getattr(module, class_name)
 

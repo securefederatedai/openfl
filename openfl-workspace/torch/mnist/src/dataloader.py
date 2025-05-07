@@ -15,20 +15,33 @@ logger = getLogger(__name__)
 class PyTorchMNISTInMemory(PyTorchDataLoader):
     """PyTorch data loader for MNIST dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """Instantiate the data object.
 
         Args:
-            data_path: The file path to the data
+            data_path: The file path to the data. If None, initialize for model creation only.
             batch_size: The batch size of the data loader
             **kwargs: Additional arguments, passed to super
              init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
 
+        # Set default values for model initialization
+        self.X_train = None
+        self.y_train = None
+        self.X_valid = None
+        self.y_valid = None
+        self.train_loader = None
+        self.val_loader = None
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            logger.info("Initializing dataloader for model creation only (no data loading)")
+            return
+
         try:
             int(data_path)
-        except:
+        except ValueError:
             raise ValueError(
                 "Expected `%s` to be representable as `int`, as it refers to the data shard " +
                 "number used by the collaborator.",

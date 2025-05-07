@@ -10,7 +10,6 @@ from pathlib import Path
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 
-from openfl.federated import PyTorchDataLoader
 import numpy as np
 import torch
 from torch.utils.data import random_split
@@ -18,6 +17,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
+from openfl.federated import PyTorchDataLoader
 from openfl.utilities import validate_file_hash
 
 logger = getLogger(__name__)
@@ -26,20 +26,31 @@ logger = getLogger(__name__)
 class PyTorchHistologyInMemory(PyTorchDataLoader):
     """PyTorch data loader for Histology dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """Instantiate the data object.
 
         Args:
-            data_path: The file path to the data
+            data_path: The file path to the data. If None, initialize for model creation only.
             batch_size: The batch size of the data loader
             **kwargs: Additional arguments, passed to super init
              and load_mnist_shard
         """
         super().__init__(batch_size, random_seed=0, **kwargs)
 
+        # Set default values for model initialization
+        self.X_train = None
+        self.y_train = None
+        self.X_valid = None
+        self.y_valid = None
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            logger.info("Initializing dataloader for model creation only (no data loading)")
+            return
+
         try:
             int(data_path)
-        except:
+        except ValueError:
             raise ValueError(
                 "Expected `%s` to be representable as `int`, as it refers to the data shard " +
                 "number used by the collaborator.",
