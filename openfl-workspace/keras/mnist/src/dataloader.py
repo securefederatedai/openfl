@@ -27,7 +27,6 @@ class KerasMNISTInMemory(KerasDataLoader):
         self.y_train = None
         self.X_valid = None
         self.y_valid = None
-        self.num_classes = 10  # MNIST has 10 classes
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
@@ -70,21 +69,3 @@ class KerasMNISTInMemory(KerasDataLoader):
             list: The input shape for the model [28, 28, 1]
         """
         return [28, 28, 1]
-
-    def get_train_data_size(self):
-        """
-        Return the size of the training dataset.
-
-        Returns:
-            int: Size of the training dataset or 0 if not loaded
-        """
-        return 0 if self.X_train is None else len(self.X_train)
-
-    def get_valid_data_size(self):
-        """
-        Return the size of the validation dataset.
-
-        Returns:
-            int: Size of the validation dataset or 0 if not loaded
-        """
-        return 0 if self.X_valid is None else len(self.X_valid)

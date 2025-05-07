@@ -18,8 +18,7 @@ from yaml import FullLoader, dump, load
 from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
 from openfl.protocols import utils
-from openfl.utilities.click_types import InputSpec
-from openfl.utilities.dataloading import get_dataloader
+from openfl.utilities.dataloading import initialize_minimal_dataloader
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities.utils import getfqdn_env
@@ -185,9 +184,8 @@ def _initialize_tensor_dict(plan, input_shape, init_model_path):
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
     """
-    # Use the updated get_dataloader function which supports minimal initialization
-    # without requiring hardcoded class names
-    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=None)
+    # Use the new function that doesn't require prefer_minimal parameter
+    data_loader = initialize_minimal_dataloader(plan)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
     round_number = 0

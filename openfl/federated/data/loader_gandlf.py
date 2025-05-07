@@ -33,7 +33,7 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         self.val_csv = None
         self.train_dataloader = None
         self.val_dataloader = None
-        
+
         # If feature_shape is provided, use it
         # Otherwise, it will be derived from GANDLF config in get_feature_shape
         self._provided_feature_shape = feature_shape
@@ -41,7 +41,7 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
             return
-            
+
         # Otherwise set up paths for actual data loading
         if "inference" in data_path:
             self.train_csv = None
@@ -73,15 +73,16 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         # If feature_shape was explicitly provided in __init__, use it
         if self._provided_feature_shape is not None:
             return self._provided_feature_shape
-            
-        # If we have a train dataloader with a dataset that has a gandlf_params attribute with patch_size
-        if (self.train_dataloader is not None and 
+
+        # If we have a train dataloader with a dataset that has a gandlf_params attribute
+        # with patch_size
+        if (self.train_dataloader is not None and
             hasattr(self.train_dataloader, 'dataset') and
             hasattr(self.train_dataloader.dataset, 'gandlf_params') and
             'patch_size' in self.train_dataloader.dataset.gandlf_params):
             # Return the patch size from GANDLF config
             return self.train_dataloader.dataset.gandlf_params['patch_size']
-            
+
         # Default fallback value
         return [32, 32, 32]
 
