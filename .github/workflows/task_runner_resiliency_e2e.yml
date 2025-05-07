@@ -124,7 +124,7 @@ jobs:
           test_type: "Resiliency_Native_1"
       
       - name: Run Task Runner E2E tests with TLS - Attempt 2
-        id: run_tests
+        id: run_tests_2
         if: ${{ always() }}
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
@@ -139,7 +139,7 @@ jobs:
           test_type: "Resiliency_Native_2"
       
       - name: Run Task Runner E2E tests with TLS - Attempt 3
-        id: run_tests
+        id: run_tests_3
         if: ${{ always() }}
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
