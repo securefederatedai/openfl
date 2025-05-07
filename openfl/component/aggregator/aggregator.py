@@ -402,11 +402,14 @@ class Aggregator:
                     round_number,
                 )
             self.last_tensor_dict = tensor_dict
+            print("Assigned last_tensor_dict")
 
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
         )
+        print(f"Constructed model proto: {self.model}")
         utils.dump_proto(self.model, file_path)
+        print(f"Dumped proto to {file_path}")
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """
@@ -1165,8 +1168,10 @@ class Aggregator:
                                 "(model not saved in evaluation mode)"
                             )
             if "trained" in tags:
+                print("Preparing trained tensor")
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
-
+        
+        print(f"Metrics: {metrics}")
         return metrics
 
     def _end_of_round_check(self):
@@ -1211,6 +1216,7 @@ class Aggregator:
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
+        print(f"Just before callbacks.on_round_end with round number: {self.round_number}")
         self.callbacks.on_round_end(self.round_number, logs)
 
         self.round_number += 1

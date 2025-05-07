@@ -1142,6 +1142,8 @@ def get_agg_running_proc_count():
             if isinstance(cmdline, list) and agg_proc_to_check in ' '.join(cmdline):
                 log.info(f"Aggregator process found in {proc.info['cmdline']} with PID: {proc.pid}")
                 count += 1
+            else:
+                log.info(f"Aggregator process not found in {proc.info['cmdline']}")
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             log.warning(f"Error while checking process {agg_proc_to_check} in {proc.info['cmdline']}")
 
