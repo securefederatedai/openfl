@@ -76,12 +76,14 @@ class GaNDLFDataLoaderWrapper(DataLoader):
 
         # If we have a train dataloader with a dataset that has a gandlf_params attribute
         # with patch_size
-        if (self.train_dataloader is not None and
-            hasattr(self.train_dataloader, 'dataset') and
-            hasattr(self.train_dataloader.dataset, 'gandlf_params') and
-            'patch_size' in self.train_dataloader.dataset.gandlf_params):
+        if (
+            self.train_dataloader is not None
+            and hasattr(self.train_dataloader, "dataset")
+            and hasattr(self.train_dataloader.dataset, "gandlf_params")
+            and "patch_size" in self.train_dataloader.dataset.gandlf_params
+        ):
             # Return the patch size from GANDLF config
-            return self.train_dataloader.dataset.gandlf_params['patch_size']
+            return self.train_dataloader.dataset.gandlf_params["patch_size"]
 
         # Default fallback value
         return [32, 32, 32]
@@ -118,7 +120,7 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         Returns:
             int: The total number of training samples or 0 if not loaded.
         """
-        if self.train_dataloader is None or not hasattr(self.train_dataloader, 'dataset'):
+        if self.train_dataloader is None or not hasattr(self.train_dataloader, "dataset"):
             return 0
         return len(self.train_dataloader.dataset)
 
@@ -128,6 +130,6 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         Returns:
             int: The total number of validation samples or 0 if not loaded.
         """
-        if self.val_dataloader is None or not hasattr(self.val_dataloader, 'dataset'):
+        if self.val_dataloader is None or not hasattr(self.val_dataloader, "dataset"):
             return 0
         return len(self.val_dataloader.dataset)

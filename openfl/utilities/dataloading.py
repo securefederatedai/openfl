@@ -10,6 +10,7 @@ from openfl.federated.data.loader import DataLoader
 
 logger = logging.getLogger(__name__)
 
+
 def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
     """Initialize a minimal dataloader without loading actual data.
 
@@ -36,8 +37,7 @@ def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
         except (ImportError, AttributeError) as e:
             logger.error(f"Failed to import dataloader class: {e}")
             raise ValueError(
-                f"Cannot load data_loader class from template "
-                f"'{dataloader_template}'"
+                f"Cannot load data_loader class from template '{dataloader_template}'"
             ) from e
 
         # Initialize dataloader with None as data_path to skip data loading
@@ -51,6 +51,7 @@ def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
     except Exception as e:
         logger.warning(f"Could not initialize minimal dataloader: {e}")
         raise
+
 
 def initialize_dataloader(
     plan: Plan,
