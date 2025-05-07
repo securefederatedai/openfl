@@ -1119,28 +1119,26 @@ def is_aggregator_reachable(fed_obj):
                 log.warning(f"Aggregator is not reachable from {collaborator.name}")
                 reachable = False
 
-    # Check if the aggregator is running
-    agg_running = is_aggregator_running()
+    # Print aggregator processes
+    print_aggregator_processes()
 
-    return reachable and agg_running
+    return reachable
 
 
-def is_aggregator_running():
+def print_aggregator_processes():
     """
-    Function to check if the aggregator process is running.
+    Function to print the aggregator processes.
     """
     agg_proc_to_check = "fx aggregator start"
     for proc in psutil.process_iter(['cmdline']):
         try:
             cmdline = proc.info['cmdline']
             if isinstance(cmdline, list) and agg_proc_to_check in ' '.join(cmdline):
-                return True
+                log.info(f"Aggregator process found in {proc.info['cmdline']} with PID: {proc.pid}")
             else:
                 log.warning(f"Aggregator process not found in {proc.info['cmdline']}")
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             log.warning(f"Error while checking process {agg_proc_to_check} in {proc.info['cmdline']}")
-
-    return False
 
 
 def set_keras_backend(model_name):
