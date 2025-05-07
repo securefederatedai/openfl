@@ -287,6 +287,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 
     assert (
         round_post_agg_restart := fed_helper.validate_round_increment(
+            fed_obj,
             init_round,
             db_file,
             total_rounds,
@@ -299,6 +300,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 
     assert (
         round_post_collab_restart := fed_helper.validate_round_increment(
+            fed_obj,
             round_post_agg_restart,
             db_file,
             total_rounds,
@@ -310,6 +312,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     log.info("All participants restarted successfully")
 
     assert fed_helper.validate_round_increment(
+        fed_obj,
         round_post_collab_restart,
         db_file,
         total_rounds,
@@ -335,6 +338,7 @@ def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds
     log.info(f"{n_cols} Collaborators stopped successfully")
 
     round_increment = fed_helper.validate_round_increment(
+        fed_obj,
         init_round,
         db_file,
         total_rounds,
@@ -355,6 +359,7 @@ def _perform_collaborator_restart_validate_rounds(fed_obj, db_file, total_rounds
     log.info(f"{n_cols} Collaborators restarted successfully")
 
     assert fed_helper.validate_round_increment(
+        fed_obj,
         init_round,
         db_file,
         total_rounds,

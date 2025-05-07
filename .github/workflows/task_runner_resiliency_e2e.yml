@@ -121,6 +121,36 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Resiliency_Native" 
+          test_type: "Resiliency_Native_1"
+      
+      - name: Run Task Runner E2E tests with TLS - Attempt 2
+        id: run_tests
+        if: ${{ always() }}
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Resiliency_Native_2"
+      
+      - name: Run Task Runner E2E tests with TLS - Attempt 3
+        id: run_tests
+        if: ${{ always() }}
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Resiliency_Native_3" 
 
   # TODO - Add dockerized approach as well once we have GitHub runners with higher configurations.

@@ -8,6 +8,7 @@ import yaml
 import os
 import json
 import re
+import psutil
 import subprocess   # nosec B404
 from pathlib import Path
 import shutil
@@ -1049,11 +1050,12 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
             raise ValueError("Best score not found in the aggregator metrics file")
 
 
-def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
+def validate_round_increment(fed_obj, inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
     """
     Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
     and retrying with some wait time for input timeout.
     Args:
+        fed_obj (object): Federation fixture object
         inp_round (int): The initial round number to compare against.
         database_file (str): The path to the database file.
         total_rounds (int): The total number of rounds expected.
@@ -1075,8 +1077,66 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
         log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+
+        # If it is already 60 seconds, then fetch the aggregator and collaborator log files
+        if time.time() - start_time > 60:
+            if not is_aggregator_reachable(fed_obj):
+                raise Exception("Aggregator is not reachable from one or more collaborators. Failing the test.")
+
         time.sleep(sleep_interval)
     log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
+    return False
+
+
+def is_aggregator_reachable(fed_obj):
+    """
+    Function to check if the aggregator is reachable by checking the logs of the aggregator and collaborators.
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if the aggregator is reachable, else False
+    """
+    reachable = True
+    agg_log_file = os.path.join(fed_obj.aggregator.workspace_path, "logs", "aggregator.log")
+    # Fetch the last 5 lines from the log file
+    with open(agg_log_file, "r") as file:
+        lines = [line.strip() for line in file.readlines()]
+        last_few_lines = lines[-5:] if lines else ""
+        log.info(f"Last few lines in aggregator log file: {last_few_lines}")
+
+    # Fetch the last 5 lines from collaborator log files
+    for collaborator in fed_obj.collaborators:
+        col_log_file = os.path.join(collaborator.workspace_path, "logs", f"{collaborator.name}.log")
+        with open(col_log_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+            last_few_lines = lines[-5:] if lines else ""
+            log.info(f"Last line in {collaborator.name} log file: {last_few_lines}")
+
+            if "Failed to send data request to aggregator" in last_few_lines or "error code StatusCode.UNAVAILABLE" in last_few_lines:
+                log.warning(f"Aggregator is not reachable for {collaborator.name}")
+                reachable = False
+
+    # Check if the aggregator is running
+    agg_running = is_aggregator_running()
+
+    return reachable and agg_running
+
+
+def is_aggregator_running():
+    """
+    Function to check if the aggregator process is running.
+    """
+    agg_proc_to_check = "fx aggregator start"
+    for proc in psutil.process_iter(['cmdline']):
+        try:
+            cmdline = proc.info['cmdline']
+            if isinstance(cmdline, list) and agg_proc_to_check in ' '.join(cmdline):
+                return True
+            else:
+                log.warning(f"Aggregator process not found in {proc.info['cmdline']}")
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            log.warning(f"Error while checking process {agg_proc_to_check} in {proc.info['cmdline']}")
+
     return False
 
 
