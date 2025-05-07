@@ -120,7 +120,9 @@ class KerasTaskRunner(TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        output_model_dict = self.get_tensor_dict(
+            with_opt_vars=(self.opt_treatment == "CONTINUE_GLOBAL")
+        )
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
@@ -165,7 +167,6 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == "CONTINUE_GLOBAL":
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        self.update_tensorkeys_for_functions()
         return global_tensor_dict, local_tensor_dict
 
     def train_(self, batch_generator, metrics: list = None, **kwargs):
@@ -406,35 +407,6 @@ class KerasTaskRunner(TaskRunner):
             return self.required_tensorkeys_for_function[func_name][local_model]
         else:
             return self.required_tensorkeys_for_function[func_name]
-
-    def update_tensorkeys_for_functions(self):
-        """Update the required tensors for all publicly accessible methods that
-        could be called as part of a task.
-
-        By default, this is just all of the layers and optimizer of the model.
-        Custom tensors should be added to this function
-        """
-        # TODO complete this function. It is only needed for opt_treatment,
-        #  and making the model stateless
-
-        # Minimal required tensors for train function
-        model_layer_names = self._get_weights_names(self.model)
-        opt_names = self._get_weights_names(self.model.optimizer)
-        tensor_names = model_layer_names + opt_names
-        logger.debug("Updating model tensor names: %s", tensor_names)
-        self.required_tensorkeys_for_function["train_task"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
-        ]
-
-        # Validation may be performed on local or aggregated (global) model,
-        # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function["validate_task"] = {}
-        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
-            TensorKey(tensor_name, "LOCAL", 0, False, ("trained",)) for tensor_name in tensor_names
-        ]
-        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
-        ]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible methods that
