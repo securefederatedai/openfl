@@ -1110,7 +1110,7 @@ def is_aggregator_reachable(fed_obj):
         with open(col_log_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
             last_few_lines = lines[-5:] if lines else ""
-            log.info(f"Last line in {collaborator.name} log file: {last_few_lines}")
+            log.info(f"Last few lines in {collaborator.name} log file: {last_few_lines}")
 
             if "Failed to send data request to aggregator" in last_few_lines or "error code StatusCode.UNAVAILABLE" in last_few_lines:
                 log.warning(f"Aggregator is not reachable for {collaborator.name}")
