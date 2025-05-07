@@ -311,8 +311,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
     log.info("All participants restarted successfully")
 
-    assert 
-    (
+    assert (
         round_post_all_restart := fed_helper.validate_round_increment(
             fed_obj,
             round_post_collab_restart,
@@ -340,8 +339,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
     log.info("2 - All participants restarted successfully")
 
-    assert 
-    (
+    assert (
         round_post_all_restart_2 := fed_helper.validate_round_increment(
             fed_obj,
             round_post_agg_restart_2,
@@ -369,8 +367,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
     assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
     log.info("3 - All participants restarted successfully")
 
-    assert 
-    (
+    assert (
         round_post_all_restart_3 := fed_helper.validate_round_increment(
             fed_obj,
             round_post_agg_restart_3,
