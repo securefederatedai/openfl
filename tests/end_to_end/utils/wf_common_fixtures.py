@@ -4,9 +4,12 @@
 import pytest
 import collections
 import numpy as np
+import logging
 
 from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
+
+log = logging.getLogger(__name__)
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 workflow_local_fixture = collections.namedtuple(
@@ -21,7 +24,7 @@ def fx_local_federated_workflow(request):
     Fixture to set up a local federated workflow for testing.
     This fixture initializes an `Aggregator` and sets up a list of collaborators
     based on the number specified in the test configuration. It also configures
-    a `LocalRuntime` with the aggregator, collaborators, and an optional backend
+    a `LocalRuntime` with the aggregator, collaborators, and an optional workflow_backend
     if specified in the test configuration.
     Args:
         request (FixtureRequest): The pytest request object that provides access
@@ -63,9 +66,10 @@ def fx_local_federated_workflow(request):
             )
         )
 
-    backend = request.config.backend if hasattr(request.config, 'backend') else None
-    if backend:
-        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    workflow_backend = request.config.workflow_backend if hasattr(request.config, 'workflow_backend') else None
+    if workflow_backend:
+        log.info(f"Using workflow backend: {workflow_backend}")
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=workflow_backend)
     else:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
@@ -132,9 +136,9 @@ def fx_local_federated_workflow_prvt_attr(request):
         }
         collaborators_list.append(collab)
 
-    backend = request.config.backend if hasattr(request.config, 'backend') else None
-    if backend:
-        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=backend)
+    workflow_backend = request.config.workflow_backend if hasattr(request.config, 'workflow_backend') else None
+    if workflow_backend:
+        local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list, backend=workflow_backend)
     else:
         local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators_list)
 
