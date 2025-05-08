@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch
 import torchvision
-
+import sys
 from copy import deepcopy
 
 from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
@@ -323,9 +323,14 @@ if __name__ == "__main__":
             )
         )
 
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
+
     local_runtime = LocalRuntime(
-        aggregator=aggregator_, collaborators=collaborators, backend="ray"
+        aggregator=aggregator_, collaborators=collaborators, backend=backend
     )
+
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
     num_rounds = 5
     model = None
