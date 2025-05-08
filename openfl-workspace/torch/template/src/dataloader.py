@@ -41,12 +41,6 @@ class TemplateDataLoader(PyTorchDataLoader):
         """
         super().__init__(batch_size, **kwargs)
 
-        # Initialize empty attributes
-        self.X_train = None
-        self.y_train = None
-        self.X_valid = None
-        self.y_valid = None
-
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
             return

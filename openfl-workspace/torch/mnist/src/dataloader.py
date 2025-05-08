@@ -28,10 +28,6 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         super().__init__(batch_size, **kwargs)
 
         # Set default values for model initialization
-        self.X_train = None
-        self.y_train = None
-        self.X_valid = None
-        self.y_valid = None
         self.train_loader = None
         self.val_loader = None
 
@@ -61,22 +57,6 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         self.val_loader = self.get_valid_loader()
 
         self.num_classes = num_classes
-
-    def get_num_classes(self):
-        """
-        Return the number of classes for the dataset.
-        Returns:
-            int: Number of classes for the dataset
-        """
-        return 10
-
-    def get_feature_shape(self):
-        """
-        Return the input shape for the model.
-        Returns:
-            list: The input shape for the model [28, 28, 1]
-        """
-        return [28, 28, 1]
 
 
 def load_mnist_shard(
