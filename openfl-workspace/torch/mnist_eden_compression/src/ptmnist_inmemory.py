@@ -68,3 +68,12 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
             int: Number of classes for the dataset
         """
         return 10
+
+    def get_feature_shape(self):
+        """
+        Return the input shape for the model. This works even when no data is loaded.
+
+        Returns:
+            list: The input shape for the model [1, 28, 28]
+        """
+        return [1, 28, 28]
