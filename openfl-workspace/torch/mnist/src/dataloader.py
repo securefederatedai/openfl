@@ -3,11 +3,12 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import PyTorchDataLoader
-from torchvision import datasets
-from torchvision import transforms
-import numpy as np
 from logging import getLogger
+
+import numpy as np
+from torchvision import datasets, transforms
+
+from openfl.federated import PyTorchDataLoader
 
 logger = getLogger(__name__)
 

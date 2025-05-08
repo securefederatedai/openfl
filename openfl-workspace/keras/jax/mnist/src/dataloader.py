@@ -26,7 +26,6 @@ class JAXMNISTInMemory(KerasDataLoader):
         self.y_train = None
         self.X_valid = None
         self.y_valid = None
-        self.num_classes = 10  # MNIST has 10 classes
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
@@ -51,3 +50,19 @@ class JAXMNISTInMemory(KerasDataLoader):
         self.y_valid = y_valid
 
         self.num_classes = num_classes
+
+    def get_num_classes(self):
+        """
+        Return the number of classes for the dataset.
+        Returns:
+            int: Number of classes for the dataset
+        """
+        return 10
+
+    def get_feature_shape(self):
+        """
+        Return the input shape for the model.
+        Returns:
+            list: The input shape for the model [28, 28, 1]
+        """
+        return [28, 28, 1]

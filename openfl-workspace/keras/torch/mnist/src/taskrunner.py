@@ -3,12 +3,14 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import logging
+
 import keras
 
-from .model import CNNModel
 from openfl.federated import KerasTaskRunner
 
-import logging
+from .model import CNNModel
+
 logger = logging.getLogger(__name__)
 
 class KerasCNN(KerasTaskRunner):
