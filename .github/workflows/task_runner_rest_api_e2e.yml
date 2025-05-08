@@ -61,7 +61,7 @@ jobs:
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
           --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }} --tr_rest_api --disable_tls
           echo "Task runner end to end test run completed"
@@ -165,7 +165,7 @@ jobs:
       - name: Run Task Runner resiliency tests
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_federation_via_native_with_restarts --num_rounds 25 --tr_rest_api
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_federation_via_native_with_restarts --model_name ${{ env.MODEL_NAME }} --num_rounds 25 --tr_rest_api
           echo "Task runner end to end test run completed"
 
       - name: Post test run
