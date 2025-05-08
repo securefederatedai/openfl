@@ -40,10 +40,33 @@ class KerasDataLoader(DataLoader):
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
 
+        This method handles cases where no data is loaded (minimal initialization).
+        For MNIST-like datasets, it returns [28, 28, 1] (channels last format).
+
         Returns:
-            tuple: The shape of an example feature array.
+            list: The shape of an example feature array.
         """
-        return self.X_train[0].shape
+        if self.X_train is not None and len(self.X_train) > 0:
+            # Return actual shape from loaded data if available
+            return list(self.X_train[0].shape)
+        # For minimal initialization, return a default MNIST-like shape
+        # Child classes should override this method if they work with different data shapes
+        return [28, 28, 1]  # Default Keras shape: [height, width, channels]
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        This method handles cases where no data is loaded (minimal initialization).
+        For MNIST-like datasets, it returns 10 classes.
+
+        Returns:
+            int: The number of classes
+        """
+        if hasattr(self, "num_classes"):
+            return self.num_classes
+        # Default to 10 classes (typical for MNIST-like datasets)
+        # Child classes should override this method for datasets with different numbers of classes
+        return 10
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.
