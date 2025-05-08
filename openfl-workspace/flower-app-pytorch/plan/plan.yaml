@@ -16,9 +16,9 @@ connector :
     automatic_shutdown : True
     superlink_params :
       insecure : True
-      serverappio-api-address : 127.0.0.1:9091
-      fleet-api-address :  127.0.0.1:9092 
-      exec-api-address : 127.0.0.1:9093
+      serverappio-api-port : auto
+      fleet-api-port :  auto
+      exec-api-port : auto
     flwr_run_params :
       flwr_app_name : "app-pytorch"
       federation_name : "local-poc"
