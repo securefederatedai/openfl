@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 import socket
 from src.util import is_safe_path
+from src.grpc.connector.flower import interop_server
 
 flwr_home = os.path.join(os.getcwd(), "save/.flwr")
 if not is_safe_path(flwr_home):
@@ -52,13 +53,22 @@ class FlowerTaskRunner(TaskRunner):
 
         self.shutdown_requested = False  # Flag to signal shutdown
 
-    def start_client_adapter(self, interop_server, **kwargs):
+    def start_client_adapter(self,
+                             col_name=None,
+                             round_num=None,
+                             input_tensor_dict=None,
+                             **kwargs):
         """
-        Start the local gRPC server and the Flower SuperNode.
+        Start the FlowerInteropServer and the Flower SuperNode.
 
         Args:
-            interop_server: The local gRPC server instance.
-            **kwargs: Additional parameters, including 'local_server_port'.
+            col_name (str, optional): The collaborator name. Defaults to None.
+            round_num (int, optional): The current round number. Defaults to None.
+            input_tensor_dict (dict, optional): The input tensor dictionary. Defaults to None.
+            **kwargs: Additional parameters for configuration.
+                includes: 
+                    interop_server (object): The FlowerInteropServer instance.
+                    local_server_port (int): The port for the local server.
         """
         local_server_port = kwargs.get('local_server_port')
 
@@ -66,6 +76,7 @@ class FlowerTaskRunner(TaskRunner):
             self.shutdown_requested = True
 
         # Set the callback for ending the experiment
+        interop_server = kwargs.get('interop_server')
         interop_server.set_end_experiment_callback(message_callback)
         interop_server.start_server(local_server_port)
 
@@ -117,6 +128,8 @@ class FlowerTaskRunner(TaskRunner):
                 interop_server.stop_server()
             time.sleep(0.1)
 
+        return {}, {}
+
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
         """
@@ -161,6 +174,9 @@ class FlowerTaskRunner(TaskRunner):
         """Initialize tensor keys for functions. Currently not implemented."""
         pass
 
+    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+        """Get tensor keys for functions. Return empty dict."""
+        return {}
 
 def install_flower_FAB(flwr_app_name):
     """
