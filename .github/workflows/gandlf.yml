@@ -50,8 +50,7 @@ jobs:
     - name: Install GaNDLF repository
       uses: actions/checkout@v4
       with:
-        ref: 0.1.1 # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required in torch to work with a later version.
-        repository: 'mlcommons/GaNDLF'
+        repository: 'noopurintel/GaNDLF'
         fetch-depth: 2  # needed for detecting changes
         submodules: 'recursive'
         path: 'gandlf'
