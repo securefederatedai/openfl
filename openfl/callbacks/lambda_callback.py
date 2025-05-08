@@ -12,10 +12,14 @@ class LambdaCallback(Callback):
 
     * on_round_begin: expects `round_num` as a positional argument.
     * on_round_end: expects `round_num` as a positional argument.
+    * on_task_begin: expects `task_name` and `round_num` as a positional argument.
+    * on_task_end: expects `task_name` and `round_num` as a positional argument.
 
     Args:
         on_round_begin: called at the beginning of every round.
         on_round_end: called at the end of every round.
+        on_task_begin: called at the beginning of a task.
+        on_task_end: called at the end of a task.
         on_experiment_begin: called at the beginning of an experiment.
         on_experiment_end: called at the end of an experiment.
     """
@@ -24,6 +28,8 @@ class LambdaCallback(Callback):
         self,
         on_round_begin=None,
         on_round_end=None,
+        on_task_begin=None,
+        on_task_end=None,
         on_experiment_begin=None,
         on_experiment_end=None,
     ):
@@ -32,6 +38,10 @@ class LambdaCallback(Callback):
             self.on_round_begin = on_round_begin
         if on_round_end is not None:
             self.on_round_end = on_round_end
+        if on_task_begin is not None:
+            self.on_task_begin = on_task_begin
+        if on_task_end is not None:
+            self.on_task_end = on_task_end
         if on_experiment_begin is not None:
             self.on_experiment_begin = on_experiment_begin
         if on_experiment_end is not None:
