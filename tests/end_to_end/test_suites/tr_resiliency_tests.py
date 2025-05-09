@@ -269,14 +269,14 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     )
 
 
-def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds, num_restarts=3):
+def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds, num_restarts=5):
     """
     Internal function to perform restart and validate rounds.
     Args:
         fed_obj (Fixture): Pytest fixture for federation
         db_file (str): Path to the database file
         total_rounds (int): Total number of rounds
-        num_restarts (int, optional): Number of restarts to perform. Defaults to 3.
+        num_restarts (int, optional): Number of restarts to perform. Defaults to 5.
     """
 
     init_round = fed_helper.get_current_round(db_file)
