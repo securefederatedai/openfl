@@ -35,9 +35,8 @@ class KerasMNISTInMemory(KerasDataLoader):
             int(data_path)
         except ValueError:
             raise ValueError(
-                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
-                "number used by the collaborator.",
-                data_path
+                f"Expected '{data_path}' to be representable as `int`, "
+                "as it refers to the data shard number used by the collaborator."
             )
 
         # Pass the feature_shape and num_classes to load_mnist_shard
