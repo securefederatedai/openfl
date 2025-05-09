@@ -78,17 +78,18 @@ class Aggregator():
             log.info(f"Command for {self.name}: {command}")
 
             # Set the log file path for the aggregator process
-            env = os.environ.copy()
-            env["LOG_FILE"] = log_file
+            # env = os.environ.copy()
+            # env["LOG_FILE"] = log_file
 
             # open file in append mode, so that restarting scenarios can be handled
-            bg_file = open(os.path.join(tempfile.mkdtemp(), "tmp.log"), "a", buffering=1)
+            # bg_file = open(os.path.join(tempfile.mkdtemp(), "tmp.log"), "a", buffering=1)
+            bg_file = open(self.res_file, "a", buffering=1)
             self.start_process = ssh.run_command_background(
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
                 check_sleep=60,
-                env=env
+                # env=env
             )
 
             log.info(

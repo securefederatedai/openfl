@@ -1049,7 +1049,7 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
             raise ValueError("Best score not found in the aggregator metrics file")
 
 
-def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
+def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=10):
     """
     Validate if the round number has increased from inp_round by fetching the value via get_key_value_from_db
     and retrying with some wait time for input timeout.
@@ -1059,7 +1059,7 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         total_rounds (int): The total number of rounds expected.
         timeout (int): The maximum time to wait in seconds.
             Default is 300 seconds as some of the models take more time to complete the round.
-        sleep_interval (int): The wait time between retries in seconds. Default is 5 seconds.
+        sleep_interval (int): The wait time between retries in seconds. Default is 10 seconds.
     Returns:
         round number(int) if current round number has increased, else False.
     """
