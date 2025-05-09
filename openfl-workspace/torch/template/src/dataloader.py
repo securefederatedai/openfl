@@ -41,6 +41,11 @@ class TemplateDataLoader(PyTorchDataLoader):
         """
         super().__init__(batch_size, **kwargs)
 
+        # Define required attributes for minimal initialization
+        # These should be replaced with appropriate values for your specific dataset
+        self.feature_shape = [1, 28, 28]  # Example shape [channels, height, width] for PyTorch
+        self.num_classes = 10  # Example number of classes
+
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
             return

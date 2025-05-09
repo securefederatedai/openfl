@@ -40,8 +40,12 @@ class KerasMNISTInMemory(KerasDataLoader):
                 data_path
             )
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=int(data_path), **kwargs
+        # Pass the feature_shape and num_classes to load_mnist_shard
+        X_train, y_train, X_valid, y_valid = load_mnist_shard(
+            shard_num=int(data_path),
+            feature_shape=self.feature_shape,
+            num_classes=self.num_classes,
+            **kwargs
         )
 
         self.X_train = X_train

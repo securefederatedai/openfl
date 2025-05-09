@@ -60,7 +60,7 @@ class PyTorchDataLoader(DataLoader):
             return list(self.X_train[0].shape)
 
         # When no data is loaded, check if feature_shape is defined
-        if hasattr(self, 'feature_shape'):
+        if hasattr(self, "feature_shape"):
             return self.feature_shape
 
         # Otherwise, require child classes to define feature_shape
@@ -81,13 +81,11 @@ class PyTorchDataLoader(DataLoader):
         Raises:
             NotImplementedError: If self.num_classes is not defined.
         """
-        if hasattr(self, 'num_classes'):
+        if hasattr(self, "num_classes"):
             return self.num_classes
 
         # Require child classes to define num_classes
-        raise NotImplementedError(
-            "Dataset-specific dataloaders must define self.num_classes."
-        )
+        raise NotImplementedError("Dataset-specific dataloaders must define self.num_classes.")
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.

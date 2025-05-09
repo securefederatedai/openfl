@@ -39,12 +39,14 @@ class JAXMNISTInMemory(KerasDataLoader):
                 data_path
             )
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=int(data_path), **kwargs
+        X_train, y_train, X_valid, y_valid = load_mnist_shard(
+            shard_num=int(data_path),
+            feature_shape=self.feature_shape,
+            num_classes=self.num_classes,
+            **kwargs
         )
 
         self.X_train = X_train
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
-

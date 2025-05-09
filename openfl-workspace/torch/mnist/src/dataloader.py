@@ -30,6 +30,8 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         # Set default values for model initialization
         self.train_loader = None
         self.val_loader = None
+        self.feature_shape = [1, 28, 28]  # MNIST shape for PyTorch (channels first)
+        self.num_classes = 10  # MNIST has 10 classes
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
@@ -45,8 +47,11 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
                 data_path
             )
 
-        num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=int(data_path), **kwargs
+        X_train, y_train, X_valid, y_valid = load_mnist_shard(
+            shard_num=int(data_path),
+            feature_shape=self.feature_shape,
+            num_classes=self.num_classes,
+            **kwargs
         )
         self.X_train = X_train
         self.y_train = y_train
@@ -56,11 +61,11 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         self.y_valid = y_valid
         self.val_loader = self.get_valid_loader()
 
-        self.num_classes = num_classes
 
 
 def load_mnist_shard(
-    shard_num, collaborator_count, categorical=False, channels_last=True, **kwargs
+    shard_num, collaborator_count, feature_shape=None, num_classes=None,
+    categorical=False, channels_last=True, **kwargs
 ):
     """
     Load the MNIST dataset.
@@ -69,6 +74,8 @@ def load_mnist_shard(
         shard_num (int): The shard to use from the dataset
         collaborator_count (int): The number of collaborators in the
                                   federation
+        feature_shape (list, optional): The shape of input features.
+        num_classes (int, optional): Number of classes.
         categorical (bool): True = convert the labels to one-hot encoded
                             vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -76,14 +83,12 @@ def load_mnist_shard(
         **kwargs: Additional parameters to pass to the function
 
     Returns:
-        list: The input shape
-        int: The number of classes
         numpy.ndarray: The training data
         numpy.ndarray: The training labels
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    num_classes = 10
+
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
         shard_num, collaborator_count, transform=transforms.ToTensor()
@@ -99,7 +104,7 @@ def load_mnist_shard(
         y_train = one_hot(y_train, num_classes)
         y_valid = one_hot(y_valid, num_classes)
 
-    return num_classes, X_train, y_train, X_valid, y_valid
+    return X_train, y_train, X_valid, y_valid
 
 
 def one_hot(labels, classes):
