@@ -334,37 +334,23 @@ def _verify_completion_for_participant(
 
     # Do not open file here as it will be opened in the loop below
     # Also it takes time for the federation run to start and write the logs
-    content = [""]
-
     while time.time() - start_time < timeout:
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
-
-        # Get the desired no of lines from the log file
-        if num_collaborators < 5:
-            reverse_index = 10
-        else:
-            # For more than 5 collaborators, set the index to 10 + number of collaborators
-            # This is to ensure that we get the completion message for all the collaborators
-            reverse_index = num_collaborators + 5
-
-        # Get the required lines from the log file
-        if len(lines) >= reverse_index:
-            content = lines[-reverse_index:]
-        else:
-            content = lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
 
         # If in logs Exception is encountered, throw Exception and stop the process
-        if constants.EXCEPTION in content:
+        if constants.EXCEPTION in lines:
             log.error(
                 f"Process {participant.name} is throwing Exception. Check the logs for more details"
             )
             raise Exception(f"Process failed for {participant.name}")
 
-        msg_received = [line for line in content if constants.AGG_END_MSG in line or constants.COL_END_MSG in line]
+        # Read the whole log file instead of last few lines for completion messages
+        # Reason - in case of restarts just upon completion, the required message is left way up in the log file
+        msg_received = [line for line in lines if constants.AGG_END_MSG in line or constants.COL_END_MSG in line]
         if msg_received:
             log.info(f"Process completed for {participant.name}")
             break
