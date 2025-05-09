@@ -169,6 +169,15 @@ class KerasTaskRunner(TaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
+    def _initialize_metrics_result(self,kwargs):
+        if "batch_size" in kwargs:
+            batch_size = kwargs["batch_size"]
+        else:
+            batch_size = 1
+        # evaluation needed before metrics can be resolved
+        self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+        return self.model.get_metrics_result()
+
     def train_(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch. Override this function for custom training.
 
@@ -189,13 +198,10 @@ class KerasTaskRunner(TaskRunner):
         #  defined) then the model must be recompiled.
         try:
             results = self.model.get_metrics_result()
+            if len(results) == 0:
+                results = self._initialize_metrics_result(kwargs)
         except ValueError:
-            if "batch_size" in kwargs:
-                batch_size = kwargs["batch_size"]
-            else:
-                batch_size = 1
-            # evaluation needed before metrics can be resolved
-            self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+            self._initialize_metrics_result(kwargs)
             results = self.model.get_metrics_result()
 
         # TODO if there are new metrics in the flplan that were not included
