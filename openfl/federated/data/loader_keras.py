@@ -40,33 +40,48 @@ class KerasDataLoader(DataLoader):
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
 
-        This method handles cases where no data is loaded (minimal initialization).
-        For MNIST-like datasets, it returns [28, 28, 1] (channels last format).
+        This method expects either X_train to be loaded or self.feature_shape to be defined.
+        Child classes should define self.feature_shape in their __init__ method.
 
         Returns:
             list: The shape of an example feature array.
+
+        Raises:
+            NotImplementedError: If X_train is None and self.feature_shape is not defined.
         """
         if self.X_train is not None and len(self.X_train) > 0:
             # Return actual shape from loaded data if available
             return list(self.X_train[0].shape)
-        # For minimal initialization, return a default MNIST-like shape
-        # Child classes should override this method if they work with different data shapes
-        return [28, 28, 1]  # Default Keras shape: [height, width, channels]
+
+        # When no data is loaded, check if feature_shape is defined
+        if hasattr(self, 'feature_shape'):
+            return self.feature_shape
+
+        # Otherwise, require child classes to define feature_shape
+        raise NotImplementedError(
+            "Dataset-specific dataloaders must define self.feature_shape "
+            "when used for minimal initialization without data."
+        )
 
     def get_num_classes(self):
         """Returns the number of classes for classification tasks.
 
-        This method handles cases where no data is loaded (minimal initialization).
-        For MNIST-like datasets, it returns 10 classes.
+        This method expects self.num_classes to be defined.
+        Child classes should define self.num_classes in their __init__ method.
 
         Returns:
-            int: The number of classes
+            int: The number of classes.
+
+        Raises:
+            NotImplementedError: If self.num_classes is not defined.
         """
-        if hasattr(self, "num_classes"):
+        if hasattr(self, 'num_classes'):
             return self.num_classes
-        # Default to 10 classes (typical for MNIST-like datasets)
-        # Child classes should override this method for datasets with different numbers of classes
-        return 10
+
+        # Require child classes to define num_classes
+        raise NotImplementedError(
+            "Dataset-specific dataloaders must define self.num_classes."
+        )
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.
