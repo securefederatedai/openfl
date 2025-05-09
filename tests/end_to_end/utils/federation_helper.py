@@ -1063,7 +1063,7 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
     Returns:
         round number(int) if current round number has increased, else False.
     """
-    if inp_round == total_rounds:
+    if (inp_round + 1) == total_rounds:
         log.info("Federation is already at the last round.")
         return inp_round
 

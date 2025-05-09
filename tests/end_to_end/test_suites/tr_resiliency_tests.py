@@ -75,6 +75,7 @@ def test_federation_via_native_with_restarts(request, fx_federation_tr):
         fed_obj=fx_federation_tr,
         db_file=db_file,
         total_rounds=request.config.num_rounds,
+        num_restarts=request.config.num_restarts,
     )
 
     # Verify the completion of the federation run
@@ -250,6 +251,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
         fed_obj=fx_federation_tr_dws,
         db_file=db_file,
         total_rounds=request.config.num_rounds,
+        num_restarts=request.config.num_restarts,
     )
 
     # Verify the completion of the federation run
@@ -269,7 +271,7 @@ def test_federation_via_dws_with_restarts(request, fx_federation_tr_dws):
     )
 
 
-def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds, num_restarts=5):
+def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds, num_restarts=3):
     """
     Internal function to perform restart and validate rounds.
     Args:

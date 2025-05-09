@@ -36,6 +36,7 @@ def pytest_addoption(parser):
     parser.addoption("--disable_tls", action="store_true")
     parser.addoption("--log_memory_usage", action="store_true")
     parser.addoption("--secure_agg", action="store_true")
+    parser.addoption("--num_restarts")
 
 
 def pytest_configure(config):
@@ -57,6 +58,7 @@ def pytest_configure(config):
     config.tr_rest_api = args.tr_rest_api
     config.workflow_backend = args.workflow_backend
     config.results_dir = config.getini("results_dir")
+    config.num_restarts = args.num_restarts
 
 
 @pytest.fixture(scope="session", autouse=True)

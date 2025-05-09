@@ -21,6 +21,11 @@ on:
         required: false
         default: "2"
         type: string
+      num_restarts:
+        description: "Number of restart rounds. 1 round includes restart of aggregator, collaborators and all the participants sequentially"
+        required: false
+        default: "3"
+        type: string
       model_name:
         description: "Model name"
         required: false
@@ -51,6 +56,7 @@ env:
   MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+  NUM_RESTARTS: ${{ inputs.num_restarts || 3 }} # Number of restarts for the test
 
 jobs:
   input_selection:
@@ -114,7 +120,8 @@ jobs:
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-          --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
+          --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }} \
+          --num_restarts ${{ env.NUM_RESTARTS }}
           echo "Task runner end to end test run completed"
 
       - name: Post test run
