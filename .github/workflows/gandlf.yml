@@ -50,7 +50,8 @@ jobs:
     - name: Install GaNDLF repository
       uses: actions/checkout@v4
       with:
-        repository: 'noopurintel/GaNDLF'
+        repository: 'mlcommons/GaNDLF'
+        ref: 'fix_ci'
         fetch-depth: 2  # needed for detecting changes
         submodules: 'recursive'
         path: 'gandlf'
@@ -64,17 +65,11 @@ jobs:
         cat ./GANDLF/version.py
         echo "Download data and Split CSVs into training and validation"
         pytest -k "prepare_data_for_ci"
-        echo "Prepared data for ci"
         head -n 1 testing/data/train_2d_rad_segmentation.csv > $HOME/results/valid.csv
-        echo "1st line of train_2d_rad_segmentation added to valid.csv"
         tail -n +9 testing/data/train_2d_rad_segmentation.csv >> $HOME/results/valid.csv
-        echo "Last 9 lines added"
         head -n 8 testing/data/train_2d_rad_segmentation.csv > $HOME/results/train.csv
-        echo "First 8 lines added"
         cp testing/config_segmentation.yaml $HOME/results/config_segmentation.yaml
-        echo "Copied from testing to results folder"
         sed -i 's/# n_channels: 3/num_channels: 3/g' $HOME/results/config_segmentation.yaml
-        echo "Modified num of channels"
 
     - name: Run GanDLF Segmentation Test
       id: run_tests
