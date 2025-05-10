@@ -170,13 +170,14 @@ class FLSpec:
         """
         self._metaflow_interface = MetaflowInterface(self.__class__, self.runtime.backend)
         self._run_id = self._metaflow_interface.create_run()
-        # Initialize aggregator private attributes
-        self.runtime.initialize_aggregator()
-        self._foreach_methods = []
         FLSpec._reset_clones()
         FLSpec._create_clones(self, self.runtime.collaborators)
-        # Initialize collaborator private attributes
+
+        # Initialize participant private attributes
+        self.runtime.initialize_aggregator()
         self.runtime.initialize_collaborators()
+        self._foreach_methods = []
+
         if self._checkpoint:
             print(f"Created flow {self.__class__.__name__}")
 
