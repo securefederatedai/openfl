@@ -4,6 +4,8 @@
 from metaflow import Flow
 import logging
 import numpy as np
+from openfl.databases import TensorDB
+from openfl.utilities import TensorKey
 
 log = logging.getLogger(__name__)
 
@@ -112,3 +114,16 @@ def init_agg_pvt_attr_np():
               of a NumPy array of shape (10, 28, 28) filled with random values.
     """
     return {"test_loader": np.random.rand(10, 28, 28)}
+
+def callable_to_initialize_collaborator_unserializable_pvt_attrs():
+    """
+    Create and return a TensorDB
+    """
+    return {"col_tensor_db": TensorDB()}
+
+
+def callable_to_initialize_aggregator_unserializable_pvt_attrs():
+    """
+    Create and return a TensorDB
+    """
+    return {"agg_tensor_db": TensorDB()}
