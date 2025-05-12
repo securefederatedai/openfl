@@ -34,9 +34,8 @@ class KerasMNISTInMemory(KerasDataLoader):
             int(data_path)
         except ValueError:
             raise ValueError(
-                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
-                "number used by the collaborator.",
-                data_path
+                f"Expected '{data_path}' to be representable as `int`, "
+                "as it refers to the data shard number used by the collaborator."
             )
 
         X_train, y_train, X_valid, y_valid = load_mnist_shard(
@@ -50,3 +49,19 @@ class KerasMNISTInMemory(KerasDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [28, 28, 1] for MNIST.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (10 for MNIST).
+        """
+        return self.num_classes

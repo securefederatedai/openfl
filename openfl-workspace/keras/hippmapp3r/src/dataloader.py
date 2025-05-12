@@ -41,6 +41,22 @@ class KerasHippmapp3rsynth(KerasDataLoader):
         self.y_train = np.asarray(y_train)
         self.y_valid = np.asarray(y_valid)
 
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [64, 64, 128] for Hippmapp3r.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (2 for binary segmentation).
+        """
+        return 2  # Binary segmentation task (background and hippocampus)
+
     @staticmethod
     def _batch_generator(X, y, idxs, batch_size, num_batches):
         """Generates batches of data.

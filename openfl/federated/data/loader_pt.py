@@ -46,46 +46,32 @@ class PyTorchDataLoader(DataLoader):
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
 
-        This method expects either X_train to be loaded or self.feature_shape to be defined.
-        Child classes should define self.feature_shape in their __init__ method.
+        Child classes must implement this method and return the feature shape.
 
         Returns:
             list: The shape of an example feature array.
 
         Raises:
-            NotImplementedError: If X_train is None and self.feature_shape is not defined.
+            NotImplementedError: This method must be implemented by all derived classes.
         """
-        if self.X_train is not None and len(self.X_train) > 0:
-            # Return actual shape from loaded data if available
-            return list(self.X_train[0].shape)
-
-        # When no data is loaded, check if feature_shape is defined
-        if hasattr(self, "feature_shape"):
-            return self.feature_shape
-
-        # Otherwise, require child classes to define feature_shape
         raise NotImplementedError(
-            "Dataset-specific dataloaders must define self.feature_shape "
-            "when used for minimal initialization without data."
+            "Dataset-specific dataloaders must implement get_feature_shape method."
         )
 
     def get_num_classes(self):
         """Returns the number of classes for classification tasks.
 
-        This method expects self.num_classes to be defined.
-        Child classes should define self.num_classes in their __init__ method.
+        Child classes must implement this method and return the number of classes.
 
         Returns:
             int: The number of classes.
 
         Raises:
-            NotImplementedError: If self.num_classes is not defined.
+            NotImplementedError: This method must be implemented by all derived classes.
         """
-        if hasattr(self, "num_classes"):
-            return self.num_classes
-
-        # Require child classes to define num_classes
-        raise NotImplementedError("Dataset-specific dataloaders must define self.num_classes.")
+        raise NotImplementedError(
+            "Dataset-specific dataloaders must implement get_num_classes method."
+        )
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.

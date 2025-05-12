@@ -43,3 +43,20 @@ class KerasBratsInMemory(KerasDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array for BraTS dataset.
+        """
+        # BraTS images have shape [240, 240, 4] - 4 MRI modalities
+        return [240, 240, 4]
+
+    def get_num_classes(self):
+        """Returns the number of classes for segmentation tasks.
+
+        Returns:
+            int: The number of classes (4 for BraTS - background + 3 tumor regions).
+        """
+        return 4  # Background + 3 tumor regions

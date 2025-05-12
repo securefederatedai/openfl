@@ -66,6 +66,22 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
         self.X_valid = X_valid
         self.y_valid = y_valid
 
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [3, 150, 150] for Histology images.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (8 for Histology dataset).
+        """
+        return self.num_classes
+
 
 class HistologyDataset(ImageFolder):
     """Colorectal Histology Dataset."""
