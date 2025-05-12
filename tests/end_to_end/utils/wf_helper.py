@@ -115,14 +115,14 @@ def init_agg_pvt_attr_np():
     """
     return {"test_loader": np.random.rand(10, 28, 28)}
 
-def callable_to_initialize_collaborator_unserializable_pvt_attrs():
+def callable_to_init_collab_unserializable_pvt_attrs():
     """
     Create and return a TensorDB
     """
     return {"col_tensor_db": TensorDB()}
 
 
-def callable_to_initialize_aggregator_unserializable_pvt_attrs():
+def callable_to_init_agg_unserializable_pvt_attrs():
     """
     Create and return a TensorDB
     """

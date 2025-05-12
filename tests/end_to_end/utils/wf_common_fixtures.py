@@ -149,8 +149,9 @@ def fx_local_federated_workflow_prvt_attr(request):
         runtime=local_runtime,
     )
 
+
 @pytest.fixture(scope="function")
-def fx_local_federated_workflow_unserializable_private_attr(request):
+def fx_local_fed_wf_unserializable_pvt_attrs(request):
     """
     Fixture to set up a local federated workflow for testing.
     This fixture initializes an `Aggregator` and sets up a list of collaborators
@@ -166,8 +167,8 @@ def fx_local_federated_workflow_unserializable_private_attr(request):
     """
     # Inline import
     from tests.end_to_end.utils.wf_helper import (
-        callable_to_initialize_aggregator_unserializable_pvt_attrs,
-        callable_to_initialize_collaborator_unserializable_pvt_attrs
+        callable_to_init_agg_unserializable_pvt_attrs,
+        callable_to_init_collab_unserializable_pvt_attrs
     )
     collab_callback_func = request.param[0] if hasattr(request, 'param') and request.param else None
     collab_value = request.param[1] if hasattr(request, 'param') and request.param else None

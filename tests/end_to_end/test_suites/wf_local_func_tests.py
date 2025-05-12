@@ -11,7 +11,7 @@ from metaflow import Step
 from tests.end_to_end.utils.wf_common_fixtures import (
     fx_local_federated_workflow,
     fx_local_federated_workflow_prvt_attr,
-    fx_local_federated_workflow_unserializable_private_attr,
+    fx_local_fed_wf_unserializable_pvt_attrs,
 )
 
 from tests.end_to_end.workflow.exclude_flow import TestFlowExclude
@@ -260,23 +260,24 @@ def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
         flflow.run()
     log.info("Successfully ended test_private_attr_both")
 
+
 @pytest.mark.parametrize(
-    "fx_local_federated_workflow_unserializable_private_attr",
+    "fx_local_fed_wf_unserializable_pvt_attrs",
     [
-        ("callable_to_initialize_collaborator_unserializable_pvt_attrs",
+        ("callable_to_init_collab_unserializable_pvt_attrs",
         "int",
-        "callable_to_initialize_aggregator_unserializable_pvt_attrs")
+        "callable_to_init_agg_unserializable_pvt_attrs")
     ],
     indirect=True,
 )
 def test_unserializable_private_attr(
-    request, fx_local_federated_workflow_unserializable_private_attr
+    request, fx_local_fed_wf_unserializable_pvt_attrs
 ):
     """
     Validate unserializable objects are accessible as private attributes
     """
     log.info("Starting test_unserializable_private_attr")
-    flflow = TestFlowUnserializablePrivateAttributes(rounds=2, checkpoint=False)
-    flflow.runtime = fx_local_federated_workflow_unserializable_private_attr.runtime
+    flflow = TestFlowUnserializablePrivateAttributes(rounds=request.config.num_rounds, checkpoint=False)
+    flflow.runtime = fx_local_fed_wf_unserializable_pvt_attrs.runtime
     flflow.run()
     log.info("Successfully ended test_unserializable_private_attr")
