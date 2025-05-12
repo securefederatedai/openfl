@@ -134,13 +134,3 @@ class TestFlowUnserializablePrivateAttributes(FLSpec):
             )
             tensor_key_dict[tensor_key] = param.detach().cpu().numpy()
         tensordb.cache_tensor(tensor_key_dict)
-
-
-def callable_to_initialize_collaborator_private_attributes():
-    return {
-        "col_tensor_db": TensorDB(),
-    }
-
-
-def callable_to_initialize_aggregator_private_attributes():
-    return {"agg_tensor_db": TensorDB()}
