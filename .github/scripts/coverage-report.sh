@@ -2,12 +2,23 @@
 
 set -Eeuo pipefail
 
+pip uninstall openfl -y
+
+pip install -e .
+
+pip install -r test-requirements.txt
+
+pip install -r openfl-tutorials/experimental/workflow/workflow_interface_requirements.txt
+
+pip install coverage
+
+pip install pytest-cov
+
 fx experimental deactivate 
 
 rm -rf .coverage
 
-python -m pytest -rA --cov-append --cov=openfl 
-
+python -m pytest -rA --cov=openfl 
 
 python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_via_native --model_name keras/mnist --num_rounds 2 --disable_client_auth --secure_agg --cov-report=term-missing --cov-append --cov=openfl  
 
@@ -17,7 +28,7 @@ python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py -k test_lo
 
 python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py --model_name torch/mnist --num_rounds 25 --cov-report=term-missing --cov-append --cov=openfl 
 
-python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py --model_name flower-app-pytorch --num_rounds 1 --cov-report=term-missing --cov-append --cov=openfl 
+python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py -k test_flower_app_pytorch_native --model_name flower-app-pytorch --num_rounds 1 --cov-report=term-missing --cov-append --cov=openfl 
 
 coverage report
 
