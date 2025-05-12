@@ -30,7 +30,6 @@ fx experimental activate
 - [Federated FedProx PyTorch MNIST Workflow Tutorial](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/403_Federated_FedProx_PyTorch_MNIST_Workflow_Tutorial.ipynb): Implements FedProx algorithm for distributed training on MNIST using PyTorch and Workflow API.
 - [Keras MNIST with FedProx](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/404_Keras_MNIST_with_FedProx.ipynb): Trains a TensorFlow Keras model on MNIST using OpenFL Workflow Interface with FedProx optimization.
 - [Federated Evaluation MNIST Workflow Tutorial](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/405_MNIST_FederatedEvaluation.ipynb): Shows how to implement Federated Evaluation using Workflow API.
-- [Workspace Creation from JupyterNotebook](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/1001_Workspace_Creation_from_JupyterNotebook.ipynb): Demonstrates converting a Jupyter Notebook Federated Learning experiment into an OpenFL workspace.
 
 ### Advanced
 

@@ -156,7 +156,7 @@ class ConnectorFlower:
 
         os.environ["TMPDIR"] = os.environ["FLWR_HOME"]
 
-        if self.flwr_run_params.get("patch"):
+        if self.flwr_run_params.get("sgx_enabled"):
             command = ["python", "src/patch/flwr_run_patch.py", "run", f"./src/{flwr_app_name}"]
         else:
             command = ["flwr", "run", f"./src/{flwr_app_name}"]

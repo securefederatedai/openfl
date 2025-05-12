@@ -1,0 +1,50 @@
+# Copyright (C) 2025 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    last_state_path : save/result.json
+    rounds_to_train : 1 # Number of training rounds (set to 1 for Federated Analytics).
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    use_delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.dataloader.IRISInMemory
+  settings :
+    collaborator_count : 2
+    data_group_name    : iris
+    batch_size         : 150
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.taskrunner.IrisHistogram
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  template : openfl.component.RandomGroupedAssigner
+  settings :
+    task_groups  :
+      - name       : analytics
+        percentage : 1.0
+        tasks      :
+          - analytics
+
+tasks :
+  analytics:
+    function : analytics
+    aggregation_type: 
+      template: src.aggregatehistogram.AggregateHistogram
+      
+    kwargs   :
+      columns: ['sepal length (cm)', 'sepal width (cm)']
+
