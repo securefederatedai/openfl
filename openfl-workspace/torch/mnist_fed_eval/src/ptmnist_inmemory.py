@@ -24,8 +24,8 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         # Set MNIST-specific default attributes
         self.train_loader = None
         self.val_loader = None
-        self.feature_shape = [1, 28, 28]  # MNIST shape for PyTorch (channels first)
-        self.num_classes = 10  # MNIST has 10 classes
+        self.feature_shape = [1, 28, 28]
+        self.num_classes = 10
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:

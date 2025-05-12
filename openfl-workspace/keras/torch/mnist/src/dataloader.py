@@ -22,8 +22,8 @@ class KerasMNISTInMemory(KerasDataLoader):
         super().__init__(batch_size, **kwargs)
 
         # Set MNIST-specific default attributes
-        self.feature_shape = [28, 28, 1]  # MNIST shape for Keras (channels last)
-        self.num_classes = 10  # MNIST has 10 classes
+        self.feature_shape = [28, 28, 1]
+        self.num_classes = 10
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
