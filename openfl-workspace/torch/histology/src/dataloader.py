@@ -38,8 +38,8 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
         super().__init__(batch_size, random_seed=0, **kwargs)
 
         # Set Histology-specific default attributes
-        self.feature_shape = [3, 150, 150]  # Histology image shape for PyTorch (channels first)
-        self.num_classes = 8  # Histology has 8 classes
+        self.feature_shape = [3, 150, 150]
+        self.num_classes = 8
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:

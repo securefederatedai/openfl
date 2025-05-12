@@ -4,8 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import KerasDataLoader
-
-from .mnist_utils import load_mnist_shard
+from src.mnist_utils import load_mnist_shard
 
 
 class JAXMNISTInMemory(KerasDataLoader):
@@ -23,8 +22,8 @@ class JAXMNISTInMemory(KerasDataLoader):
         super().__init__(batch_size, **kwargs)
 
         # Set MNIST-specific default attributes
-        self.feature_shape = [28, 28, 1]  # MNIST shape for JAX (channels last)
-        self.num_classes = 10  # MNIST has 10 classes
+        self.feature_shape = [28, 28, 1]
+        self.num_classes = 10
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:

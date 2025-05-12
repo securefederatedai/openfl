@@ -33,13 +33,13 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
             data_path: The file path to the data
             batch_size: The batch size of the data loader
             **kwargs: Additional arguments, passed to super init
-             and load_mnist_shard
+             and load_histology_shard
         """
         super().__init__(batch_size, random_seed=0, **kwargs)
 
         # Set Histology-specific default attributes
-        self.feature_shape = [3, 150, 150]  # Histology image shape for PyTorch (channels first)
-        self.num_classes = 8  # Histology has 8 classes
+        self.feature_shape = [3, 150, 150]
+        self.num_classes = 8
 
         X_train, y_train, X_valid, y_valid = load_histology_shard(
             shard_num=int(data_path),

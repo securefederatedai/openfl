@@ -8,8 +8,7 @@ import logging
 import keras
 
 from openfl.federated import KerasTaskRunner
-
-from .model import CNNModel
+from src.model import CNNModel
 
 logger = logging.getLogger(__name__)
 

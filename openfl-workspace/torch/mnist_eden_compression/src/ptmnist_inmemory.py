@@ -4,8 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import PyTorchDataLoader
-
-from .mnist_utils import load_mnist_shard
+from src.mnist_utils import load_mnist_shard
 
 
 class PyTorchMNISTInMemory(PyTorchDataLoader):

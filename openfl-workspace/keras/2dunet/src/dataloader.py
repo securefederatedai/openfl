@@ -4,8 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import KerasDataLoader
-
-from .brats_utils import load_from_nifti
+from src.brats_utils import load_from_nifti
 
 
 class KerasBratsInMemory(KerasDataLoader):

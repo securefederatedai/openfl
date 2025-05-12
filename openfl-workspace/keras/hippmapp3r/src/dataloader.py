@@ -47,7 +47,7 @@ class KerasHippmapp3rsynth(KerasDataLoader):
         Returns:
             list: The shape of an example feature array [64, 64, 128] for Hippmapp3r.
         """
-        return self.feature_shape
+        return [64, 64, 128]
 
     def get_num_classes(self):
         """Returns the number of classes for classification tasks.
