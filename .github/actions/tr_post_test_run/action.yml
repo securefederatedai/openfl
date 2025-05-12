@@ -13,7 +13,8 @@ runs:
   steps:
     - name: Print test summary
       id: print_test_summary
-      if: ${{ always() }}
+      # This step is only run if the previous steps were successful
+      if: ${{ success() }}
       run: |
         export PYTHONPATH="$PYTHONPATH:."
         python tests/end_to_end/utils/summary_helper.py --func_name "print_task_runner_score"

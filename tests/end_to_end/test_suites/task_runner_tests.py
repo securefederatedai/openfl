@@ -55,3 +55,20 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
 
     best_agg_score = fed_helper.get_best_agg_score(fx_federation_tr_dws.aggregator.tensor_db_file)
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
+    
+    
+@pytest.mark.task_runner_basic_ping_pong
+def test_federation_ping_pong(request, fx_federation_tr):
+    """
+    Verify that the collaborator can ping the aggregator. If Ping successful, collaborator can start the training.
+    Verify log mesage in the collaborator log file.
+    "TLS connection established."
+    Args:
+        request (Fixture): Pytest fixture
+        fx_federation_tr (Fixture): Pytest fixture for native task runner
+    """
+    # Start the federation
+    assert fed_helper.start_aggregator(fx_federation_tr)
+    
+    # Verify collaborator able to ping aggregator
+    assert fed_helper.verify_ping_aggregator(fx_federation_tr)

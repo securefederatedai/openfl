@@ -207,6 +207,7 @@ jobs:
       task_runner_dockerized_e2e,
       task_runner_secret_ssl_e2e,
       task_runner_flower_app_pytorch,
+      task_runner_rest_api_e2e,
       run_trivy,
       run_bandit
     ]
