@@ -34,12 +34,12 @@ class FlowerTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.sgx_enabled = kwargs.get('sgx_enabled')
         if self.data_loader is None:
             flwr_app_name = kwargs.get('flwr_app_name')
-            if self.sgx_enabled:
-                install_flower_FAB(flwr_app_name)
+            install_flower_FAB(flwr_app_name)
             return
+
+        self.sgx_enabled = kwargs.get('sgx_enabled')
 
         self.model = None
         self.logger = getLogger(__name__)
@@ -170,16 +170,18 @@ def install_flower_FAB(flwr_app_name):
         flwr_app_name (str): The name of the Flower application to patch.
     """
     flwr_dir = os.environ["FLWR_HOME"]
-    os.environ["TMPDIR"] = flwr_dir
+
+    # Change the current working directory to the Flower directory
+    os.chdir(flwr_dir)
 
     # Run the build command
-    subprocess.check_call([
-        sys.executable,
-        "src/patch/flwr_run_patch.py",
+    build_command = [
+        "flwr",
         "build",
         "--app",
-        f"./src/{flwr_app_name}"
-    ])
+        os.path.join("..", "..", "src", flwr_app_name)
+    ]
+    subprocess.check_call(build_command)
 
     # List .fab files after running the build command
     fab_files = list(Path(flwr_dir).glob("*.fab"))
@@ -189,8 +191,7 @@ def install_flower_FAB(flwr_app_name):
 
     # Run the install command using the newest .fab file
     subprocess.check_call([
-        sys.executable,
-        "src/patch/flwr_run_patch.py",
+        "flwr",
         "install",
         str(newest_fab_file)
     ])
