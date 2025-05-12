@@ -219,7 +219,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
-      matrix:
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
