@@ -8,6 +8,7 @@ import asyncio
 import inspect
 import queue
 import time
+from copy import deepcopy
 from logging import getLogger
 from threading import Event
 from typing import Any, Callable, Dict, List, Tuple
@@ -16,7 +17,11 @@ import dill
 
 from openfl.experimental.workflow.interface import FLSpec
 from openfl.experimental.workflow.runtime import FederatedRuntime
-from openfl.experimental.workflow.utilities import aggregator_to_collaborator, checkpoint
+from openfl.experimental.workflow.utilities import (
+    aggregator_to_collaborator,
+    checkpoint,
+    generate_artifacts,
+)
 from openfl.experimental.workflow.utilities.metaflow_utils import MetaflowInterface
 
 logger = getLogger(__name__)
@@ -43,7 +48,8 @@ class Aggregator:
         collaborator_task_results (Event): Event to inform aggregator that
             collaborators have sent the results.
         __collaborator_tasks_queue (Dict[Queue]): queue for each collaborator.
-        flow (Any): Flow class.
+        flow (FLSpec): Flow class.
+        final_flow_state (FLSpec): Final flow state.
         name (str): aggregator in string format.
         checkpoint (bool): Whether to save checkpoint or not (default=False).
         private_attrs_callable (Callable): Function for Aggregator private
@@ -124,6 +130,7 @@ class Aggregator:
         self.__collaborator_tasks_queue = {collab: queue.Queue() for collab in self.authorized_cols}
 
         self.flow = flow
+        self.final_flow_state = deepcopy(flow)
         self.checkpoint = checkpoint
         self.flow._foreach_methods = []
         logger.info("MetaflowInterface creation.")
@@ -180,6 +187,12 @@ class Aggregator:
             f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
             f" WARNED!!!"
         )
+
+    def _update_final_flow(self) -> None:
+        """Update the final flow state with current flow artifacts."""
+        artifacts_iter, _ = generate_artifacts(ctx=self.flow)
+        for name, attr in artifacts_iter():
+            setattr(self.final_flow_state, name, deepcopy(attr))
 
     @staticmethod
     def _get_sleep_time() -> int:
@@ -250,7 +263,8 @@ class Aggregator:
                 self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-        return self.flow
+        self._update_final_flow()
+        return self.final_flow_state
 
     def call_checkpoint(
         self, name: str, ctx: Any, f: Callable, stream_buffer: bytes = None
