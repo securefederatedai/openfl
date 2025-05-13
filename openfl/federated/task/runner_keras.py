@@ -169,11 +169,7 @@ class KerasTaskRunner(TaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
-    def _initialize_metrics_result(self,kwargs):
-        if "batch_size" in kwargs:
-            batch_size = kwargs["batch_size"]
-        else:
-            batch_size = 1
+    def _initialize_metrics_result(self,batch_size):
         # evaluation needed before metrics can be resolved
         self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
         return self.model.get_metrics_result()
@@ -196,12 +192,14 @@ class KerasTaskRunner(TaskRunner):
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
         #  defined) then the model must be recompiled.
+
+        batch_size = kwargs.get("batch_size", 1)
         try:
             results = self.model.get_metrics_result()
             if len(results) == 0:
-                results = self._initialize_metrics_result(kwargs)
+                results = self._initialize_metrics_result(batch_size)
         except ValueError:
-            self._initialize_metrics_result(kwargs)
+            self._initialize_metrics_result(batch_size)
             results = self.model.get_metrics_result()
 
         # TODO if there are new metrics in the flplan that were not included
@@ -236,10 +234,7 @@ class KerasTaskRunner(TaskRunner):
                 These correspond to acc, precision, f1_score, etc.
             dict: Empty dictionary.
         """
-        if "batch_size" in kwargs:
-            batch_size = kwargs["batch_size"]
-        else:
-            batch_size = 1
+        batch_size = kwargs.get("batch_size", 1)
 
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs["metrics"]
