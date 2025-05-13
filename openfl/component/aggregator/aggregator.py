@@ -1233,7 +1233,6 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
-            # import pdb; pdb.set_trace()
             # End of experiment callbacks.
             self.callbacks.on_experiment_end()
         else:
