@@ -235,7 +235,7 @@ def run_federation(fed_obj):
         _ = set_keras_backend(fed_obj.model_name)
 
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
+    """futures = [
         executor.submit(
             participant.start
         )
@@ -245,7 +245,15 @@ def run_federation(fed_obj):
     # Result will contain response files for all the participants.
     results = [f.result() for f in futures]
     if not all(results):
-        raise ex.ParticipantStartException("Failed to start one or more participants")
+        raise ex.ParticipantStartException("Failed to start one or more participants")"""
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            # Start the participant
+            participant.start()
+        except Exception as e:
+            log.error(f"Failed to start {participant.name}: {e}")
+            raise e
+
     return True
 
 
