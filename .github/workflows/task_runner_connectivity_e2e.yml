@@ -42,7 +42,7 @@ jobs:
       - name: Run Task Runner grpc connectivity test
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name no-op
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name ${{ env.MODEL_NAME }}
           echo "Task runner end to end test run completed"
 
       - name: Post test run
@@ -76,7 +76,7 @@ jobs:
   #     - name: Run Task Runner rest connectivity test
   #       id: run_tests
   #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name no-op --tr_rest_api
+  #         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name ${{ env.MODEL_NAME }} --tr_rest_api
   #         echo "Task runner end to end test run completed"
 
   #     - name: Post test run

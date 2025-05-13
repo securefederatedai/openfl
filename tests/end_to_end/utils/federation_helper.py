@@ -1175,6 +1175,7 @@ def start_aggregator(fed_obj):
 
     return True
 
+
 def ping_from_collaborator(collaborator):
     """
     Ping the aggregator from collaborator to check connectivity
@@ -1201,5 +1202,3 @@ def ping_from_collaborator(collaborator):
             time.sleep(5)
     log.error(f"Aggregator is not reachable from {collaborator.name}")
     return False
-    
-        
