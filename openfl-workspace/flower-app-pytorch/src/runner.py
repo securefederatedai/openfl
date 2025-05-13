@@ -5,7 +5,6 @@ import time
 import os
 import numpy as np
 from pathlib import Path
-import sys
 import socket
 from src.util import is_safe_path
 
