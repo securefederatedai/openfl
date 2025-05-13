@@ -239,7 +239,7 @@ def run_federation(fed_obj):
         executor.submit(
             participant.start
         )
-        for participant in [fed_obj.aggregator] + fed_obj.collaborators[:-1]  # TODO - remove this intentional failure after testing
+        for participant in [fed_obj.aggregator] + fed_obj.collaborators
     ]
 
     # Result will contain response files for all the participants.
