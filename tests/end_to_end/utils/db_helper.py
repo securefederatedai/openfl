@@ -71,8 +71,8 @@ def get_key_value_from_db(key, database_file, max_retries=10, sleep_interval=5):
         if os.path.exists(database_file):
             db_obj = DBHelper(database_file)
             val = db_obj.read_key_value_store().get(key)
-            # if val:
-            #     return val
+            if val:
+                return val
             log.info(f"Value not found in the database. Retrying in {sleep_interval} seconds...")
         else:
             log.info(f"Database file not found. Retrying in {sleep_interval} seconds...")
