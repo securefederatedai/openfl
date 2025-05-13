@@ -237,6 +237,11 @@ class Collaborator:
                 raise ValueError(f"Value corresponding to global tensor `{tk}` not found.")
             input_tensor_dict[tk.tensor_name] = value
 
+        input_tensor_dict = {
+            k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
+        }
+        self.callbacks.on_task_begin(task_name, round_number)
+
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
@@ -250,7 +255,7 @@ class Collaborator:
             **kwargs,
         )
 
-        self.callbacks.on_task_end(round_number)
+        self.callbacks.on_task_end(task_name, round_number)
 
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
