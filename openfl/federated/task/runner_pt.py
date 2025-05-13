@@ -461,7 +461,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
-        if "." not in filepath.split("/")[-1]:
+        if "." not in str(filepath).split("/")[-1]:
             filepath += ".pt"
 
         torch.save(pickle_dict, filepath)

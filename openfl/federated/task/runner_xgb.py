@@ -370,7 +370,7 @@ class XGBoostTaskRunner(TaskRunner):
         Returns:
             None
         """
-        if "." not in filepath.split("/")[-1]:
+        if "." not in str(filepath).split("/")[-1]:
             filepath += ".json"
 
         self.bst.save_model(filepath)
