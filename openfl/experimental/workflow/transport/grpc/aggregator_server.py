@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -14,6 +14,7 @@ from grpc import StatusCode, server, ssl_server_credentials
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
+from openfl.protocols.utils import datastream_to_proto, proto_to_datastream
 
 logger = logging.getLogger(__name__)
 
@@ -128,18 +129,20 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802
-        """<FIND OUT WHAT COMMENT TO PUT HERE>.
+        """Processes a request from a collaborator to retrieve the results of a locally
+        executed task.
 
         Args:
             request: The gRPC message request
             context: The gRPC context
         """
-        self.validate_collaborator(request, context)
-        self.check_request(request)
-        collaborator_name = request.header.sender
-        round_number = (request.round_number,)
-        next_step = (request.next_step,)
-        execution_environment = request.execution_environment
+        proto = datastream_to_proto(aggregator_pb2.TaskResultsRequest(), request)
+        self.validate_collaborator(proto, context)
+        self.check_request(proto)
+        collaborator_name = proto.header.sender
+        round_number = (proto.round_number,)
+        next_step = (proto.next_step,)
+        execution_environment = proto.execution_environment
 
         _ = self.aggregator.send_task_results(
             collaborator_name, round_number[0], next_step, execution_environment
@@ -160,7 +163,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         rn, f, ee, st, q = self.aggregator.get_tasks(request.header.sender)
 
-        return aggregator_pb2.GetTasksResponse(
+        response = aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
             round_number=rn,
             function_name=f,
@@ -168,6 +171,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sleep_time=st,
             quit=q,
         )
+        return proto_to_datastream(response)
 
     def CallCheckpoint(self, request, context):  # NOQA:N802
         """Request aggregator to perform a checkpoint for a given function.
@@ -176,12 +180,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request: The gRPC message request
             context: The gRPC context
         """
-        self.validate_collaborator(request, context)
-        self.check_request(request)
-        collaborator_name = request.header.sender
-        execution_environment = request.execution_environment
-        function = request.function
-        stream_buffer = request.stream_buffer
+        proto = datastream_to_proto(aggregator_pb2.CheckpointRequest(), request)
+        self.validate_collaborator(proto, context)
+        self.check_request(proto)
+        collaborator_name = proto.header.sender
+        execution_environment = proto.execution_environment
+        function = proto.function
+        stream_buffer = proto.stream_buffer
 
         self.aggregator.call_checkpoint(
             collaborator_name, execution_environment, function, stream_buffer
