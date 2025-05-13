@@ -146,7 +146,7 @@ def print_task_runner_score():
         "aggregator",
         "workspace",
         "local_state",
-        "tensor.db1",
+        "tensor.db",
     )
     # If the federation run fails in between, tensor.db file won't be present
     best_score = "Not Found"
