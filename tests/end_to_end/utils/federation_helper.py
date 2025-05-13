@@ -228,13 +228,11 @@ def run_federation(fed_obj):
     Returns:
         bool: True if successful, else False
     """
-    concurrent.futures.ThreadPoolExecutor()
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    # As the collaborators will wait for aggregator to start, we need to start them in sequence.
     for participant in [fed_obj.aggregator] + fed_obj.collaborators:
         try:
             # Start the participant
