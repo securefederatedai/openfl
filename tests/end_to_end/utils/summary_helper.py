@@ -155,7 +155,7 @@ def print_task_runner_score():
         best_score = fed_helper.get_best_agg_score(tensor_db_file, max_retries=1) if os.path.exists(tensor_db_file) else "Not Found"
     except ex.TensorDBException as e:
         # Do not fail the test in any scenario
-        print(f"Error reading tensor.db file: {e}")
+        print(f"Error reading tensor.db file: {e}. Best score will be reported as {best_score}.")
     except Exception as e:
         # Do not fail the test in any scenario
         print(f"Unexpected error: {e}")
