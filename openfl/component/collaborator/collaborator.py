@@ -160,35 +160,103 @@ class Collaborator:
     def run(self):
         """Run the collaborator."""
         # Experiment begin
-        self.callbacks.on_experiment_begin()
+        import traceback
 
-        while True:
-            tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
+        try:
+            # Log initial connection information
+            logger.info(f"Collaborator {self.collaborator_name} starting run method")
+            logger.info(f"Federation UUID: {self.federation_uuid}")
+            logger.info(f"Aggregator UUID: {self.aggregator_uuid}")
 
-            if time_to_quit:
-                break
+            # Experiment begin
+            try:
+                logger.info("Calling on_experiment_begin callbacks")
+                self.callbacks.on_experiment_begin()
+                logger.info("Callbacks completed successfully")
+            except Exception as e:
+                logger.critical(f"Error in on_experiment_begin: {str(e)}")
+                logger.critical(traceback.format_exc())
+                raise
 
-            if not tasks:
-                sleep(sleep_time)
-                continue
+            # Main execution loop
+            while True:
+                try:
+                    logger.info("Attempting to get tasks from aggregator")
+                    tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
+                    logger.info(
+                        f"Received from aggregator: tasks={tasks}, round={round_num}, "
+                        f"sleep_time={sleep_time}, quit={time_to_quit}"
+                    )
+                except Exception as e:
+                    logger.critical(f"Error getting tasks from aggregator: {str(e)}")
+                    logger.critical(traceback.format_exc())
+                    raise
 
-            # Round begin
-            logger.info("Round: %d Received Tasks: %s", round_num, tasks)
-            self.callbacks.on_round_begin(round_num)
+                if time_to_quit:
+                    logger.info("Received quit signal, breaking out of run loop")
+                    break
 
-            # Run tasks
-            logs = {}
-            for task in tasks:
-                metrics = self.do_task(task, round_num)
-                logs.update(metrics)
+                if not tasks:
+                    logger.info(f"No tasks to execute, sleeping for {sleep_time} seconds")
+                    sleep(sleep_time)
+                    continue
 
-            # Round end
-            self.tensor_db.clean_up(self.db_store_rounds)
-            self.callbacks.on_round_end(round_num, logs)
+                # Round begin
+                try:
+                    logger.info("Round: %d Received Tasks: %s", round_num, tasks)
+                    logger.info(f"Starting round {round_num} with tasks: {tasks}")
+                    self.callbacks.on_round_begin(round_num)
+                except Exception as e:
+                    logger.critical(f"Error in on_round_begin for round {round_num}: {str(e)}")
+                    logger.critical(traceback.format_exc())
+                    raise
 
-        # Experiment end
-        self.callbacks.on_experiment_end()
-        logger.info("Received shutdown signal. Exiting...")
+                # Run tasks
+                logs = {}
+                for task in tasks:
+                    try:
+                        logger.info(f"Executing task: {task}")
+                        metrics = self.do_task(task, round_num)
+                        logger.info(f"Task completed with metrics: {metrics}")
+                        logs.update(metrics)
+                    except Exception as e:
+                        logger.critical(
+                            f"Error executing task {task} in round {round_num}: {str(e)}"
+                        )
+                        logger.critical(traceback.format_exc())
+                        raise
+
+                # Round end
+                try:
+                    logger.info(f"Cleaning up TensorDB with db_store_rounds={self.db_store_rounds}")
+                    self.tensor_db.clean_up(self.db_store_rounds)
+                    logger.info(f"Calling on_round_end callbacks for round {round_num}")
+                    self.callbacks.on_round_end(round_num, logs)
+                except Exception as e:
+                    logger.critical(
+                        f"Error in round end processing for round {round_num}: {str(e)}"
+                    )
+                    logger.critical(traceback.format_exc())
+                    raise
+
+            # Experiment end
+            try:
+                logger.info("Calling on_experiment_end callbacks")
+                self.callbacks.on_experiment_end()
+                logger.info("Experiment ended successfully")
+            except Exception as e:
+                logger.critical(f"Error in on_experiment_end: {str(e)}")
+                logger.critical(traceback.format_exc())
+                raise
+
+            logger.info("Received shutdown signal. Exiting...")
+
+        except Exception as e:
+            # Log any unhandled exceptions
+            logger.critical(f"Unhandled exception in collaborator run: {str(e)}")
+            logger.critical(traceback.format_exc())
+            # Re-raise the exception after logging
+            raise
 
     def do_task(self, task, round_number) -> dict:
         """Perform the specified task.
