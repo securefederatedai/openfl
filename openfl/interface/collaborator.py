@@ -63,78 +63,25 @@ def collaborator(context):
 )
 def start_(plan, collaborator_name, data_config):
     """Starts a collaborator service."""
-    import traceback
-
-    try:
-        logger.info(
-            f"Starting collaborator '{collaborator_name}' with plan '{plan}' and "
-            f"data_config '{data_config}'"
-        )
-
-        if plan and is_directory_traversal(plan):
-            echo("Federated learning plan path is out of the openfl workspace scope.")
-            logger.error("Directory traversal detected in plan path")
-            sys.exit(1)
-        if data_config and is_directory_traversal(data_config):
-            echo("The data set/shard configuration file path is out of the openfl workspace scope.")
-            logger.error("Directory traversal detected in data_config path")
-            sys.exit(1)
-
-        # Log the step for debugging
-        logger.info("Loading plan configuration...")
-
-        try:
-            # Parse the plan
-            plan_obj = Plan.parse(
-                plan_config_path=Path(plan).absolute(),
-                data_config_path=Path(data_config).absolute(),
-            )
-            logger.info("Plan configuration loaded successfully")
-        except Exception as e:
-            logger.critical(f"Failed to parse plan configuration: {str(e)}")
-            logger.critical(traceback.format_exc())
-            echo(f"Error loading plan configuration: {str(e)}")
-            sys.exit(1)
-
-        # TODO: Need to restructure data loader config file loader
-        logger.info(f"Data paths: {plan_obj.cols_data_paths}")
-        echo(f"Data = {plan_obj.cols_data_paths}")
-        logger.info("🧿 Starting a Collaborator Service.")
-
-        # Log the step for debugging
-        logger.info(f"Getting collaborator instance for '{collaborator_name}'...")
-
-        try:
-            # Get the collaborator instance
-            collaborator = plan_obj.get_collaborator(collaborator_name)
-            logger.info("Collaborator instance created successfully")
-        except Exception as e:
-            logger.critical(f"Failed to instantiate collaborator '{collaborator_name}': {str(e)}")
-            logger.critical(traceback.format_exc())
-            echo(f"Error creating collaborator instance: {str(e)}")
-            sys.exit(1)
-
-        # Log the step for debugging
-        logger.info("Starting collaborator run method...")
-
-        try:
-            # Start running the collaborator
-            collaborator.run()
-        except Exception as e:
-            logger.critical(f"Error in collaborator.run(): {str(e)}")
-            logger.critical(traceback.format_exc())
-            echo(f"Error running collaborator: {str(e)}")
-            sys.exit(1)
-
-    except Exception as e:
-        # Catch any other exceptions that might occur
-        logger.critical(f"Unhandled exception in collaborator start: {str(e)}")
-        logger.critical(traceback.format_exc())
-
-        # Also print to console
-        echo(f"Unhandled error: {str(e)}")
-        echo("Check logs for more details")
+    if plan and is_directory_traversal(plan):
+        echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
+    if data_config and is_directory_traversal(data_config):
+        echo("The data set/shard configuration file path is out of the openfl workspace scope.")
+        sys.exit(1)
+
+    plan_obj = Plan.parse(
+        plan_config_path=Path(plan).absolute(),
+        data_config_path=Path(data_config).absolute(),
+    )
+
+    # TODO: Need to restructure data loader config file loader
+    logger.info(f"Data paths: {plan_obj.cols_data_paths}")
+    echo(f"Data = {plan_obj.cols_data_paths}")
+    logger.info("🧿 Starting a Collaborator Service.")
+
+    collaborator = plan_obj.get_collaborator(collaborator_name)
+    collaborator.run()
 
 
 @collaborator.command(name="ping")
