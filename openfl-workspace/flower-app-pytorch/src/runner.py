@@ -8,7 +8,6 @@ from pathlib import Path
 import sys
 import socket
 from src.util import is_safe_path
-from src.grpc.connector.flower import interop_server
 
 flwr_home = os.path.join(os.getcwd(), "save/.flwr")
 if not is_safe_path(flwr_home):
@@ -66,7 +65,7 @@ class FlowerTaskRunner(TaskRunner):
             round_num (int, optional): The current round number. Defaults to None.
             input_tensor_dict (dict, optional): The input tensor dictionary. Defaults to None.
             **kwargs: Additional parameters for configuration.
-                includes: 
+                includes:
                     interop_server (object): The FlowerInteropServer instance.
                     local_server_port (int): The port for the local server.
         """

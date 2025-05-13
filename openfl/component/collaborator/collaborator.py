@@ -4,11 +4,11 @@
 
 """Collaborator module."""
 
+import importlib
 import logging
 from enum import Enum
 from time import sleep
 from typing import List, Optional
-import importlib
 
 import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
@@ -247,8 +247,7 @@ class Collaborator:
         func = getattr(self.task_runner, func_name)
         logger.debug("Using TaskRunner subclassing API")
 
-        if task_name=="interop":
-            # Prepare the interop server
+        if task_name == "interop":
             kwargs = self.prepare_interop_server(kwargs)
 
         global_output_tensor_dict, local_output_tensor_dict = func(
@@ -602,17 +601,16 @@ class Collaborator:
         """
 
         # Initialize the interop server
-        framework = self.task_config['settings']["interop_server"]
+        framework = self.task_config["settings"]["interop_server"]
         module = importlib.import_module(framework)
 
         def receive_message_from_interop(message):
             """Receive message from interop server."""
             # Process the request and return a response
-            response = self.client.send_message_to_server(message, 
-                                                          self.collaborator_name)
+            response = self.client.send_message_to_server(message, self.collaborator_name)
             return response
 
         interop_server = module.FlowerInteropServer(receive_message_from_interop)
-        kwargs['interop_server'] = interop_server
+        kwargs["interop_server"] = interop_server
 
         return kwargs
