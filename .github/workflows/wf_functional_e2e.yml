@@ -32,9 +32,9 @@ jobs:
     name: WF Functional Without TLS
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    env:
+      PYTHON_VERSION: '3.10'
     strategy:
-      matrix:
-        python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     steps:
@@ -76,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: wf_func_python${{ matrix.python_version }}_${{ github.run_id }}
+          name: wf_func_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
 
   test_wf_ray_backend_func_tests:
@@ -85,9 +85,9 @@ jobs:
     runs-on: ubuntu-22.04
     needs: test_wf_functional_local_runtime
     timeout-minutes: 15
+    env:
+      PYTHON_VERSION: '3.11'
     strategy:
-      matrix:
-        python_version: ["3.11"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     steps:
@@ -129,5 +129,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: wf_func_ray_python${{ matrix.python_version }}_${{ github.run_id }}
+          name: wf_func_ray_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
