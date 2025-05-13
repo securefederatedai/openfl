@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DirectorClient module."""
@@ -12,6 +12,7 @@ from grpc._channel import _MultiThreadedRendezvous as DataStream
 
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
+from openfl.protocols.utils import datastream_to_proto
 
 from .grpc_channel_options import channel_options
 
@@ -313,8 +314,8 @@ class RuntimeDirectorClient:
                 - flspec_obj (object): The FLSpec object containing
                     details of the updated flow state.
         """
-        response = self.stub.GetFlowState(director_pb2.GetFlowStateRequest())
-
+        response_stream = self.stub.GetFlowState(director_pb2.GetFlowStateRequest())
+        response = datastream_to_proto(director_pb2.GetFlowStateResponse(), response_stream)
         return response.completed, response.flspec_obj
 
     def stream_experiment_stdout(self, experiment_name) -> Iterator[Dict[str, Any]]:
