@@ -14,12 +14,6 @@ OpenFL's Support for Federated Analytics
 
 OpenFL, a flexible framework for Federated Learning, extends its capabilities to support Federated Analytics. By leveraging the federation plan and task runner API, OpenFL enables users to perform analytics tasks across collaborators. These tasks are defined in the ``plan.yaml`` file and distributed to collaborators for execution. The results are then aggregated by the aggregator to provide global insights.
 
-Overview
---------
-OpenFL simplifies Federated Analytics by providing predefined task groups and configurations in the federation plan. Users can define analytics tasks such as computing histograms, means, or other statistical measures.
-
-For example, using OpenFL, one can compute the frequency distribution of features in a dataset distributed across multiple collaborators. The results are aggregated to provide a global frequency distribution without sharing raw data.
-
 
 Example Workspace: Histogram Calculation using sklearn IRIS Dataset
 ------------------------------------------------------------------------------
@@ -31,14 +25,53 @@ The Federated Analytics workspace for histogram calculation demonstrates how to 
 The analytics tasks are defined in the `plan.yaml` file. For example:
 
 .. code-block:: yaml
-    tasks :
-        analytics:
-            function : analytics
-            aggregation_type: 
-                template: src.aggregatehistogram.AggregateHistogram
-            
-            kwargs   :
-                columns: ['sepal length (cm)', 'sepal width (cm)']
+    :emphasize-lines: 6,41,43,45
+
+    aggregator:
+      defaults: plan/defaults/aggregator.yaml
+      template: openfl.component.Aggregator
+      settings:
+        last_state_path: save/result.json
+        rounds_to_train: 1 # Number of training rounds (set to 1 for Federated Analytics).
+
+    collaborator:
+      defaults: plan/defaults/collaborator.yaml
+      template: openfl.component.Collaborator
+      settings:
+        use_delta_updates: false
+        opt_treatment: RESET
+
+    data_loader:
+      defaults: plan/defaults/data_loader.yaml
+      template: src.dataloader.IRISInMemory
+      settings:
+        collaborator_count: 2
+        data_group_name: iris
+        batch_size: 150
+
+    task_runner:
+      defaults: plan/defaults/task_runner.yaml
+      template: src.taskrunner.IrisHistogram
+
+    network:
+      defaults: plan/defaults/network.yaml
+
+    assigner:
+      template: openfl.component.RandomGroupedAssigner
+      settings:
+        task_groups:
+          - name: analytics
+            percentage: 1.0
+            tasks:
+              - analytics
+
+    tasks:
+      analytics:
+        function: analytics
+        aggregation_type:
+          template: src.aggregatehistogram.AggregateHistogram
+        kwargs:
+          columns: ['sepal length (cm)', 'sepal width (cm)']
 
 **Note:** The `function` and `aggregation_type.template` fields in the configuration can be replaced with custom implementations to suit specific use cases. This flexibility allows users to define their own analytics logic and aggregation methods tailored to their requirements.
 
@@ -56,11 +89,11 @@ Detailed Instructions
 
 Workspace Setup and Federation Run
 
-Create a workspace for analytics (for example, using the federate_analytics/histogram template):
+Create a workspace for analytics (for example, using the federated_analytics/histogram template):
 
 .. code-block:: bash
 
-    fx workspace create --prefix ./analytics_workspace --template federate_analytics/histogram
+    fx workspace create --prefix ./analytics_workspace --template federated_analytics/histogram
     cd analytics_workspace
     fx workspace certify
     fx aggregator generate-cert-request
