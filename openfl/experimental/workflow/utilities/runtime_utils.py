@@ -45,14 +45,16 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     return cls_attrs, valid_artifacts
 
 
-def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpoint"]):
+def generate_artifacts(
+    ctx, reserved_words=["next", "runtime", "input", "checkpoint", "execute_task_args"]
+):
     """Generates artifacts from the given context, excluding specified reserved
     words.
 
     Args:
         ctx (any): The context to generate artifacts from.
         reserved_words (list, optional): A list of reserved words to exclude.
-            Defaults to ["next", "runtime", "input", "checkpoint"].
+            Defaults to ["next", "runtime", "input", "checkpoint", "execute_task_args"].
 
     Returns:
         tuple: A tuple containing a generator of artifacts and a list of
@@ -152,14 +154,14 @@ def _process_exclusion(ctx, cls_attrs, exclude_list, f):
             delattr(ctx, attr)
 
 
-def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
+def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime", "execute_task_args"]):
     """Optionally saves the current state for the task just executed.
 
     Args:
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
         chkpnt_reserved_words (list, optional): A list of reserved words to
-            exclude from checkpointing. Defaults to ["next", "runtime"].
+            exclude from checkpointing. Defaults to ["next", "runtime", "execute_task_args"].
 
     Returns:
         step_stdout (io.StringIO): parent_func stdout
