@@ -120,7 +120,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Dockerized E2E
-    needs: task_runner_e2e
+    needs: task_runner_straggler_e2e
     uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -144,18 +144,6 @@ jobs:
     name: TaskRunner Flower App Pytorch E2E
     needs: set_commit_id_for_all_jobs
     uses: ./.github/workflows/task_runner_flower_e2e.yml
-    with:
-      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
-
-
-  # run code rest api tests
-  task_runner_rest_api_e2e:
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
-    name: TaskRunner REST API E2E
-    needs: set_commit_id_for_all_jobs
-    uses: ./.github/workflows/task_runner_rest_api_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
@@ -207,7 +195,6 @@ jobs:
       task_runner_dockerized_e2e,
       task_runner_secret_ssl_e2e,
       task_runner_flower_app_pytorch,
-      task_runner_rest_api_e2e,
       run_trivy,
       run_bandit
     ]

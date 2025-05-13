@@ -20,7 +20,6 @@ class ModelName(Enum):
     XGB_HIGGS = "xgb_higgs"
     GANDLF_SEG_TEST = "gandlf_seg_test"
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
-    NO_OP = "no-op"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
@@ -59,4 +58,3 @@ COL_END_MSG = "Received shutdown signal"
 COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.zip'"
 EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
-COL_TLS_END_MSG = "TLS connection established."

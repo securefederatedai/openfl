@@ -249,23 +249,6 @@ def run_federation(fed_obj):
     return True
 
 
-def start_aggregator(fed_obj):
-    """
-    Start the aggregator
-    Args:
-        fed_obj (object): Federation fixture object
-    Returns:
-        bool: True if successful, else False
-    """
-    try:
-        fed_obj.aggregator.start()
-    except Exception as e:
-        log.error(f"Failed to start aggregator: {e}")
-        raise e
-
-    return True
-
-
 def run_federation_for_dws(fed_obj, use_tls):
     """
     Start the federation
@@ -1174,56 +1157,3 @@ def get_agg_addr_port(plan_file):
         return agg_addr, agg_port
     except Exception as e:
         raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
-    
-
-def verify_ping_aggregator(fed_obj):
-    """
-    Verify if the aggregator is reachable from all the collaborators
-    Args:
-        fed_obj (object): Federation object
-    Returns:
-        bool: True if successful, else False
-    """
-    try:
-        executor = concurrent.futures.ThreadPoolExecutor()
-        results = [
-            executor.submit(
-                collaborator.ping_aggregator,
-            )
-            for collaborator in fed_obj.collaborators
-        ]
-        if not all([f.result() for f in results]):
-            raise Exception(
-                "Failed to generate sign request for one or more collaborators"
-            )
-    except Exception as e:
-        raise e
-    time.sleep(5)
-
-    executor = concurrent.futures.ThreadPoolExecutor()
-    results = [executor.submit(_verify_ping, collaborator) for collaborator in fed_obj.collaborators]
-    if not all([f.result() for f in results]):
-        return False
-    return True
-
-
-def _verify_ping(collaborator, timeout=20):
-    """
-    Verify if the collaborator is reachable from the aggregator
-    Args:
-        collaborator (object): Collaborator object
-    Returns:
-        bool: True if successful, else False
-    """
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        with open(collaborator.res_file, "r") as file:
-            lines = [line.strip() for line in file.readlines()]
-        last_7_lines = list(filter(str.rstrip, lines))[-7:]
-        log.info(f"Last lines of {collaborator.name} res_file: {list(filter(str.rstrip, lines))[-1:]}")
-        if [1 for content in last_7_lines if constants.COL_TLS_END_MSG in content]:
-            log.debug(f"Ping successful for {collaborator.name}")
-            return True
-        time.sleep(5)
-    log.error(f"Ping failed for {collaborator.name}")
-    return False
