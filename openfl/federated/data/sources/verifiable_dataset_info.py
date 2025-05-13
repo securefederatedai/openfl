@@ -151,7 +151,11 @@ class VerifiableDatasetInfo:
             )
         else:
             return VerifiableDatasetInfo(
-                [LocalDataSource(name=data_dict.get("name", None), source_path=".", base_path=base_path)],
+                [
+                    LocalDataSource(
+                        name=data_dict.get("name", None), source_path=".", base_path=base_path
+                    )
+                ],
                 label=data_dict["label"],
                 metadata=data_dict["metadata"],
                 root_hash=data_dict["dataset_id"],

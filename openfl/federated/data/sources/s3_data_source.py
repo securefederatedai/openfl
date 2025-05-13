@@ -3,10 +3,9 @@
 
 import hashlib
 import os
+from importlib import util
 from typing import Generator
 from urllib.parse import urlparse
-
-import boto3
 
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 
@@ -24,6 +23,12 @@ class S3DataSource(DataSource):
         secret_name=None,
         hash_func=None,
     ):
+        if util.find_spec("boto3") is None:
+            raise Exception(
+                "'boto3' not installed.This package is necessary for interacting with AWS services."
+            )
+        import boto3
+
         super().__init__(DataSourceType.S3, name)
         self.uri = uri
         self.endpoint = endpoint

@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import hashlib
+import logging
+from importlib import util
 from typing import Callable
 
-from azure.storage.blob import BlobServiceClient
-
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
+
+logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("azure.storage").setLevel(logging.WARNING)
 
 
 class AzureBlobDataSource(DataSource):
@@ -14,12 +17,21 @@ class AzureBlobDataSource(DataSource):
 
     def __init__(
         self,
+        name: str,
         connection_string: str,
         container_name: str,
         folder_prefix="",
         hash_func: Callable[..., "hashlib._Hash"] = hashlib.sha384,
     ):
-        super().__init__(DataSourceType.AZURE_BLOB)
+        # Check if azure.storage.blob is installed.
+        if util.find_spec("azure.storage.blob") is None:
+            raise Exception(
+                "'azure-storage-blob' not installed."
+                "This package is necessary for interacting with Azure Blob Storage."
+            )
+        from azure.storage.blob import BlobServiceClient
+
+        super().__init__(DataSourceType.AZURE_BLOB, name)
         self.connection_string = connection_string
         self.container_name = container_name
         self.folder_prefix = folder_prefix
@@ -54,6 +66,7 @@ class AzureBlobDataSource(DataSource):
     def from_dict(cls, ds_dict: dict):
         hash_func = getattr(hashlib, ds_dict.get("hash_func", "sha384"), None)
         return cls(
+            name=ds_dict["name"],
             connection_string=ds_dict["connection_string"],
             container_name=ds_dict["container_name"],
             hash_func=hash_func,

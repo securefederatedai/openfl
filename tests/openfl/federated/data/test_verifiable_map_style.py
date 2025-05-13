@@ -425,7 +425,7 @@ def mock_azure_blob():
         {f: img_data for f in files}
         for files in files_per_container
     ]
-    with patch("openfl.federated.data.sources.azure_blob_data_source.BlobServiceClient") as mock_service_cls:
+    with patch("azure.storage.blob.BlobServiceClient") as mock_service_cls:
         service_mocks = []
 
         for files, file_contents in zip(files_per_container, file_contents_list):
@@ -467,8 +467,8 @@ def mock_azure_blob():
 
 def test_azure_blob_image_folder_map_style_datasource(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     datasources = [ds1, ds2]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
@@ -489,8 +489,8 @@ def test_azure_blob_image_folder_map_style_datasource(mock_azure_blob):
 
 def test_azure_blob_image_folder_map_style_datasource_verify(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     datasources = [ds1, ds2]
     verifiable_dataset_info = VerifiableDatasetInfo(
         data_sources=datasources,
@@ -515,8 +515,8 @@ def test_azure_blob_image_folder_map_style_datasource_verify(mock_azure_blob):
 def test_azure_blob_image_folder_map_style_datasource_labels(mock_azure_blob):
     """Test that LabelMapper correctly maps labels across multiple datasets."""
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     datasources = [ds1, ds2]
 
     verifiable_dataset_info = VerifiableDatasetInfo(
@@ -555,11 +555,11 @@ def test_mixed_ds_image_folder_map_style_datasource_labels(fake_image_datasource
     """Test that LabelMapper correctly maps labels across multiple datasets."""
     local_ds1, local_ds2, _ = fake_image_datasources
     base_path, relative_paths = split_to_base_and_relative_paths([local_ds1, local_ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name="lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
 
     container1, container2 = mock_azure_blob
-    azure_ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    azure_ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    azure_ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    azure_ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
 
     datasources.append(azure_ds1)
     datasources.append(azure_ds2)

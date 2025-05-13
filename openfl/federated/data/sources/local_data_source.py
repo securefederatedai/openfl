@@ -38,7 +38,7 @@ class LocalDataSource(DataSource):
         if not super().is_valid_hash_function(hash_func):
             raise ValueError(
                 f"Data source {self.name}: Invalid hash function: {hash_func.__name__}."
-                 " Must be a hashlib function."
+                " Must be a hashlib function."
             )
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size

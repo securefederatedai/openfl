@@ -23,7 +23,7 @@ class DataSource(ABC):
     Base class for different types of data sources.
 
     Attributes:
-        type (str): The storage type of the data source
+        type (DataSourceType): The storage type of the data source
         name (str): The name of the data source
     """
 

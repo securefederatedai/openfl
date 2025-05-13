@@ -110,7 +110,7 @@ def mock_azure_blob():
         file_contents = {f: f"file content of file #{i} in container {c_idx + 1}, path: {f}".encode() for i, f in enumerate(files)}
         file_contents_list.append(file_contents)
 
-    with patch("openfl.federated.data.sources.azure_blob_data_source.BlobServiceClient") as mock_service_cls:
+    with patch("azure.storage.blob.BlobServiceClient") as mock_service_cls:
         service_mocks = []
 
         for files, file_contents in zip(files_per_container, file_contents_list):
@@ -435,7 +435,7 @@ def test_one_s3_datasource_verify_single_file(mock_s3_buckets):
 
 def test_one_azure_blob_data_source(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -445,8 +445,8 @@ def test_one_azure_blob_data_source(mock_azure_blob):
 
 def test_two_azure_blob_datasource(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -456,8 +456,8 @@ def test_two_azure_blob_datasource(mock_azure_blob):
 
 def test_two_azure_blob_datasource_use_saved_hash(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -468,7 +468,7 @@ def test_two_azure_blob_datasource_use_saved_hash(mock_azure_blob):
 
 def test_one_azure_blob_datasource_one_file_hash_func(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"], sha256)
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"], sha256)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -478,8 +478,8 @@ def test_one_azure_blob_datasource_one_file_hash_func(mock_azure_blob):
 
 def test_two_azure_blob_datasource_hash_func_use_saved_hash(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"], sha256)
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"], sha256)
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"], sha256)
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"], sha256)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -490,7 +490,7 @@ def test_two_azure_blob_datasource_hash_func_use_saved_hash(mock_azure_blob):
 
 def test_one_azure_blob_datasource_verify_single_file(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -505,11 +505,11 @@ def test_one_azure_blob_datasource_verify_single_file(mock_azure_blob):
 def test_azure_blob_and_local_datasources(local_data_sources, mock_azure_blob):
     local_path1, local_path2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([local_path1, local_path2])
-    local_ds1 = LocalDataSource(source_path=relative_paths[0], base_path=base_path)
-    local_ds2 = LocalDataSource(source_path=relative_paths[1], base_path=base_path)
+    local_ds1 = LocalDataSource(name="lds", source_path=relative_paths[0], base_path=base_path)
+    local_ds2 = LocalDataSource(name="lds", source_path=relative_paths[1], base_path=base_path)
     container1, container2 = mock_azure_blob
-    azure_ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    azure_ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    azure_ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    azure_ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[local_ds1, azure_ds1, local_ds2, azure_ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
