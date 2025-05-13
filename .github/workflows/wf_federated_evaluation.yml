@@ -2,16 +2,17 @@
 # It runs the federated evaluation tests
 # --------------------------------------------------------
 name: Federated Evaluation E2E
+
 on:
   workflow_call:
     inputs:
       commit_id:
         required: false
         type: string
-  workflow_dispatch:
-
+    workflow_dispatch:
+  
   permissions:
-  contents: read
+    contents: read
 
 env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
