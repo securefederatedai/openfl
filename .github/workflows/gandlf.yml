@@ -37,8 +37,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install typer==0.11.1
-        pip install torch==2.3.1+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
         pip install paramiko
         pip install .
         pip install -r test-requirements.txt
@@ -50,7 +48,6 @@ jobs:
     - name: Install GaNDLF repository
       uses: actions/checkout@v4
       with:
-        ref: 0.1.1 # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required in torch to work with a later version.
         repository: 'mlcommons/GaNDLF'
         fetch-depth: 2  # needed for detecting changes
         submodules: 'recursive'

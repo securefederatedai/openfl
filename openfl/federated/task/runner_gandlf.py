@@ -223,7 +223,7 @@ class GaNDLFTaskRunner(TaskRunner):
             )
 
         # output model tensors (Doesn't include TensorKey)
-        tensor_dict = self.get_tensor_dict(with_opt_vars=True)
+        tensor_dict = self.get_tensor_dict(with_opt_vars=(self.opt_treatment == "CONTINUE_GLOBAL"))
 
         metric_dict = {"loss": epoch_train_loss}
         for k, v in epoch_train_metric.items():
