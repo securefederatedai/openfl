@@ -363,7 +363,7 @@ class XGBoostTaskRunner(TaskRunner):
         """Save XGB booster to file.
 
         Args:
-            filepath (str): Path to pickle file to be created by booster.save_model(). 
+            filepath (str): Path to pickle file to be created by booster.save_model().
                 By default, model will be saved as `*.json`
             **kwargs: Additional parameters.
 
@@ -371,7 +371,7 @@ class XGBoostTaskRunner(TaskRunner):
             None
         """
         if "." not in str(filepath).split("/")[-1]:
-            filepath += ".json"
+            filepath = str(filepath) + ".json"
 
         self.bst.save_model(filepath)
         return filepath

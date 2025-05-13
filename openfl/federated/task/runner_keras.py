@@ -270,11 +270,11 @@ class KerasTaskRunner(TaskRunner):
         """Save model.
 
         Args:
-            filepath (str): The file path to save the model. 
+            filepath (str): The file path to save the model.
                 By default, model will be saved as `*.keras`
         """
         if "." not in str(filepath).split("/")[-1]:
-            filepath += ".keras"
+            filepath = str(filepath) + ".keras"
 
         self.model.export(filepath)
         return filepath

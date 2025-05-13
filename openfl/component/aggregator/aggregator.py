@@ -20,7 +20,6 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.model import get_model
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +87,7 @@ class Aggregator:
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
+        save_native_model=False,
         callbacks: Optional[List] = [],
         persist_checkpoint=True,
         persistent_db_path=None,
@@ -195,19 +195,21 @@ class Aggregator:
                 on_round_end=lambda round_num, logs=None: self.save_analytics_result()
             )
         )
-        callbacks.append(
-            callbacks_module.LambdaCallback(
-                on_round_end=lambda round_num, logs=None: self._save_native_model()
-            )
-        )
+        # Prepare the parameters dictionary
+        callback_params = {"origin": "aggregator"}
+
+        if save_native_model:
+            callback_params["last_state_path"] = self.last_state_path
+            callback_params["best_state_path"] = self.best_state_path
+
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
             add_memory_profiler=log_memory_usage,
             add_metric_writer=write_logs,
+            add_model_saver=save_native_model,
             tensor_db=self.tensor_db,
-            origin="aggregator",
-            last_state_path=self.last_state_path,
+            **callback_params,
         )
 
         if initial_tensor_dict:
@@ -413,22 +415,6 @@ class Aggregator:
             tensor_dict, round_number, self.compression_pipeline
         )
         utils.dump_proto(self.model, file_path)
-
-    def _save_native_model(self):
-        """Saves the model in native format as defined by the respective Task Runner"""
-        task_runner = get_model()
-
-        if self.last_tensor_dict:
-            task_runner.set_tensor_dict(self.last_tensor_dict, with_opt_vars=False)
-            last_state_path_no_ext = self.last_state_path.replace(".pbuf", "")
-            last_state_native_path = task_runner.save_native(last_state_path_no_ext)
-            logger.info("Saved last model in native format:  🠆 %s", last_state_native_path)
-
-        if self.best_tensor_dict:
-            task_runner.set_tensor_dict(self.best_tensor_dict, with_opt_vars=False)
-            best_state_path_no_ext = self.best_state_path.replace(".pbuf", "")
-            best_state_native_path = task_runner.save_native(best_state_path_no_ext)
-            logger.info("Saved best model in native format:  🠆 %s", best_state_native_path)
 
     def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """

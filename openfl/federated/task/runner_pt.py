@@ -446,7 +446,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Uses torch.save().
 
         Args:
-            filepath (str): Path to pickle file to be created by torch.save(). 
+            filepath (str): Path to pickle file to be created by torch.save().
                 By default, model will be saved as `*.pt`
             model_state_dict_key (str): key for model state dict in pickled
                 file.
@@ -462,7 +462,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
         if "." not in str(filepath).split("/")[-1]:
-            filepath += ".pt"
+            filepath = str(filepath) + ".pt"
 
         torch.save(pickle_dict, filepath)
         return filepath
