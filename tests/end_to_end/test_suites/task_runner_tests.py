@@ -62,7 +62,7 @@ def test_federation_connectivity(request, fx_federation_tr):
     """
     Verify that the collaborator can ping the aggregator. If Ping successful, collaborator can start the training.
     Generally test this with no-op workspace.
-    Verify log mesage in the collaborator log file.
+    Verify log message in the collaborator log file.
     "TLS connection established."
     Args:
         request (Fixture): Pytest fixture
