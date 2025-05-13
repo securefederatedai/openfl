@@ -276,8 +276,8 @@ def test_unserializable_private_attr(
     """
     Validate unserializable objects are accessible as private attributes
     """
-    log.info("Starting test_unserializable_private_attr")
+    log.info("Starting Test for unserializable private attributes")
     flflow = TestFlowUnserializablePrivateAttributes(rounds=request.config.num_rounds, checkpoint=False)
     flflow.runtime = fx_local_fed_wf_unserializable_pvt_attrs.runtime
     flflow.run()
-    log.info("Successfully ended test_unserializable_private_attr")
+    log.info("Successfully ended Test for unserializable private attributes")
