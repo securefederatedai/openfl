@@ -1157,3 +1157,48 @@ def get_agg_addr_port(plan_file):
         return agg_addr, agg_port
     except Exception as e:
         raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
+
+
+def start_aggregator(fed_obj):
+    """
+    Start the aggregator
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        fed_obj.aggregator.start()
+    except Exception as e:
+        log.error(f"Failed to start aggregator: {e}")
+        raise e
+
+    return True
+
+
+def ping_from_collaborator(collaborator):
+    """
+    Ping the aggregator from collaborator to check connectivity
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    log.info(f"Ping the aggregator from {collaborator.name} to check connectivity")
+    collaborator.ping_aggregator()
+    start_time = time.time()
+    time.sleep(5)
+    while time.time() - start_time < 30:
+        # read the resfile and validate "TLS connection established." message
+        with open(collaborator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        # print last line
+        log.info(f"Last line: {lines[-1]}")
+        if any(constants.COL_TLS_END_MSG in line for line in lines[-7:]):
+            log.info(f"Aggregator is reachable from {collaborator.name}")
+            return True
+        else:
+            log.info(f"Aggregator is not reachable from {collaborator.name}. Retrying in 5 seconds...")
+            time.sleep(5)
+    log.error(f"Aggregator is not reachable from {collaborator.name}")
+    return False
