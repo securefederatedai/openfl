@@ -9,7 +9,7 @@ on:
       commit_id:
         required: false
         type: string
-    workflow_dispatch:
+  workflow_dispatch:
   
 permissions:
   contents: read
