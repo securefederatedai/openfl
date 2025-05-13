@@ -34,8 +34,6 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHON_VERSION: '3.10'
-    strategy:
-      fail-fast: false # do not immediately fail if one of the combinations fail
 
     steps:
       - name: Checkout OpenFL repository
@@ -87,8 +85,6 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHON_VERSION: '3.11'
-    strategy:
-      fail-fast: false # do not immediately fail if one of the combinations fail
 
     steps:
       - name: Checkout OpenFL repository
