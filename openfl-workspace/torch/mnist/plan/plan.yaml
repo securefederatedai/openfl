@@ -24,7 +24,7 @@ compression_pipeline:
   template: openfl.pipelines.NoCompressionPipeline
 data_loader:
   settings:
-    batch_size: 64
+    batch_size: 1
     collaborator_count: 2
   template: src.dataloader.PyTorchMNISTInMemory
 network:
@@ -39,12 +39,14 @@ tasks:
       apply: global
       metrics:
       - acc
+      use_tqdm: 1
   locally_tuned_model_validation:
     function: validate_task
     kwargs:
       apply: local
       metrics:
       - acc
+      use_tqdm: 1
   settings: {}
   train:
     function: train_task
@@ -52,3 +54,4 @@ tasks:
       epochs: 1
       metrics:
       - loss
+      use_tqdm: 1

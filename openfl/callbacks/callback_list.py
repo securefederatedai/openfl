@@ -3,6 +3,7 @@
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 from openfl.callbacks.metric_writer import MetricWriter
+from tictoc import bench_dict, timer
 
 
 class CallbackList(Callback):
@@ -68,6 +69,16 @@ class CallbackList(Callback):
             self.callbacks.append(self._metric_writer)
 
     def on_round_begin(self, round_num: int, logs=None):
+        if logs == 'agg':
+            if round_num > 0:
+                elapsed_time = timer.toc()
+                timer.tic()
+                with open(f"elapsed_time.txt", "a") as file:
+                    file.write(str(elapsed_time) + "\n")
+            else:
+                timer.tic()
+
+            bench_dict['global'].gstep()
         for callback in self.callbacks:
             callback.on_round_begin(round_num, logs)
 

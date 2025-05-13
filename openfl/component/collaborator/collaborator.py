@@ -158,23 +158,30 @@ class Collaborator:
         self.client.ping()
 
     def run(self):
+        from tictoc import bench_dict, timer
         """Run the collaborator."""
         # Experiment begin
+        timer.tic()
         self.callbacks.on_experiment_begin()
-
+        timer.pttoc('experiment starts')
         while True:
+            bench_dict[self.collaborator_name].gstep()
             tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
-
+            bench_dict[self.collaborator_name].step('wait for tasks')
             if time_to_quit:
+                bench_dict[self.collaborator_name].gstop()
                 break
 
             if not tasks:
                 sleep(sleep_time)
+                bench_dict[self.collaborator_name].step('sleep time')
+                bench_dict[self.collaborator_name].gstop()
                 continue
-
+            bench_dict[self.collaborator_name].step('sleep time')
             # Round begin
             logger.info("Round: %d Received Tasks: %s", round_num, tasks)
             self.callbacks.on_round_begin(round_num)
+            bench_dict[self.collaborator_name].step('on round begin')
 
             # Run tasks
             logs = {}
@@ -182,12 +189,22 @@ class Collaborator:
                 metrics = self.do_task(task, round_num)
                 logs.update(metrics)
 
+                if isinstance(task, str):
+                    task_name = task
+                else:
+                    task_name = task.name
+                bench_dict[self.collaborator_name].step(f'do task {task_name}')
             # Round end
             self.tensor_db.clean_up(self.db_store_rounds)
+            bench_dict[self.collaborator_name].step('clean_up')
             self.callbacks.on_round_end(round_num, logs)
+            bench_dict[self.collaborator_name].step('on_round_end')
+            bench_dict[self.collaborator_name].gstop()
+            bench_dict.save()
 
         # Experiment end
         self.callbacks.on_experiment_end()
+        bench_dict.save()
         logger.info("Received shutdown signal. Exiting...")
 
     def do_task(self, task, round_number) -> dict:

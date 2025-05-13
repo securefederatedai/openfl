@@ -14,7 +14,18 @@ import pandas as pd
 from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _store
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor, TensorKey, change_tags
-
+import os
+import sys
+from tictoc import bench_dict
+try_change = os.getenv('TRY_CHANGE', 'False')
+try_change = try_change.lower() in ['true', '1', 't', 'y', 'yes']
+if try_change:
+    print('using TRY_CHANGE')
+    TRY_CHANGE=True
+else:
+    TRY_CHANGE=False
+    
+member_name = sys.argv[4] if len(sys.argv) > 3 else 'aggregator'
 
 class TensorDB:
     """The TensorDB stores a tensor key and the data that it corresponds to.
@@ -43,6 +54,8 @@ class TensorDB:
         self.tensor_db = pd.DataFrame(
             {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
         )
+        if TRY_CHANGE:
+            self.secondary_db = self.tensor_db
         self._bind_convenience_methods()
 
         self.mutex = Lock()
@@ -86,6 +99,7 @@ class TensorDB:
         if remove_older_than < 0:
             # Getting a negative argument calls off cleaning
             return
+        bench_dict['clean_up' + member_name].gstep()
         current_round = self.tensor_db["round"].astype(int).max()
         if current_round == ROUND_PLACEHOLDER:
             current_round = np.sort(self.tensor_db["round"].astype(int).unique())[-2]
@@ -93,6 +107,17 @@ class TensorDB:
             (self.tensor_db["round"].astype(int) > current_round - remove_older_than)
             | self.tensor_db["report"]
         ].reset_index(drop=True)
+        bench_dict['clean_up' + member_name].step('normal')
+        if TRY_CHANGE:
+            self.secondary_db = self.tensor_db[
+                    ~self.tensor_db["tags"].apply(
+                        lambda x: any(
+                            keyword in item for item in x for keyword in ["collaborator", "metric"]
+                        )
+                    )
+                ].reset_index(drop=True)
+        bench_dict['clean_up' + member_name].step('extra')
+        bench_dict['clean_up' + member_name].gstop()
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert a tensor into TensorDB (dataframe).
@@ -105,26 +130,40 @@ class TensorDB:
             None
         """
         entries_to_add = []
+            
         with self.mutex:
+            bench_dict['cache_tensor' + member_name].gstep()
             for tensor_key, nparray in tensor_key_dict.items():
                 tensor_name, origin, fl_round, report, tags = tensor_key
                 entries_to_add.append(
-                    pd.DataFrame(
-                        [
-                            [
-                                tensor_name,
-                                origin,
-                                fl_round,
-                                report,
-                                tags,
-                                nparray,
-                            ]
-                        ],
-                        columns=list(self.tensor_db.columns),
-                    )
-                )
+            {
+                "tensor_name": tensor_name,
+                "origin": origin,
+                "round": fl_round,
+                "report": report,
+                "tags": tags,
+                "nparray": nparray,
+            })
+            bench_dict['cache_tensor' + member_name].step('for')
 
-            self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True)
+            if len(entries_to_add)>0:
+                new_data = pd.DataFrame(entries_to_add)
+                self.tensor_db = pd.concat([self.tensor_db, new_data], ignore_index=True)
+                bench_dict['cache_tensor' + member_name].step('normal')
+                if TRY_CHANGE:
+                    filtered_new_data = new_data[
+                        ~new_data["tags"].apply(
+                            lambda x: any(
+                                keyword in item for item in x for keyword in ["collaborator", "metric"]
+                            )
+                        )
+                    ].reset_index(drop=True)
+                    bench_dict['cache_tensor' + member_name].step('extra new data')
+                    if len(filtered_new_data) > 0:
+                        self.secondary_db = pd.concat([self.secondary_db, filtered_new_data], ignore_index=True)
+                    bench_dict['cache_tensor' + member_name].step('extra append')
+                        
+            bench_dict['cache_tensor' + member_name].gstop()
 
     def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """Perform a lookup of the tensor_key in the TensorDB.
@@ -139,13 +178,51 @@ class TensorDB:
         tensor_name, origin, fl_round, report, tags = tensor_key
 
         # TODO come up with easy way to ignore compression
-        df = self.tensor_db[
-            (self.tensor_db["tensor_name"] == tensor_name)
-            & (self.tensor_db["origin"] == origin)
-            & (self.tensor_db["round"] == fl_round)
-            & (self.tensor_db["report"] == report)
-            & (self.tensor_db["tags"] == tags)
-        ]
+        bench_dict['get_cache_tensor' + member_name].gstep()
+        if any(keyword in item for item in tags for keyword in ["collaborator", "metric"]) or not TRY_CHANGE:
+            df = self.tensor_db[
+                (self.tensor_db["tensor_name"] == tensor_name)
+                & (self.tensor_db["origin"] == origin)
+                & (self.tensor_db["round"] == fl_round)
+                & (self.tensor_db["report"] == report)
+                & (self.tensor_db["tags"] == tags)
+            ]
+            bench_dict['get_cache_tensor' + member_name].step('normal')
+            bench_dict['get_cache_tensor' + member_name].gstop()
+        else:
+            df = self.secondary_db[
+                (self.secondary_db["tensor_name"] == tensor_name)
+                & (self.secondary_db["origin"] == origin)
+                & (self.secondary_db["round"] == fl_round)
+                & (self.secondary_db["report"] == report)
+                & (self.secondary_db["tags"] == tags)
+            ]
+            bench_dict['get_cache_tensor' + member_name].step('new')
+            bench_dict['get_cache_tensor' + member_name].gstop()
+            if len(df) == 0 and False:
+                self.secondary_db = self.tensor_db[
+                    ~self.tensor_db["tags"].apply(
+                        lambda x: any(
+                            keyword in item for item in x for keyword in ["collaborator", "metric"]
+                        )
+                    )
+                ].reset_index(drop=True)
+                print("NOT FOUND")
+                print(tags)
+                print("UPDATING")
+
+                if self.secondary_db.empty:
+                    self.secondary_db = pd.DataFrame(columns=self.tensor_db.columns)
+
+                df = self.secondary_db[
+                    (self.secondary_db["tensor_name"] == tensor_name)
+                    & (self.secondary_db["origin"] == origin)
+                    & (self.secondary_db["round"] == fl_round)
+                    & (self.secondary_db["report"] == report)
+                    & (self.secondary_db["tags"] == tags)
+                ]
+                if len(df) == 0:
+                    print('one of those')
 
         if len(df) == 0:
             return None

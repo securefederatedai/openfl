@@ -14,12 +14,13 @@ import numpy as np
 
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
-from openfl.databases import PersistentTensorDB, TensorDB
+from openfl.databases import PersistentTensorDB, TensorDB, TRY_CHANGE
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
+from tictoc import bench_dict
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +232,7 @@ class Aggregator:
         # TODO: Aggregator has no concrete notion of round_begin.
         # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
         self.callbacks.on_experiment_begin()
-        self.callbacks.on_round_begin(self.round_number)
+        self.callbacks.on_round_begin(self.round_number, 'agg')
 
     def _recover(self):
         """Populates the aggregator state to the state it was prior a restart"""
@@ -476,6 +477,7 @@ class Aggregator:
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
         """
+        bench_dict['global'].step('wait get tasks')
         logger.debug(
             f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
         )
@@ -543,6 +545,7 @@ class Aggregator:
         # Start straggler handling policy for timer based callback is required
         # for %age based policy callback is not required
         self.straggler_handling_policy.start_policy(callback=self._straggler_cutoff_time_elapsed)
+        bench_dict['global'].step('get_tasks')
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -607,6 +610,9 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
+        bench_dict['global'].step('wait get aggregated tensor')
+        bench_dict['get_aggregate_tensor'].gstep()
+
         if "compressed" in tags or require_lossless:
             compress_lossless = True
         else:
@@ -624,16 +630,23 @@ class Aggregator:
             tags = change_tags(tags, remove_field="compressed")
         if "lossy_compressed" in tags:
             tags = change_tags(tags, remove_field="lossy_compressed")
+            
+        bench_dict['get_aggregate_tensor'].step('change tag')
 
         tensor_key = TensorKey(tensor_name, self.uuid, round_number, report, tags)
         tensor_name, origin, round_number, report, tags = tensor_key
+        
+        bench_dict['get_aggregate_tensor'].step('get tensorkey')
 
         if "aggregated" in tags and "delta" in tags and round_number != 0:
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("aggregated",))
         else:
             agg_tensor_key = tensor_key
+        
+        bench_dict['get_aggregate_tensor'].step('tensorkey if')
 
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
+        bench_dict['get_aggregate_tensor'].step('tensor from cache')
 
         start_retrieving_time = time.time()
         while nparray is None:
@@ -642,6 +655,7 @@ class Aggregator:
             nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
             if (time.time() - start_retrieving_time) > 60:
                 break
+        bench_dict['get_aggregate_tensor'].step('wait for tensorkey')
 
         if nparray is None:
             raise ValueError(f"Aggregator does not have an aggregated tensor for {tensor_key}")
@@ -652,6 +666,9 @@ class Aggregator:
         named_tensor = self._nparray_to_named_tensor(
             agg_tensor_key, nparray, send_model_deltas=True, compress_lossless=compress_lossless
         )
+        bench_dict['get_aggregate_tensor'].step('_nparray_to_named_tensor')
+        bench_dict['get_aggregate_tensor'].gstop()
+        bench_dict['global'].step('get_aggregate_tensor')
 
         return named_tensor
 
@@ -773,6 +790,7 @@ class Aggregator:
         Returns:
             None
         """
+        bench_dict['global'].step('wait send local task')
         # Check if secure aggregation is enabled.
         if self._secure_aggregation_enabled:
             secagg_setup = self.secagg.process_secagg_setup_tensors(named_tensors)
@@ -794,7 +812,7 @@ class Aggregator:
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
-
+        bench_dict['global'].step('send task results')
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
@@ -869,6 +887,7 @@ class Aggregator:
 
         # Check if collaborator or round is done.
         self._is_collaborator_done(collaborator_name, round_number)
+        bench_dict['global'].step('process task')
         self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
@@ -1191,6 +1210,9 @@ class Aggregator:
             for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
                 logs.update(self._compute_validation_related_task_metrics(task_name))
 
+        # End of round callbacks.
+        self.callbacks.on_round_end(self.round_number, logs)
+
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -1211,7 +1233,20 @@ class Aggregator:
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
+        
+        bench_dict['global'].step('save model')
+        
         self.callbacks.on_round_end(self.round_number, logs)
+        bench_dict['global'].step('on round end')
+        if self.round_number % 10 == 0:
+            bench_dict.save()
+            bench_dict['global'].step('save tictoc')
+            
+        if self.round_number % 3 == 0:
+            self.tensor_db.tensor_db.to_pickle(f'tensor_db_{str(self.round_number).zfill(2)}.pkl')
+            if TRY_CHANGE:
+                self.tensor_db.secondary_db.to_pickle(f'secondary_tensor_db_{str(self.round_number).zfill(2)}.pkl')
+            bench_dict['global'].step('save_db')
 
         self.round_number += 1
 
@@ -1227,15 +1262,58 @@ class Aggregator:
             logger.info("Experiment Completed. Cleaning up...")
             # End of experiment callbacks.
             self.callbacks.on_experiment_end()
+            bench_dict.save()
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
-            self.callbacks.on_round_begin(self.round_number)
+            bench_dict['global'].step('other')
+            bench_dict['global'].gstop()
+            self.callbacks.on_round_begin(self.round_number, 'agg')
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
+        bench_dict['global'].step('Cleaning tensor db')
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
+        bench_dict['global'].step('reset straggler')
+
+    def _has_analytics_results(self):
+        """
+        Check if the current round has analytics results.
+
+        Returns:
+            bool: True if the current round has analytics results, False otherwise.
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        return len(analytics_result) > 0
+
+    def save_analytics_result(self):
+        """
+        Save analytics results to a JSON file.
+        This method retrieves tensors tagged with "analytics" for the current round
+        from the tensor database and saves them as a JSON file at the path specified
+        by `self.last_state_path`. The tensor values are converted to lists if they
+        are NumPy arrays.
+        The saved JSON file contains a dictionary where the keys are tensor names
+        and the values are the corresponding tensor data.
+        Logs the saved analytics result for reference.
+        Returns:
+            None
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        if len(analytics_result) > 0 and self.last_state_path:
+            with open(self.last_state_path, "w") as jsonfile:
+                analytics_result_json = {}
+                for tensorkey, values in analytics_result.items():
+                    if isinstance(values, np.ndarray):
+                        values = values.tolist()
+                    analytics_result_json[tensorkey.tensor_name] = values
+                json.dump(analytics_result_json, jsonfile, indent=4)
+            logger.debug(f"Analytics result: {analytics_result_json}")
 
     def _has_analytics_results(self):
         """
