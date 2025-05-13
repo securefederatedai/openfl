@@ -2,6 +2,8 @@
 
 set -Eeuo pipefail
 
+rm -rf build
+
 pip uninstall openfl -y
 
 pip install -e .
@@ -38,11 +40,15 @@ python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py -m tas
 
 python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py --num_rounds 2 --cov-report=term-missing --cov-append --cov=openfl 
 
-# python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py --workflow_backend ray
+python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py --workflow_backend ray --num_rounds 2 --cov-report=term-missing --cov-append --cov=openfl
 
 fx experimental activate 
 
-python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py --cov-report=term-missing  --cov-append --cov=openfl 
+python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_301_watermarking --cov-report=term-missing  --cov-append --cov=openfl 
+
+python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_secure_aggregation --cov-report=term-missing  --cov-append --cov=openfl 
+
+python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_evaluation --cov-report=term-missing  --cov-append --cov=openfl 
 
 fx experimental deactivate 
 # Combine and generate the final coverage report
