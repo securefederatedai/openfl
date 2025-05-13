@@ -13,7 +13,6 @@ runs:
   steps:
     - name: Print test summary
       id: print_test_summary
-      # This step is only run if the previous steps were successful
       if: ${{ always() }}
       run: |
         export PYTHONPATH="$PYTHONPATH:."
