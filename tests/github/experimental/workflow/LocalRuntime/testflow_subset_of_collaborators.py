@@ -114,15 +114,13 @@ if __name__ == "__main__":
             )
         )
 
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
+
     local_runtime = LocalRuntime(
-        aggregator=aggregator,
-        collaborators=collaborators,
+        aggregator=aggregator, collaborators=collaborators, backend=backend
     )
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "ray":
-            local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend="ray"
-            )
 
     random_ints = random.sample(range(1, len(collaborators) + 1), len(collaborators))
     tc_pass_fail = {"passed": [], "failed": []}

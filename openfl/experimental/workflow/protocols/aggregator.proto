@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Intel Corporation
+// Copyright (C) 2020-2025 Intel Corporation
 // Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 syntax = "proto3";
@@ -9,9 +9,9 @@ import "openfl/protocols/base.proto";
 
 
 service Aggregator {
-  rpc SendTaskResults(TaskResultsRequest) returns (TaskResultsResponse) {}
-  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
-  rpc CallCheckpoint(CheckpointRequest) returns (CheckpointResponse) {}
+  rpc SendTaskResults(stream DataStream) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (stream DataStream) {}
+  rpc CallCheckpoint(stream DataStream) returns (CheckpointResponse) {}
 }
 
 message MessageHeader {

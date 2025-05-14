@@ -40,6 +40,8 @@ class Aggregator:
         uuid (int): Aggregator UUID.
         federation_uuid (str): Federation UUID.
         assigner: Object assigning tasks to collaborators.
+        connector (optional): Object responsible for managing interopability
+            with other frameworks. Defaults to None
         quit_job_sent_to (list): Collaborators sent a quit job.
         tensor_db (TensorDB): Object for tensor database.
         db_store_rounds* (int): Rounds to store in TensorDB.
@@ -75,6 +77,7 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
+        connector=None,
         use_delta_updates=True,
         straggler_handling_policy: StragglerPolicy = WaitForAllPolicy,
         rounds_to_train=256,
@@ -142,6 +145,7 @@ class Aggregator:
         self.authorized_cols = authorized_cols
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
+        self.connector = connector
 
         self.quit_job_sent_to = []
 
@@ -208,8 +212,12 @@ class Aggregator:
                 tensor_pipe=self.compression_pipeline,
             )
         else:
-            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
-            self._load_initial_tensors()  # keys are TensorKeys
+            if self.connector:
+                # The model definition will be handled by the respective framework
+                self.model = {}
+            else:
+                self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
+                self._load_initial_tensors()  # keys are TensorKeys
 
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
@@ -813,6 +821,11 @@ class Aggregator:
             )
             return
 
+        if self.connector:
+            # Skip to end of round check
+            self._is_collaborator_done(collaborator_name, round_number)
+            self._end_of_round_with_stragglers_check()
+
         task_key = TaskResultKey(task_name, collaborator_name, round_number)
 
         # we mustn't have results already
@@ -1172,24 +1185,29 @@ class Aggregator:
         if self._end_of_round_check_done[self.round_number]:
             return
 
-        # Compute all validation related metrics
         logs = {}
-        for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
-            logs.update(self._compute_validation_related_task_metrics(task_name))
+        if not self.connector:
+            # Compute all validation related metrics
+            for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
+                logs.update(self._compute_validation_related_task_metrics(task_name))
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        if not self._has_analytics_results() and not self.assigner.is_task_group_evaluation():
-            logger.info("Saving round %s model...", self.round_number)
-            self._save_model(self.round_number, self.last_state_path)
-        elif self._has_analytics_results():
-            logger.info(
-                "Skipping model save for round %s due to federated analytics.", self.round_number
-            )
-        else:
-            logger.info("Skipping model save for round %s in evaluation mode.", self.round_number)
+        if not self.connector:
+            if not self._has_analytics_results() and not self.assigner.is_task_group_evaluation():
+                logger.info("Saving round %s model...", self.round_number)
+                self._save_model(self.round_number, self.last_state_path)
+            elif self._has_analytics_results():
+                logger.info(
+                    "Skipping model save for round %s due to federated analytics.",
+                    self.round_number,
+                )
+            else:
+                logger.info(
+                    "Skipping model save for round %s in evaluation mode.", self.round_number
+                )
 
         # End of round callbacks.
         # todo handle case when aggregator restarted before callback was successful
