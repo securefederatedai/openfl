@@ -6,6 +6,7 @@ import os
 
 from pathlib import Path
 from typing import List, Tuple
+from unittest.mock import MagicMock, patch
 import pytest
 import boto3
 from moto import mock_aws
@@ -13,6 +14,7 @@ import torch
 from torchvision.transforms import ToTensor
 
 import io
+from openfl.federated.data.sources.azure_blob_data_source import AzureBlobDataSource
 from openfl.federated.data.sources.data_source import DataSource
 from openfl.federated.data.sources.local_data_source import LocalDataSource
 from openfl.federated.data.sources.torch.folder_dataset import FolderDataset, LabelMapper
@@ -373,6 +375,220 @@ def test_s3_image_folder_map_style_datasource_labels(mock_s3_image_buckets):
 
     # Ensure that index also maps back correctly in idx_to_label
     assert label_mapper.idx_to_label[elephant_label_id] == "elephant", "Reverse mapping is incorrect"
+
+    # Esure that "dog" is mapped to a single label index
+    dog_occurrences = sum(1 for label in label_mapper.idx_to_label.values() if label == "dog")
+    assert dog_occurrences == 1, f"Label 'dog' should have only one unique index, but found {dog_occurrences}"
+
+
+
+
+
+@pytest.fixture
+def mock_azure_blob():
+    # Define two containers
+    containers = [
+        {
+            "connection_string": "DefaultEndpointsProtocol=https;AccountName=fake1;AccountKey=fakekey1;",
+            "container_name": "test-container-1",
+        },
+        {
+            "connection_string": "DefaultEndpointsProtocol=https;AccountName=fake2;AccountKey=fakekey2;",
+            "container_name": "test-container-2",
+        }
+    ]
+
+    files1 = [
+        "train/cat/cat1.png",
+        "train/cat/cat2.png",
+        "train/dog/dog1.png",
+        "train/dog/dog2.png",
+        "train/rabbit/rabbit1.png",
+        "train/rabbit/rabbit2.png"
+    ]
+    files2 = [
+        "rabbit/rabbit3.png",
+        "rabbit/rabbit4.png",
+        "elephant/elephant1.png",
+        "elephant/elephant2.png",
+        "snake/snake1.png",
+        "snake/snake2.png"
+    ]
+    files_per_container = [files1, files2]
+
+    img = Image.new("RGB", (10, 10), color="red")
+    img_bytes_io = io.BytesIO()
+    img.save(img_bytes_io, format="PNG")
+    img_data = img_bytes_io.getvalue()
+
+    file_contents_list = [
+        {f: img_data for f in files}
+        for files in files_per_container
+    ]
+    with patch("openfl.federated.data.sources.azure_blob_data_source.BlobServiceClient") as mock_service_cls:
+        service_mocks = []
+
+        for files, file_contents in zip(files_per_container, file_contents_list):
+            mock_service = MagicMock()
+            mock_container = MagicMock()
+
+            # Create blob mocks with correct names
+            blob_mocks = []
+            for f in files:
+                mock_blob = MagicMock()
+                type(mock_blob).name = property(lambda self, name=f: name)
+                blob_mocks.append(mock_blob)
+            mock_container.list_blobs.return_value = blob_mocks
+
+            def get_blob_client(blob_path, file_contents=file_contents):
+                mock_blob_client = MagicMock()
+                downloader = MagicMock()
+                downloader.readall.return_value = file_contents[blob_path]
+                mock_blob_client.download_blob.return_value = downloader
+                return mock_blob_client
+
+            mock_container.get_blob_client.side_effect = get_blob_client
+            mock_service.get_container_client.return_value = mock_container
+            service_mocks.append(mock_service)
+
+        def from_connection_string_mock(conn_str):
+            if conn_str == containers[0]["connection_string"]:
+                return service_mocks[0]
+            elif conn_str == containers[1]["connection_string"]:
+                return service_mocks[1]
+            else:
+                raise ValueError(f"Unknown connection string: {conn_str}")
+
+        mock_service_cls.from_connection_string.side_effect = from_connection_string_mock
+
+        yield containers[0], containers[1]
+
+
+
+def test_azure_blob_image_folder_map_style_datasource(mock_azure_blob):
+    container1, container2 = mock_azure_blob
+    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    datasources = [ds1, ds2]
+    verifiable_dataset_info = VerifiableDatasetInfo(
+        data_sources=datasources,
+        label="Test VerifiableMapStyleDataset",
+        metadata={"test": "test"}
+    )
+    verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset_items=False)
+    assert len(verifiable_map_style) == 12
+    assert len(verifiable_map_style.datasets) == len(datasources)
+
+    for i in range(len(verifiable_map_style)):
+        if i < 6:
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasets[0][i]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[0][i]["label"]
+        else:
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasets[1][i - 6]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[1][i - 6]["label"]
+
+def test_azure_blob_image_folder_map_style_datasource_verify(mock_azure_blob):
+    container1, container2 = mock_azure_blob
+    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    datasources = [ds1, ds2]
+    verifiable_dataset_info = VerifiableDatasetInfo(
+        data_sources=datasources,
+        label="Test VerifiableMapStyleDataset",
+        metadata={"test": "test"}
+    )
+    dataset_info_json = verifiable_dataset_info.to_json()
+    verifiable_dataset_info.verify_dataset(json.loads(dataset_info_json)["root_hash"])
+    verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset_items=True)
+    assert len(verifiable_map_style) == 12
+    assert len(verifiable_map_style.datasets) == len(datasources)
+
+    for i in range(len(verifiable_map_style)):
+        if i < 6:
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasets[0][i]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[0][i]["label"]
+        else:
+            assert verifiable_map_style[i][0] == verifiable_map_style.datasets[1][i - 6]["data"]
+            assert verifiable_map_style[i][1] == verifiable_map_style.datasets[1][i - 6]["label"]
+
+
+def test_azure_blob_image_folder_map_style_datasource_labels(mock_azure_blob):
+    """Test that LabelMapper correctly maps labels across multiple datasets."""
+    container1, container2 = mock_azure_blob
+    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    datasources = [ds1, ds2]
+
+    verifiable_dataset_info = VerifiableDatasetInfo(
+        data_sources=datasources,
+        label="Test VerifiableMapStyleDataset",
+        metadata={"test": "test"}
+    )
+    verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset_items=True)
+
+    # Check the label mapping
+    label_mapper = verifiable_map_style.label_mapper
+    assert label_mapper is not None, "LabelMapper should be initialized"
+
+    # Expected label mappings (combining all dataset labels)
+    expected_labels = {"cat", "dog", "rabbit", "elephant", "snake"}
+    mapped_labels = set(label_mapper.label_to_idx.keys())
+
+    assert mapped_labels == expected_labels, f"Expected labels {expected_labels}, but got {mapped_labels}"
+
+    # Ensure all mapped values are unique integers
+    mapped_values = set(label_mapper.label_to_idx.values())
+    assert len(mapped_values) == len(expected_labels), "LabelMapper should assign unique integers to each label"
+
+    # Ensure "elephant" has the same integer mapping across all datasets
+    elephant_label_id = label_mapper.get_label_index("elephant")
+
+    # Ensure that index also maps back correctly in idx_to_label
+    assert label_mapper.idx_to_label[elephant_label_id] == "elephant", "Reverse mapping is incorrect"
+
+    # Esure that "dog" is mapped to a single label index
+    dog_occurrences = sum(1 for label in label_mapper.idx_to_label.values() if label == "dog")
+    assert dog_occurrences == 1, f"Label 'dog' should have only one unique index, but found {dog_occurrences}"
+
+
+def test_mixed_ds_image_folder_map_style_datasource_labels(fake_image_datasources, mock_azure_blob):
+    """Test that LabelMapper correctly maps labels across multiple datasets."""
+    local_ds1, local_ds2, _ = fake_image_datasources
+    base_path, relative_paths = split_to_base_and_relative_paths([local_ds1, local_ds2])
+    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+
+    container1, container2 = mock_azure_blob
+    azure_ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    azure_ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+
+    datasources.append(azure_ds1)
+    datasources.append(azure_ds2)
+    verifiable_dataset_info = VerifiableDatasetInfo(
+        data_sources=datasources,
+        label="Test VerifiableMapStyleDataset",
+        metadata={"test": "test"}
+    )
+    verifiable_map_style = VerifiableImageFolder(verifiable_dataset_info, verify_dataset_items=True)
+
+    # Check the label mapping
+    label_mapper = verifiable_map_style.label_mapper
+    assert label_mapper is not None, "LabelMapper should be initialized"
+
+    # Expected label mappings (combining all dataset labels)
+    expected_labels = {"cat", "dog", "rabbit", "elephant", "snake"}
+    mapped_labels = set(label_mapper.label_to_idx.keys())
+
+    assert mapped_labels == expected_labels, f"Expected labels {expected_labels}, but got {mapped_labels}"
+
+    # Ensure all mapped values are unique integers
+    mapped_values = set(label_mapper.label_to_idx.values())
+    assert len(mapped_values) == len(expected_labels), "LabelMapper should assign unique integers to each label"
+
+    # Ensure "dog" has the same integer mapping across all datasets
+    dog_label_id = label_mapper.get_label_index("dog")
+
+    # Ensure that index also maps back correctly in idx_to_label
+    assert label_mapper.idx_to_label[dog_label_id] == "dog", "Reverse mapping is incorrect"
 
     # Esure that "dog" is mapped to a single label index
     dog_occurrences = sum(1 for label in label_mapper.idx_to_label.values() if label == "dog")
