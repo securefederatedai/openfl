@@ -17,7 +17,14 @@ class SmokersHealthDataLoader(DataLoader):
         )
 
     def _download_raw_data(self):
-        """Download the dataset using curl."""
+        """
+        Downloads and extracts the raw data for the smokers' health dataset.
+        This method performs the following steps:
+        1. Downloads the dataset from the specified Kaggle URL using the `curl` command.
+        2. Saves the downloaded file as a ZIP archive in the `./data` directory.
+        3. Extracts the contents of the ZIP archive into the `data` directory.
+        """
+        
         download_path = os.path.expanduser('./data/smokers_health.zip')
         subprocess.run(
             [
@@ -31,7 +38,13 @@ class SmokersHealthDataLoader(DataLoader):
         subprocess.run(['unzip', '-o', download_path, '-d', 'data'], check=True)
 
     def load_data_shard(self, shard_num, **kwargs):
-        """Load a specific shard of the dataset."""
+        """
+        Loads data from a CSV file.
+        This method reads the data from a CSV file located at './data/smoking_health_data_final.csv'
+        and returns it as a pandas DataFrame.
+        Returns:
+            pd.DataFrame: The data loaded from the CSV file.
+        """
         file_path = os.path.join('data', 'smoking_health_data_final.csv')
         df = pd.read_csv(file_path)
 

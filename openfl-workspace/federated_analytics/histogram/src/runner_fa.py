@@ -56,7 +56,6 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         Returns:
             dict: A dictionary of analysis results.
         """
-        print("inside task analytics")
         results = self.analytics_task(**kwargs)
         tags = ("analytics",)
         origin = col_name
@@ -64,7 +63,6 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
             TensorKey(metric_name, origin, round_num, False, tags): metric_value
             for metric_name, metric_value in results.items()
         }
-        print("type(output_metric_dict):", type(output_metric_dict))
         return output_metric_dict, output_metric_dict
 
     def analytics_task(self, **kwargs):
