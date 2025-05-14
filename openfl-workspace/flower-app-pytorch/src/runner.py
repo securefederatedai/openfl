@@ -127,7 +127,13 @@ class FlowerTaskRunner(TaskRunner):
                 interop_server.stop_server()
             time.sleep(0.1)
 
-        return {}, {}
+        # Collaborator expects these dictionaries, but they are not used in this context
+        # as Flower will handle the tensors internally.
+        global_output_tensor_dict = {}
+        local_output_tensor_dict = {}
+
+        return global_output_tensor_dict, local_output_tensor_dict
+
 
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
