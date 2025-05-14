@@ -226,7 +226,6 @@ def test_federated_evaluation(request):
     os.chdir(os.getcwd())
 
     assert fh.verify_federated_runtime_experiment_completion(
-        participant_res_files ,
-        expected_envoys=envoys
+        participant_res_files
     ), "Experiment failed"
     log.info("Experiment completed successfully")

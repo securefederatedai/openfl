@@ -104,11 +104,14 @@ def run_command(
             cmd, capture_output=True, shell=shell, text=True, cwd=work_dir, check=check, timeout=timeout
         )
     except subprocess.CalledProcessError as e:
-        log.error(f"Command '{cmd}' failed with return code {e.returncode}")
-        log.error(f"Error output: {e.stderr}")
-        if not return_error:
+        if return_error:
+            log.warning(f"Command '{cmd}' failed with return code {e.returncode}")
+            log.warning(f"Output: {e.stderr}")
+            return e.returncode, [], [e.stderr]
+        else:
+            log.error(f"Command '{cmd}' failed with return code {e.returncode}")
+            log.error(f"Error output: {e.stderr}")
             raise
-        return e.returncode, [], [e.stderr]
     except Exception as e:
         log.error(f"Failed to execute command '{cmd}': {str(e)}")
         log.error(f"Error Traceback: {traceback.format_exc()}")
