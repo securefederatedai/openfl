@@ -122,9 +122,7 @@ def initialize(
         init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
 
         # Initialize tensor dictionary
-        init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
-            plan, init_model_path
-        )
+        init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(plan, init_model_path)
 
         tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
             init_tensor_dict,
