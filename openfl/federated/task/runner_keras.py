@@ -169,7 +169,7 @@ class KerasTaskRunner(TaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
-    def _initialize_metrics_result(self,batch_size):
+    def _initialize_metrics_result(self, batch_size):
         # evaluation needed before metrics can be resolved
         self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
         return self.model.get_metrics_result()
