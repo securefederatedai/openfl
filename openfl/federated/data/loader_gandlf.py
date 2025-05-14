@@ -74,6 +74,11 @@ class GaNDLFDataLoaderWrapper(DataLoader):
             # Return the patch size from GANDLF config
             return self.train_dataloader.dataset.gandlf_params["patch_size"]
 
+        raise NotImplementedError(
+            "Ensure gandlf params have to be defined in gandlf config file"
+            " or implement get_feature_shape method in the GaNDLFDataLoaderWrapper class."
+        )
+
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.
 
