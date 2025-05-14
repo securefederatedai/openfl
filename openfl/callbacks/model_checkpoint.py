@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from pathlib import Path
@@ -12,27 +12,28 @@ from openfl.utilities.workspace import set_directory
 logger = logging.getLogger(__name__)
 
 
-class ModelSaver(Callback):
+class ModelCheckpoint(Callback):
     """Save the model in native format at the end of the experiment.
 
     This callback saves the model in native format at the end of the experiment.
     It uses the `TaskRunner` to load the model from a protobuf file and then saves
     it in native format.
 
-    Attributes:
-        params: A dictionary of parameters for the callback.
-            - `best_state_path`: Path to the best model state file.
-            - `last_state_path`: Path to the last model state file.
+    Args:
+        best_state_path (str): Path to the best model state file.
+        last_state_path (str): Path to the last model state file.
+
     """
 
-    def __init__(self):
+    def __init__(self, best_state_path, last_state_path):
         super().__init__()
+        self.best_state_path = best_state_path
+        self.last_state_path = last_state_path
 
     def on_experiment_end(self, logs=None):
         task_runner, tensor_pipe = initialize_task_runner()
 
-        for state_key in ["best_state_path", "last_state_path"]:
-            state_path = self.params[state_key]
+        for state_path in [self.best_state_path, self.last_state_path]:
             state_path = Path(state_path).resolve()
 
             model_protobuf = utils.load_proto(state_path)

@@ -5,6 +5,7 @@
 """PyTorchTaskRunner module."""
 
 import logging
+import os
 from copy import deepcopy
 from typing import Iterator, Tuple
 
@@ -461,7 +462,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
-        if "." not in str(filepath).split("/")[-1]:
+        if "." not in str(filepath).split(os.sep)[-1]:
             filepath = str(filepath) + ".pt"
 
         torch.save(pickle_dict, filepath)

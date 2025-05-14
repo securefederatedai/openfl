@@ -47,6 +47,7 @@ Configurable Settings
  - :code:`write_logs`: (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.     
  - :code:`persist_checkpoint`: (boolean) Specifies whether to enable the storage of a persistent checkpoint in non-volatile storage for recovery purposes. When enabled, the aggregator will restore its state to what it was prior to the restart, ensuring continuity after a restart. 
  - :code:`persistent_db_path`: (str:path) Defines the persisted database path. 
+ - :code:`save_native_model`: (boolean): Specifies whether to save the model in its native format. This is useful for post-experiment analysis and deployment. The model will be saved in the base path specified by the :code:`last_state_path` and :code:`best_state_path` setting.
 
 - :class:`Collaborator <openfl.component.Collaborator>`
     `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_

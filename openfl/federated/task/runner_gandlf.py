@@ -452,7 +452,7 @@ class GaNDLFTaskRunner(TaskRunner):
             model_state_dict_key: self.model.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
-        if "." not in str(filepath).split("/")[-1]:
+        if "." not in str(filepath).split(os.sep)[-1]:
             filepath = str(filepath) + ".pt"
 
         pt.save(pickle_dict, filepath)

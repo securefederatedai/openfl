@@ -12,7 +12,7 @@ import copy
 from warnings import catch_warnings, simplefilter
 
 import numpy as np
-
+import os
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
@@ -273,7 +273,7 @@ class KerasTaskRunner(TaskRunner):
             filepath (str): The file path to save the model.
                 By default, model will be saved as `*.keras`
         """
-        if "." not in str(filepath).split("/")[-1]:
+        if "." not in str(filepath).split(os.sep)[-1]:
             filepath = str(filepath) + ".keras"
 
         self.model.export(filepath)

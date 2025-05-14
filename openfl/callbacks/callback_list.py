@@ -3,7 +3,6 @@
 from openfl.callbacks.callback import Callback
 from openfl.callbacks.memory_profiler import MemoryProfiler
 from openfl.callbacks.metric_writer import MetricWriter
-from openfl.callbacks.model_saver import ModelSaver
 
 
 class CallbackList(Callback):
@@ -16,7 +15,6 @@ class CallbackList(Callback):
         callbacks: A list of `openfl.callbacks.Callback` instances.
         add_memory_profiler: If True, adds a `MemoryProfiler` callback to the list.
         add_metric_writer: If True, adds a `MetricWriter` callback to the list.
-        add_model_saver: If True, adds a `ModelSaver` callback to the list.
         tensor_db: Optional `TensorDB` instance of the respective participant.
             If provided, callbacks can access TensorDB for various actions.
         params: Additional parameters saved for use within the callbacks.
@@ -27,14 +25,13 @@ class CallbackList(Callback):
         callbacks: list,
         add_memory_profiler=False,
         add_metric_writer=False,
-        add_model_saver=False,
         tensor_db=None,
         **params,
     ):
         super().__init__()
         self.callbacks = list(_flatten(callbacks)) if callbacks else []
 
-        self._add_default_callbacks(add_memory_profiler, add_metric_writer, add_model_saver)
+        self._add_default_callbacks(add_memory_profiler, add_metric_writer)
 
         self.set_tensor_db(tensor_db)
         self.set_params(params)
@@ -51,7 +48,7 @@ class CallbackList(Callback):
             for callback in self.callbacks:
                 callback.set_tensor_db(tensor_db)
 
-    def _add_default_callbacks(self, add_memory_profiler, add_metric_writer, add_model_saver):
+    def _add_default_callbacks(self, add_memory_profiler, add_metric_writer):
         """Add default callbacks to callbacks list if not already present."""
         self._memory_profiler = None
         self._metric_writer = None
@@ -62,8 +59,6 @@ class CallbackList(Callback):
                 self._memory_profiler = cb
             if isinstance(cb, MetricWriter):
                 self._metric_writer = cb
-            if isinstance(cb, ModelSaver):
-                self._model_saver = cb
 
         if add_memory_profiler and self._memory_profiler is None:
             self._memory_profiler = MemoryProfiler()
@@ -72,10 +67,6 @@ class CallbackList(Callback):
         if add_metric_writer and self._metric_writer is None:
             self._metric_writer = MetricWriter()
             self.callbacks.append(self._metric_writer)
-
-        if add_model_saver and self._model_saver is None:
-            self._model_saver = ModelSaver()
-            self.callbacks.append(self._model_saver)
 
     def on_round_begin(self, round_num: int, logs=None):
         for callback in self.callbacks:

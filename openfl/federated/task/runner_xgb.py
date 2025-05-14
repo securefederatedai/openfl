@@ -6,7 +6,7 @@
 
 import json
 import logging
-
+import os
 import numpy as np
 import xgboost as xgb
 from sklearn.metrics import accuracy_score
@@ -370,7 +370,7 @@ class XGBoostTaskRunner(TaskRunner):
         Returns:
             None
         """
-        if "." not in str(filepath).split("/")[-1]:
+        if "." not in str(filepath).split(os.sep)[-1]:
             filepath = str(filepath) + ".json"
 
         self.bst.save_model(filepath)
