@@ -3,25 +3,32 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import KerasDataLoader
+from glob import glob
+
 import numpy as np
 from sklearn.model_selection import train_test_split
-from glob import glob
+
+from openfl.federated import KerasDataLoader
 
 
 class KerasHippmapp3rsynth(KerasDataLoader):
     """Data Loader for synthetic Hippmapp3r Dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """
         Initialize.
 
         Args:
-            data_path: File path for the dataset
+            data_path: File path for the dataset. If None, initialize for model creation only.
             batch_size (int): The batch size for the data loader
             **kwargs: Additional arguments, passed to super init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
+        self.feature_shape = [64, 64, 128]  # Hippmapp3r shape for Keras (channels last)
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
 
         X_train = glob(f"{data_path}/X*.npy")
         y_train = glob(f"{data_path}/y*.npy")
@@ -33,6 +40,22 @@ class KerasHippmapp3rsynth(KerasDataLoader):
         self.X_valid = np.asarray(X_valid)
         self.y_train = np.asarray(y_train)
         self.y_valid = np.asarray(y_valid)
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [64, 64, 128] for Hippmapp3r.
+        """
+        return [64, 64, 128]
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (2 for binary segmentation).
+        """
+        return 2  # Binary segmentation task (background and hippocampus)
 
     @staticmethod
     def _batch_generator(X, y, idxs, batch_size, num_batches):
