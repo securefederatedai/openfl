@@ -1025,12 +1025,14 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file=None, agg_metric_file=None):
+def get_best_agg_score(database_file=None, agg_metric_file=None, max_retries=10, sleep_interval=5):
     """
     Get the best aggregated score from the database file or aggregator metrics file
     Args:
         database_file (str): Database file. Optional.
         agg_metric_file (str): Aggregator metrics file. Optional.
+        max_retries (int): Maximum number of retries to get the best score in case of database_file. Default is 10.
+        sleep_interval (int): Sleep interval between retries in seconds in case of database_file. Default is 5 seconds.
     Returns:
         float: Best aggregated score
     """
@@ -1039,7 +1041,7 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
         raise ValueError("Either database_file or agg_metric_file should be provided")
 
     if database_file:
-        return db_helper.get_key_value_from_db("best_score", database_file)
+        return db_helper.get_key_value_from_db("best_score", database_file, max_retries=max_retries, sleep_interval=sleep_interval)
     else:
         json_file = convert_to_json(agg_metric_file)
         best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
