@@ -123,7 +123,7 @@ def initialize(
 
         # Initialize tensor dictionary
         init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
-            plan, None, init_model_path
+            plan, init_model_path
         )
 
         tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
@@ -173,12 +173,11 @@ def initialize(
     logger.info(f"{context.obj['plans']}")
 
 
-def _initialize_tensor_dict(plan, input_shape, init_model_path):
+def _initialize_tensor_dict(plan, init_model_path):
     """Initialize and return the tensor dictionary.
 
     Args:
         plan: The federation plan object
-        input_shape: The input shape to the model (deprecated, will be ignored)
         init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:

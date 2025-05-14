@@ -19,24 +19,18 @@ class GaNDLFDataLoaderWrapper(DataLoader):
         feature_shape (tuple): Shape of an example feature array.
     """
 
-    def __init__(self, data_path=None, feature_shape=None, **kwargs):
+    def __init__(self, data_path=None, **kwargs):
         """Initializes the GaNDLFDataLoaderWrapper object.
 
         Args:
             data_path (str, optional): The path to the directory containing the data.
                 If None, initialize for model creation only.
-            feature_shape (tuple, optional): The shape of an example feature array.
-                If None, will be derived from GANDLF config or default to [32, 32, 32].
             **kwargs: Additional arguments to pass to the function.
         """
         self.train_csv = None
         self.val_csv = None
         self.train_dataloader = None
         self.val_dataloader = None
-
-        # If feature_shape is provided, use it
-        # Otherwise, it will be derived from GANDLF config in get_feature_shape
-        self._provided_feature_shape = feature_shape
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:
@@ -66,13 +60,8 @@ class GaNDLFDataLoaderWrapper(DataLoader):
 
         Returns:
             tuple: The shape of an example feature array.
-                If feature_shape was provided in __init__, that value is returned.
-                Otherwise, derives shape from the GANDLF config's patch_size if available,
-                or falls back to default [32, 32, 32].
+                derives shape from the GANDLF config's patch_size if available
         """
-        # If feature_shape was explicitly provided in __init__, use it
-        if self._provided_feature_shape is not None:
-            return self._provided_feature_shape
 
         # If we have a train dataloader with a dataset that has a gandlf_params attribute
         # with patch_size
