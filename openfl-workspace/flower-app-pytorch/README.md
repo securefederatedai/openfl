@@ -103,7 +103,7 @@ tasks:
     interop_server: src.grpc.connector.flower.interop_server
 ```
 
-5.`Collaborator` has an additional setting `interop` which will invoke a callback to prepare the interop server that'll eventually be started by the Task Runner
+5.`Collaborator` has an additional setting `interop_mode` which will invoke a callback to prepare the interop server that'll eventually be started by the Task Runner
 
 ```yaml
 collaborator :
