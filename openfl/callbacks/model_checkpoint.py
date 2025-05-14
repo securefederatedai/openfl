@@ -6,7 +6,7 @@ from pathlib import Path
 from openfl.callbacks.callback import Callback
 from openfl.federated import Plan
 from openfl.protocols import utils
-from openfl.utilities.dataloading import get_dataloader
+from openfl.utilities.dataloading import initialize_minimal_dataloader
 from openfl.utilities.workspace import set_directory
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def initialize_task_runner(
             data_config_path=data_config,
             resolve=False,
         )
-        data_loader = get_dataloader(plan, prefer_minimal=True)
+        data_loader = initialize_minimal_dataloader(plan)
         task_runner = plan.get_task_runner(data_loader=data_loader)
         tensor_pipe = plan.get_tensor_pipe()
 
