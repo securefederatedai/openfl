@@ -85,9 +85,6 @@ class GaNDLFDataLoaderWrapper(DataLoader):
             # Return the patch size from GANDLF config
             return self.train_dataloader.dataset.gandlf_params["patch_size"]
 
-        # Default fallback value
-        return [32, 32, 32]
-
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.
 
