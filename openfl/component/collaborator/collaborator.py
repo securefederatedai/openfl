@@ -150,7 +150,7 @@ class Collaborator:
         if self._interop_mode_enabled:
             callbacks.append(
                 callbacks_module.LambdaCallback(
-                    on_experiment_begin=lambda logs=None: self.prepare_interop_server()
+                    on_round_begin=lambda round_num, logs=None: self.prepare_interop_server()
                 )
             )
 
