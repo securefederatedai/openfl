@@ -1,0 +1,23 @@
+---
+# Composite Action to run pre-test functions for Workflow API end to end tests
+
+name: 'Pre-Test Functions for Workflow API'
+description: 'Run pre-test functions'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      id: install_dependencies
+      run: |
+        python -m pip install --upgrade pip ipython ipykernel
+        pip install .
+        pip install -r openfl-tutorials/experimental/workflow/workflow_interface_requirements.txt
+        pip install -r test-requirements.txt
+      shell: bash

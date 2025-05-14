@@ -41,7 +41,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         """
         super().__init__(device=device, **kwargs)
 
-        self.num_classes = self.data_loader.num_classes
+        self.num_classes = self.data_loader.get_num_classes()
         self.init_network(device=self.device, **kwargs)
         self._init_optimizer()
         self.loss_fn = cross_entropy

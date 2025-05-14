@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -12,6 +12,7 @@ import grpc
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
+from openfl.protocols.utils import datastream_to_proto, proto_to_datastream
 
 
 class ConstantBackoff:
@@ -280,7 +281,7 @@ class AggregatorGRPCClient:
             execution_environment=clone_bytes,
         )
 
-        response = self.stub.SendTaskResults(request)
+        response = self.stub.SendTaskResults(proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
 
         return response.header
@@ -291,8 +292,8 @@ class AggregatorGRPCClient:
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
         request = aggregator_pb2.GetTasksRequest(header=self.header)
-
-        response = self.stub.GetTasks(request)
+        response_stream = self.stub.GetTasks(request)
+        response = datastream_to_proto(aggregator_pb2.GetTasksResponse(), response_stream)
         self.validate_response(response, collaborator_name)
 
         return (
@@ -316,7 +317,7 @@ class AggregatorGRPCClient:
             stream_buffer=stream_buffer,
         )
 
-        response = self.stub.CallCheckpoint(request)
+        response = self.stub.CallCheckpoint(proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
 
         return response.header

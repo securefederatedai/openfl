@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DirectorGRPCServer module."""
@@ -15,7 +15,7 @@ from grpc import aio, ssl_server_credentials
 from openfl.experimental.workflow.protocols import director_pb2, director_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.exceptions import EnvoyNotFoundError
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
-from openfl.protocols.utils import get_headers
+from openfl.protocols.utils import get_headers, proto_to_datastream
 
 logger = logging.getLogger(__name__)
 
@@ -326,7 +326,12 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             director_pb2.GetFlowStateResponse: The response to the request.
         """
         status, flspec_obj = await self.director.get_flow_state()
-        return director_pb2.GetFlowStateResponse(completed=status, flspec_obj=flspec_obj)
+        response = director_pb2.GetFlowStateResponse(
+            completed=status,
+            flspec_obj=flspec_obj,
+        )
+        for chunk in proto_to_datastream(response):
+            await context.write(chunk)
 
     async def GetExperimentStdout(
         self, request, context
