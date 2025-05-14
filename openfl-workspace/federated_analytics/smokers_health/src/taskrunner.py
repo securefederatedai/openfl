@@ -13,7 +13,6 @@ class SmokersHealthAnalytics(FederatedAnalyticsTaskRunner):
     """
 
     def analytics_task(self, columns, **kwargs):
-        print("inside task analytics")
         # query data
         data = self.data_loader.query(columns)
 
@@ -26,9 +25,21 @@ class SmokersHealthAnalytics(FederatedAnalyticsTaskRunner):
             'blood_pressure': lambda x: self.process_blood_pressure(x).iloc[0]
         })
 
-        print(result)
-        print(type(result))
-        return result.to_dict()
+        # Convert the result into the desired format
+        formatted_result = {}
+
+        keys = ', heart_rate_mean, chol_mean, systolic_blood_pressure_mean, diastolic_blood_pressure_mean'
+        for index, row in result.iterrows():
+            age, sex, current_smoker = index
+            heart_rate_mean = row['heart_rate']
+            chol_mean = row['chol']
+            systolic_mean = row['blood_pressure'][0]
+            diastolic_mean = row['blood_pressure'][1]
+            combined_key = f"{age}_{sex}_current_smoker_{current_smoker} {keys}"
+            formatted_result[combined_key] = np.array([
+                heart_rate_mean, chol_mean, systolic_mean, diastolic_mean
+            ])
+        return formatted_result
 
     # Process blood pressure data
     def process_blood_pressure(self, bp_series):

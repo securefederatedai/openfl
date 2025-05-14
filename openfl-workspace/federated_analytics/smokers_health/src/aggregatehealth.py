@@ -22,17 +22,7 @@ class AggregateHealthMetrics(AggregationFunction):
         if not local_tensors:
             raise ValueError("No local metrics to aggregate.")
         
-        print("type(local_tensors):", type(local_tensors))
-        print("len(local_tensors):", len(local_tensors))
-        print("local_tensors[0]:", local_tensors[0])
-        print("type(local_tensors[0]):", type(local_tensors[0]))
-        print("len(local_tensors[0]):", len(local_tensors[0]))
-        print("local_tensors[0].keys():", local_tensors[0].keys())
-        print("local_tensors[0].values():", local_tensors[0].values())
-        print("local_tensors:", local_tensors)
-        aggregated = {}
-        for key in local_tensors[0].keys():
-            values = [tensor[key] for tensor in local_tensors]
-            aggregated[key] = np.mean(values)
-
-        return aggregated
+        agg_histogram = np.zeros_like(local_tensors[0].tensor)
+        for local_tensor in local_tensors:
+            agg_histogram += local_tensor.tensor / len(local_tensors)
+        return agg_histogram
