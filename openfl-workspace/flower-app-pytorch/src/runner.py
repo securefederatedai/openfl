@@ -67,25 +67,25 @@ class FlowerTaskRunner(TaskRunner):
             **kwargs: Additional parameters for configuration.
                 includes:
                     interop_server (object): The FlowerInteropServer instance.
-                    local_server_port (int): The port for the local server.
+                    interop_server_port (int): The port for the interop server.
         """
-        local_server_port = kwargs.get('local_server_port')
 
         def message_callback():
             self.shutdown_requested = True
 
         # Set the callback for ending the experiment
         interop_server = kwargs.get('interop_server')
+        interop_server_port = kwargs.get('interop_server_port')
         interop_server.set_end_experiment_callback(message_callback)
-        interop_server.start_server(local_server_port)
+        interop_server.start_server(interop_server_port)
 
-        local_server_port = interop_server.get_port()
+        interop_server_port = interop_server.get_port()
 
         command = [
             "flower-supernode",
             "--insecure",
             "--grpc-adapter",
-            "--superlink", f"127.0.0.1:{local_server_port}",
+            "--superlink", f"127.0.0.1:{interop_server_port}",
             "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
             "--node-config", f"data-path='{self.data_path}'"
         ]
@@ -104,7 +104,7 @@ class FlowerTaskRunner(TaskRunner):
 
         if self.sgx_enabled:
             # Check if port is open before starting the client app
-            while not is_port_open('127.0.0.1', local_server_port):
+            while not is_port_open('127.0.0.1', interop_server_port):
                 time.sleep(0.5)
 
             time.sleep(1) # Add a small delay after confirming the port is open

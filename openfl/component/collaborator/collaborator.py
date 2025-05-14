@@ -247,7 +247,7 @@ class Collaborator:
         func = getattr(self.task_runner, func_name)
         logger.debug("Using TaskRunner subclassing API")
 
-        if task_name == "interop":
+        if task_name == "prepare_for_interop":
             kwargs = self.prepare_interop_server(kwargs)
 
         global_output_tensor_dict, local_output_tensor_dict = func(

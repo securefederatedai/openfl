@@ -52,7 +52,7 @@ assigner :
       - name  : Connector_Flower
         percentage : 1.0
         tasks : 
-          - interop
+          - prepare_for_interop
 
 tasks :
   defaults : plan/defaults/tasks_connector.yaml
