@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
@@ -6,8 +6,7 @@
 from logging import getLogger
 
 import numpy as np
-from torchvision import datasets
-from torchvision import transforms
+from torchvision import datasets, transforms
 
 logger = getLogger(__name__)
 
@@ -68,7 +67,8 @@ def load_mnist_shard(shard_num, collaborator_count, feature_shape=None, num_clas
         collaborator_count (int): The number of collaborators in the
                                   federation
         feature_shape (list, optional): The shape of input features.
-        num_classes (int, optional): Number of classes.
+                                       If None, uses default MNIST shape.
+        num_classes (int, optional): Number of classes. If None, uses default MNIST classes (10).
         categorical (bool): True = convert the labels to one-hot encoded
                             vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -76,11 +76,14 @@ def load_mnist_shard(shard_num, collaborator_count, feature_shape=None, num_clas
         **kwargs: Additional parameters to pass to the function
 
     Returns:
+        list: The input shape
+        int: The number of classes
         numpy.ndarray: The training data
         numpy.ndarray: The training labels
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
+
     # We don't actually need to use feature_shape for PyTorch implementation
     # since the transforms.ToTensor() handles the reshaping automatically
     # But we keep it as a parameter for consistency with other implementations
@@ -98,4 +101,4 @@ def load_mnist_shard(shard_num, collaborator_count, feature_shape=None, num_clas
         y_train = one_hot(y_train, num_classes)
         y_valid = one_hot(y_valid, num_classes)
 
-    return X_train, y_train, X_valid, y_valid
+    return num_classes, X_train, y_train, X_valid, y_valid

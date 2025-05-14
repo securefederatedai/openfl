@@ -7,7 +7,7 @@ import os
 
 import numpy as np
 
-from .nii_reader import nii_reader
+from src.nii_reader import nii_reader
 
 logger = logging.getLogger(__name__)
 

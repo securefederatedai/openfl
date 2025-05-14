@@ -3,12 +3,13 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import logging
+
 import keras
 
-from .model import CNNModel
 from openfl.federated import KerasTaskRunner
+from src.model import CNNModel
 
-import logging
 logger = logging.getLogger(__name__)
 
 class CNNTaskruner(KerasTaskRunner):
@@ -16,14 +17,17 @@ class CNNTaskruner(KerasTaskRunner):
 
     def __init__(self, **kwargs):
         """
-        Initializes the TaskRunner instance. Builds the Keras model, initializes required tensors for all publicly accessible methods that
-        could be called as part of a task and initializes the logger.
+        Initializes the TaskRunner instance. Builds the Keras model, initializes required tensors
+        for all publicly accessible methods that could be called as part of a task
+        and initializes the logger.
 
         Args:
-            **kwargs: Arbitrary keyword arguments passed to the superclass and used for model building.
+            **kwargs: Arbitrary keyword arguments passed to the superclass and used for
+                model building.
 
         Attributes:
-            model (keras.Model): The Keras model built using the provided feature shape and number of classes.
+            model (keras.Model): The Keras model built using the provided feature shape
+                and number of classes.
             logger (logging.Logger): Logger instance for logging information.
 
         Methods:
@@ -40,9 +44,6 @@ class CNNTaskruner(KerasTaskRunner):
 
         self.model.summary(print_fn=logger.info)
 
-        logger.info(f'Train Set Size : {self.get_train_data_size()}')
-        logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
-
     def build_model(self,
                     input_shape,
                     num_classes,
@@ -58,11 +59,15 @@ class CNNTaskruner(KerasTaskRunner):
         Args:
             input_shape (tuple): Shape of the input data (height, width, channels).
             num_classes (int): Number of output classes.
-            conv_kernel_size (tuple, optional): Size of the convolutional kernels. Defaults to (4, 4).
+            conv_kernel_size (tuple, optional): Size of the convolutional kernels.
+                Defaults to (4, 4).
             conv_strides (tuple, optional): Strides of the convolutional layers. Defaults to (2, 2).
-            conv1_channels_out (int, optional): Number of output channels for the first convolutional layer. Defaults to 16.
-            conv2_channels_out (int, optional): Number of output channels for the second convolutional layer. Defaults to 32.
-            final_dense_inputsize (int, optional): Number of units in the final dense layer before the output layer. Defaults to 100.
+            conv1_channels_out (int, optional): Number of output channels for the first
+                convolutional layer. Defaults to 16.
+            conv2_channels_out (int, optional): Number of output channels for the second
+                convolutional layer. Defaults to 32.
+            final_dense_inputsize (int, optional): Number of units in the final dense layer
+                before the output layer. Defaults to 100.
             **kwargs: Additional keyword arguments.
         Returns:
             keras.Model: Compiled CNN model.

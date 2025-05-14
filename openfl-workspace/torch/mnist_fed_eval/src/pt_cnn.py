@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
@@ -6,25 +6,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 import tqdm
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
-
-
-def cross_entropy(output, target):
-    """Binary cross-entropy metric.
-
-    Args:
-        output: The mode prediction
-        target: The target (ground truth label)
-
-    Returns:
-        Binary cross-entropy with logits
-
-    """
-    return F.cross_entropy(input=output, target=target)
 
 
 class PyTorchCNN(PyTorchTaskRunner):
@@ -43,13 +28,7 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         self.num_classes = self.data_loader.get_num_classes()
         self.init_network(device=self.device, **kwargs)
-        self._init_optimizer()
-        self.loss_fn = cross_entropy
         self.initialize_tensorkeys_for_functions()
-
-    def _init_optimizer(self):
-        """Initialize the optimizer."""
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
     def init_network(self,
                      device,
@@ -186,10 +165,15 @@ class PyTorchCNN(PyTorchTaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def reset_opt_vars(self):
-        """Reset optimizer variables.
-
-        Resets the optimizer state variables.
-
+    def save_native(self, filepath):
         """
-        self._init_optimizer()
+        Save model in a picked file specified by the filepath.
+        Uses torch.save().
+
+        Args:
+            filepath (string)                 : Path to pickle file to be
+                                                created by pt.save().
+        Returns:
+            None
+        """
+        torch.save(self, filepath)

@@ -228,24 +228,19 @@ def run_federation(fed_obj):
     Returns:
         bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start
-        )
-        for participant in [fed_obj.aggregator] + fed_obj.collaborators
-    ]
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            # Start the participant
+            participant.start()
+        except Exception as e:
+            log.error(f"Failed to start {participant.name}: {e}")
+            raise e
 
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise ex.ParticipantStartException("Failed to start one or more participants")
     return True
 
 
