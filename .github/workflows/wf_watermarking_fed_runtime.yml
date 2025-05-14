@@ -26,23 +26,17 @@ jobs:
       (github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    env:
+      PYTHON_VERSION: '3.10'
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:
         ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-
-    - name: Install dependencies # Without this step, fx command will not work
-      id: install_dependencies
-      run: |
-        python -m pip install --upgrade pip ipython ipykernel
-        pip install .
-        pip install -r test-requirements.txt
+    - name: Pre test run
+      uses: ./.github/actions/wf_pre_test_run
+      if: ${{ always() }}
 
     - name: Run Federated Runtime 301 MNIST Watermarking via pytest
       id: run_tests
