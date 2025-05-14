@@ -199,9 +199,9 @@ class Aggregator:
 
         if save_native_model:
             ckpt_callback = callbacks_module.ModelCheckpoint(
-                self.last_state_path, 
+                self.last_state_path,
                 self.best_state_path,
-                )
+            )
             callbacks.append(ckpt_callback)
 
         # Callbacks
