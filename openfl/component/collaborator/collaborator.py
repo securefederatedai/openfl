@@ -76,6 +76,7 @@ class Collaborator:
         write_logs=False,
         callbacks: Optional[List] = [],
         secure_aggregation=False,
+        interop_mode=False,
     ):
         """Initialize the Collaborator object.
 
@@ -143,6 +144,15 @@ class Collaborator:
                 callbacks.append(secure_aggregation_callback)
             else:
                 callbacks = [secure_aggregation_callback]
+
+        # Interoperability mode
+        self._interop_mode_enabled = interop_mode
+        if self._interop_mode_enabled:
+            callbacks.append(
+                callbacks_module.LambdaCallback(
+                    on_experiment_begin=lambda logs=None: self.prepare_interop_server()
+                )
+            )
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -246,9 +256,6 @@ class Collaborator:
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
         logger.debug("Using TaskRunner subclassing API")
-
-        if task_name == "prepare_for_interop":
-            kwargs = self.prepare_interop_server(kwargs)
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -589,15 +596,14 @@ class Collaborator:
             masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
             tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
 
-    def prepare_interop_server(self, kwargs):
+    def prepare_interop_server(self):
         """
         Prepare the interoperability server.
-        Args:
-            kwargs (dict): A dictionary of keyword arguments to be updated with
-                           the initialized interop server.
-        Returns:
-            dict: The updated dictionary of keyword arguments containing the
-                  initialized interop server.
+
+        This function initializes the interoperability server and sets up
+        the callback for receiving messages from the interop server.
+        It also sets the interop server in the task configuration to be used
+        by the Task Runner.
         """
 
         # Initialize the interop server
@@ -611,6 +617,4 @@ class Collaborator:
             return response
 
         interop_server = module.FlowerInteropServer(receive_message_from_interop)
-        kwargs["interop_server"] = interop_server
-
-        return kwargs
+        self.task_config["prepare_for_interop"]["kwargs"]["interop_server"] = interop_server

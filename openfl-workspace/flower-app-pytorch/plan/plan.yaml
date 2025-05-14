@@ -27,6 +27,8 @@ connector :
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
+  settings: 
+    interop_mode : True
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
