@@ -23,19 +23,17 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    env:
+      PYTHON_VERSION: '3.10'
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4
       with:
         ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
-
-    - name: Install Papermill Package
-      run: python -m pip install --upgrade pip ipython ipykernel papermill
+    - name: Pre test run
+      uses: ./.github/actions/wf_pre_test_run
+      if: ${{ always() }}
 
     - name: Run Notebook
       run: |
