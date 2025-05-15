@@ -15,6 +15,7 @@ class DataSourceType(Enum):
 
     LOCAL = auto()
     S3 = auto()
+    AZURE_BLOB = auto()
 
 
 class DataSource(ABC):
