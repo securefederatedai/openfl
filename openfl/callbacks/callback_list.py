@@ -52,7 +52,6 @@ class CallbackList(Callback):
         """Add default callbacks to callbacks list if not already present."""
         self._memory_profiler = None
         self._metric_writer = None
-        self._model_saver = None
 
         for cb in self.callbacks:
             if isinstance(cb, MemoryProfiler):

@@ -197,7 +197,7 @@ class Aggregator:
             )
         )
 
-        if save_native_model:
+        if save_native_model and not self.assigner.is_task_group_evaluation():
             ckpt_callback = callbacks_module.ModelCheckpoint(
                 self.last_state_path,
                 self.best_state_path,
