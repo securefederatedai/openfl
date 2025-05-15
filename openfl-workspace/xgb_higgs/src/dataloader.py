@@ -2,9 +2,12 @@
 # Licensed subject to the terms of the separately executed evaluation license agreement between
 # Intel Corporation and you.
 
-from openfl.federated import XGBoostDataLoader
 import os
+
 import modin.pandas as pd
+
+from openfl.federated import XGBoostDataLoader
+
 
 class HiggsDataLoader(XGBoostDataLoader):
     """
@@ -19,8 +22,14 @@ class HiggsDataLoader(XGBoostDataLoader):
         X_valid (numpy.ndarray): Validation features.
         y_valid (numpy.ndarray): Validation labels.
     """
-    def __init__(self, data_path, **kwargs):
+    def __init__(self, data_path=None, **kwargs):
         super().__init__(**kwargs)
+
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
+
         X_train, y_train, X_valid, y_valid = load_Higgs(
             data_path, **kwargs
         )
