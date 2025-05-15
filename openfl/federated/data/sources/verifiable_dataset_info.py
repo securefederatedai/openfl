@@ -107,6 +107,7 @@ class VerifiableDatasetInfo:
             "label": self.label,
             "metadata": self.metadata,
             "dataset_format": "concise_dataset",
+            "name": self.data_sources[0].name,
         }
         if self.data_sources[0].type == DataSourceType.S3:
             s3_dict = self.data_sources[0].to_dict()
@@ -150,7 +151,11 @@ class VerifiableDatasetInfo:
             )
         else:
             return VerifiableDatasetInfo(
-                [LocalDataSource(source_path=".", base_path=base_path)],
+                [
+                    LocalDataSource(
+                        name=data_dict.get("name", None), source_path=".", base_path=base_path
+                    )
+                ],
                 label=data_dict["label"],
                 metadata=data_dict["metadata"],
                 root_hash=data_dict["dataset_id"],

@@ -1,0 +1,22 @@
+{
+  "s3_ds1": {
+    "params": {
+      "access_key_env_name": "MINIO_ROOT_USER_2",
+      "endpoint": "http://localhost:9000",
+      "secret_key_env_name": "MINIO_ROOT_PASSWORD",
+      "secret_name": "vault_secret_name2",
+      "uri": "s3://my-bucket-2/"
+    },
+    "type": "s3"
+  },
+  "s3_ds2": {
+    "params": {
+      "access_key_env_name": "MINIO_ROOT_USER",
+      "endpoint": "http://localhost:9000",
+      "secret_key_env_name": "MINIO_ROOT_PASSWORD",
+      "secret_name": "vault_secret_name1",
+      "uri": "s3://my-bucket/"
+    },
+    "type": "s3"
+  }
+}

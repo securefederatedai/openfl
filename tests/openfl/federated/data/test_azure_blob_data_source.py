@@ -22,7 +22,7 @@ def mocked_azure_blob_ds():
     ]
     file_contents = {f: f"file content of file #{i}".encode() for i, f in enumerate(files)}
 
-    with patch("openfl.federated.data.sources.azure_blob_data_source.BlobServiceClient") as mock_service_cls:
+    with patch("azure.storage.blob.BlobServiceClient") as mock_service_cls:
         # Mock container and blob service
         mock_service = MagicMock()
         mock_container = MagicMock()
@@ -61,6 +61,7 @@ def mocked_azure_blob_ds():
 def test_enumerate_files(mocked_azure_blob_ds):
     connection_string, container_name, expected_files, _ = mocked_azure_blob_ds
     datasource = AzureBlobDataSource(
+            name="abds",
             connection_string=connection_string,
             container_name=container_name,
         )
@@ -70,6 +71,7 @@ def test_enumerate_files(mocked_azure_blob_ds):
 def test_compute_file_hash(mocked_azure_blob_ds):
     connection_string, container_name, files, file_contents = mocked_azure_blob_ds
     datasource = AzureBlobDataSource(
+            name="abds",
             connection_string=connection_string,
             container_name=container_name,
         )
@@ -82,6 +84,7 @@ def test_from_dict(mocked_azure_blob_ds):
     connection_string, container_name, _, _ = mocked_azure_blob_ds
 
     ds_dict = {
+        "name": "abds",
         "connection_string": connection_string,
         "container_name": container_name,
         "hash_func": "sha384"
@@ -96,6 +99,7 @@ def test_from_dict(mocked_azure_blob_ds):
 def test_files_content(mocked_azure_blob_ds):
     connection_string, container_name, files, file_contents = mocked_azure_blob_ds
     datasource = AzureBlobDataSource(
+            name="abds",
             connection_string=connection_string,
             container_name=container_name,
         )
@@ -107,6 +111,7 @@ def test_folder_prefix(mocked_azure_blob_ds):
     connection_string, container_name, files, _ = mocked_azure_blob_ds
     folder_prefix = "folder1/"
     datasource = AzureBlobDataSource(
+            name="abds",
             connection_string=connection_string,
             container_name=container_name,
             folder_prefix=folder_prefix,
