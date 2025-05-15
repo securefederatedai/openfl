@@ -7,6 +7,7 @@ import json
 from hashlib import sha384
 from typing import List
 
+from openfl.federated.data.sources.azure_blob_data_source import AzureBlobDataSource
 from openfl.federated.data.sources.data_source import DataSource, DataSourceType
 from openfl.federated.data.sources.local_data_source import LocalDataSource
 from openfl.federated.data.sources.s3_data_source import S3DataSource
@@ -95,6 +96,8 @@ class VerifiableDatasetInfo:
             path = str(self.data_sources[0].get_source_full_path())
         elif self.data_sources[0].type == DataSourceType.S3:
             path = self.data_sources[0].uri
+        elif self.data_sources[0].type == DataSourceType.AZURE_BLOB:
+            path = self.data_sources[0].connection_string
         else:
             raise ValueError(f"Unknown storage type: {self.data_sources[0].type}")
 
@@ -109,6 +112,10 @@ class VerifiableDatasetInfo:
             s3_dict = self.data_sources[0].to_dict()
             s3_dict.pop("uri")
             dataset_dict.update(s3_dict)
+        elif self.data_sources[0].type == DataSourceType.AZURE_BLOB:
+            azure_dict = self.data_sources[0].to_dict()
+            azure_dict.pop("connection_string")
+            dataset_dict.update(azure_dict)
 
         return json.dumps(dataset_dict, sort_keys=True, indent=4)
 
@@ -132,6 +139,15 @@ class VerifiableDatasetInfo:
                 metadata=data_dict["metadata"],
                 root_hash=data_dict["dataset_id"],
             )
+        elif "container_name" in data_dict:
+            azure_dict = data_dict
+            azure_dict["connection_string"] = data_dict["mount_absolute_path"]
+            return VerifiableDatasetInfo(
+                [AzureBlobDataSource.from_dict(ds_dict=azure_dict)],
+                label=data_dict["label"],
+                metadata=data_dict["metadata"],
+                root_hash=data_dict["dataset_id"],
+            )
         else:
             return VerifiableDatasetInfo(
                 [LocalDataSource(source_path=".", base_path=base_path)],
@@ -151,6 +167,8 @@ class VerifiableDatasetInfo:
                 data_source = LocalDataSource.from_dict(ds_dict=datasource, base_path=base_path)
             elif datasource["type"] == DataSourceType.S3.value:
                 data_source = S3DataSource.from_dict(ds_dict=datasource)
+            elif datasource["type"] == DataSourceType.AZURE_BLOB.value:
+                data_source = AzureBlobDataSource.from_dict(ds_dict=datasource)
             else:
                 raise ValueError(f"Unknown storage type: {datasource['type']}")
             data_sources.append(data_source)
