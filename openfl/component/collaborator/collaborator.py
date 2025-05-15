@@ -159,9 +159,23 @@ class Collaborator:
 
     def run(self):
         """Run the collaborator."""
-        # Experiment begin
-        self.callbacks.on_experiment_begin()
+        try:
+            self.callbacks.on_experiment_begin()
+            self._execute_collaborator_rounds()
+            self.callbacks.on_experiment_end()
+            logger.info("Received shutdown signal. Exiting...")
+        except Exception as experiment_error:
+            logger.critical(
+                f"Critical error in collaborator execution. Error: {str(experiment_error)}", 
+                exc_info=True
+            )
+            self.callbacks.on_experiment_end({"error": str(experiment_error)})
+            logger.critical("Collaborator is shutting down due to critical error.")
+            # Exit with error code
+            raise RuntimeError("Collaborator execution failed") from experiment_error
 
+    def _execute_collaborator_rounds(self):
+        """Execute rounds until receiving shutdown signal."""
         while True:
             tasks, round_num, sleep_time, time_to_quit = self.client.get_tasks()
 
@@ -172,23 +186,25 @@ class Collaborator:
                 sleep(sleep_time)
                 continue
 
-            # Round begin
-            logger.info("Round: %d Received Tasks: %s", round_num, tasks)
-            self.callbacks.on_round_begin(round_num)
+            try:
+                # Round begin
+                logger.info("Round: %d Received Tasks: %s", round_num, tasks)
+                self.callbacks.on_round_begin(round_num)
 
-            # Run tasks
-            logs = {}
-            for task in tasks:
-                metrics = self.do_task(task, round_num)
-                logs.update(metrics)
+                # Run tasks
+                logs = self._execute_round_tasks(tasks, round_num)
 
-            # Round end
-            self.tensor_db.clean_up(self.db_store_rounds)
-            self.callbacks.on_round_end(round_num, logs)
+                # Round end
+                self.tensor_db.clean_up(self.db_store_rounds)
+                self.callbacks.on_round_end(round_num, logs)
 
-        # Experiment end
-        self.callbacks.on_experiment_end()
-        logger.info("Received shutdown signal. Exiting...")
+            except Exception as round_error:
+                logger.error(
+                    f"Error during round {round_num} execution. Error: {str(round_error)}", 
+                    exc_info=True
+                )
+                # Sleep before trying again to avoid tight error loops
+                sleep(sleep_time or 10)
 
     def do_task(self, task, round_number) -> dict:
         """Perform the specified task.
@@ -274,93 +290,97 @@ class Collaborator:
         """Resolve the tensor corresponding to the requested tensorkey.
 
         Args:
-            tensor_key (namedtuple): Tensorkey that will be resolved locally or
-            remotely. May be the product of other tensors.
+            tensor_key (namedtuple): Tensorkey that will be resolved locally or remotely.
 
         Returns:
-            nparray: The decompressed tensor associated with the requested
-                tensor key.
+            nparray: The decompressed tensor associated with the requested tensor key.
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
         logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
-        nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
+        try:
+            nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
 
-        # if None and origin is our client, request it from the client
-        if nparray is None:
-            if origin == self.collaborator_name:
-                logger.info(
-                    f"Attempting to find locally stored {tensor_name} tensor from prior round..."
-                )
-                prior_round = round_number - 1
-                while prior_round >= 0:
-                    nparray = self.tensor_db.get_tensor_from_cache(
-                        TensorKey(tensor_name, origin, prior_round, report, tags)
-                    )
-                    if nparray is not None:
-                        logger.debug(
-                            f"Found tensor {tensor_name} in local TensorDB for round {prior_round}"
-                        )
-                        return nparray
-                    prior_round -= 1
-                logger.info(f"Cannot find any prior version of tensor {tensor_name} locally...")
-            # Determine whether there are additional compression related
-            # dependencies.
-            # Typically, dependencies are only relevant to model layers
-            tensor_dependencies = self.tensor_codec.find_dependencies(
-                tensor_key, self.use_delta_updates
-            )
-            logger.debug(
-                "Unable to get tensor from local store..."
-                "attempting to retrieve from client len tensor_dependencies"
-                f" tensor_key {tensor_key}"
-            )
-            if len(tensor_dependencies) > 0:
-                # Resolve dependencies
-                # tensor_dependencies[0] corresponds to the prior version
-                # of the model.
-                # If it exists locally, should pull the remote delta because
-                # this is the least costly path
-                prior_model_layer = self.tensor_db.get_tensor_from_cache(tensor_dependencies[0])
-                if prior_model_layer is not None:
-                    uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
-                        tensor_dependencies[1]
-                    )
-                    new_model_tk, nparray = self.tensor_codec.apply_delta(
-                        tensor_dependencies[1],
-                        uncompressed_delta,
-                        prior_model_layer,
-                        creates_model=True,
-                    )
-                    self.tensor_db.cache_tensor({new_model_tk: nparray})
-                else:
+            # if None and origin is our client, request it from the client
+            if nparray is None:
+                if origin == self.collaborator_name:
                     logger.info(
-                        "Could not find previous model layer.Fetching latest layer from aggregator"
+                        f"Attempting to find locally stored {tensor_name} tensor from prior round..."
                     )
-                    # The original model tensor should be fetched from aggregator
+                    prior_round = round_number - 1
+                    while prior_round >= 0:
+                        nparray = self.tensor_db.get_tensor_from_cache(
+                            TensorKey(tensor_name, origin, prior_round, report, tags)
+                        )
+                        if nparray is not None:
+                            logger.debug(
+                                f"Found tensor {tensor_name} in local TensorDB for round {prior_round}"
+                            )
+                            return nparray
+                        prior_round -= 1
+                    logger.info(f"Cannot find any prior version of tensor {tensor_name} locally...")
+                # Determine whether there are additional compression related
+                # dependencies.
+                # Typically, dependencies are only relevant to model layers
+                tensor_dependencies = self.tensor_codec.find_dependencies(
+                    tensor_key, self.use_delta_updates
+                )
+                logger.debug(
+                    "Unable to get tensor from local store..."
+                    "attempting to retrieve from client len tensor_dependencies"
+                    f" tensor_key {tensor_key}"
+                )
+                if len(tensor_dependencies) > 0:
+                    # Resolve dependencies
+                    # tensor_dependencies[0] corresponds to the prior version
+                    # of the model.
+                    # If it exists locally, should pull the remote delta because
+                    # this is the least costly path
+                    prior_model_layer = self.tensor_db.get_tensor_from_cache(tensor_dependencies[0])
+                    if prior_model_layer is not None:
+                        uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
+                            tensor_dependencies[1]
+                        )
+                        new_model_tk, nparray = self.tensor_codec.apply_delta(
+                            tensor_dependencies[1],
+                            uncompressed_delta,
+                            prior_model_layer,
+                            creates_model=True,
+                        )
+                        self.tensor_db.cache_tensor({new_model_tk: nparray})
+                    else:
+                        logger.info(
+                            "Could not find previous model layer. Fetching latest layer from aggregator"
+                        )
+                        # The original model tensor should be fetched from aggregator
+                        nparray = self.get_aggregated_tensor_from_aggregator(
+                            tensor_key, require_lossless=True
+                        )
+                elif "model" in tags:
+                    # Pulling the model for the first time
                     nparray = self.get_aggregated_tensor_from_aggregator(
                         tensor_key, require_lossless=True
                     )
-            elif "model" in tags:
-                # Pulling the model for the first time
-                nparray = self.get_aggregated_tensor_from_aggregator(
-                    tensor_key, require_lossless=True
-                )
+                else:
+                    # we should try fetching the tensor from aggregator
+                    tensor_name, origin, round_number, report, tags = tensor_key
+                    tags = (self.collaborator_name,) + tags
+                    tensor_key = (tensor_name, origin, round_number, report, tags)
+                    logger.info(
+                        "Could not find previous model layer."
+                        f"Fetching latest layer from aggregator {tensor_key}"
+                    )
+                    nparray = self.get_aggregated_tensor_from_aggregator(
+                        tensor_key, require_lossless=True
+                    )
             else:
-                # we should try fetching the tensor from aggregator
-                tensor_name, origin, round_number, report, tags = tensor_key
-                tags = (self.collaborator_name,) + tags
-                tensor_key = (tensor_name, origin, round_number, report, tags)
-                logger.info(
-                    "Could not find previous model layer."
-                    f"Fetching latest layer from aggregator {tensor_key}"
-                )
-                nparray = self.get_aggregated_tensor_from_aggregator(
-                    tensor_key, require_lossless=True
-                )
-        else:
-            logger.debug("Found tensor %s in local TensorDB", tensor_key)
-
+                logger.debug("Found tensor %s in local TensorDB", tensor_key)
+        except Exception as get_tensor_error:
+            logger.error(
+                f"Error retrieving tensor {tensor_key}. Error: {str(get_tensor_error)}", 
+                exc_info=True
+            )
+            raise
         return nparray
 
     def get_aggregated_tensor_from_aggregator(self, tensor_key, require_lossless=False):

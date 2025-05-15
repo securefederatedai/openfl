@@ -70,18 +70,24 @@ def start_(plan, collaborator_name, data_config):
         echo("The data set/shard configuration file path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    plan_obj = Plan.parse(
-        plan_config_path=Path(plan).absolute(),
-        data_config_path=Path(data_config).absolute(),
-    )
+    try:
+        plan_obj = Plan.parse(
+            plan_config_path=Path(plan).absolute(),
+            data_config_path=Path(data_config).absolute(),
+        )
 
-    # TODO: Need to restructure data loader config file loader
-    logger.info(f"Data paths: {plan_obj.cols_data_paths}")
-    echo(f"Data = {plan_obj.cols_data_paths}")
-    logger.info("🧿 Starting a Collaborator Service.")
+        # TODO: Need to restructure data loader config file loader
+        logger.info(f"Data paths: {plan_obj.cols_data_paths}")
+        echo(f"Data = {plan_obj.cols_data_paths}")
+        logger.info("🧿 Starting a Collaborator Service.")
 
-    collaborator = plan_obj.get_collaborator(collaborator_name)
-    collaborator.run()
+        collaborator = plan_obj.get_collaborator(collaborator_name)
+        collaborator.run()
+    except Exception as e:
+        logger.critical(f"Critical error starting or running collaborator: {str(e)}", exc_info=True)
+        echo(style(f"Collaborator failed with error: {str(e)}", fg="red"))
+        # Exit with error code to indicate failure
+        sys.exit(1)
 
 
 @collaborator.command(name="ping")
