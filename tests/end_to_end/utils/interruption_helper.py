@@ -131,7 +131,8 @@ def kill_processes(command_to_kill, fail_if_not_found=False):
             log.info(f"PIDs for command '{command_to_kill}': {pids}")
             # Kill each process
             for pid in pids:
-                subprocess.run(['sudo', 'kill', '-9', str(pid)], check=fail_if_not_found)
+                # subprocess.run(['sudo', 'kill', '-9', str(pid)], check=fail_if_not_found)
+                subprocess.run(['sudo', 'kill', str(pid)], check=fail_if_not_found)
                 log.info(f"Killed process with PID {pid}")
         return True
     except subprocess.CalledProcessError:
