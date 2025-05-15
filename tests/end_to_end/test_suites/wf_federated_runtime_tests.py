@@ -168,6 +168,7 @@ def test_federated_runtime_secure_aggregation(request):
     log.info("Experiment completed successfully")
 
 
+@pytest.mark.federated_runtime_federated_evaluation
 def test_federated_evaluation(request):
     """
     Test federated evaluation.
