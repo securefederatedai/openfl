@@ -314,7 +314,7 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
 
         # Restart all participants
         assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
-        log.info("All participants restarted successfully for round {i}")
+        log.info(f"All participants restarted successfully for round {i}")
 
         assert (
             round_post_all_restart := fed_helper.validate_round_increment(
