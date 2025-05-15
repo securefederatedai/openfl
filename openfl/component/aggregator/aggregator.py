@@ -206,7 +206,8 @@ class Aggregator:
                 callbacks.append(ckpt_callback)
             else:
                 logger.info(
-                    "Saving native model is disabled in evaluation mode. Skipping ModelCheckpoint callback."
+                    "Saving native model is disabled in evaluation mode. " \
+                    "Skipping ModelCheckpoint callback."
                 )
 
         # Callbacks
