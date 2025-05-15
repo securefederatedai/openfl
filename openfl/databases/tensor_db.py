@@ -151,28 +151,24 @@ class TensorDB:
             return None
         return np.asarray(df["nparray"].iloc[0])
 
-    def get_tensors_by_round_and_tags(self, fl_round: int, tags: tuple) -> dict:
+    def get_tensors_by_filter(self, custom_filter=None) -> dict:
         """Retrieve all tensors that match the specified round and tags.
 
         Args:
-            fl_round (int): The round number to filter tensors.
-            tags (tuple): The tags to filter tensors.
-
+            custom_filter (callable): A function that takes a DataFrame and
+                returns a boolean mask to filter the DataFrame.
+                If None, no filtering is applied.
         Returns:
             dict: A dictionary where the keys are TensorKey objects and the values are numpy arrays.
         """
-        # Filter the DataFrame based on the round and tags
-        df = self.tensor_db[
-            (self.tensor_db["round"] == fl_round) & (self.tensor_db["tags"] == tags)
-        ]
-
-        # Check if any tensors match the criteria
-        if len(df) == 0:
-            return {}
-
         # Construct a dictionary mapping TensorKey to np.ndarray
         tensor_dict = {}
-        for _, row in df.iterrows():
+        for _, row in self.tensor_db.iterrows():
+            if custom_filter is not None:
+                # Apply the custom filter to the DataFrame and skip rows that do not match
+                if not custom_filter(row.to_dict()):
+                    continue
+            # Create a TensorKey object from the row data
             tensor_key = TensorKey(
                 tensor_name=row["tensor_name"],
                 origin=row["origin"],
@@ -183,6 +179,24 @@ class TensorDB:
             tensor_dict[tensor_key] = np.array(row["nparray"])
 
         return tensor_dict
+
+    def get_tensors_by_round_and_tags(
+        self,
+        fl_round: int,
+        tags: tuple,
+    ) -> dict:
+        """Retrieve all tensors that match the specified round and tags.
+
+        Args:
+            fl_round (int): The round number to filter tensors.
+            tags (tuple): The tags to filter tensors.
+
+        Returns:
+            dict: A dictionary where the keys are TensorKey objects and the values are numpy arrays.
+        """
+        return self.get_tensors_by_filter(
+            custom_filter=lambda row: row["round"] == fl_round and tuple(row["tags"]) == tuple(tags)
+        )
 
     def get_aggregated_tensor(
         self,

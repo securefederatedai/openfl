@@ -7,7 +7,7 @@
 import sys
 from logging import getLogger
 from os import makedirs
-from os.path import isfile
+from os.path import isfile, splitext
 from pathlib import Path
 from shutil import copyfile, rmtree
 
@@ -18,8 +18,7 @@ from yaml import FullLoader, dump, load
 from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
 from openfl.protocols import utils
-from openfl.utilities.click_types import InputSpec
-from openfl.utilities.dataloading import get_dataloader
+from openfl.utilities.dataloading import initialize_minimal_dataloader
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities.utils import getfqdn_env
@@ -70,21 +69,6 @@ def plan(context):
     help="The FQDN of the federation aggregator",
 )
 @option(
-    "-f",
-    "--input_shape",
-    cls=InputSpec,
-    required=False,
-    help="""
-    The input spec of the model.
-
-    May be provided as a list for single input head: ``--input-shape [3,32,32]``,
-
-    or as a dictionary for multihead models (must be passed in quotes):
-
-    ``--input-shape "{'input_0': [1, 240, 240, 4],'input_1': [1, 240, 240, 1]}"``.
-    """,
-)
-@option(
     "-g",
     "--gandlf_config",
     required=False,
@@ -94,7 +78,7 @@ def plan(context):
     "-i",
     "--init_model_path",
     required=False,
-    help="Path to initial model protobuf file.",
+    help="Path to initial model. It can be a protobuf or native format.",
     type=ClickPath(exists=True),
 )
 def initialize(
@@ -103,7 +87,6 @@ def initialize(
     cols_config,
     data_config,
     aggregator_address,
-    input_shape,
     gandlf_config,
     init_model_path,
 ):
@@ -137,17 +120,9 @@ def initialize(
         plan.get_task_runner(data_loader=None)
     else:
         init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
-        # This is needed to bypass data being locally available
-        if input_shape is not None:
-            logger.info(
-                "Attempting to generate initial model weights with custom input shape "
-                f"{input_shape}"
-            )
 
         # Initialize tensor dictionary
-        init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(
-            plan, input_shape, init_model_path
-        )
+        init_tensor_dict, task_runner, round_number = _initialize_tensor_dict(plan, init_model_path)
 
         tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
             init_tensor_dict,
@@ -196,26 +171,36 @@ def initialize(
     logger.info(f"{context.obj['plans']}")
 
 
-def _initialize_tensor_dict(plan, input_shape, init_model_path):
+def _initialize_tensor_dict(plan, init_model_path):
     """Initialize and return the tensor dictionary.
 
     Args:
         plan: The federation plan object
-        input_shape: The input shape to the model
-        init_model_path: Path to initial model protobuf file
+        init_model_path: Path to initial model. It can be a protobuf or native format."
 
     Returns:
         Tuple of (tensor_dict, task_runner, round_number)
     """
-    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+    # Use the new function that doesn't require prefer_minimal parameter
+    data_loader = initialize_minimal_dataloader(plan)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
     round_number = 0
 
     if init_model_path and isfile(init_model_path):
         logger.info(f"Loading initial model from {init_model_path}")
-        model_proto = utils.load_proto(init_model_path)
-        init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        file_extension = splitext(init_model_path)[1]
+
+        if file_extension == ".pbuf":
+            model_proto = utils.load_proto(init_model_path)
+            init_tensor_dict, round_number = utils.deconstruct_model_proto(model_proto, tensor_pipe)
+        else:
+            try:
+                task_runner.load_native(init_model_path)
+                init_tensor_dict = task_runner.get_tensor_dict(False)
+            except Exception as e:
+                logger.error(f"Failed to load native model: {e}")
+                raise
     else:
         init_tensor_dict = task_runner.get_tensor_dict(False)
 

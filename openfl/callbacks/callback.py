@@ -13,8 +13,12 @@ class Callback:
     for the following events:
         * At the beginning of an experiment
         * At the beginning of a round
+        * At the beginning of a task^
+        * At the end of a task^
         * At the end of a round
         * At the end of an experiment
+
+    ^ These events are only triggered for the collaborator.
 
     Attributes:
         params: Additional parameters saved for use within the callback.
@@ -51,6 +55,18 @@ class Callback:
 
     def on_experiment_end(self, logs=None):
         """Callback function to be executed at the end of an experiment.
+
+        Subclasses need to implement actions to be taken here.
+        """
+
+    def on_task_begin(self, task_name: str, round_num: int, logs=None):
+        """Callback function to be executed at the beginning of a task.
+
+        Subclasses need to implement actions to be taken here.
+        """
+
+    def on_task_end(self, task_name: str, round_num: int, logs=None):
+        """Callback function to be executed at the end of a task.
 
         Subclasses need to implement actions to be taken here.
         """

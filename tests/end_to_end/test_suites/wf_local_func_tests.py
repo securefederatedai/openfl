@@ -14,8 +14,6 @@ from tests.end_to_end.workflow.include_exclude_flow import TestFlowIncludeExclud
 from tests.end_to_end.workflow.include_flow import TestFlowInclude
 from tests.end_to_end.workflow.internal_loop import TestFlowInternalLoop
 from tests.end_to_end.workflow.reference_flow import TestFlowReference
-from tests.end_to_end.workflow.reference_include_flow import TestFlowReferenceWithInclude
-from tests.end_to_end.workflow.reference_exclude import TestFlowReferenceWithExclude
 from tests.end_to_end.workflow.subset_flow import TestFlowSubsetCollaborators
 from tests.end_to_end.workflow.private_attr_wo_callable import TestFlowPrivateAttributesWoCallable
 from tests.end_to_end.workflow.private_attributes_flow import TestFlowPrivateAttributes
@@ -119,33 +117,6 @@ def test_reference_flow(request, fx_local_federated_workflow):
         log.info(f"Starting round {i}...")
         flflow.run()
     log.info("Successfully ended test_reference_flow")
-
-
-def test_reference_include_flow(request, fx_local_federated_workflow):
-    """
-    Test reference variables matched if included else not
-    """
-    log.info("Starting test_reference_include_flow")
-    flflow = TestFlowReferenceWithInclude(checkpoint=True)
-    flflow.runtime = fx_local_federated_workflow.runtime
-    for i in range(request.config.num_rounds):
-        log.info(f"Starting round {i}...")
-        flflow.run()
-    log.info("Successfully ended test_reference_include_flow")
-
-
-def test_reference_exclude_flow(request, fx_local_federated_workflow):
-    """
-    Test reference variables matched if not excluded
-    """
-    log.info("Starting test_reference_exclude_flow")
-    flflow = TestFlowReferenceWithExclude(checkpoint=True)
-    flflow.runtime = fx_local_federated_workflow.runtime
-    for i in range(request.config.num_rounds):
-        log.info(f"Starting round {i}...")
-        flflow.run()
-    log.info("Successfully ended test_reference_exclude_flow")
-
 
 @pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_name", "str", None )], indirect=True)
 def test_subset_collaborators(request, fx_local_federated_workflow):

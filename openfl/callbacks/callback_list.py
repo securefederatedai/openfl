@@ -83,6 +83,14 @@ class CallbackList(Callback):
         for callback in self.callbacks:
             callback.on_experiment_end(logs)
 
+    def on_task_begin(self, task_name: str, round_num: int, logs=None):
+        for callback in self.callbacks:
+            callback.on_task_begin(task_name, round_num, logs)
+
+    def on_task_end(self, task_name: str, round_num: int, logs=None):
+        for callback in self.callbacks:
+            callback.on_task_end(task_name, round_num, logs)
+
 
 def _flatten(l):
     """Flatten a possibly-nested tree of lists."""

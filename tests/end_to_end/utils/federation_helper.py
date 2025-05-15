@@ -20,6 +20,7 @@ import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 log = logging.getLogger(__name__)
 home_dir = Path().home()
@@ -227,24 +228,19 @@ def run_federation(fed_obj):
     Returns:
         bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start
-        )
-        for participant in [fed_obj.aggregator] + fed_obj.collaborators
-    ]
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            # Start the participant
+            participant.start()
+        except Exception as e:
+            log.error(f"Failed to start {participant.name}: {e}")
+            raise e
 
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise ex.ParticipantStartException("Failed to start one or more participants")
     return True
 
 
@@ -294,6 +290,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             _verify_completion_for_participant,
             participant,
             num_rounds,
+            num_collaborators=len(fed_obj.collaborators),
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -308,13 +305,14 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
 
 
 def _verify_completion_for_participant(
-    participant, num_rounds, time_for_each_round=100
+    participant, num_rounds, num_collaborators, time_for_each_round=100
 ):
     """
     Verify the completion of the process for the participant
     Args:
         participant (object): Participant object
         num_rounds (int): Number of rounds
+        num_collaborators (int): Number of collaborators
         time_for_each_round (int): Time for each round
     Returns:
         bool: True if successful, else False
@@ -337,8 +335,19 @@ def _verify_completion_for_participant(
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
 
-        # Below change is done to handle warnings coming in end of runs
-        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
+        # Get the desired no of lines from the log file
+        if num_collaborators < 5:
+            reverse_index = 10
+        else:
+            # For more than 5 collaborators, set the index to 10 + number of collaborators
+            # This is to ensure that we get the completion message for all the collaborators
+            reverse_index = num_collaborators + 5
+
+        # Get the required lines from the log file
+        if len(lines) >= reverse_index:
+            content = lines[-reverse_index:]
+        else:
+            content = lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
@@ -355,8 +364,6 @@ def _verify_completion_for_participant(
             log.info(f"Process completed for {participant.name}")
             break
 
-        time.sleep(45)
-
         # If process.poll() has a value, it means the process has completed
         # If None, it means the process is still running
         # This is applicable for native process only
@@ -369,6 +376,8 @@ def _verify_completion_for_participant(
         else:
             # Dockerized workspace scenario
             log.info(f"No process found for participant {participant.name}")
+
+        time.sleep(45)
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
@@ -1011,15 +1020,30 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file: str) -> float:
+def get_best_agg_score(database_file=None, agg_metric_file=None, max_retries=10, sleep_interval=5):
     """
-    Get the best aggregated score from the database file
+    Get the best aggregated score from the database file or aggregator metrics file
     Args:
-        database_file (str): Database file
+        database_file (str): Database file. Optional.
+        agg_metric_file (str): Aggregator metrics file. Optional.
+        max_retries (int): Maximum number of retries to get the best score in case of database_file. Default is 10.
+        sleep_interval (int): Sleep interval between retries in seconds in case of database_file. Default is 5 seconds.
     Returns:
         float: Best aggregated score
     """
-    return db_helper.get_key_value_from_db("best_score", database_file)
+    # If both the params are not present, raise exception
+    if not database_file and not agg_metric_file:
+        raise ValueError("Either database_file or agg_metric_file should be provided")
+
+    if database_file:
+        return db_helper.get_key_value_from_db("best_score", database_file, max_retries=max_retries, sleep_interval=sleep_interval)
+    else:
+        json_file = convert_to_json(agg_metric_file)
+        best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
+        if best_score:
+            return float(best_score)
+        else:
+            raise ValueError("Best score not found in the aggregator metrics file")
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
@@ -1130,3 +1154,48 @@ def get_agg_addr_port(plan_file):
         return agg_addr, agg_port
     except Exception as e:
         raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
+
+
+def start_aggregator(fed_obj):
+    """
+    Start the aggregator
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        fed_obj.aggregator.start()
+    except Exception as e:
+        log.error(f"Failed to start aggregator: {e}")
+        raise e
+
+    return True
+
+
+def ping_from_collaborator(collaborator):
+    """
+    Ping the aggregator from collaborator to check connectivity
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    log.info(f"Ping the aggregator from {collaborator.name} to check connectivity")
+    collaborator.ping_aggregator()
+    start_time = time.time()
+    time.sleep(5)
+    while time.time() - start_time < 30:
+        # read the resfile and validate "TLS connection established." message
+        with open(collaborator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        # print last line
+        log.info(f"Last line: {lines[-1]}")
+        if any(constants.COL_TLS_END_MSG in line for line in lines[-7:]):
+            log.info(f"Aggregator is reachable from {collaborator.name}")
+            return True
+        else:
+            log.info(f"Aggregator is not reachable from {collaborator.name}. Retrying in 5 seconds...")
+            time.sleep(5)
+    log.error(f"Aggregator is not reachable from {collaborator.name}")
+    return False

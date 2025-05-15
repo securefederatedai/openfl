@@ -9,6 +9,9 @@ on:
       commit_id:
         required: false
         type: string
+      models:
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -36,14 +39,15 @@ jobs:
     name: With TLS
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       matrix:
         # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
         # Thus these models are excluded from the matrix for now.
-        model_name: ["torch/mnist", "keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]
+        model_name: ${{ fromJson(inputs.models || '["torch/mnist", "keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]') }}
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -78,9 +82,9 @@ jobs:
 
   test_without_tls:
     name: Without TLS
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+    if: | # Skip for PR pipeline
+      ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
@@ -122,9 +126,9 @@ jobs:
 
   test_without_client_auth:
     name: Without Client Auth
-    if: |
-      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-      (github.event_name == 'workflow_dispatch')
+    if: | # Skip for PR pipeline
+      ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:

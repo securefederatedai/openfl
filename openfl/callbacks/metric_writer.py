@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import time
 
 from tensorboardX import SummaryWriter
 
@@ -14,18 +15,21 @@ logger = logging.getLogger(__name__)
 class MetricWriter(Callback):
     """Log scalar metrics at the end of each round.
 
+    This callback logs scalar metrics to a file and optionally to TensorBoard.
+    To enable TensorBoard logging, set the environment variable `TENSORBOARD=1`.
+
     Attributes:
         log_dir: Path to write logs as lines of JSON. Defaults to `./logs`.
-        use_tensorboard: If True, writes scalar summaries to TensorBoard under `log_dir`.
     """
 
-    def __init__(self, log_dir: str = "./logs/", use_tensorboard: bool = True):
+    def __init__(self, log_dir: str = "./logs/"):
         super().__init__()
         self.log_dir = log_dir
-        self.use_tensorboard = use_tensorboard
+        self.use_tensorboard = bool(int(os.environ.get("TENSORBOARD", 0)))
 
         self._log_file_handle = None
         self._summary_writer = None
+        self._round_start_time = None
 
     def on_experiment_begin(self, logs=None):
         """Open file handles for logging."""
@@ -49,13 +53,19 @@ class MetricWriter(Callback):
             logs: A key-value pair of scalar metrics.
         """
         logs = logs or {}
-        logger.info(f"Round {round_num}: Metrics: {logs}")
+        elapsed_seconds = time.monotonic() - self._round_start_time
+        metrics = {
+            "round_number": round_num,
+            "elapsed_seconds": elapsed_seconds,
+            **logs,
+        }
+        logger.info(f"Round {round_num}: Metrics: {metrics}")
 
-        self._log_file_handle.write(json.dumps(logs) + "\n")
+        self._log_file_handle.write(json.dumps(metrics) + "\n")
         self._log_file_handle.flush()
 
         if self._summary_writer:
-            for key, value in logs.items():
+            for key, value in metrics.items():
                 self._summary_writer.add_scalar(key, value, round_num)
             self._summary_writer.flush()
 
@@ -67,3 +77,6 @@ class MetricWriter(Callback):
 
         if self._summary_writer:
             self._summary_writer.close()
+
+    def on_round_begin(self, round_num: int, logs=None):
+        self._round_start_time = time.monotonic()

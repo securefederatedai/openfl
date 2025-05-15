@@ -168,7 +168,7 @@ To help OpenFL calculate the initial model weights, we need to provide the shape
 
 ```
 mkdir save
-fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
+fx plan initialize --aggregator_address localhost
 ```
 
 We can now perform a test run with the following commands for creating a local PKI setup and starting the aggregator and the collaborators on the same machine:

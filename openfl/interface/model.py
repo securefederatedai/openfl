@@ -14,7 +14,7 @@ from click import confirm, group, option, pass_context, style
 from openfl.federated import Plan
 from openfl.protocols import utils
 from openfl.utilities.click_types import InputSpec
-from openfl.utilities.dataloading import get_dataloader
+from openfl.utilities.dataloading import initialize_minimal_dataloader
 from openfl.utilities.workspace import set_directory
 
 logger = getLogger(__name__)
@@ -160,7 +160,8 @@ def get_model(
             cols_config_path=cols_config,
             data_config_path=data_config,
         )
-        data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+        # Note: input_shape is ignored in initialize_minimal_dataloader as it's no longer needed
+        data_loader = initialize_minimal_dataloader(plan)
         task_runner = plan.get_task_runner(data_loader=data_loader)
         tensor_pipe = plan.get_tensor_pipe()
 

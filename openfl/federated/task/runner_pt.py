@@ -46,10 +46,14 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
-        if device:
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        elif isinstance(device, str):
+            self.device = torch.device(device)
+        elif isinstance(device, torch.device):
             self.device = device
         else:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            raise ValueError("Device must be None, a string, or a torch.device object.")
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -174,7 +178,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        output_model_dict = self.get_tensor_dict(
+            with_opt_vars=(self.opt_treatment == "CONTINUE_GLOBAL")
+        )
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
@@ -420,9 +426,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = torch.load(filepath)  # nosec B614
-        self.load_state_dict(pickle_dict[model_state_dict_key])
-        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        pickle_dict = torch.load(filepath, weights_only=True)  # nosec B614
+
+        if model_state_dict_key in pickle_dict and optimizer_state_dict_key in pickle_dict:
+            self.load_state_dict(pickle_dict[model_state_dict_key])
+            self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        else:
+            self.load_state_dict(pickle_dict)
 
     def save_native(
         self,
