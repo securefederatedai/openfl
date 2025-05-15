@@ -314,15 +314,11 @@ class Plan:
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
             self.config["network"][SETTINGS]["agg_port"] = generate_port(self.hash, "agg_port")
 
-        if 'connector' in self.config:
-            superlink_params = self.config['connector'][SETTINGS].get('superlink_params', {})
-            if superlink_params:
-                superlink_params['serverappio-api-port'] = generate_port(self.hash, "serverappio-api-port")
-                superlink_params['fleet-api-port'] = generate_port(self.hash, "fleet-api-port")
-                superlink_params['exec-api-port'] = generate_port(self.hash, "exec-api-port")
-  
         if 'local_server_port' in self.config['tasks'][SETTINGS]:
-            self.config['tasks'][SETTINGS]['local_server_port'] = generate_port(self.hash, "local_server_port")
+            if self.config['tasks'][SETTINGS]['local_server_port'] == AUTO:
+                self.config['tasks'][SETTINGS]['local_server_port'] = generate_port(
+                    self.hash, "local_server_port"
+                )
 
     def get_assigner(self):
         """Get the plan task assigner."""

@@ -33,5 +33,5 @@ local-epochs = 1
 default = "local-poc"
 
 [tool.flwr.federations.local-poc]
-address = "127.0.0.1:9093" # this connects to flower --exec-api-address
+address = "localhost:9093" # this connects to flower --exec-api-address
 insecure = true

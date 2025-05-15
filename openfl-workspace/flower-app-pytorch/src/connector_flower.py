@@ -45,6 +45,7 @@ class ConnectorFlower:
         self.signal_shutdown_sent = False
 
         self.superlink_params = superlink_params
+        self.superlink_host = superlink_params.get("superlink_host", "localhost")
         self.flwr_superlink_command = self._build_flwr_superlink_command()
 
         self.flwr_run_params = flwr_run_params
@@ -55,12 +56,18 @@ class ConnectorFlower:
 
     def get_interop_client(self):
         """
-        Create and return a LocalGRPCClient instance using the superlink parameters.
+        Create and return a FlowerInteropClient instance using the superlink parameters.
+        This client is responsible for handling communication with the Flower SuperLink.
+        Flower normally connects the SuperLink and SuperNode via the Fleet API, has a 
+        default address of 0.0.0.0:9092 so we set the connector address to the same value 
+        if not specified.
 
         Returns:
-            LocalGRPCClient: An instance configured with the connector address and server rounds.
+            FlowerInteropClient: An instance configured with the connector address and server rounds.
         """
-        connector_address = self.superlink_params.get("fleet-api-address", "0.0.0.0:9092")
+        connector_port = self.superlink_params.get("fleet_api_port", "9092")
+        connector_host = self.superlink_host if "fleet_api_port" in self.superlink_params else "0.0.0.0"
+        connector_address = f"{connector_host}:{connector_port}"
         self.interop_client = FlowerInteropClient(connector_address, self.automatic_shutdown)
         return self.interop_client
 
@@ -77,16 +84,19 @@ class ConnectorFlower:
         if "insecure" in self.superlink_params and self.superlink_params["insecure"]:
             command += ["--insecure"]
 
-        if "serverappio-api-address" in self.superlink_params:
-            command += ["--serverappio-api-address", str(self.superlink_params["serverappio-api-address"])]
+        if "serverappio_api_port" in self.superlink_params:
+            serverappio_api_address = f'{self.superlink_host}:{self.superlink_params.get("serverappio_api_port")}'
+            command += ["--serverappio-api-address", serverappio_api_address]
             # flwr default: 0.0.0.0:9091
 
-        if "fleet-api-address" in self.superlink_params:
-            command += ["--fleet-api-address", str(self.superlink_params["fleet-api-address"])]
+        if "fleet_api_port" in self.superlink_params:
+            fleet_api_address = f'{self.superlink_host}:{self.superlink_params.get("fleet_api_port")}'
+            command += ["--fleet-api-address", fleet_api_address]
             # flwr default: 0.0.0.0:9092
 
-        if "exec-api-address" in self.superlink_params:
-            command += ["--exec-api-address", str(self.superlink_params["exec-api-address"])]
+        if "exec_api_port" in self.superlink_params:
+            exec_api_address = f'{self.superlink_host}:{self.superlink_params.get("exec_api_port")}'
+            command += ["--exec-api-address", exec_api_address]
             # flwr default: 0.0.0.0:9093
 
         if self.automatic_shutdown:
@@ -108,8 +118,9 @@ class ConnectorFlower:
         if "insecure" in self.superlink_params and self.superlink_params["insecure"]:
             command += ["--insecure"]
 
-        if "serverappio-api-address" in self.superlink_params:
-            command += ["--serverappio-api-address", str(self.superlink_params["serverappio-api-address"])]
+        if "serverappio_api_port" in self.superlink_params:
+            serverappio_api_address = f'{self.superlink_host}:{self.superlink_params.get("serverappio_api_port")}'
+            command += ["--serverappio-api-address", serverappio_api_address]
 
         return command
 
