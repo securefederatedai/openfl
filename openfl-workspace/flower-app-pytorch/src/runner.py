@@ -73,12 +73,12 @@ class FlowerTaskRunner(TaskRunner):
         def message_callback():
             self.shutdown_requested = True
 
-        # Set the callback for ending the experiment
         interop_server = kwargs.get('interop_server')
         interop_server_port = kwargs.get('interop_server_port')
         interop_server.set_end_experiment_callback(message_callback)
         interop_server.start_server(interop_server_port)
 
+        # interop server sets port dynamically
         interop_server_port = interop_server.get_port()
 
         command = [
