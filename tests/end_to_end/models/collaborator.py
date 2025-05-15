@@ -213,3 +213,36 @@ class Collaborator():
             raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
         return True
+
+    def ping_aggregator(self):
+        """
+        Ping the aggregator to check if it is running
+        Returns:
+            bool: True if successful, else False
+        """
+        try:
+            log.info(f"Pinging from {self.collaborator_name} to aggregator")
+            # Note: LOG_FILE does not take absolute path, hence using relative path
+            log_file = os.path.join("logs", f"{self.collaborator_name}.log")
+            self.res_file = os.path.join(self.workspace_path, log_file)
+            # Set the log file path for the collaborator process
+            env = os.environ.copy()
+            env["LOG_FILE"] = log_file
+            command = ["fx", "collaborator", "ping", "-n", self.collaborator_name]
+            error_msg = f"Failed to ping from {self.collaborator_name}"
+            # run in background to avoid blocking the main thread
+            bg_file = open(os.path.join(tempfile.mkdtemp(), "tmp.log"), "a", buffering=1)
+            self.start_process = ssh.run_command_background(
+                cmd=command,
+                work_dir=self.workspace_path,
+                redirect_to_file=bg_file,
+                check_sleep=60,
+                env=env
+            )
+            log.info(
+                f"Pinged from {self.name} and tracking the logs in {self.res_file}."
+            )
+        except Exception as e:
+            log.error(f"{error_msg}: {e}")
+            raise e
+        return True

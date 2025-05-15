@@ -1,72 +1,89 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import importlib
+import logging
 import os
 import zipfile
-from typing import Union
 
 from openfl.federated import Plan
 from openfl.federated.data.loader import DataLoader
-from openfl.utilities.mocks import MockDataLoader
+
+logger = logging.getLogger(__name__)
 
 
-def get_dataloader(
+def initialize_minimal_dataloader(plan: Plan) -> DataLoader:
+    """Initialize a minimal dataloader without loading actual data.
+
+    This is used primarily for model initialization when the actual data
+    is not needed.
+
+    Args:
+        plan (Plan): Plan object linked with the dataloader
+
+    Returns:
+        DataLoader: A minimal dataloader instance with no data loaded
+
+    Raises:
+        ValueError: If required configuration is missing or dataloader class cannot be found
+    """
+    # Get the dataloader template from plan
+    if "data_loader" not in plan.config or "template" not in plan.config["data_loader"]:
+        logger.error("Missing 'data_loader' or 'template' field in plan configuration")
+        raise ValueError("Invalid plan configuration: missing data_loader template")
+
+    dataloader_template = plan.config["data_loader"]["template"]
+
+    # Dynamically import the dataloader class
+    module_name, class_name = dataloader_template.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    if not hasattr(module, class_name):
+        logger.error(f"Class {class_name} not found in module {module_name}")
+        raise ValueError(
+            f"Cannot load data_loader class '{class_name}' from module '{module_name}'"
+        )
+
+    dataloader_class = getattr(module, class_name)
+
+    # Initialize dataloader with None as data_path to skip data loading
+    if "settings" not in plan.config["data_loader"]:
+        logger.error("Missing 'settings' field in data_loader configuration")
+        raise ValueError("Invalid plan configuration: missing data_loader settings")
+
+    data_loader_settings = plan.config["data_loader"]["settings"].copy()
+    data_loader = dataloader_class(data_path=None, **data_loader_settings)
+    logger.info("Initialized minimal dataloader for model creation")
+    return data_loader
+
+
+def initialize_dataloader(
     plan: Plan,
-    prefer_minimal: bool = False,
-    input_shape: Union[list, dict] = None,
     collaborator_index: int = 0,
 ) -> DataLoader:
-    """Get dataloader instance from plan
+    """Initialize a dataloader with actual data from a collaborator.
 
-    NOTE: if `prefer_minimal` is False, cwd must be the workspace directory
-    because we need to construct dataloader from actual collaborator data path
+    NOTE: cwd must be the workspace directory because we need to
+    construct dataloader from actual collaborator data path
     with actual data present.
 
     Args:
-        plan (Plan):
-            plan object linked with the dataloader
-        prefer_minimal (bool ?):
-            prefer to use MockDataLoader which can be used to more easily
-            instantiate task_runner without any initial data.
-            Default to `False`.
-        input_shape (list | dict ?):
-            input_shape denoted by list notation `[a,b,c, ...]` or in case
-            of multihead models, dict object with individual layer keys such
-            as `{"input_0": [a,b,...], "output_1": [x,y,z, ...]}`
-            Defaults to `None`.
-        collaborator_index (int ?):
-            which collaborator should be used for initializing dataloader
-            among collaborators specified in plan/data.yaml.
-            Defaults to `0`.
+        plan (Plan): Plan object linked with the dataloader
+        collaborator_index (int): Which collaborator should be used for initializing dataloader
+            among collaborators specified in plan/data.yaml. Defaults to 0.
 
     Returns:
-        data_loader (DataLoader): DataLoader instance
+        DataLoader: A dataloader instance with data loaded
+
+    Raises:
+        ValueError: If collaborator_index is out of range
     """
-
-    # if specified, try to use minimal dataloader
-    if prefer_minimal:
-        # if input_shape not given, try to ascertain input_shape from plan
-        if not input_shape and "input_shape" in plan.config["data_loader"]["settings"]:
-            input_shape = plan.config["data_loader"]["settings"]["input_shape"]
-
-        # input_shape is resolved; we can use the minimal dataloader intended
-        # for util contexts which does not need a full dataloader with data
-        if input_shape:
-            data_loader: DataLoader = MockDataLoader(input_shape)
-            # generically inherit all attributes from data_loader.settings
-            for key, value in plan.config["data_loader"]["settings"].items():
-                setattr(data_loader, key, value)
-            return data_loader
-
-    # Fallback; try to get a dataloader by constructing it from the collaborator
-    # data directory path present in the the current workspace
-
+    # Regular dataloader initialization with actual data paths
     collaborator_names = list(plan.cols_data_paths)
-    collatorators_count = len(collaborator_names)
+    collaborators_count = len(collaborator_names)
 
-    if collaborator_index >= collatorators_count:
-        raise Exception(
+    if collaborator_index >= collaborators_count:
+        raise ValueError(
             f"Unable to construct full dataloader from collab_index={collaborator_index} "
-            f"when the plan has {collatorators_count} as total collaborator count. "
+            f"when the plan has {collaborators_count} as total collaborator count. "
             f"Please check plan/data.yaml file for current collaborator entries."
         )
 
@@ -83,5 +100,4 @@ def get_dataloader(
             zip_ref.extractall(collaborator_data_path)
 
     data_loader = plan.get_data_loader(collaborator_name)
-
     return data_loader

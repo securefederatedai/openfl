@@ -6,8 +6,7 @@
 from logging import getLogger
 
 import numpy as np
-from torchvision import datasets
-from torchvision import transforms
+from torchvision import datasets, transforms
 
 logger = getLogger(__name__)
 
@@ -58,7 +57,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
     return (X_train, y_train), (X_valid, y_valid)
 
 
-def load_mnist_shard(shard_num, collaborator_count,
+def load_mnist_shard(shard_num, collaborator_count, feature_shape=None, num_classes=None,
                      categorical=False, channels_last=True, **kwargs):
     """
     Load the MNIST dataset.
@@ -67,6 +66,9 @@ def load_mnist_shard(shard_num, collaborator_count,
         shard_num (int): The shard to use from the dataset
         collaborator_count (int): The number of collaborators in the
                                   federation
+        feature_shape (list, optional): The shape of input features.
+                                       If None, uses default MNIST shape.
+        num_classes (int, optional): Number of classes. If None, uses default MNIST classes (10).
         categorical (bool): True = convert the labels to one-hot encoded
                             vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -81,7 +83,10 @@ def load_mnist_shard(shard_num, collaborator_count,
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    num_classes = 10
+
+    # We don't actually need to use feature_shape for PyTorch implementation
+    # since the transforms.ToTensor() handles the reshaping automatically
+    # But we keep it as a parameter for consistency with other implementations
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
         shard_num, collaborator_count, transform=transforms.ToTensor())

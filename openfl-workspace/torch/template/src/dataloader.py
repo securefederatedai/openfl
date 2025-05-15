@@ -26,16 +26,29 @@ class TemplateDataLoader(PyTorchDataLoader):
     is properly initialized with the specified batch size.
     After calling `super().__init__`, define `self.X_train`, `self.y_train`,
     `self.X_valid`, and `self.y_valid`.
+
+    Note: If data_path is None, the dataloader is being initialized for model creation only,
+    and no data will be loaded.
     """
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """Initialize the data loader.
         Args:
             data_path: The file path to the data at the respective collaborator site.
+                       If None, initialize for model creation only.
             batch_size: The batch size of the data loader.
             **kwargs: Additional arguments that may be defined in `plan.yaml`
         """
         super().__init__(batch_size, **kwargs)
+
+        # Define required attributes for minimal initialization
+        # These should be replaced with appropriate values for your specific dataset
+        self.feature_shape = [1, 28, 28]  # Example shape [channels, height, width] for PyTorch
+        self.num_classes = 10  # Example number of classes
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
 
         # Load the dataset using the provided data_path and any additional kwargs.
         X_train, y_train, X_valid, y_valid = load_dataset(data_path, **kwargs)
@@ -45,6 +58,22 @@ class TemplateDataLoader(PyTorchDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes.
+        """
+        return self.num_classes
 
 
 def load_dataset(data_path, **kwargs):
