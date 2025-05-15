@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.exceptions as ex
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 result_path = os.path.join(Path().home(), "results")
@@ -138,7 +139,7 @@ def print_task_runner_score():
         print("No directory starting with 'test_' found in the result path.")
         return
 
-    # Assumption - result directory is present in the home directory
+    best_score = "Not Found"
     tensor_db_file = os.path.join(
         test_specific_result_path,
         model_name,
@@ -148,7 +149,17 @@ def print_task_runner_score():
         "tensor.db",
     )
     # If the federation run fails in between, tensor.db file won't be present
-    best_score = fed_helper.get_best_agg_score(tensor_db_file) if os.path.exists(tensor_db_file) else "Not Found"
+    # In any scenario, we should not fail the script
+    if not os.path.exists(tensor_db_file):
+        print(f"File tensor.db not found at {tensor_db_file}.")
+    else:
+        try:
+            # Pass max retries=1 as we are printing the summary after completion itself
+            best_score = fed_helper.get_best_agg_score(tensor_db_file, max_retries=1)
+        except ex.TensorDBException as e:
+            print(f"Error reading tensor.db file: {e}.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand

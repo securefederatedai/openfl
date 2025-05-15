@@ -39,10 +39,9 @@ jobs:
     name: Federated Runtime Watermarking E2E
     uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
 
-  # Uncomment the call once this bug is fixed - https://github.com/mlcommons/GaNDLF/issues/1007
-  # gandlf_taskrunner:
-  #   name: GaNDLF TaskRunner E2E
-  #   uses: ./.github/workflows/gandlf.yml
+  gandlf_taskrunner:
+    name: GaNDLF TaskRunner E2E
+    uses: ./.github/workflows/gandlf.yml
 
   hadolint_security_scan:
     name: Hadolint Security Scan
@@ -55,6 +54,10 @@ jobs:
   windows:
     name: Windows pytest coverage and workspace runs
     uses: ./.github/workflows/windows.yml
+
+  task_runner_connectivity:
+    name: TaskRunner Connectivity E2E
+    uses: ./.github/workflows/task_runner_connectivity_e2e.yml
     
   task_runner_e2e:
     name: TaskRunner E2E
