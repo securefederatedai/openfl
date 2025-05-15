@@ -24,7 +24,7 @@ class KerasHippmapp3rsynth(KerasDataLoader):
             **kwargs: Additional arguments, passed to super init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
-        self.feature_shape = [64, 64, 128]  # Hippmapp3r shape for Keras (channels last)
+        self.feature_shape = [160, 160, 128]  # Hippmapp3r shape for Keras (channels last)
 
         # If data_path is None, this is being used for model initialization only
         if data_path is None:

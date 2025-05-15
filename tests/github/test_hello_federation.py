@@ -71,7 +71,8 @@ def main():
 
         dir1 = workspace_root / col1 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col1], cwd=dir1)
-
+        # add sleep for 10s as the collaborator needs time to download the data
+        time.sleep(10)
         dir2 = workspace_root / col2 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col2], cwd=dir2)
 

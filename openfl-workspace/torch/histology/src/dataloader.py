@@ -187,7 +187,7 @@ def load_histology_shard(shard_num, collaborator_count, feature_shape=None, num_
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    img_rows, img_cols = feature_shape[0], feature_shape[1]
+    img_rows, img_cols = feature_shape[1], feature_shape[2]
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
         shard_num, collaborator_count)
