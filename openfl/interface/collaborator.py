@@ -63,7 +63,6 @@ def collaborator(context):
 )
 def start_(plan, collaborator_name, data_config):
     """Starts a collaborator service."""
-
     if plan and is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -71,17 +70,18 @@ def start_(plan, collaborator_name, data_config):
         echo("The data set/shard configuration file path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    plan = Plan.parse(
+    plan_obj = Plan.parse(
         plan_config_path=Path(plan).absolute(),
         data_config_path=Path(data_config).absolute(),
     )
 
     # TODO: Need to restructure data loader config file loader
-
-    echo(f"Data = {plan.cols_data_paths}")
+    logger.info(f"Data paths: {plan_obj.cols_data_paths}")
+    echo(f"Data = {plan_obj.cols_data_paths}")
     logger.info("🧿 Starting a Collaborator Service.")
 
-    plan.get_collaborator(collaborator_name).run()
+    collaborator = plan_obj.get_collaborator(collaborator_name)
+    collaborator.run()
 
 
 @collaborator.command(name="ping")
