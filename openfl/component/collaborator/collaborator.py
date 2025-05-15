@@ -171,7 +171,7 @@ class Collaborator:
         except Exception as experiment_error:
             logger.critical(
                 f"Critical error in collaborator execution. Error: {experiment_error}",
-                exc_info=True
+                exc_info=True,
             )
             self.callbacks.on_experiment_end({"error": str(experiment_error)})
             logger.critical("Collaborator is shutting down due to critical error.")
@@ -199,8 +199,7 @@ class Collaborator:
                 self.callbacks.on_round_end(round_num, logs)
             except Exception as round_error:
                 logger.error(
-                    f"Error during round {round_num} execution. Error: {round_error}",
-                    exc_info=True
+                    f"Error during round {round_num} execution. Error: {round_error}", exc_info=True
                 )
                 sleep(sleep_time or 10)
 
@@ -326,7 +325,8 @@ class Collaborator:
             if nparray is None:
                 if origin == self.collaborator_name:
                     logger.info(
-                        f"Attempting to find locally stored {tensor_name} tensor from prior round..."
+                        f"Attempting to find locally stored {tensor_name} "
+                        f"tensor from prior round..."
                     )
                     prior_round = round_number - 1
                     while prior_round >= 0:
@@ -335,7 +335,8 @@ class Collaborator:
                         )
                         if nparray is not None:
                             logger.debug(
-                                f"Found tensor {tensor_name} in local TensorDB for round {prior_round}"
+                                f"Found tensor {tensor_name} in local TensorDB "
+                                f"for round {prior_round}"
                             )
                             return nparray
                         prior_round -= 1
@@ -371,7 +372,8 @@ class Collaborator:
                         self.tensor_db.cache_tensor({new_model_tk: nparray})
                     else:
                         logger.info(
-                            "Could not find previous model layer. Fetching latest layer from aggregator"
+                            "Could not find previous model layer. "
+                            "Fetching latest layer from aggregator"
                         )
                         nparray = self.get_aggregated_tensor_from_aggregator(
                             tensor_key, require_lossless=True
@@ -395,8 +397,7 @@ class Collaborator:
                 logger.debug("Found tensor %s in local TensorDB", tensor_key)
         except Exception as get_tensor_error:
             logger.error(
-                f"Error retrieving tensor {tensor_key}. Error: {get_tensor_error}",
-                exc_info=True
+                f"Error retrieving tensor {tensor_key}. Error: {get_tensor_error}", exc_info=True
             )
             raise
         return nparray
