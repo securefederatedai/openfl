@@ -1,11 +1,12 @@
-from datasets import Dataset, DatasetDict, Image
+import glob
+import multiprocessing as mp
 import os
 import random
-import glob
+
 import albumentations
 import numpy as np
-import multiprocessing as mp
 import torch
+from datasets import Dataset, DatasetDict, Image
 
 SEGMENT_CLASSES = {
     0: "NOT tumor",
@@ -65,7 +66,7 @@ def process_patient(
 
 
 def get_samples(
-    dataset_path="PATH/Processed_TrainingData/",
+    dataset_path="Processed_TrainingData/",
     image_types=IMAGE_TYPES,
     # x_slice_range=(60, 180),
     # y_slice_range=(40, 200),
@@ -97,8 +98,8 @@ def get_samples(
     return samples
 
 
-def create_dataset_dict(test_ratio=0.1, seed=42, patient_percentage=None, collaborator_count=1):
-    samples = get_samples(image_types=IMAGE_TYPES)
+def create_dataset_dict(dataset_path, test_ratio=0.1, seed=42, patient_percentage=None, collaborator_count=1):
+    samples = get_samples(dataset_path=dataset_path, image_types=IMAGE_TYPES)
     random.seed(seed)
     random.shuffle(samples)
     test_size = int(len(samples) * test_ratio)
@@ -107,8 +108,8 @@ def create_dataset_dict(test_ratio=0.1, seed=42, patient_percentage=None, collab
         return [i for patients in samples for i in patients]
 
     g_test_samples = samples[:test_size]
-    test_samples = samples[test_size : test_size + test_size]
-    train_samples = samples[test_size + test_size :]
+    test_samples = samples[test_size: test_size + test_size]
+    train_samples = samples[test_size + test_size:]
 
     if patient_percentage is not None:
         if isinstance(patient_percentage, float):

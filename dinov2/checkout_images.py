@@ -1,18 +1,19 @@
 # %%
-import evaluate
-import torch
-import os
-import numpy as np
-from transformers import Trainer, TrainingArguments
-from torch.utils.tensorboard import SummaryWriter
 import argparse
-from torchinfo import summary
-from peft.config import PeftConfig
-from peft import LoraConfig, TaskType, PeftModel
+import os
 
-from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
-from openfl.experimental.workflow.runtime import LocalRuntime
+import evaluate
+import numpy as np
+import torch
+from openfl.experimental.workflow.interface import (Aggregator, Collaborator,
+                                                    FLSpec)
 from openfl.experimental.workflow.placement import aggregator, collaborator
+from openfl.experimental.workflow.runtime import LocalRuntime
+from peft import LoraConfig, PeftModel, TaskType
+from peft.config import PeftConfig
+from torch.utils.tensorboard import SummaryWriter
+from torchinfo import summary
+from transformers import Trainer, TrainingArguments
 
 os.chdir(PATH")
 from src.dataloader import create_dataset_dict, SEGMENT_CLASSES, collate_fn
@@ -92,7 +93,9 @@ training_args = TrainingArguments(
     report_to=["tensorboard"],  # Add this line to enable TensorBoard logging
 )
 from transformers import Trainer
+
 from src.utils import MetricAccumulator
+
 metric = evaluate.load("mean_iou")
 metric_accumulator = MetricAccumulator(metric, len(SEGMENT_CLASSES), ignore_index=None)
 trainer = Trainer(

@@ -1,10 +1,12 @@
 # %%
 import os
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import matplotlib.pyplot as plt
-import pandas as pd
 from collections import defaultdict
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from tensorboard.backend.event_processing.event_accumulator import \
+    EventAccumulator
 
 
 def load_and_plot_tensorboard_logs(log_dir):

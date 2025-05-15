@@ -1,22 +1,18 @@
 # %%
-import torch
-import os
-from transformers import TrainingArguments, Dinov2Config
-from torch.utils.tensorboard import SummaryWriter
 import argparse
-from torchinfo import summary
-from peft import LoraConfig, TaskType
+import os
 
+import torch
 from openfl.experimental.workflow.interface import Aggregator, Collaborator
 from openfl.experimental.workflow.runtime import LocalRuntime
+from torch.utils.tensorboard import SummaryWriter
+from torchinfo import summary
+from transformers import TrainingArguments
 
-os.chdir("/home/oamontoy/workspace/openfl/dinov2")
-from src.dataloader import create_dataset_dict, SEGMENT_CLASSES
-from src.model import VitForSemanticSegmentation
-from src.utils import PeftModelForVit
+os.chdir("/home/omar/Documents/mine/INTEL/openfl/dinov2")
+from src.Brats2020_dataloader import SEGMENT_CLASSES, create_dataset_dict
 from src.unet import UNet
-from src.visionflow import FederatedFlow, set_writer
-
+from src.VisionFlow import VisionFlow, set_writer
 
 random_seed = 1
 torch.manual_seed(random_seed)
@@ -45,55 +41,18 @@ experiment = args.experiment
 
 if patient_count > 0:
     dataset_dicts, val_set = create_dataset_dict(
-        patient_percentage=patient_count, collaborator_count=4
+        dataset_path="/home/omar/Documents/mine/INTEL/datasets/Processed_TrainingData/",
+        patient_percentage=patient_count,
+        collaborator_count=4,
     )
 else:
     dataset_dicts, val_set = create_dataset_dict(
-        patient_percentage=patient_percentage, collaborator_count=4
+        dataset_path="/home/omar/Documents/mine/INTEL/datasets/Processed_TrainingData/",
+        patient_percentage=patient_percentage,
+        collaborator_count=4,
     )
 
-
-if use_vit:
-    if use_dino:
-        model_name = "facebook/dinov2-base"
-        model_type = "dino2"
-    else:
-        model_name = "google/vit-base-patch16-224"
-        model_type = "vit"
-    
-    MODEL_CONFIG = Dinov2Config()
-    self.feature_extractor = ViTModel.from_pretrained(**kwargs)
-    self.classifier = UNetDecoder(
-                self.config.hidden_size, out_channels=self.config.num_labels
-            )
-        
-    model = VitForSemanticSegmentation(
-        pretrained_model_name_or_path=model_name,
-        use_UNetDecoder=use_decoder_unet,
-        lora=use_lora,
-        dinov2=use_dino,
-    )
-    for name, param in model.named_parameters():
-        if name.startswith("feature_extractor"):
-            param.requires_grad = False
-    if use_lora:
-        lora_config = LoraConfig(
-            task_type=TaskType.FEATURE_EXTRACTION,
-            r=8,
-            lora_alpha=16,
-            lora_dropout=0.1,
-            target_modules="all-linear",
-        )
-        model.feature_extractor = PeftModelForVit(model.feature_extractor, lora_config)
-        model.feature_extractor.print_trainable_parameters()
-    else:
-        summary(model.feature_extractor, input_size=(1, 3, 224, 224))
-    patches = model.feature_extractor.config.image_size // model.feature_extractor.config.patch_size
-    embeddings = model.feature_extractor.config.hidden_size
-    summary(
-        model.classifier, input_size=(5 if use_decoder_unet else 1, patches * patches, embeddings)
-    )
-else:
+if False:
     model = UNet(3, len(SEGMENT_CLASSES))
     model_type = "unet"
     summary(model, input_size=(1, 3, 224, 224))
@@ -109,6 +68,7 @@ split_type = (
 )
 dir_path = f"./{experiment}"
 os.makedirs(dir_path, exist_ok=True)
+model_type = "testetesded"
 output_dir = f"{dir_path}/{model_type}_{lora_type}_{'decoder' if use_decoder_unet else ''}_{split_type}_{'_dummy' if use_fast else ''}"
 os.makedirs(output_dir, exist_ok=True)
 
@@ -163,13 +123,15 @@ local_runtime = LocalRuntime(
 )
 print(f"Local runtime collaborators = {local_runtime.collaborators}")
 # %%
-model.to("cpu")
-flflow = FederatedFlow(
-    model,
+flflow = VisionFlow(
     rounds=3 if use_fast else 10,
-    val_set=val_set if not use_fast else val_set.select(range(len(eval_dataset) // 20)),
+    global_validation_dataset=(
+        val_set if not use_fast else val_set.select(range(len(eval_dataset) // 20))
+    ),
     training_args=training_args,
     use_lora=use_lora,
+    move_to_cpu_end_of_training=True,
+    model_config_kwargs = {'output_hidden_states':True}
 )
 flflow.runtime = local_runtime
 flflow.run()

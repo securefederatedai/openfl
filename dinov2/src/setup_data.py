@@ -1,13 +1,14 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import argparse
 import os
+from multiprocessing import Pool
+
 import nibabel as nib
 import numpy as np
-import argparse
-from tqdm import tqdm
 from PIL import Image
-from multiprocessing import Pool
+from tqdm import tqdm
 
 
 def save_slices(image, output_path, dir_name, prefix, axis, slice_range):

@@ -1,10 +1,11 @@
 # %%
-import torch
 import matplotlib.pyplot as plt
-from transformers import PreTrainedModel, Dinov2PreTrainedModel
-from train import VitForSemanticSegmentation
-from dataloader import create_dataset_dict, SEGMENT_CLASSES
 import numpy as np
+import torch
+from train import VitForSemanticSegmentation
+from transformers import Dinov2PreTrainedModel, PreTrainedModel
+
+from dataloader import SEGMENT_CLASSES, create_dataset_dict
 
 # Load the dataset
 dataset_dict = create_dataset_dict()
