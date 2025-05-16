@@ -159,8 +159,7 @@ class Aggregator:
             self.persistent_db = PersistentTensorDB(persistent_db_path)
         else:
             logger.info(
-                "Persistent checkpoint is disabled either property is set true "
-                "or if running in evaluation mode"
+                "Either persistent checkpoint is disabled or the experiment is in evaluation mode"
             )
             self.persistent_db = None
         # FIXME: I think next line generates an error on the second round
