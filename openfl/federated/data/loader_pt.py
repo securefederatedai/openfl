@@ -46,10 +46,32 @@ class PyTorchDataLoader(DataLoader):
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
 
+        Child classes must implement this method and return the feature shape.
+
         Returns:
-            tuple: The shape of an example feature array.
+            list: The shape of an example feature array.
+
+        Raises:
+            NotImplementedError: This method must be implemented by all derived classes.
         """
-        return self.X_train[0].shape
+        raise NotImplementedError(
+            "Dataset-specific dataloaders must implement get_feature_shape method."
+        )
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Child classes must implement this method and return the number of classes.
+
+        Returns:
+            int: The number of classes.
+
+        Raises:
+            NotImplementedError: This method must be implemented by all derived classes.
+        """
+        raise NotImplementedError(
+            "Dataset-specific dataloaders must implement get_num_classes method."
+        )
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """Returns the data loader for the training data.

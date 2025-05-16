@@ -62,14 +62,16 @@ def _load_raw_datashards(shard_num, collaborator_count):
     return (X_train, y_train), (X_valid, y_valid)
 
 
-def load_mnist_shard(shard_num, collaborator_count, categorical=True,
-                     channels_last=True, **kwargs):
+def load_mnist_shard(shard_num, collaborator_count, feature_shape=None, num_classes=None,
+                     categorical=True, channels_last=True, **kwargs):
     """
     Load the MNIST dataset.
 
     Args:
         shard_num (int): The shard to use from the dataset
         collaborator_count (int): The number of collaborators in the federation
+        feature_shape (list, optional): The shape of input features.
+        num_classes (int, optional): Number of classes.
         categorical (bool): True = convert the labels to one-hot encoded
          vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -77,15 +79,12 @@ def load_mnist_shard(shard_num, collaborator_count, categorical=True,
         **kwargs: Additional parameters to pass to the function
 
     Returns:
-        list: The input shape
-        int: The number of classes
         numpy.ndarray: The training data
         numpy.ndarray: The training labels
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    img_rows, img_cols = 28, 28
-    num_classes = 10
+    img_rows, img_cols = feature_shape[0], feature_shape[1]
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
         shard_num, collaborator_count
@@ -94,11 +93,9 @@ def load_mnist_shard(shard_num, collaborator_count, categorical=True,
     if channels_last:
         X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
         X_valid = X_valid.reshape(X_valid.shape[0], img_rows, img_cols, 1)
-        input_shape = (img_rows, img_cols, 1)
     else:
         X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
         X_valid = X_valid.reshape(X_valid.shape[0], 1, img_rows, img_cols)
-        input_shape = (1, img_rows, img_cols)
 
     X_train = X_train.astype('float32')
     X_valid = X_valid.astype('float32')
@@ -115,4 +112,4 @@ def load_mnist_shard(shard_num, collaborator_count, categorical=True,
         y_train = one_hot(y_train, num_classes)
         y_valid = one_hot(y_valid, num_classes)
 
-    return input_shape, num_classes, X_train, y_train, X_valid, y_valid
+    return X_train, y_train, X_valid, y_valid
