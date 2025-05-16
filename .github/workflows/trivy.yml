@@ -1,4 +1,4 @@
-name: Trivy Nightly Security Scan
+name: Trivy Nightly Scan
 on:
   workflow_call:
     inputs:
@@ -7,192 +7,117 @@ on:
         type: string
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight UTC
+    - cron: '0 0 * * *' # This runs the workflow every night at midnight UTC
 
 jobs:
-  security-scan:
+  build:
     if: github.event.pull_request.draft == false
     permissions:
-      contents: read
-      security-events: write
-      actions: read
-      packages: read
-      issues: write
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     runs-on: ubuntu-22.04
-    timeout-minutes: 45
+    timeout-minutes: 15
+
     env:
-      TRIVY_VERSION: 0.50.1
+      TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
       COMMIT_ID: ${{ inputs.commit_id || github.sha }}
 
     steps:
-      # ============ SETUP PHASE ============
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_ID }}
-          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      # ============ SCANNING PHASE ============
-      - name: Run filesystem scan
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          scan-type: 'fs'
-          format: 'json'
-          output: 'trivy-fs-report.json'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          security-checks: 'vuln'
-
-      - name: Build Docker image
+      - name: Install Trivy
         run: |
-          docker buildx build \
-            --pull \
-            --tag local/scan-target:${{ github.run_id }} \
-            --file openfl-docker/Dockerfile.base \
-            --load \
-            .
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
-      - name: Scan Docker image
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          image-ref: 'local/scan-target:${{ github.run_id }}'
-          format: 'json'
-          output: 'trivy-image-report.json'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          security-checks: 'vuln'
-
-      # ============ REPORTING PHASE ============
-      - name: Generate SBOM reports
+      - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
-          trivy fs --format spdx-json --output trivy-fs-sbom.json .
-          trivy image --format spdx-json --output trivy-image-sbom.json local/scan-target:${{ github.run_id }}
+          trivy --quiet fs \
+          --format json \
+          --output trivy-code-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM \
+          .
 
-      - name: Create consolidated report
-        id: report
+      - name: Display Trivy code Scan Results
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
         run: |
-          # Initialize markdown report
-          echo "# Security Scan Report - OpenFL" > report.md
-          echo "**Scan Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> report.md
-          echo "**Commit:** [${{ env.COMMIT_ID }}](https://github.com/rajithkrishnegowda/openfl/commit/${{ env.COMMIT_ID }})" >> report.md
-          echo -e "\n## Vulnerability Summary\n" >> report.md
+          echo "Trivy Scan Results:"
+          cat trivy-code-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
 
-          # Process filesystem results
-          if [ -f "trivy-fs-report.json" ]; then
-            FS_VULNS=$(jq '[.Results[]?.Vulnerabilities[]?] | length' trivy-fs-report.json || echo 0)
-            echo "### Filesystem Scans" >> report.md
-            echo "**Critical/High Vulnerabilities:** $FS_VULNS" >> report.md
-            
-            if [ "$FS_VULNS" -gt 0 ]; then
-              echo -e "\n| Severity | ID | Package | Version | Description |" >> report.md
-              echo "|----------|----|---------|---------|-------------|" >> report.md
-              jq -r '.Results[]?.Vulnerabilities[]? | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-fs-report.json >> report.md
-              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-          # Process image results
-          if [ -f "trivy-image-report.json" ]; then
-            IMG_VULNS=$(jq '[.Results[]?.Vulnerabilities[]?] | length' trivy-image-report.json || echo 0)
-            echo -e "\n### Container Image Scans" >> report.md
-            echo "**Critical/High Vulnerabilities:** $IMG_VULNS" >> report.md
-            
-            if [ "$IMG_VULNS" -gt 0 ]; then
-              echo -e "\n| Severity | ID | Package | Version | Description |" >> report.md
-              echo "|----------|----|---------|---------|-------------|" >> report.md
-              jq -r '.Results[]?.Vulnerabilities[]? | "| \(.Severity) | \(.VulnerabilityID) | \(.PkgName) | \(.InstalledVersion) | \(.Title) |"' trivy-image-report.json >> report.md
-              echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-          # Add artifact download links
-          echo -e "\n## Next Steps\n" >> report.md
-          echo "1. Review the full reports in the workflow artifacts" >> report.md
-          echo "2. Address critical vulnerabilities immediately" >> report.md
-          echo "3. Create GitHub issues for tracking remediation" >> report.md
-
-          cat report.md
-
-      # ============ NOTIFICATION PHASE ============
-      - name: Set notification subject
-        id: set-subject
-        run: |
-          if [[ "${{ job.status }}" == "failure" ]]; then
-            echo "subject=🚨 OpenFL Security Scan Failed" >> $GITHUB_OUTPUT
-          elif [[ "${{ steps.report.outputs.has_vulnerabilities }}" == "true" ]]; then
-            echo "subject=⚠️ OpenFL Vulnerabilities Found" >> $GITHUB_OUTPUT
-          else
-            echo "subject=✅ OpenFL Security Scan Passed" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Extract CODEOWNERS emails
-        id: codeowners
-        run: |
-          if ! command -v python &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y python3
-          fi
-
-          OUTPUT=$(python .github/scripts/extract_emails.py)
-          echo "Extracted emails: $OUTPUT"
-          
-          EMAILS=$(echo "$OUTPUT" | jq -r '.emails | join(",")')
-          echo "emails=${EMAILS:-${{ secrets.SECURITY_EMAIL_RECIPIENTS }}}" >> $GITHUB_OUTPUT
-
-        env:
-          PYTHONIOENCODING: utf-8
-
-      - name: Prepare email content
-        id: prepare-email
-        run: |
-          # Convert markdown to HTML
-          python -m pip install markdown
-          HTML_CONTENT=$(python -c "import markdown; print(markdown.markdown(open('report.md').read()))")
-          echo "html_body<<EOF" >> $GITHUB_OUTPUT
-          echo "$HTML_CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Send email via Python script
-        if: always() && (steps.report.outputs.has_vulnerabilities == 'true' || failure())
-        env:
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          RECIPIENTS: ${{ steps.codeowners.outputs.emails }}
-        run: |
-          python .github/scripts/send_email.py \
-            --sender "security@openfl.github" \
-            --to "$RECIPIENTS" \
-            --subject "${{ steps.set-subject.outputs.subject }}" \
-            --body "${{ steps.prepare-email.outputs.html_body }}" \
-            --smtp-user "$SMTP_USER" \
-            --smtp-pwd "$SMTP_PASSWORD" \
-            --smtp-server "$SMTP_SERVER:$SMTP_PORT" \
-            --html-body
-
-      # ============ ARTIFACT UPLOADS ============
-      - name: Upload scan artifacts
+      - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v4
         with:
-          name: security-reports-${{ github.run_id }}
-          path: |
-            trivy-fs-report.json
-            trivy-image-report.json
-            trivy-fs-sbom.json
-            trivy-image-sbom.json
-            report.md
-          retention-days: 30
+          name: trivy-code-report-json
+          path: trivy-code-results.json
 
-      # ============ FAILURE HANDLING ============
-      - name: Fail workflow if vulnerabilities found
-        if: steps.report.outputs.has_vulnerabilities == 'true' && github.event_name != 'schedule'
+      - name: Build an image from Dockerfile
         run: |
-          echo "::error::Critical/High vulnerabilities detected!"
-          exit 1
+          docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
+
+      - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
+        id: trivy-scan
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
+          format: 'json'
+          output: 'trivy-docker-results.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          trivyignores: '.trivyignore'
+
+      - name: Display Trivy Docker Scan Results
+        if: failure() # Ensure this step runs regardless of the previous step's outcome
+        run: |
+          if [ -s trivy-docker-results.json ]; then
+            echo "Trivy Scan Results:"
+            cat trivy-docker-results.json | jq '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | {VulnerabilityID, PkgName, InstalledVersion, Severity, Description}'
+          else
+            echo "Trivy scan results file is empty or not found."
+          fi
+     
+      - name: Upload final Trivy Docker Vulnerability Scan
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-docker-report-json
+          path: trivy-docker-results.json
+
+      - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
+        run: |
+          trivy --quiet fs \
+          --format spdx-json \
+          --output trivy-code-spdx-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM \
+          .
+
+      - name: Upload SPDX Code Vulnerability Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-code-spdx-report-json
+          path: trivy-code-spdx-results.json
+        
+      - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
+          format: 'spdx-json'
+          output: 'trivy-docker-spdx-results.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          trivyignores: '.trivyignore'
+    
+      - name: Upload SPDX Docker Vulnerability Scan
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-docker-spdx-report-json
+          path: trivy-docker-spdx-results.json
