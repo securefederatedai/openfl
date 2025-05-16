@@ -280,31 +280,18 @@ flwr run ./src/app-pytorch
 ```
 It will run another experiment. Once you are done, you can manually shut down OpenFL's `collaborator` and Flower's `SuperNode` with `CTRL+C`. This will trigger a task-completion by the task runner that'll subsequently begin the graceful shutdown process of the OpenFL and Flower components.
 
-### Running in SGX Enclave
-Gramine does not support all Linux system calls. Flower FAB is built and installed at runtime. During this, `utime()` is called, which is an [unsupported call](https://gramine.readthedocs.io/en/latest/devel/features.html#list-of-system-calls), resulting in error or unexpected behavior. To navigate this, when running in an SGX enclave, we opt to build and install the FAB during initialization and package it alongside the OpenFL workspace. To make this work, we introduce some patches to Flower's build command, which helps circumvent the unsupported system call as well as minimize read/write access.
-
-To run these patches, simply add `patch: True` to the `Connector` and `Task Runner` settings (if not already set). For the `Task Runner` also include the name of the Flower app for building and installation.
+### Running in Intel<sup>®</sup> SGX Enclave
+Intel SGX is a set of CPU extensions for creating isolated memory regions, called enclaves, that allow secure computation of sensitive data. Applications that run within enclaves are encrypted in memory and remain isolated from the rest of the system. Executing code within an enclave requires an [Intel SGX–supported Intel CPU](https://www.intel.com/content/www/us/en/support/articles/000028173/processors.html). To run this workspace in an SGX enclave, first, set `sgx_enabled: True` in the `plan.yaml` for the `task_runner`:
 
 ```yaml
-connector : 
-  defaults : plan/defaults/connector.yaml
-  template : openfl.component.ConnectorFlower
-  settings :
-    automatic_shutdown : True
-    superlink_params :
-      insecure : True
-      serverappio-api-address : 127.0.0.1:9091 
-      fleet-api-address :  127.0.0.1:9092 
-      exec-api-address : 127.0.0.1:9093
-    flwr_run_params :
-      flwr_app_name : "app-pytorch"
-      federation_name : "local-poc"
-      patch : True
-
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : openfl.federated.task.runner_flower.FlowerTaskRunner
+  template : src.runner.FlowerTaskRunner
   settings :
-    patch : True
-    flwr_app_name : "app-pytorch"
+    flwr_app_name: app-pytorch
+    sgx_enabled: False
 ```
+
+Then, follow the [instructions](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#docker-container-approach) to build/pull a base image, dockerize your workspace, and containerize each component.
+
+Enabling this flag does two things. First, it runs the Flower `ClientApp` as an isolated process (`--isolation process`). This reduces the number of processes that need to be spawned in the enclave, reducing overhead time ([see](https://gramine.readthedocs.io/en/stable/performance.html#multi-process-workloads)). Second, Gramine does not support all Linux system calls. Flower FAB is built and installed at runtime. During this, `utime()` is called, which is an [unsupported call](https://gramine.readthedocs.io/en/latest/devel/features.html#list-of-system-calls), resulting in error or unexpected behavior. To navigate this, when running in an SGX enclave, we opt to build and install the FAB during initialization and package it alongside the OpenFL workspace when the `sgx_enabled` flag is set to `True`

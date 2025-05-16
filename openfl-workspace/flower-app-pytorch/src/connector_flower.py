@@ -154,12 +154,7 @@ class ConnectorFlower:
         federation_name = self.flwr_run_params.get("federation_name")
         flwr_app_name = self.flwr_run_params.get("flwr_app_name")
 
-        os.environ["TMPDIR"] = os.environ["FLWR_HOME"]
-
-        if self.flwr_run_params.get("sgx_enabled"):
-            command = ["python", "src/patch/flwr_run_patch.py", "run", f"./src/{flwr_app_name}"]
-        else:
-            command = ["flwr", "run", f"./src/{flwr_app_name}"]
+        command = ["flwr", "run", f"./src/{flwr_app_name}"]
 
         if federation_name:
             command.append(federation_name)
