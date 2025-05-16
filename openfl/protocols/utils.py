@@ -352,3 +352,77 @@ def get_headers(context) -> dict:
             values are the corresponding header values.
     """
     return {header[0]: header[1] for header in context.invocation_metadata()}
+
+
+def serialize_tensor(tensor_key, nparray, tensor_codec, lossless=True):
+    """Serialize the tensor.
+
+    This function also performs compression.
+
+    Args:
+        tensor_key (namedtuple): A TensorKey.
+        nparray: A NumPy array associated with the requested
+            tensor key.
+        tensor_codec: The codec to use for compression.
+        lossless: A flag indicating whether to use lossless compression.
+
+    Returns:
+        named_tensor (protobuf) : The tensor constructed from the nparray.
+    """
+    tensor_key, nparray, metadata = tensor_codec.compress(
+        tensor_key,
+        nparray,
+        lossless,
+    )
+    named_tensor = construct_named_tensor(
+        tensor_key,
+        nparray,
+        metadata,
+        lossless,
+    )
+    return named_tensor
+
+
+def deserialize_tensor(named_tensor, tensor_codec):
+    """Deserialize a `NamedTensor` to a numpy array.
+
+    This function also performs decompresssion. Whether or not the
+    decompression is lossless is determined by the `lossless` field
+    of the `NamedTensor` protobuf.
+
+    Args:
+        named_tensor (protobuf): The tensor to convert to nparray.
+        tensor_codec: The codec to use for decompression.
+
+    Returns:
+        A tuple (TensorKey, nparray), where the `origin` field of the
+        `TensorKey` is `None`. The `origin` field must be populated
+        later, as it is not known at this point.
+    """
+    metadata = [
+        {
+            "int_to_float": proto.int_to_float,
+            "int_list": proto.int_list,
+            "bool_list": proto.bool_list,
+        }
+        for proto in named_tensor.transformer_metadata
+    ]
+
+    # Deserialization happens on the receiving end.
+    # Origin of this tensor is populated later.
+    tensor_key = TensorKey(
+        named_tensor.name,
+        None,
+        named_tensor.round_number,
+        named_tensor.report,
+        tuple(named_tensor.tags),
+    )
+
+    tensor_key, nparray = tensor_codec.decompress(
+        tensor_key,
+        data=named_tensor.data_bytes,
+        transformer_metadata=metadata,
+        require_lossless=named_tensor.lossless,
+    )
+
+    return tensor_key, nparray

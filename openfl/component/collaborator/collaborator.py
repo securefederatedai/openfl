@@ -283,8 +283,12 @@ class Collaborator:
         if len(tensor_keys) > 0:
             logger.info("Fetching %d tensors from the aggregator", len(tensor_keys))
             named_tensors = self.client.get_aggregated_tensors(tensor_keys, require_lossless=True)
+
+            # Deserialize tensors and mark them as coming from the aggregator.
             for tensor_key, named_tensor in zip(tensor_keys, named_tensors):
-                tensor_dict[tensor_key] = self.deserialize_tensor(named_tensor)
+                tensor_key, nparray = utils.deserialize_tensor(named_tensor, self.tensor_codec)
+                tensor_key = tensor_key._replace(origin=self.aggregator_uuid)
+                tensor_dict[tensor_key] = nparray
 
         self.tensor_db.cache_tensor(tensor_dict)
 
@@ -322,7 +326,10 @@ class Collaborator:
                 metrics.update({f"{self.collaborator_name}/{task_name}/{tensor_name}": value})
 
         # Serialize tensors to be sent to the aggregator
-        named_tensors = [self.serialize_tensor(k, v) for k, v in tensor_dict.items()]
+        named_tensors = [
+            utils.serialize_tensor(k, v, self.tensor_codec, lossless=True)
+            for k, v in tensor_dict.items()
+        ]
 
         self.client.send_local_task_results(
             round_number,
@@ -332,71 +339,6 @@ class Collaborator:
         )
 
         return metrics
-
-    def serialize_tensor(self, tensor_key, nparray):
-        """Serialize the tensor.
-
-        This function also performs compression.
-
-        Args:
-            tensor_key (namedtuple): A TensorKey.
-            nparray: A NumPy array associated with the requested
-                tensor key.
-
-        Returns:
-            named_tensor (protobuf) : The tensor constructed from the nparray.
-        """
-        lossless = True
-        tensor_key, nparray, metadata = self.tensor_codec.compress(
-            tensor_key,
-            nparray,
-            lossless,
-        )
-        named_tensor = utils.construct_named_tensor(
-            tensor_key,
-            nparray,
-            metadata,
-            lossless,
-        )
-        return named_tensor
-
-    def deserialize_tensor(self, named_tensor):
-        """Deserialize a `NamedTensor` to a numpy array.
-
-        This function also performs decompresssion.
-
-        Args:
-            named_tensor (protobuf): The tensor to convert to nparray.
-
-        Returns:
-            The converted nparray.
-        """
-        metadata = [
-            {
-                "int_to_float": proto.int_to_float,
-                "int_list": proto.int_list,
-                "bool_list": proto.bool_list,
-            }
-            for proto in named_tensor.transformer_metadata
-        ]
-        # The tensor has already been transferred to collaborator, so
-        # the newly constructed tensor should have the collaborator origin
-        tensor_key = TensorKey(
-            named_tensor.name,
-            self.collaborator_name,
-            named_tensor.round_number,
-            named_tensor.report,
-            tuple(named_tensor.tags),
-        )
-
-        tensor_key, nparray = self.tensor_codec.decompress(
-            tensor_key,
-            data=named_tensor.data_bytes,
-            transformer_metadata=metadata,
-            require_lossless=named_tensor.lossless,
-        )
-
-        return nparray
 
     def _apply_masks(
         self,

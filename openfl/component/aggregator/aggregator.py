@@ -627,24 +627,6 @@ class Aggregator:
             raise ValueError(f"Aggregator does not have `{tensor_key}`")
 
         # Serialize (and compress) the tensor
-        named_tensor = self.serialize_tensor(tensor_key, nparray, lossless=require_lossless)
-        return named_tensor
-
-    def serialize_tensor(self, tensor_key, nparray, lossless: bool):
-        """Serialize the tensor.
-
-        This function also performs compression.
-
-        Args:
-            tensor_key (namedtuple): A TensorKey.
-            nparray: A NumPy array associated with the requested
-                tensor key.
-            lossless: Whether to use lossless compression.
-
-        Returns:
-            named_tensor (protobuf) : The tensor constructed from the nparray.
-        """
-        # Secure aggregation setup tensor.
         if "secagg" in tensor_key.tags:
             import numpy as np
 
@@ -663,14 +645,9 @@ class Aggregator:
 
             return named_tensor
 
-        tensor_key, nparray, metadata = self.tensor_codec.compress(tensor_key, nparray, lossless)
-        named_tensor = utils.construct_named_tensor(
-            tensor_key,
-            nparray,
-            metadata,
-            lossless,
+        named_tensor = utils.serialize_tensor(
+            tensor_key, nparray, self.tensor_codec, lossless=require_lossless
         )
-
         return named_tensor
 
     def _collaborator_task_completed(self, collaborator, task_name, round_num):
@@ -769,43 +746,47 @@ class Aggregator:
             self._is_collaborator_done(collaborator_name, round_number)
             self._end_of_round_with_stragglers_check()
 
-        task_key = TaskResultKey(task_name, collaborator_name, round_number)
-
-        # we mustn't have results already
         if self._collaborator_task_completed(collaborator_name, task_name, round_number):
             logger.warning(
-                f"Aggregator already has task results from collaborator {collaborator_name}"
-                f" for task {task_key}"
+                f"Aggregator already has task results from collaborator {collaborator_name} "
+                f"for task {task_name} in round {round_number}. Ignoring..."
             )
             return
 
-        # By giving task_key it's own weight, we can support different
-        # training/validation weights
-        # As well as eventually supporting weights that change by round
-        # (if more data is added)
+        # Record collaborator individual weightage/contribution for federated averaging
+        task_key = TaskResultKey(task_name, collaborator_name, round_number)
         self.collaborator_task_weight[task_key] = data_size
 
-        # initialize the list of tensors that go with this task
-        # Setting these incrementally is leading to missing values
+        # Process named tensors
         task_results = []
-
+        result_tensor_dict = {}
         for named_tensor in named_tensors:
-            tensor_key, value = self.deserialize_tensor(named_tensor, collaborator_name)
+            # Deserialize
+            tensor_key, nparray = utils.deserialize_tensor(named_tensor, self.tensor_codec)
+
+            # Update origin/tags
+            updated_tags = change_tags(tensor_key.tags, add_field=collaborator_name)
+            tensor_key = tensor_key._replace(origin=self.uuid, tags=updated_tags)
+
+            # Record
+            result_tensor_dict[tensor_key] = nparray
+            task_results.append(tensor_key)
 
             if "metric" in tensor_key.tags:
-                # Caution: This schema must be followed. It is also used in
-                # gRPC message streams for director/envoy.
+                assert nparray.ndim == 0, (
+                    f"Expected metric to be a scalar, got shape {nparray.shape}"
+                )
                 metrics = {
                     "round": round_number,
                     "metric_origin": collaborator_name,
                     "task_name": task_name,
                     "metric_name": tensor_key.tensor_name,
-                    "metric_value": float(value),
+                    "metric_value": float(nparray),
                 }
                 self.metric_queue.put(metrics)
 
-            task_results.append(tensor_key)
-
+        # Store results in TensorDB
+        self.tensor_db.cache_tensor(result_tensor_dict)
         self.collaborator_tasks_results[task_key] = task_results
 
         # Check if collaborator or round is done.
@@ -831,48 +812,6 @@ class Aggregator:
             if len(self.stragglers) != 0:
                 logger.warning(f"Identified stragglers: {self.stragglers}")
             self._end_of_round_check()
-
-    def deserialize_tensor(self, named_tensor, collaborator_name):
-        """Deserialize a `NamedTensor` to a numpy array.
-
-        This function also performs decompresssion.
-
-        Args:
-            named_tensor (protobuf): The tensor to convert to nparray.
-
-        Returns:
-            A tuple (TensorKey, nparray).
-        """
-        metadata = [
-            {
-                "int_to_float": proto.int_to_float,
-                "int_list": proto.int_list,
-                "bool_list": proto.bool_list,
-            }
-            for proto in named_tensor.transformer_metadata
-        ]
-        # The tensor has already been transferred to aggregator,
-        # so the newly constructed tensor should have the aggregator origin
-        tensor_key = TensorKey(
-            named_tensor.name,
-            self.uuid,
-            named_tensor.round_number,
-            named_tensor.report,
-            tuple(named_tensor.tags),
-        )
-
-        tensor_key, nparray = self.tensor_codec.decompress(
-            tensor_key,
-            data=named_tensor.data_bytes,
-            transformer_metadata=metadata,
-            require_lossless=named_tensor.lossless,
-        )
-        updated_tags = change_tags(tensor_key.tags, add_field=collaborator_name)
-        tensor_key = tensor_key._replace(tags=updated_tags)
-
-        self.tensor_db.cache_tensor({tensor_key: nparray})
-
-        return tensor_key, nparray
 
     def _prepare_trained(self, tensor_name, origin, round_number, report, agg_results):
         """Prepare aggregated tensorkey tags.
