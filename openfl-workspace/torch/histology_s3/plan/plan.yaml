@@ -1,0 +1,41 @@
+# Copyright (C) 2025 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/torch_cnn_histology_init.pbuf
+    best_state_path : save/torch_cnn_histology_best.pbuf
+    last_state_path : save/torch_cnn_histology_last.pbuf
+    rounds_to_train : 2
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    use_delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  template : src.dataloader.PyTorchHistologyVerifiableDataLoader
+  settings :
+    collaborator_count : 2
+    data_group_name    : histology
+    batch_size         : 32
+
+task_runner:
+  defaults : plan/defaults/task_runner.yaml
+  template: src.taskrunner.PyTorchCNN
+
+network:
+  defaults: plan/defaults/network.yaml
+
+tasks:
+  defaults: plan/defaults/tasks_torch.yaml
+
+assigner:
+  defaults: plan/defaults/assigner.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
