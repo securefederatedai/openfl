@@ -1,15 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from openfl.federated.data.loader import DataLoader
-from sklearn.datasets import load_iris
 import pandas as pd
+from sklearn.datasets import load_iris
+
+from openfl.federated.data.loader import DataLoader
 
 
 class IRISInMemory(DataLoader):
     """Data Loader for IRIS Dataset."""
 
-    def __init__(self, batch_size, data_path, **kwargs):
+    def __init__(self, batch_size=32, data_path=None, **kwargs):
         super().__init__(**kwargs)
+
+        # Initialize default attributes
+        self.data_shard = None
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
 
         # download data
         self._download_raw_data()
@@ -62,7 +70,7 @@ class IRISInMemory(DataLoader):
         Query the data shard for the specified columns.
         Args:
             columns (list): A list of column names to query from the data shard.
-            **kwargs: Additional keyword arguments (currently not used).
+        **kwargs: Additional keyword arguments (currently not used).
         Returns:
             DataFrame: A DataFrame containing the data for the specified columns.
         Raises:

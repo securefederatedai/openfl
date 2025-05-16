@@ -3,14 +3,13 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import logging
+
+from keras.layers import Conv2D, Dense, Flatten
 from keras.models import Sequential
-from keras.layers import Conv2D
-from keras.layers import Dense
-from keras.layers import Flatten
 
 from openfl.federated import KerasTaskRunner
 
-import logging
 logger = logging.getLogger(__name__)
 
 class KerasCNN(KerasTaskRunner):
@@ -25,14 +24,15 @@ class KerasCNN(KerasTaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+        self.model = self.build_model(
+            self.data_loader.get_feature_shape(),
+            self.data_loader.get_num_classes(),
+            **kwargs
+        )
 
         self.initialize_tensorkeys_for_functions()
 
         self.model.summary(print_fn=logger.info)
-
-        logger.info(f'Train Set Size : {self.get_train_data_size()}')
-        logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
 
     def build_model(self,
                     input_shape,

@@ -64,6 +64,17 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
+  task_runner_connectivity_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Connectivity E2E
+    needs: set_commit_id_for_all_jobs
+    uses: ./.github/workflows/task_runner_connectivity_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+    secrets: inherit
+    
   task_runner_e2e:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
