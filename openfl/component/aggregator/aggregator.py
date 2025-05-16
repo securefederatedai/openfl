@@ -197,18 +197,12 @@ class Aggregator:
             )
         )
 
-        if save_native_model:
-            if not self.assigner.is_task_group_evaluation():
-                ckpt_callback = callbacks_module.ModelCheckpoint(
-                    self.last_state_path,
-                    self.best_state_path,
-                )
-                callbacks.append(ckpt_callback)
-            else:
-                logger.info(
-                    "Saving native model is disabled in evaluation mode. "
-                    "Skipping ModelCheckpoint callback."
-                )
+        if save_native_model and not self.assigner.is_task_group_evaluation():
+            ckpt_callback = callbacks_module.ModelCheckpoint(
+                self.last_state_path,
+                self.best_state_path,
+            )
+            callbacks.append(ckpt_callback)
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
