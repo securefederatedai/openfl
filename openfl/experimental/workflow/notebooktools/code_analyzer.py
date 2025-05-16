@@ -7,7 +7,7 @@ import re
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import nbformat
 from nbdev.export import nb_export
@@ -18,8 +18,9 @@ class CodeAnalyzer:
       Provides code extraction and transformation functionality
 
     Attributes:
-        script_path (Path): Absolute path to the python script generated.
         script_name (str): Name of the generated python script.
+        script_path (Path): Absolute path to the python script generated.
+        requirements (List[str]): List of pip libraries found in the script.
         exported_script_module (ModuleType): The imported module object of the generated script.
         available_modules_in_exported_script (list): List of available attributes in the
             exported script.
@@ -43,6 +44,7 @@ class CodeAnalyzer:
                 f"{self.script_name}.py",
             )
         ).resolve()
+        self.requirements = self._get_requirements()
         self.__modify_experiment_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
@@ -292,41 +294,25 @@ class CodeAnalyzer:
             value = value.lstrip("[").rstrip("]")
         return value
 
-    def get_requirements(self) -> Tuple[List[str], List[int], List[str]]:
+    def _get_requirements(self) -> List[str]:
         """Extract pip libraries from the script
 
         Returns:
-            tuple: A tuple containing:
-                requirements (list of str): List of pip libraries found in the script.
-                line_nos (list of int): List of line numbers where "pip install" commands are found.
-                data (list of str): The entire script data as a list of lines.
+            requirements (List[str]): List of pip libraries found in the script.
         """
         data = None
         with self.script_path.open("r") as f:
             requirements = []
-            line_nos = []
             data = f.readlines()
-            for i, line in enumerate(data):
+            for _, line in enumerate(data):
                 line = line.strip()
                 if "pip install" in line:
-                    line_nos.append(i)
                     # Avoid commented lines, libraries from *.txt file, or openfl.git
                     # installation
                     if not line.startswith("#") and "-r" not in line and "openfl.git" not in line:
                         requirements.append(f"{line.split(' ')[-1].strip()}\n")
 
-            return requirements, line_nos, data
-
-    def remove_lines(self, data: List[str], line_nos: List[int]) -> None:
-        """Removes pip install lines from the script
-        Args:
-            data (List[str]): The entire script data as a list of lines.
-            line_nos (List[int]): List of line numbers where "pip install" commands are found.
-        """
-        with self.script_path.open("w") as f:
-            for i, line in enumerate(data):
-                if i not in line_nos:
-                    f.write(line)
+            return requirements
 
     def get_flow_class_details(self, parent_class) -> Dict[str, Any]:
         """

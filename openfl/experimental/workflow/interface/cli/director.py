@@ -97,7 +97,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         validators=[
             Validator("settings.listen_host", default="localhost"),
             Validator("settings.listen_port", default=50051, gte=1024, lte=65535),
-            Validator("settings.install_requirements", default=False),
+            Validator("settings.install_requirements", default=True),
             Validator(
                 "settings.envoy_health_check_period",
                 default=60,  # in seconds
