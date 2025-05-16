@@ -228,24 +228,19 @@ def run_federation(fed_obj):
     Returns:
         bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start
-        )
-        for participant in [fed_obj.aggregator] + fed_obj.collaborators
-    ]
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            # Start the participant
+            participant.start()
+        except Exception as e:
+            log.error(f"Failed to start {participant.name}: {e}")
+            raise e
 
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise ex.ParticipantStartException("Failed to start one or more participants")
     return True
 
 
@@ -373,7 +368,7 @@ def _verify_completion_for_participant(
         # If None, it means the process is still running
         # This is applicable for native process only
         if participant.start_process:
-            if participant.start_process.poll():
+            if participant.start_process.poll() or not len(intr_helper.get_pids_for_active_command(participant.name)):
                 log.info(f"No processes found for participant {participant.name}")
                 break
             else:
@@ -1025,12 +1020,14 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file=None, agg_metric_file=None):
+def get_best_agg_score(database_file=None, agg_metric_file=None, max_retries=10, sleep_interval=5):
     """
     Get the best aggregated score from the database file or aggregator metrics file
     Args:
         database_file (str): Database file. Optional.
         agg_metric_file (str): Aggregator metrics file. Optional.
+        max_retries (int): Maximum number of retries to get the best score in case of database_file. Default is 10.
+        sleep_interval (int): Sleep interval between retries in seconds in case of database_file. Default is 5 seconds.
     Returns:
         float: Best aggregated score
     """
@@ -1039,7 +1036,7 @@ def get_best_agg_score(database_file=None, agg_metric_file=None):
         raise ValueError("Either database_file or agg_metric_file should be provided")
 
     if database_file:
-        return db_helper.get_key_value_from_db("best_score", database_file)
+        return db_helper.get_key_value_from_db("best_score", database_file, max_retries=max_retries, sleep_interval=sleep_interval)
     else:
         json_file = convert_to_json(agg_metric_file)
         best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
@@ -1074,7 +1071,11 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         if current_round > inp_round + 1:
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
-        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        # Check if already at the final round (round no. index starts with 0)
+        if current_round + 1 == total_rounds:
+            log.info(f"Already at the final round")
+            return current_round
+        log.info(f"Round number has not increased from {inp_round}. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
     log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
     return False
