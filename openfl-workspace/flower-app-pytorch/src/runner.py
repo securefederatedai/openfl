@@ -1,12 +1,16 @@
 from openfl.federated.task.runner import TaskRunner
 import subprocess
-from logging import getLogger
+import hashlib
 import time
+import logging
 import os
 import numpy as np
 from pathlib import Path
 import socket
 from src.util import is_safe_path
+from openfl.utilities.utils import generate_port
+
+logger = logging.getLogger(__name__)
 
 flwr_home = os.path.join(os.getcwd(), "save/.flwr")
 if not is_safe_path(flwr_home):
@@ -41,13 +45,8 @@ class FlowerTaskRunner(TaskRunner):
         self.sgx_enabled = kwargs.get('sgx_enabled')
 
         self.model = None
-        self.logger = getLogger(__name__)
 
         self.data_path = self.data_loader.get_node_configs()
-
-        self.client_port = kwargs.get('client_port')
-        if self.client_port is None:
-            self.client_port = get_dynamic_port()
 
         self.shutdown_requested = False  # Flag to signal shutdown
 
@@ -66,26 +65,39 @@ class FlowerTaskRunner(TaskRunner):
             **kwargs: Additional parameters for configuration.
                 includes:
                     interop_server (object): The FlowerInteropServer instance.
+                    interop_server_host (str): The address of the interop server.
                     interop_server_port (int): The port for the interop server.
+                    clientappio_api_port (int): The port for the clientappio API.
+                    local_simulation (bool): Flag for local simulation to dynamically adjust ports.
         """
 
         def message_callback():
             self.shutdown_requested = True
 
         interop_server = kwargs.get('interop_server')
+        interop_server_host = kwargs.get('interop_server_host')
         interop_server_port = kwargs.get('interop_server_port')
-        interop_server.set_end_experiment_callback(message_callback)
-        interop_server.start_server(interop_server_port)
+        clientappio_api_port = kwargs.get('clientappio_api_port')
+        
+        if kwargs.get('local_simulation'):
+            # Dynamically adjust ports for local simulation
+            logger.info(f"Adjusting ports for local simulation: {col_name}")
 
-        # interop server sets port dynamically
-        interop_server_port = interop_server.get_port()
+            interop_server_port = get_dynamic_port(interop_server_port, col_name)
+            clientappio_api_port = get_dynamic_port(clientappio_api_port, col_name)
+
+            logger.info(f"Adjusted interop_server_port: {interop_server_port}")
+            logger.info(f"Adjusted clientappio_api_port: {clientappio_api_port}")
+
+        interop_server.set_end_experiment_callback(message_callback)
+        interop_server.start_server(interop_server_host, interop_server_port)
 
         command = [
             "flower-supernode",
             "--insecure",
             "--grpc-adapter",
-            "--superlink", f"127.0.0.1:{interop_server_port}",
-            "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
+            "--superlink", f"{interop_server_host}:{interop_server_port}",
+            "--clientappio-api-address", f"{interop_server_host}:{clientappio_api_port}",
             "--node-config", f"data-path='{self.data_path}'"
         ]
 
@@ -94,34 +106,34 @@ class FlowerTaskRunner(TaskRunner):
             flwr_clientapp_command = [
                 "flwr-clientapp",
                 "--insecure",
-                "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
+                "--clientappio-api-address", f"{interop_server_host}:{clientappio_api_port}",
             ]
 
-        self.logger.info("Starting Flower SuperNode process...")
+        logger.info("Starting Flower SuperNode process...")
         supernode_process = subprocess.Popen(command, shell=False)
         interop_server.handle_signals(supernode_process)
 
         if self.sgx_enabled:
             # Check if port is open before starting the client app
-            while not is_port_open('127.0.0.1', interop_server_port):
+            while not is_port_open(interop_server_host, interop_server_port):
                 time.sleep(0.5)
 
             time.sleep(1) # Add a small delay after confirming the port is open
 
-            self.logger.info("Starting Flower ClientApp process...")
+            logger.info("Starting Flower ClientApp process...")
             flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
             interop_server.handle_signals(flwr_clientapp_process)
 
-        self.logger.info("Press CTRL+C to stop the server and SuperNode process.")
+        logger.info("Press CTRL+C to stop the server and SuperNode process.")
 
         while not interop_server.termination_event.is_set():
             if self.shutdown_requested:
                 if self.sgx_enabled:
-                    self.logger.info("Terminating Flower ClientApp process...")
+                    logger.info("Terminating Flower ClientApp process...")
                     interop_server.terminate_supernode_process(flwr_clientapp_process)
                     flwr_clientapp_process.wait()
 
-                self.logger.info("Shutting down the server and SuperNode process...")
+                logger.info("Shutting down the server and SuperNode process...")
                 interop_server.terminate_supernode_process(supernode_process)
                 interop_server.stop_server()
             time.sleep(0.1)
@@ -216,20 +228,18 @@ def install_flower_FAB(flwr_app_name):
         str(newest_fab_file)
     ])
 
-def get_dynamic_port():
+def get_dynamic_port(base_port, collaborator_name):
     """
-    Get a dynamically assigned port number.
+    Get a dynamically assigned port number based on collaborator name and base port.
+    This is only necessary for local simulation in order to avoid port conflicts.
 
     Returns:
-        int: An available port number assigned by the operating system.
+        int: The dynamically assigned port number.
     """
-    # Create a socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # Bind to port 0 to let the OS assign an available port
-        s.bind(('127.0.0.1', 0))
-        # Get the assigned port number
-        port = s.getsockname()[1]
-    return port
+    combined_string = f"{base_port}--{collaborator_name}"
+    hash_object = hashlib.md5(combined_string.encode())
+    hash_value = hash_object.hexdigest()  
+    return generate_port(hash_value)
 
 def is_port_open(host, port):
     """Check if a port is open on the given host."""

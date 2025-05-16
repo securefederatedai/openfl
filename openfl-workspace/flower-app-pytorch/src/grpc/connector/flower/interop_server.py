@@ -41,17 +41,13 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
     def set_end_experiment_callback(self, callback):
         self.end_experiment_callback = callback
 
-    def start_server(self, local_server_port):
+    def start_server(self, interop_server_host, interop_server_port):
         """Starts the gRPC server."""
         self.server = grpc.server(ThreadPoolExecutor(max_workers=cpu_count()))
         grpcadapter_pb2_grpc.add_GrpcAdapterServicer_to_server(self, self.server)
-        self.port = self.server.add_insecure_port(f'[::]:{local_server_port}')
+        self.server.add_insecure_port(f'{interop_server_host}:{interop_server_port}')
         self.server.start()
         logger.info(f"OpenFL local gRPC server started, listening on port {self.port}.")
-
-    def get_port(self):
-        # Return the port that was assigned
-        return self.port
 
     def stop_server(self):
         """Stops the gRPC server."""
