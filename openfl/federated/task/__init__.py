@@ -14,3 +14,5 @@ if util.find_spec("torch") is not None:
     from openfl.federated.task.runner_pt import PyTorchTaskRunner  # NOQA
 if util.find_spec("xgboost") is not None:
     from openfl.federated.task.runner_xgb import XGBoostTaskRunner  # NOQA
+if util.find_spec("flwr") is not None:
+    from openfl.federated.task.runner_flower import FlowerTaskRunner  # NOQA

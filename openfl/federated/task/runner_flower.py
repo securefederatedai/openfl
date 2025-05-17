@@ -7,14 +7,11 @@ import os
 import numpy as np
 from pathlib import Path
 import socket
-from src.util import is_safe_path
 from openfl.utilities.utils import generate_port
 
 logger = logging.getLogger(__name__)
 
 flwr_home = os.path.join(os.getcwd(), "save/.flwr")
-if not is_safe_path(flwr_home):
-    raise ValueError("Invalid path for FLWR_HOME")
 
 os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)

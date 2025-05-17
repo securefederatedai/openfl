@@ -25,13 +25,13 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.loader.FlowerDataLoader
+  template : openfl.federated.data.FlowerDataLoader
   settings :
     collaborator_count : 2
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.runner.FlowerTaskRunner
+  template : openfl.federated.task.FlowerTaskRunner
   settings :
     flwr_app_name: app-pytorch
     sgx_enabled: False
