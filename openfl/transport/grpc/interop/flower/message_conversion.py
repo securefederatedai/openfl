@@ -1,3 +1,6 @@
+# Copyright 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from flwr.proto import grpcadapter_pb2
 from openfl.protocols import aggregator_pb2
 

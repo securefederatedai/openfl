@@ -11,7 +11,7 @@ aggregator :
 
 connector : 
   defaults : plan/defaults/connector_flower.yaml
-  template : src.connector_flower.ConnectorFlower
+  template : openfl.component.ConnectorFlower
   settings :
     exec_api_port : 9093
     flwr_app_name : "app-pytorch"

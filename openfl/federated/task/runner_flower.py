@@ -1,3 +1,6 @@
+# Copyright 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from openfl.federated.task.runner import TaskRunner
 import subprocess
 import hashlib

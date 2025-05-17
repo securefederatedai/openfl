@@ -1,3 +1,6 @@
+# Copyright 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -6,14 +9,11 @@ import subprocess
 import sys
 import signal
 
-from src.grpc.connector.flower.interop_client import FlowerInteropClient
-from src.util import is_safe_path
+from openfl.transport.grpc.interop import FlowerInteropClient
 
 import os
 
 flwr_home = os.path.join(os.getcwd(), "save/.flwr")
-if not is_safe_path(flwr_home):
-    raise ValueError("Invalid path for FLWR_HOME")
 
 os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)

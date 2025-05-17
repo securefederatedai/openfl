@@ -609,7 +609,6 @@ class Collaborator:
 
         # Initialize the interop server
         interop_server_template = self.task_config["settings"]["interop_server"]
-        interop_server_template = 'src.grpc.connector.flower.interop_server.FlowerInteropServer'
         interop_server_class = splitext(interop_server_template)[1].strip(".")
         interop_server_module_path = splitext(interop_server_template)[0]
         interop_server_module = importlib.import_module(interop_server_module_path)

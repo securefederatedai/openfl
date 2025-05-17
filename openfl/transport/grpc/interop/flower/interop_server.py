@@ -1,10 +1,15 @@
+# Copyright 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 import threading
 import queue
 import grpc
 from concurrent.futures import ThreadPoolExecutor
 from flwr.proto import grpcadapter_pb2_grpc
-from src.grpc.connector.flower.message_conversion import flower_to_openfl_message, openfl_to_flower_message
+from openfl.transport.grpc.interop.flower.message_conversion import (
+    flower_to_openfl_message, openfl_to_flower_message
+)
 from multiprocessing import cpu_count
 import signal
 import psutil
