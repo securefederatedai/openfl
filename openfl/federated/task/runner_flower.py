@@ -196,10 +196,10 @@ class FlowerTaskRunner(TaskRunner):
 
 def install_flower_FAB(flwr_app_name):
     """
-    Build and install the patch for the Flower application.
+    Build and install Flower application.
 
     Args:
-        flwr_app_name (str): The name of the Flower application to patch.
+        flwr_app_name (str): The name of the Flower application.
     """
     flwr_dir = os.environ["FLWR_HOME"]
 
