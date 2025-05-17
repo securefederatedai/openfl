@@ -26,8 +26,6 @@ collaborator :
 data_loader :
   defaults : plan/defaults/data_loader.yaml
   template : openfl.federated.data.FlowerDataLoader
-  settings :
-    collaborator_count : 2
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
