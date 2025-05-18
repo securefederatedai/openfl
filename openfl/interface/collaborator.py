@@ -231,9 +231,11 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     type=ClickPath(exists=True),
     help=(
         "Path to directory containing sources.json file defining the data sources of the dataset. "
-        "This file should contain a JSON object with the data sources to be registered. For 'local'"
-        " type, 'params' must include: 'path'. For 's3' type, 'params' must include: 'uri', "
-        "'access_key_env_name', 'secret_key_env_name', 'secret_name', and optionally 'endpoint'."
+        "This file should contain a JSON object with the data sources to be registered. For local "
+        "data source, 'type' is 'fs', and 'params' must include: 'path'. For 's3' type, 'params' "
+        "must include: 'uri', 'access_key_env_name', 'secret_key_env_name', 'secret_name', and "
+        "optionally 'endpoint'. For azure_blob, 'type' is 'ab', and 'params' must include: "
+        "'connection_string', 'container_name', and optionally 'folder_prefix'."
     ),
 )
 def calchash(data_path):
@@ -258,7 +260,7 @@ def calchash(data_path):
         sys.exit(1)
     with open(datasources_json_path, "r", encoding="utf-8") as file:
         data = file.read()
-    vds = DataSourcesJsonParser.parse(data)
+    vds = DataSourcesJsonParser.parse(data, check_dir_traversal=True)
     root_hash = vds.create_dataset_hash()
     hash_file_path = os.path.join(data_path, "hash.txt")
     with open(hash_file_path, "w", encoding="utf-8") as hash_file:
