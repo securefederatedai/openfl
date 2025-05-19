@@ -207,7 +207,6 @@ class ConnectorFlower:
             subprocess.run(self.flwr_run_command)
 
         if hasattr(self, 'flwr_serverapp_command') and self.flwr_serverapp_command:
-            time.sleep(60)
             logger.info(f"[OpenFL Connector] Starting server app subprocess: {' '.join(self.flwr_serverapp_command)}")
             self.interop_client.set_is_flwr_serverapp_running_callback(self.is_flwr_serverapp_running)
             self.flwr_serverapp_subprocess = subprocess.Popen(self.flwr_serverapp_command)
