@@ -21,16 +21,14 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
     request handling issues.
     """
 
-    def __init__(self, openfl_client, collaborator_name):
+    def __init__(self, send_message_to_client):
         """
         Initialize.
 
         Args:
-            openfl_client: An instance of the OpenFL Client.
-            collaborator_name: The name of the collaborator.
+            send_message_to_client (Callable): A callable function to send messages to the OpenFL client.
         """
-        self.openfl_client = openfl_client
-        self.collaborator_name = collaborator_name
+        self.send_message_to_client = send_message_to_client
         self.end_experiment_callback = None
         self.request_queue = queue.Queue()
         self.processing_thread = threading.Thread(target=self.process_queue)
@@ -86,7 +84,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             openfl_request = flower_to_openfl_message(request)
 
             # Send request to the OpenFL server
-            openfl_response = self.openfl_client.send_message_to_server(openfl_request, self.collaborator_name)
+            openfl_response = self.send_message_to_client(openfl_request)
 
             # Check to end experiment
             if hasattr(openfl_response, 'metadata'):
