@@ -13,6 +13,7 @@ import grpc
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, base_pb2, utils
 from openfl.protocols.aggregator_client_interface import AggregatorClientInterface
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, base_pb2, utils
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 
 logger = logging.getLogger(__name__)
