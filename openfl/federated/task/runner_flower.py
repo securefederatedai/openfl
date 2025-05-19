@@ -10,6 +10,7 @@ import os
 import numpy as np
 from pathlib import Path
 import socket
+import sys
 from openfl.utilities.utils import generate_port
 from openfl.utilities.path_check import is_directory_traversal
 
@@ -36,6 +37,7 @@ class FlowerTaskRunner(TaskRunner):
         self.flwr_dir = kwargs.get('flwr_dir')
         if is_directory_traversal(self.flwr_dir):
             logger.error("Flower app directory path is out of the OpenFL workspace scope.")
+            sys.exit(1)
         else: 
             os.makedirs(self.flwr_dir, exist_ok=True)
             os.environ["FLWR_HOME"] = self.flwr_dir

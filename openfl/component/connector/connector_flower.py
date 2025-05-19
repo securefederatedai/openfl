@@ -52,6 +52,7 @@ class ConnectorFlower:
         self.flwr_dir = flwr_dir
         if is_directory_traversal(self.flwr_dir):
             logger.error("Flower app directory path is out of the OpenFL workspace scope.")
+            sys.exit(1)
         else: 
             os.makedirs(self.flwr_dir, exist_ok=True)
             os.environ["FLWR_HOME"] = self.flwr_dir
