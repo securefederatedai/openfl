@@ -6,11 +6,11 @@
 
 import logging
 import time
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import grpc
 
-from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, base_pb2, utils
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 
 logger = logging.getLogger(__name__)
@@ -345,7 +345,7 @@ class AggregatorGRPCClient:
         self,
         tensor_keys,
         require_lossless,
-    ):
+    ) -> List[base_pb2.NamedTensor]:
         """
         Get aggregated tensors from the aggregator.
 
@@ -354,7 +354,7 @@ class AggregatorGRPCClient:
             require_lossless (bool): Whether lossless compression is required.
 
         Returns:
-            aggregator_pb2.TensorProto: The aggregated tensor.
+            A list of `NamedTensor`s in the same order as requested.
         """
         header = create_header(
             sender=self.collaborator_name,
