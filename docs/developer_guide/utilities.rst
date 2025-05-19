@@ -9,6 +9,9 @@ The following are utilities available in Open Federated Learning (OpenFL).
 :doc:`utilities/splitters_data`
     Split your data to run your federation from a single dataset.
 
+:doc:`utilities/verifiable_datasets`
+    Build and verify datasets composed of multiple data sources.
+
 :doc:`utilities/timeouts`
     Decorate methods to enforce timeout on it's execution.
 
@@ -18,4 +21,6 @@ The following are utilities available in Open Federated Learning (OpenFL).
 
    utilities/pki
    utilities/splitters_data
+   utilities/verifiable_datasets
    utilities/timeouts
+   
