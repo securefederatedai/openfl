@@ -14,6 +14,7 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     KERAS_TORCH_MNIST = "keras/torch/mnist"
     TORCH_HISTOLOGY = "torch/histology"
+    TORCH_HISTOLOGY_S3 = "torch/histology_s3"
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"

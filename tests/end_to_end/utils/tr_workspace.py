@@ -148,7 +148,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value, constants.ModelName.TORCH_HISTOLOGY_S3.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:

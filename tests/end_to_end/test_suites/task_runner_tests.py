@@ -73,3 +73,24 @@ def test_federation_connectivity(request, fx_federation_tr):
     # Verify collaborator able to ping aggregator
     for col in fx_federation_tr.collaborators:
         assert fed_helper.ping_from_collaborator(col), f"Ping failed from {col.name} to aggregator"
+
+
+def test_federation_with_s3_bucket(request, fx_federation_tr):
+    """
+    Test federation with S3 bucket.
+    Args:
+        request (Fixture): Pytest fixture
+        fx_federation_tr (Fixture): Pytest fixture for native task runner
+    """
+    # Start the federation
+    assert fed_helper.run_federation(fx_federation_tr)
+
+    # Verify the completion of the federation run
+    assert fed_helper.verify_federation_run_completion(
+        fx_federation_tr,
+        test_env=request.config.test_env,
+        num_rounds=request.config.num_rounds,
+    ), "Federation completion failed"
+
+    best_agg_score = fed_helper.get_best_agg_score(fx_federation_tr.aggregator.tensor_db_file)
+    log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")

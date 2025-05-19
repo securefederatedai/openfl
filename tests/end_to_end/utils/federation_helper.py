@@ -635,6 +635,8 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
             download_higgs_data(collaborators, local_bind_path)
         elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
             download_flower_data(collaborators, local_bind_path)
+        elif model_name == constants.ModelName.TORCH_HISTOLOGY_S3.value:
+            download_s3_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
@@ -700,6 +702,21 @@ def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path
             )
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
+
+
+def download_s3_data(collaborators, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
+    # TODO - add logic to get the data just like torch/histology
+    # Create a bucket in S3 and upload the data to the bucket
 
 
 def download_flower_data(collaborators, local_bind_path):
