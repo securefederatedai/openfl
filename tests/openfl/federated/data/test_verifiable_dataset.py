@@ -110,7 +110,7 @@ def mock_azure_blob():
         file_contents = {f: f"file content of file #{i} in container {c_idx + 1}, path: {f}".encode() for i, f in enumerate(files)}
         file_contents_list.append(file_contents)
 
-    with patch("openfl.federated.data.sources.azure_blob_data_source.BlobServiceClient") as mock_service_cls:
+    with patch("azure.storage.blob.BlobServiceClient") as mock_service_cls:
         service_mocks = []
 
         for files, file_contents in zip(files_per_container, file_contents_list):
@@ -170,7 +170,7 @@ def copy_subtree(fs, existing_dir_path, new_dir_tree):
 def test_one_local_datasource(local_data_sources):
     ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -181,7 +181,7 @@ def test_one_local_datasource(local_data_sources):
 def test_two_local_datasource(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -192,7 +192,7 @@ def test_two_local_datasource(local_data_sources):
 def test_one_local_datasource_one_folder(local_data_sources):
     ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1"])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -203,7 +203,7 @@ def test_one_local_datasource_one_folder(local_data_sources):
 def test_one_local_datasource_one_file(local_data_sources):
     ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -214,7 +214,7 @@ def test_one_local_datasource_one_file(local_data_sources):
 def test_two_local_datasource_two_dirs(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1", ds2 / "1"])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -225,7 +225,7 @@ def test_two_local_datasource_two_dirs(local_data_sources):
 def test_two_local_datasource_two_files(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file2.txt", ds2 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -236,7 +236,7 @@ def test_two_local_datasource_two_files(local_data_sources):
 def test_one_local_datasource_two_files(local_data_sources):
     ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1 / "1" / "file1.txt", ds1 / "1" / "file2.txt"])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -247,7 +247,7 @@ def test_one_local_datasource_two_files(local_data_sources):
 def test_two_local_datasource_different_base_path(fs, local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     # Copy the datasources to a new location to have a different base_path
     new_base = Path("/new_test_data")
@@ -264,7 +264,7 @@ def test_two_local_datasource_different_base_path(fs, local_data_sources):
 def test_two_local_datasource_use_saved_hash(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -281,7 +281,7 @@ def test_two_local_datasource_with_symlink(fs, local_data_sources):
     fs.create_symlink(symlink_ds1, real_ds1)  # Create symlink to real_ds1
     base_path, relative_paths = split_to_base_and_relative_paths([symlink_ds1, ds2])
     assert relative_paths[0] == real_ds1.name
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     dataset_hash = verifiable.create_dataset_hash()
     assert isinstance(dataset_hash, str), f"Expected str, got {type(dataset_hash)}"
@@ -295,7 +295,7 @@ def test_two_local_datasource_different_base_path_with_symlink(fs, local_data_so
     fs.create_symlink(symlink_ds1, real_ds1)  # Create symlink to real_ds1
     base_path, relative_paths = split_to_base_and_relative_paths([symlink_ds1, ds2])
     assert relative_paths[0] == real_ds1.name
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     # Copy the datasources to a new location to have a different base_path
     new_base = Path("/new_test_data")
@@ -312,7 +312,7 @@ def test_two_local_datasource_different_base_path_with_symlink(fs, local_data_so
 def test_one_local_datasource_verify_single_file(local_data_sources):
     ds1, _ = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -327,7 +327,7 @@ def test_one_local_datasource_verify_single_file(local_data_sources):
 def test_two_local_datasource_verify_single_file(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -342,7 +342,7 @@ def test_two_local_datasource_verify_single_file(local_data_sources):
 def test_two_local_datasource_non_defalt_args(local_data_sources):
     ds1, ds2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([ds1, ds2])
-    datasources = [LocalDataSource(source_path=rel_path, base_path=base_path, hash_func=sha256, max_dataset_size=500) for rel_path in relative_paths]
+    datasources = [LocalDataSource(name= "lds", source_path=rel_path, base_path=base_path, hash_func=sha256, max_dataset_size=500) for rel_path in relative_paths]
     verifiable = VerifiableDatasetInfo(data_sources=datasources, label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -356,7 +356,7 @@ def test_two_local_datasource_non_defalt_args(local_data_sources):
 
 def test_one_s3_data_source(mock_s3_buckets):
     bucket1, _ = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1")
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -366,8 +366,8 @@ def test_one_s3_data_source(mock_s3_buckets):
 
 def test_two_s3_datasource(mock_s3_buckets):
     bucket1, bucket2 = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
-    ds2 = S3DataSource(f"s3://{bucket2}/dir1")
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1")
+    ds2 = S3DataSource("s3ds", f"s3://{bucket2}/dir1")
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -377,7 +377,7 @@ def test_two_s3_datasource(mock_s3_buckets):
 
 def test_one_s3_datasource_one_file(mock_s3_buckets):
     bucket1, _ = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1/file1.txt")
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1/file1.txt")
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -387,8 +387,8 @@ def test_one_s3_datasource_one_file(mock_s3_buckets):
 
 def test_two_s3_datasource_use_saved_hash(mock_s3_buckets):
     bucket1, bucket2 = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
-    ds2 = S3DataSource(f"s3://{bucket2}/dir1")
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1")
+    ds2 = S3DataSource("s3ds", f"s3://{bucket2}/dir1")
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -399,7 +399,7 @@ def test_two_s3_datasource_use_saved_hash(mock_s3_buckets):
 
 def test_one_s3_datasource_one_file_hash_func(mock_s3_buckets):
     bucket1, _ = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1/file1.txt", hash_func=sha384)
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1/file1.txt", hash_func=sha384)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -409,8 +409,8 @@ def test_one_s3_datasource_one_file_hash_func(mock_s3_buckets):
 
 def test_two_s3_datasource_hash_func_use_saved_hash(mock_s3_buckets):
     bucket1, bucket2 = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1", hash_func=sha384)
-    ds2 = S3DataSource(f"s3://{bucket2}/dir1", hash_func=sha384)
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1", hash_func=sha384)
+    ds2 = S3DataSource("s3ds", f"s3://{bucket2}/dir1", hash_func=sha384)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -421,7 +421,7 @@ def test_two_s3_datasource_hash_func_use_saved_hash(mock_s3_buckets):
 
 def test_one_s3_datasource_verify_single_file(mock_s3_buckets):
     bucket1, _ = mock_s3_buckets
-    ds1 = S3DataSource(f"s3://{bucket1}/folder1")
+    ds1 = S3DataSource("s3ds", f"s3://{bucket1}/folder1")
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -435,7 +435,7 @@ def test_one_s3_datasource_verify_single_file(mock_s3_buckets):
 
 def test_one_azure_blob_data_source(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -445,8 +445,8 @@ def test_one_azure_blob_data_source(mock_azure_blob):
 
 def test_two_azure_blob_datasource(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -456,8 +456,8 @@ def test_two_azure_blob_datasource(mock_azure_blob):
 
 def test_two_azure_blob_datasource_use_saved_hash(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -468,7 +468,7 @@ def test_two_azure_blob_datasource_use_saved_hash(mock_azure_blob):
 
 def test_one_azure_blob_datasource_one_file_hash_func(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"], sha256)
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"], sha256)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -478,8 +478,8 @@ def test_one_azure_blob_datasource_one_file_hash_func(mock_azure_blob):
 
 def test_two_azure_blob_datasource_hash_func_use_saved_hash(mock_azure_blob):
     container1, container2 = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"], sha256)
-    ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"], sha256)
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"], sha256)
+    ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"], sha256)
     verifiable = VerifiableDatasetInfo(data_sources=[ds1, ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -490,7 +490,7 @@ def test_two_azure_blob_datasource_hash_func_use_saved_hash(mock_azure_blob):
 
 def test_one_azure_blob_datasource_verify_single_file(mock_azure_blob):
     container1, _ = mock_azure_blob
-    ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
+    ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[ds1], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"
@@ -505,11 +505,11 @@ def test_one_azure_blob_datasource_verify_single_file(mock_azure_blob):
 def test_azure_blob_and_local_datasources(local_data_sources, mock_azure_blob):
     local_path1, local_path2 = local_data_sources
     base_path, relative_paths = split_to_base_and_relative_paths([local_path1, local_path2])
-    local_ds1 = LocalDataSource(source_path=relative_paths[0], base_path=base_path)
-    local_ds2 = LocalDataSource(source_path=relative_paths[1], base_path=base_path)
+    local_ds1 = LocalDataSource(name="lds", source_path=relative_paths[0], base_path=base_path)
+    local_ds2 = LocalDataSource(name="lds", source_path=relative_paths[1], base_path=base_path)
     container1, container2 = mock_azure_blob
-    azure_ds1 = AzureBlobDataSource(container1["connection_string"], container1["container_name"])
-    azure_ds2 = AzureBlobDataSource(container2["connection_string"], container2["container_name"])
+    azure_ds1 = AzureBlobDataSource("abds", container1["connection_string"], container1["container_name"])
+    azure_ds2 = AzureBlobDataSource("abds", container2["connection_string"], container2["container_name"])
     verifiable = VerifiableDatasetInfo(data_sources=[local_ds1, azure_ds1, local_ds2, azure_ds2], label="my_dataset", metadata="md")
     hash = verifiable.create_dataset_hash()
     assert isinstance(hash, str), f"Expected str, got {type(hash)}"

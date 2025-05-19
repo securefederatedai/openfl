@@ -22,7 +22,6 @@ connector :
     flwr_run_params :
       flwr_app_name : "app-pytorch"
       federation_name : "local-poc"
-      sgx_enabled: False
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

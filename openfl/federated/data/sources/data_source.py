@@ -23,17 +23,20 @@ class DataSource(ABC):
     Base class for different types of data sources.
 
     Attributes:
-        type (str): The storage type of the data source
+        type (DataSourceType): The storage type of the data source
+        name (str): The name of the data source
     """
 
-    def __init__(self, type: DataSourceType):
+    def __init__(self, type: DataSourceType, name: str):
         """
         Initialize a DataSource.
 
         Args:
             type (DataSourceType): The storage type of the data source.
+            name (str): The name of the data source.
         """
         self.type = type
+        self.name = name
 
     @abstractmethod
     def compute_file_hash(self, path: str) -> str:
