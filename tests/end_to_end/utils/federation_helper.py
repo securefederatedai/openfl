@@ -18,6 +18,7 @@ import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.interruption_helper as intr_helper
+import tests.end_to_end.utils.s3_helper as s3_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 from tests.end_to_end.utils.generate_report import convert_to_json
@@ -717,6 +718,8 @@ def download_s3_data(collaborators, local_bind_path):
     log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
     # TODO - add logic to get the data just like torch/histology
     # Create a bucket in S3 and upload the data to the bucket
+    s3_obj = s3_helper.S3Helper()
+    bucket_name = s3_obj.create_bucket("test-bucket")
 
 
 def download_flower_data(collaborators, local_bind_path):

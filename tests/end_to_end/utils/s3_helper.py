@@ -1,4 +1,9 @@
 import os
+import subprocess
+import time
+import signal
+import shutil
+import atexit
 import boto3
 from botocore.client import Config
 from botocore.exceptions import ClientError
@@ -44,7 +49,7 @@ class S3Helper:
             config=Config(signature_version='s3v4'),
             region_name=self.region
         )
-    
+
     def create_bucket(self, bucket_name):
         """
         Create a new bucket if it doesn't exist.
@@ -519,6 +524,113 @@ class S3Helper:
             print(f"- {obj}")
             
         return matches
+
+    @staticmethod
+    def start_server(data_dir=None, access_key=None, secret_key=None, address="localhost:9001", console_address="localhost:9002"):
+        """
+        Start a MinIO server.
+        
+        Args:
+            data_dir: Directory to store data (default: ~/minio_data)
+            access_key: MinIO access key (default: from MINIO_ROOT_USER env var or 'minioadmin')
+            secret_key: MinIO secret key (default: from MINIO_ROOT_PASSWORD env var or 'minioadmin')
+            address: Address to bind the MinIO server (default: localhost:9001)
+            console_address: Address to bind the MinIO console (default: localhost:9002)
+            
+        Returns:
+            subprocess.Popen: The process object for the MinIO server
+        """
+        return start_minio_server(data_dir, access_key, secret_key, address, console_address)
+
+
+def start_minio_server(data_dir=None, access_key=None, secret_key=None, address="localhost:9001", console_address="localhost:9002"):
+    """
+    Start a MinIO server as a subprocess.
+    
+    Args:
+        data_dir: Directory to store data (default: ~/minio_data)
+        access_key: MinIO access key (default: from MINIO_ROOT_USER env var or 'minioadmin')
+        secret_key: MinIO secret key (default: from MINIO_ROOT_PASSWORD env var or 'minioadmin')
+        address: Address to bind the MinIO server (default: localhost:9001)
+        console_address: Address to bind the MinIO console (default: localhost:9002)
+        
+    Returns:
+        subprocess.Popen: The process object for the MinIO server
+    """
+    # Set default values
+    if data_dir is None:
+        data_dir = os.path.expanduser("~/minio_data")
+    
+    # Create data directory if it doesn't exist
+    os.makedirs(data_dir, exist_ok=True)
+    
+    # Get credentials from environment or use defaults
+    access_key = access_key or os.environ.get('MINIO_ROOT_USER', 'minioadmin')
+    secret_key = secret_key or os.environ.get('MINIO_ROOT_PASSWORD', 'minioadmin')
+    
+    # Check if minio is installed
+    minio_path = shutil.which("minio")
+    if minio_path is None:
+        print("MinIO server not found. Please install MinIO first.")
+        print("You can download it from: https://min.io/download")
+        return None
+
+    # Set environment variables for the subprocess
+    env = os.environ.copy()
+    env["MINIO_ROOT_USER"] = access_key
+    env["MINIO_ROOT_PASSWORD"] = secret_key
+    
+    # Start MinIO server
+    cmd = [
+        minio_path,
+        "server",
+        data_dir,
+        "--address", address,
+        "--console-address", console_address
+    ]
+    
+    print(f"Starting MinIO server with data directory: {data_dir}")
+    print(f"Server endpoint: http://{address}")
+    print(f"Console endpoint: http://{console_address}")
+    print(f"Access key: {access_key}")
+    print(f"Secret key: {secret_key}")
+    
+    # Start the process
+    process = subprocess.Popen(
+        cmd, 
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    
+    # Register a function to stop the server at exit
+    def stop_server():
+        if process.poll() is None:  # If process is still running
+            print("Stopping MinIO server...")
+            process.send_signal(signal.SIGTERM)
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+    
+    atexit.register(stop_server)
+    
+    # Wait for server to start
+    time.sleep(2)
+    
+    # Check if server started successfully
+    if process.poll() is not None:
+        # Process exited already
+        out, err = process.communicate()
+        print("Failed to start MinIO server:")
+        print(f"STDOUT: {out}")
+        print(f"STDERR: {err}")
+        return None
+    
+    print("MinIO server started successfully.")
+    return process
 
 
 if __name__ == "__main__":
