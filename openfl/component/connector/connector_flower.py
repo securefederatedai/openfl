@@ -43,7 +43,8 @@ class ConnectorFlower:
             flwr_app_name (str, optional): Name of the Flower application to run. Defaults to None.
             federation_name (str, optional): Name of the federation. Defaults to None.
             automatic_shutdown (bool, optional): Whether to enable automatic shutdown. Defaults to True.
-            flwr_dir (str, optional): Directory for Flower app. Defaults to None.
+            flwr_dir (str, optional): Directory for Flower app within the OpenFL workspace. 
+                Plan.yaml configuration defaults to `save/.flwr`
             **kwargs: Additional keyword arguments.
         """
         super().__init__()
