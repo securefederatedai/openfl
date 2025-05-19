@@ -150,7 +150,7 @@ class Aggregator:
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
-        if persist_checkpoint:
+        if persist_checkpoint and not self.assigner.is_task_group_evaluation():
             persistent_db_path = persistent_db_path or "tensor.db"
             logger.info(
                 "Persistent checkpoint is enabled, setting persistent db at path %s",
@@ -158,7 +158,9 @@ class Aggregator:
             )
             self.persistent_db = PersistentTensorDB(persistent_db_path)
         else:
-            logger.info("Persistent checkpoint is disabled")
+            logger.info(
+                "Either persistent checkpoint is disabled or the experiment is in evaluation mode"
+            )
             self.persistent_db = None
         # FIXME: I think next line generates an error on the second round
         # if it is set to 1 for the aggregator.
@@ -225,8 +227,10 @@ class Aggregator:
 
             self.secagg = SecAggSetup(self.uuid, self.authorized_cols, self.tensor_db)
 
-        if self.persistent_db and self._recover():
-            logger.info("Recovered state of aggregator")
+        # Only recover from persistent DB if not in evaluation mode
+        if self.persistent_db and not self.assigner.is_task_group_evaluation():
+            if self._recover():
+                logger.info("Recovered state of aggregator")
 
         # TODO: Aggregator has no concrete notion of round_begin.
         # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
