@@ -420,7 +420,8 @@ class AggregatorGRPCClient(AggregatorClientInterface):
             tensors=named_tensors,
         )
 
-        response = self.stub.SendLocalTaskResults(request)
+        # convert (potentially) long list of tensors into stream
+        response = self.stub.SendLocalTaskResults(utils.proto_to_datastream(request))
         self.validate_response(response)
 
     @_atomic_connection
