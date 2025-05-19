@@ -5,10 +5,12 @@
 <div align="center">
 	
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
+[![Conda version](https://img.shields.io/conda/vn/conda-forge/openfl?color=green)](https://anaconda.org/conda-forge/openfl)
 [![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6599/badge)](https://bestpractices.coreinfrastructure.org/projects/6599)
+[![Product Quality Pipeline](https://github.com/securefederatedai/openfl/actions/workflows/pq_pipeline.yml/badge.svg)](https://github.com/securefederatedai/openfl/actions/workflows/pq_pipeline.yml)
 <a href="https://scan.coverity.com/projects/securefederatedai-openfl">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/29040/badge.svg"/>
@@ -46,6 +48,10 @@ Install via PyPI (latest stable release):
 
 ```
 pip install -U openfl
+```
+Or via conda:
+```
+conda install conda-forge::openfl
 ```
 For more installation options, checkout the [installation guide](https://openfl.readthedocs.io/en/latest/installation.html).
 

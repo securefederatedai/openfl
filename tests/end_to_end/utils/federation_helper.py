@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import time
@@ -17,8 +17,10 @@ import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
+import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
+from tests.end_to_end.utils.generate_report import convert_to_json
 
 log = logging.getLogger(__name__)
 home_dir = Path().home()
@@ -144,7 +146,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
                 ]
                 client_certs = " ".join(client_cert_entries) if client_cert_entries else ""
                 tarfiles += f" agg_to_col_{collaborator_name}_signed_cert.zip {client_certs}"
-                # IMPORTANT: Model XGBoost(xgb_higgs) uses format like data/1 and data/2, thus adding data to tarball in the same format.
+                # IMPORTANT: Models XGBoost(xgb_higgs) and Flower use format like data/1 and data/2, thus adding data to tarball in the same format.
                 if add_data:
                     tarfiles += f" data/{data_file_path}"
 
@@ -218,35 +220,27 @@ def copy_file_between_participants(
     return True
 
 
-def run_federation(fed_obj, install_dependencies=True):
+def run_federation(fed_obj):
     """
     Start the federation
     Args:
         fed_obj (object): Federation fixture object
-        install_dependencies (bool): Install dependencies on collaborators (default is True)
     Returns:
         bool: True if successful, else False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
-    if install_dependencies:
-        install_dependencies_on_collaborators(fed_obj)
 
     # Set the backend (KERAS_BACKEND) for Keras as an environment variable
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    # As the collaborators will wait for aggregator to start, we need to start them in parallel.
-    futures = [
-        executor.submit(
-            participant.start
-        )
-        for participant in [fed_obj.aggregator] + fed_obj.collaborators
-    ]
+    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+        try:
+            # Start the participant
+            participant.start()
+        except Exception as e:
+            log.error(f"Failed to start {participant.name}: {e}")
+            raise e
 
-    # Result will contain response files for all the participants.
-    results = [f.result() for f in futures]
-    if not all(results):
-        raise ex.ParticipantStartException("Failed to start one or more participants")
     return True
 
 
@@ -263,7 +257,7 @@ def run_federation_for_dws(fed_obj, use_tls):
         try:
             container = dh.start_docker_container_with_federation_run(
                 participant=participant,
-                image=constants.DFLT_DOCKERIZE_IMAGE_NAME,
+                image=constants.DFLT_WORKSPACE_NAME,
                 use_tls=use_tls,
                 env_keyval_list=set_keras_backend(fed_obj.model_name) if "keras" in fed_obj.model_name else None,
             )
@@ -275,27 +269,6 @@ def run_federation_for_dws(fed_obj, use_tls):
         participant.res_file = os.path.join(participant.workspace_path, "logs", f"{participant.name}.log")
 
     return True
-
-
-def install_dependencies_on_collaborators(fed_obj):
-    """
-    Install dependencies on all the collaborators
-    """
-    executor = concurrent.futures.ThreadPoolExecutor()
-    # Install dependencies on collaborators
-    # This is a time taking process, thus doing at this stage after all verification is done
-    log.info("Installing dependencies on collaborators. This might take some time...")
-    futures = [
-        executor.submit(participant.install_dependencies)
-        for participant in fed_obj.collaborators
-    ]
-    results = [f.result() for f in futures]
-    log.info(
-        f"Results from all the collaborators for installation of dependencies: {results}"
-    )
-
-    if not all(results):
-        raise Exception("Failed to install dependencies on one or more collaborators")
 
 
 def verify_federation_run_completion(fed_obj, test_env, num_rounds):
@@ -317,6 +290,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             _verify_completion_for_participant,
             participant,
             num_rounds,
+            num_collaborators=len(fed_obj.collaborators),
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -331,13 +305,14 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
 
 
 def _verify_completion_for_participant(
-    participant, num_rounds, time_for_each_round=100
+    participant, num_rounds, num_collaborators, time_for_each_round=100
 ):
     """
     Verify the completion of the process for the participant
     Args:
         participant (object): Participant object
         num_rounds (int): Number of rounds
+        num_collaborators (int): Number of collaborators
         time_for_each_round (int): Time for each round
     Returns:
         bool: True if successful, else False
@@ -360,8 +335,19 @@ def _verify_completion_for_participant(
         with open(participant.res_file, "r") as file:
             lines = [line.strip() for line in file.readlines()]
 
-        # Below change is done to handle warnings coming in end of runs
-        content = list(filter(str.rstrip, lines))[-7:] if len(lines) >= 7 else lines
+        # Get the desired no of lines from the log file
+        if num_collaborators < 5:
+            reverse_index = 10
+        else:
+            # For more than 5 collaborators, set the index to 10 + number of collaborators
+            # This is to ensure that we get the completion message for all the collaborators
+            reverse_index = num_collaborators + 5
+
+        # Get the required lines from the log file
+        if len(lines) >= reverse_index:
+            content = lines[-reverse_index:]
+        else:
+            content = lines
 
         # Print last line of the log file on screen to track the progress
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
@@ -378,22 +364,20 @@ def _verify_completion_for_participant(
             log.info(f"Process completed for {participant.name}")
             break
 
-        time.sleep(45)
-
-        # Verify that the process is completed successfully
-        get_process_id = constants.AGG_START_CMD if participant.name == "aggregator" else constants.COL_START_CMD.format(participant.name)
-
-        # Find the process ID
-        pids = []
-        for line in os.popen(f"ps ax | grep '{get_process_id}' | grep -v grep"):
-            fields = line.split()
-            pids.append(fields[0])
-
-        if not pids:
-            log.info(f"No processes found for participant {participant.name}")
-            break
+        # If process.poll() has a value, it means the process has completed
+        # If None, it means the process is still running
+        # This is applicable for native process only
+        if participant.start_process:
+            if participant.start_process.poll() or not len(intr_helper.get_pids_for_active_command(participant.name)):
+                log.info(f"No processes found for participant {participant.name}")
+                break
+            else:
+                log.info(f"Process is yet to complete for {participant.name}")
         else:
-            log.info(f"Process is yet to complete for {participant.name}")
+            # Dockerized workspace scenario
+            log.info(f"No process found for participant {participant.name}")
+
+        time.sleep(45)
 
     # Read tensor.db file for aggregator to check if the process is completed
     if participant.name == "aggregator" and num_rounds > 1:
@@ -419,7 +403,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     test_env = request.config.test_env
 
     # Validate the model name and create the workspace name
-    if not request.config.model_name.replace("/", "_").upper() in constants.ModelName._member_names_:
+    if not request.config.model_name.replace("/", "_").replace("-", "_").upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path specific to the model and the test case
@@ -462,30 +446,6 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     return workspace_path, local_bind_path, agg_domain_name
 
 
-def add_local_workspace_permission(local_bind_path):
-    """
-    Add permission to workspace. This is aggregator/model owner specific operation.
-    Args:
-        workspace_path (str): Workspace path
-        agg_container_id (str): Container ID
-    """
-    try:
-        agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
-        return_code, output, error = run_command(
-            f"sudo chmod -R 777 {agg_workspace_path}",
-            workspace_path=local_bind_path,
-        )
-        if return_code != 0:
-            raise Exception(f"Failed to add local permission to workspace: {error}")
-
-        log.debug(
-            f"Recursive permission added to workspace on local machine: {agg_workspace_path}"
-        )
-    except Exception as e:
-        log.error(f"Failed to add local permission to workspace: {e}")
-        raise e
-
-
 def create_persistent_store(participant_name, local_bind_path):
     """
     Create persistent store for the participant on local machine (even for docker)
@@ -498,8 +458,7 @@ def create_persistent_store(participant_name, local_bind_path):
         error_msg = f"Failed to create persistent store for {participant_name}"
         cmd_persistent_store = (
             f"export WORKING_DIRECTORY={local_bind_path}; "
-            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace; "
-            "sudo chmod -R 755 $WORKING_DIRECTORY"
+            f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace"
         )
         log.debug(f"Creating persistent store")
         return_code, output, error = run_command(
@@ -639,7 +598,7 @@ def setup_collaborator(index, workspace_path, local_bind_path):
             local_bind_path, collaborator.name
         )
         copy_file_between_participants(
-            local_agg_ws_path, local_col_ws_path, constants.AGG_WORKSPACE_ZIP_NAME
+            local_agg_ws_path, local_col_ws_path, f"{constants.DFLT_WORKSPACE_NAME}.zip"
         )
         collaborator.import_workspace()
     except Exception as e:
@@ -674,6 +633,8 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
         # Below step will also modify the data.yaml file for all the collaborators
         if model_name == constants.ModelName.XGB_HIGGS.value:
             download_higgs_data(collaborators, local_bind_path)
+        elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
+            download_flower_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
@@ -741,6 +702,19 @@ def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
 
+def download_flower_data(collaborators, local_bind_path):
+    """
+    Download the data for the model and copy to the respective collaborator workspaces
+    Also modify the data.yaml file for all the collaborators
+    Args:
+        collaborators (list): List of collaborator objects
+        local_bind_path (str): Local bind path
+    Returns:
+        bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+
+
 def download_higgs_data(collaborators, local_bind_path):
     """
     Download the data for the model and copy to the respective collaborator workspaces
@@ -750,6 +724,15 @@ def download_higgs_data(collaborators, local_bind_path):
         local_bind_path (str): Local bind path
     Returns:
         bool: True if successful, else False
+    """
+    common_download_for_higgs_and_flower(collaborators, local_bind_path)
+
+
+def common_download_for_higgs_and_flower(collaborators, local_bind_path):
+    """
+    Common function to download the data for both Higgs and Flower models.
+    In future, if the data setup for other models is similar, we can use this function.
+    Also, if the setup changes for any of the models, we can modify this function to accommodate the changes.
     """
     log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
     try:
@@ -765,7 +748,7 @@ def download_higgs_data(collaborators, local_bind_path):
         command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
         subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
     except Exception:
-        raise ex.DataSetupException(f"Failed to download data for XGBoost model")
+        raise ex.DataSetupException(f"Failed to download data for given model")
 
     try:
         # Copy the data to the respective workspaces based on the index
@@ -786,9 +769,9 @@ def download_higgs_data(collaborators, local_bind_path):
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
 
-    # Below step is specific to XGBoost model which uses higgs_data folder to create data folders.
+    # XGBoost model uses folder name higgs_data and Flower model uses data to create data folders.
     shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
-
+    shutil.rmtree(os.path.join(local_bind_path, "data"), ignore_errors=True)
     return True
 
 
@@ -1037,15 +1020,30 @@ def get_current_round(database_file: str) -> int:
     return int(db_helper.get_key_value_from_db("round_number", database_file))
 
 
-def get_best_agg_score(database_file: str) -> float:
+def get_best_agg_score(database_file=None, agg_metric_file=None, max_retries=10, sleep_interval=5):
     """
-    Get the best aggregated score from the database file
+    Get the best aggregated score from the database file or aggregator metrics file
     Args:
-        database_file (str): Database file
+        database_file (str): Database file. Optional.
+        agg_metric_file (str): Aggregator metrics file. Optional.
+        max_retries (int): Maximum number of retries to get the best score in case of database_file. Default is 10.
+        sleep_interval (int): Sleep interval between retries in seconds in case of database_file. Default is 5 seconds.
     Returns:
         float: Best aggregated score
     """
-    return db_helper.get_key_value_from_db("best_score", database_file)
+    # If both the params are not present, raise exception
+    if not database_file and not agg_metric_file:
+        raise ValueError("Either database_file or agg_metric_file should be provided")
+
+    if database_file:
+        return db_helper.get_key_value_from_db("best_score", database_file, max_retries=max_retries, sleep_interval=sleep_interval)
+    else:
+        json_file = convert_to_json(agg_metric_file)
+        best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
+        if best_score:
+            return float(best_score)
+        else:
+            raise ValueError("Best score not found in the aggregator metrics file")
 
 
 def validate_round_increment(inp_round, database_file, total_rounds, timeout=300, sleep_interval=5):
@@ -1073,7 +1071,11 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         if current_round > inp_round + 1:
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
-        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        # Check if already at the final round (round no. index starts with 0)
+        if current_round + 1 == total_rounds:
+            log.info(f"Already at the final round")
+            return current_round
+        log.info(f"Round number has not increased from {inp_round}. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
     log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
     return False
@@ -1102,52 +1104,27 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def remove_stale_processes(num_collaborators=0, envoys=[], director=False):
+def remove_stale_processes(aggregator=None, collaborators=[], director=None, envoys=[]):
     """
     Remove stale processes
+    Args:
+        aggregator (object): Aggregator object
+        collaborators (list): List of collaborator objects
+        director (object): Director object
+        envoys (list): List of envoy objects
     """
-    if num_collaborators > 0:
-        log.info("Removing stale processes..")
-        # Remove any stale processes
-        try:
-            for i in range(1, num_collaborators + 1):
-                subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep 'collaborator{i}' | awk '{{print $2}}')",
-                    shell=True,
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-            subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'aggregator' | awk '{{print $2}}')",
-                shell=True,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+    if aggregator:
+        intr_helper.kill_processes(aggregator.name)
+
+    for collaborators in collaborators:
+        intr_helper.kill_processes(collaborators.name)
 
     if director:
-        try:
-            subprocess.run(
-                "sudo kill -9 $(ps -ef | grep 'director' | awk '{{print $2}}')",
-                shell=True,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            log.warning(f"Failed to kill processes: {e}")
+        intr_helper.kill_processes("director")
 
-    if envoys:
-        for envoy in envoys:
-            try:
-                subprocess.run(
-                    f"sudo kill -9 $(ps -ef | grep '{envoy}' | awk '{{print $2}}')",
-                    shell=True,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                log.warning(f"Failed to kill processes: {e}")
+    for envoy in envoys:
+        intr_helper.kill_processes(envoy)
+
     log.info("Stale processes (if any) removed successfully")
 
 
@@ -1181,3 +1158,48 @@ def get_agg_addr_port(plan_file):
         return agg_addr, agg_port
     except Exception as e:
         raise ex.PlanReadException(f"Failed to get aggregator address and port: {e}")
+
+
+def start_aggregator(fed_obj):
+    """
+    Start the aggregator
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    try:
+        fed_obj.aggregator.start()
+    except Exception as e:
+        log.error(f"Failed to start aggregator: {e}")
+        raise e
+
+    return True
+
+
+def ping_from_collaborator(collaborator):
+    """
+    Ping the aggregator from collaborator to check connectivity
+    Args:
+        fed_obj (object): Federation fixture object
+    Returns:
+        bool: True if successful, else False
+    """
+    log.info(f"Ping the aggregator from {collaborator.name} to check connectivity")
+    collaborator.ping_aggregator()
+    start_time = time.time()
+    time.sleep(5)
+    while time.time() - start_time < 30:
+        # read the resfile and validate "TLS connection established." message
+        with open(collaborator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        # print last line
+        log.info(f"Last line: {lines[-1]}")
+        if any(constants.COL_TLS_END_MSG in line for line in lines[-7:]):
+            log.info(f"Aggregator is reachable from {collaborator.name}")
+            return True
+        else:
+            log.info(f"Aggregator is not reachable from {collaborator.name}. Retrying in 5 seconds...")
+            time.sleep(5)
+    log.error(f"Aggregator is not reachable from {collaborator.name}")
+    return False

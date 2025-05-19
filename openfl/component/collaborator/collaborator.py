@@ -4,6 +4,7 @@
 
 """Collaborator module."""
 
+import importlib
 import logging
 from enum import Enum
 from time import sleep
@@ -75,6 +76,7 @@ class Collaborator:
         write_logs=False,
         callbacks: Optional[List] = [],
         secure_aggregation=False,
+        interop_mode=False,
     ):
         """Initialize the Collaborator object.
 
@@ -143,6 +145,15 @@ class Collaborator:
             else:
                 callbacks = [secure_aggregation_callback]
 
+        # Interoperability mode
+        self._interop_mode_enabled = interop_mode
+        if self._interop_mode_enabled:
+            callbacks.append(
+                callbacks_module.LambdaCallback(
+                    on_experiment_begin=lambda logs=None: self.prepare_interop_server()
+                )
+            )
+
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,
@@ -152,6 +163,10 @@ class Collaborator:
             origin=self.collaborator_name,
             client=self.client,
         )
+
+    def ping(self):
+        """Ping the Aggregator."""
+        self.client.ping()
 
     def run(self):
         """Run the collaborator."""
@@ -169,7 +184,7 @@ class Collaborator:
                 continue
 
             # Round begin
-            logger.info("Received Tasks: %s", tasks)
+            logger.info("Round: %d Received Tasks: %s", round_num, tasks)
             self.callbacks.on_round_begin(round_num)
 
             # Run tasks
@@ -236,7 +251,7 @@ class Collaborator:
         input_tensor_dict = {
             k.tensor_name: self.get_data_for_tensorkey(k) for k in required_tensorkeys
         }
-
+        self.callbacks.on_task_begin(task_name, round_number)
         # now we have whatever the model needs to do the task
         # Tasks are defined as methods of TaskRunner
         func = getattr(self.task_runner, func_name)
@@ -248,6 +263,9 @@ class Collaborator:
             input_tensor_dict=input_tensor_dict,
             **kwargs,
         )
+
+        self.callbacks.on_task_end(task_name, round_number)
+
         # If secure aggregation is enabled, add masks to the dict to be shared
         # with the aggregator.
         if self._secure_aggregation_enabled:
@@ -577,3 +595,26 @@ class Collaborator:
                 continue
             masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
             tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
+
+    def prepare_interop_server(self):
+        """
+        Prepare the interoperability server.
+
+        This function initializes the interoperability server and sets up
+        the callback for receiving messages from the interop server.
+        It also sets the interop server in the task configuration to be used
+        by the Task Runner.
+        """
+
+        # Initialize the interop server
+        framework = self.task_config["settings"]["interop_server"]
+        module = importlib.import_module(framework)
+
+        def receive_message_from_interop(message):
+            """Receive message from interop server."""
+            # Process the request and return a response
+            response = self.client.send_message_to_server(message, self.collaborator_name)
+            return response
+
+        interop_server = module.FlowerInteropServer(receive_message_from_interop)
+        self.task_config["prepare_for_interop"]["kwargs"]["interop_server"] = interop_server

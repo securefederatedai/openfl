@@ -60,7 +60,7 @@ class BuildPyGRPC(build_py):
 
 setup(
     name='openfl',
-    version='1.8.0.dev0',
+    version='1.9.0.dev',
     author='OpenFL Team',
     description='Federated Learning for the Edge',
     long_description=open("README.md", encoding="utf-8").read(),
@@ -92,7 +92,7 @@ setup(
         'scikit-learn',
         'flatten_json',
         'tensorboardX',
-        'protobuf>=4.22,<6.0.0',
+        'protobuf>=4.21,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
     ],
     python_requires='>=3.10, <3.13',

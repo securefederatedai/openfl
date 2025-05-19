@@ -5,10 +5,14 @@ import time
 import os
 import numpy as np
 from pathlib import Path
-import sys
 import socket
+from src.util import is_safe_path
 
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
+flwr_home = os.path.join(os.getcwd(), "save/.flwr")
+if not is_safe_path(flwr_home):
+    raise ValueError("Invalid path for FLWR_HOME")
+
+os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class FlowerTaskRunner(TaskRunner):
@@ -29,12 +33,12 @@ class FlowerTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.patch = kwargs.get('patch')
         if self.data_loader is None:
             flwr_app_name = kwargs.get('flwr_app_name')
-            if self.patch:
-                install_flower_FAB(flwr_app_name)
+            install_flower_FAB(flwr_app_name)
             return
+
+        self.sgx_enabled = kwargs.get('sgx_enabled')
 
         self.model = None
         self.logger = getLogger(__name__)
@@ -47,48 +51,89 @@ class FlowerTaskRunner(TaskRunner):
 
         self.shutdown_requested = False  # Flag to signal shutdown
 
-    def start_client_adapter(self, local_grpc_server, **kwargs):
+    def start_client_adapter(self,
+                             col_name=None,
+                             round_num=None,
+                             input_tensor_dict=None,
+                             **kwargs):
         """
-        Start the local gRPC server and the Flower SuperNode.
+        Start the FlowerInteropServer and the Flower SuperNode.
 
         Args:
-            local_grpc_server: The local gRPC server instance.
-            **kwargs: Additional parameters, including 'local_server_port'.
+            col_name (str, optional): The collaborator name. Defaults to None.
+            round_num (int, optional): The current round number. Defaults to None.
+            input_tensor_dict (dict, optional): The input tensor dictionary. Defaults to None.
+            **kwargs: Additional parameters for configuration.
+                includes:
+                    interop_server (object): The FlowerInteropServer instance.
+                    interop_server_port (int): The port for the interop server.
         """
-        local_server_port = kwargs.get('local_server_port')
 
         def message_callback():
             self.shutdown_requested = True
 
-        # Set the callback for ending the experiment
-        local_grpc_server.set_end_experiment_callback(message_callback)
-        local_grpc_server.start_server(local_server_port)
+        interop_server = kwargs.get('interop_server')
+        interop_server_port = kwargs.get('interop_server_port')
+        interop_server.set_end_experiment_callback(message_callback)
+        interop_server.start_server(interop_server_port)
 
-        local_server_port = local_grpc_server.get_port()
+        # interop server sets port dynamically
+        interop_server_port = interop_server.get_port()
 
         command = [
             "flower-supernode",
             "--insecure",
             "--grpc-adapter",
-            "--superlink", f"127.0.0.1:{local_server_port}",
+            "--superlink", f"127.0.0.1:{interop_server_port}",
             "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
             "--node-config", f"data-path='{self.data_path}'"
         ]
 
+        if self.sgx_enabled:
+            command += ["--isolation", "process"]
+            flwr_clientapp_command = [
+                "flwr-clientapp",
+                "--insecure",
+                "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
+            ]
+
+        self.logger.info("Starting Flower SuperNode process...")
         supernode_process = subprocess.Popen(command, shell=False)
-        local_grpc_server.handle_signals(supernode_process)
+        interop_server.handle_signals(supernode_process)
+
+        if self.sgx_enabled:
+            # Check if port is open before starting the client app
+            while not is_port_open('127.0.0.1', interop_server_port):
+                time.sleep(0.5)
+
+            time.sleep(1) # Add a small delay after confirming the port is open
+
+            self.logger.info("Starting Flower ClientApp process...")
+            flwr_clientapp_process = subprocess.Popen(flwr_clientapp_command, shell=False)
+            interop_server.handle_signals(flwr_clientapp_process)
 
         self.logger.info("Press CTRL+C to stop the server and SuperNode process.")
 
-        try:
-            while not local_grpc_server.termination_event.is_set():
-                if self.shutdown_requested:
-                    local_grpc_server.terminate_supernode_process(supernode_process)
-                    local_grpc_server.stop_server()
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            local_grpc_server.terminate_supernode_process(supernode_process)
-            local_grpc_server.stop_server()
+        while not interop_server.termination_event.is_set():
+            if self.shutdown_requested:
+                if self.sgx_enabled:
+                    self.logger.info("Terminating Flower ClientApp process...")
+                    interop_server.terminate_supernode_process(flwr_clientapp_process)
+                    flwr_clientapp_process.wait()
+
+                self.logger.info("Shutting down the server and SuperNode process...")
+                interop_server.terminate_supernode_process(supernode_process)
+                interop_server.stop_server()
+            time.sleep(0.1)
+
+        # Collaborator expects these dictionaries, but they are not used in this context
+        # as Flower will handle the tensors internally.
+        global_output_tensor_dict = {}
+        local_output_tensor_dict = {}
+
+        return global_output_tensor_dict, local_output_tensor_dict
+
+
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
         """
@@ -133,6 +178,9 @@ class FlowerTaskRunner(TaskRunner):
         """Initialize tensor keys for functions. Currently not implemented."""
         pass
 
+    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+        """Get tensor keys for functions. Return empty dict."""
+        return {}
 
 def install_flower_FAB(flwr_app_name):
     """
@@ -142,16 +190,18 @@ def install_flower_FAB(flwr_app_name):
         flwr_app_name (str): The name of the Flower application to patch.
     """
     flwr_dir = os.environ["FLWR_HOME"]
-    os.environ["TMPDIR"] = flwr_dir
+
+    # Change the current working directory to the Flower directory
+    os.chdir(flwr_dir)
 
     # Run the build command
-    subprocess.check_call([
-        sys.executable,
-        "src/patch/flwr_run_patch.py",
+    build_command = [
+        "flwr",
         "build",
         "--app",
-        f"./src/{flwr_app_name}"
-    ])
+        os.path.join("..", "..", "src", flwr_app_name)
+    ]
+    subprocess.check_call(build_command)
 
     # List .fab files after running the build command
     fab_files = list(Path(flwr_dir).glob("*.fab"))
@@ -161,8 +211,7 @@ def install_flower_FAB(flwr_app_name):
 
     # Run the install command using the newest .fab file
     subprocess.check_call([
-        sys.executable,
-        "src/patch/flwr_run_patch.py",
+        "flwr",
         "install",
         str(newest_fab_file)
     ])
@@ -177,7 +226,14 @@ def get_dynamic_port():
     # Create a socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind to port 0 to let the OS assign an available port
-        s.bind(('', 0))
+        s.bind(('127.0.0.1', 0))
         # Get the assigned port number
         port = s.getsockname()[1]
     return port
+
+def is_port_open(host, port):
+    """Check if a port is open on the given host."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        return result == 0

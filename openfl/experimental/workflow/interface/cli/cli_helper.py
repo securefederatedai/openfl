@@ -17,10 +17,9 @@ from yaml import FullLoader, load
 FX = argv[0]
 
 SITEPACKS = Path(__file__).parent.parent.parent.parent.parent.parent
-WORKSPACE = SITEPACKS / "openfl-workspace" / "experimental" / "workflow" / "AggregatorBasedWorkflow"
+WORKSPACE = SITEPACKS / "openfl-workspace" / "experimental" / "workflow" / "FederatedRuntime"
 TUTORIALS = SITEPACKS / "openfl-tutorials"
 OPENFL_USERDIR = Path.home() / ".openfl"
-CERT_DIR = Path("cert").absolute()
 
 
 def pretty(o):

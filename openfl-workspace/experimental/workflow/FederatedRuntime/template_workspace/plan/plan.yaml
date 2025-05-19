@@ -1,0 +1,24 @@
+# Copyright (C) 2020-2025 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator:
+  template: openfl.experimental.workflow.component.Aggregator
+  settings:
+    rounds_to_train: 1
+
+collaborator:
+  template: openfl.experimental.workflow.component.Collaborator
+  settings: {}
+
+federated_flow:
+  template: {}
+  settings: {}
+
+network:
+  template: openfl.federation.Network
+  settings:
+    agg_addr: auto
+    agg_port: auto
+    tls: True
+    client_reconnect_interval: 5
+    disable_client_auth: False

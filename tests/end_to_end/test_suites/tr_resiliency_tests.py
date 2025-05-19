@@ -277,42 +277,42 @@ def _perform_restart_validate_rounds(fed_obj, db_file, total_rounds):
         db_file (str): Path to the database file
         total_rounds (int): Total number of rounds
     """
+    def _restart_and_validate(participants, current_round, db_file, total_rounds, description, attempt):
+        """
+        Restarts the participants, validates the round increment, and checks if the total rounds are reached.
+        """
+        assert int_helper.restart_participants(participants), f"Failed to restart {description} on attempt {attempt}"
+        log.info(f"{description.capitalize()} restarted successfully on attempt {attempt}.")
 
-    init_round = fed_helper.get_current_round(db_file)
+        new_round = fed_helper.validate_round_increment(current_round, db_file, total_rounds)
+        assert new_round, f"Expected current round to be ahead of {current_round} after {description} restart on attempt {attempt}"
+        return new_round
 
-    # Restart aggregator
-    assert int_helper.restart_participants([fed_obj.aggregator])
-    log.info("Aggregator restarted successfully")
+    current_round = fed_helper.get_current_round(db_file)
+    log.info(f"Round number is {current_round} before restarts")
 
-    assert (
-        round_post_agg_restart := fed_helper.validate_round_increment(
-            init_round,
-            db_file,
-            total_rounds,
+    for i in range(1, 4):
+        # Restart aggregator and validate
+        current_round = _restart_and_validate(
+            [fed_obj.aggregator], current_round, db_file, total_rounds, "aggregator", attempt=i
         )
-    ), f"Expected current round to be ahead of {init_round} after aggregator restart"
+        # Stop further processing in case of final round.
+        if current_round + 1 == total_rounds:
+            break
 
-    # Restart collaborators
-    assert int_helper.restart_participants(fed_obj.collaborators)
-    log.info("Collaborators restarted successfully")
-
-    assert (
-        round_post_collab_restart := fed_helper.validate_round_increment(
-            round_post_agg_restart,
-            db_file,
-            total_rounds,
+        # Restart collaborators and validate
+        current_round = _restart_and_validate(
+            fed_obj.collaborators, current_round, db_file, total_rounds, "collaborators", attempt=i
         )
-    ), f"Expected current round to be ahead of {round_post_agg_restart} after collaborators restart"
+        if current_round + 1 == total_rounds:
+            break
 
-    # Restart all participants
-    assert int_helper.restart_participants(fed_obj.collaborators + [fed_obj.aggregator])
-    log.info("All participants restarted successfully")
-
-    assert fed_helper.validate_round_increment(
-        round_post_collab_restart,
-        db_file,
-        total_rounds,
-    ), f"Expected current round to be ahead of {round_post_collab_restart} after all participants restart"
+        # Restart all participants and validate
+        current_round = _restart_and_validate(
+            fed_obj.collaborators + [fed_obj.aggregator], current_round, db_file, total_rounds, "all participants", attempt=i
+        )
+        if current_round + 1 == total_rounds:
+            break
 
     log.info("Current round number is increasing after every restart as expected.")
 

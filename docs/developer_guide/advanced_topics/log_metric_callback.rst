@@ -3,41 +3,36 @@
 
 .. _log_metric_callback:
 
-***********************
-Metric Logging Callback
-***********************
-By default, both the director based flow and the taskrunner API support `Tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ to log metrics.
-Once the experiment is over, the logs can be invoked from the workspace with :code:`tensorboard --logdir logs`. The metrics that are logged by default are:
+**************
+Metric Logging
+**************
+TaskRunner API supports a built-in callback to log metrics to a plain text file, or in a `TensorBoard <https://www.tensorflow.org/tensorboard/get_started>`_ compatible format.
+To enable metric logging, you need to set the :code:`write_logs` parameter in the plan settings of the aggregator component to :code:`true`. An example of the plan settings is shown below:
 
-- Aggregated model validation accuracy (Aggregator/aggregated_model_validate/acc, validate_agg/aggregated_model_validate/acc)
-- Locally tuned model validation accuracy (Aggregator/locally_tuned_model_validate/acc, validate_local/locally_tuned_model_validate/acc)
-- Train loss (Aggregator/train/train_loss, trained/train/train_loss)
+.. code-block:: yaml
 
-You can also use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
+  aggregator :
+    template : openfl.component.Aggregator
+    settings :
+        write_logs : true
 
-Python API
-==========
+Metrics are captured at the end of each round and written to a file in the format of :code:`<node_name>/<task_name>/<metric_name>`. The metric values are written in a plain text file, which can be used for further analysis or visualization. These logs are written under :code:`logs/`.
 
-For logging metrics through Tensorboard, once :code:`fl_experiment.stream_metrics()` is called from the frontend API, it saves logs in the tensorboard format.
-After the experiment has finished, the logs can be invoked from the workspace with :code:`tensorboard --logdir logs`. 
+Example contents of the log file:
 
-You could also add your custom metric logging function by defining the function with the follow signature:
+.. code-block:: text
+    {"round_number": 0, "elapsed_seconds": 11.330059889999973, "aggregator/locally_tuned_model_validation/accuracy": 0.9625962972640991, "aggregator/aggregated_model_validation/accuracy": 0.13151314854621887, "aggregator/train/loss": 0.24131347239017487}
+    {"round_number": 1, "elapsed_seconds": 11.558851689999983, "aggregator/locally_tuned_model_validation/accuracy": 0.967796802520752, "aggregator/aggregated_model_validation/accuracy": 0.9674967527389526, "aggregator/train/loss": 0.08967384696006775}
 
-.. code-block:: python
+To log metrics for visualization on TensorBoard, set the environment variable :code:`TENSORBOARD=1` before starting the aggregator/collaborator. Note that this still requires :code:`write_logs` to be set to :code:`true` in the plan settings as shown above.
 
-    def callback_name(node_name, task_name, metric_name, metric, round_number):
-        """
-        Write metric callback 
+Summaries are written under :code:`logs/tensorboard/`. To visualize the logs, run the following command in a separate shell:
 
-        Args:
-            node_name (str): Name of node, which generate metric 
-            task_name (str): Name of task
-            metric_name (str): Name of metric 
-            metric (np.ndarray): Metric value
-            round_number (int): Round number
-        """
-        your code 
+.. code-block:: bash
 
+    tensorboard --logdir logs/tensorboard/
+
+You may use a compatible browser and navigate to the provided URL to open the TensorBoard dashboard.
 
 Example of MLFlow's Metric Callback
 =====================================
@@ -70,52 +65,8 @@ If you want to retrieve all the values of a given metric, uses :code:`mlflow.get
     client = mlflow.tracking.MlflowClient()
     print(client.get_metric_history("<RUN ID>", "validate_local/locally_tuned_model_validation/accuracy"))
 
-  
-Command Line Interface
-======================
+Known issues
+============
 
-For logging through Tensorboard, enable the parameter :code:`write_logs : true` in `aggregator's plan settings <https://github.com/intel/openfl/blob/develop/openfl-workspace/workspace/plan/defaults/aggregator.yaml>`_ :
-
-.. code-block:: yaml
-
-  aggregator :
-    template : openfl.component.Aggregator
-    settings :
-        write_logs : true
-
-Follow the steps below to write your custom callback function instead. As an example, a full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch/mnist** workspace.
-
-1. Define the callback function, like how you defined in Python API, in the **src** directory in your workspace.
-
-2. Provide a way to your function with the ``log_metric_callback`` key in the ``aggregator`` section of the **plan.yaml** file in your workspace. 
-
-.. code-block:: yaml
-
-  aggregator :
-    defaults : plan/defaults/aggregator.yaml
-    template : openfl.component.Aggregator
-    settings :
-      init_state_path     : save/torch_cnn_mnist_init.pbuf
-      best_state_path     : save/torch_cnn_mnist_best.pbuf
-      last_state_path     : save/torch_cnn_mnist_last.pbuf
-      rounds_to_train     : 10
-      write_logs          : true
-      log_metric_callback :
-        template : src.mnist_utils.callback_name
-
-
-Example of TensorBoard's Metric Callback
-==========================================
-
-The following is an example of a log metric callback, which writes metric values to the TensorBoard.
-
-.. code-block:: python
-
-    from torch.utils.tensorboard import SummaryWriter
-
-    writer = SummaryWriter('./logs/cnn_mnist', flush_secs=5)
-
-
-    def write_metric(node_name, task_name, metric_name, metric, round_number):
-        writer.add_scalar("{}/{}/{}".format(node_name, task_name, metric_name),
-                        metric, round_number) 
+Metric writing via TensorBoard is not supported within enclaves due to lack of full support for pythonic multiprocessing within Gramine. 
+By default, metrics are only synchronously written to a text file when enabled. Outside enclave environments, you may enable tensorboard logging via :code:`TENSORBOARD=1` environment variable. We are assessing ways to synchronously write tensorboard-compatible proto files. If this is a feature you are interested in, or would like to contribute a PR, please create an issue or a pull request.

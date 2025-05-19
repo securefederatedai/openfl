@@ -7,9 +7,15 @@ import sys
 import signal
 
 from src.grpc.connector.flower.interop_client import FlowerInteropClient
+from src.util import is_safe_path
 
 import os
-os.environ["FLWR_HOME"] = os.path.join(os.getcwd(), "save/.flwr")
+
+flwr_home = os.path.join(os.getcwd(), "save/.flwr")
+if not is_safe_path(flwr_home):
+    raise ValueError("Invalid path for FLWR_HOME")
+
+os.environ["FLWR_HOME"] = flwr_home
 os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class ConnectorFlower:
@@ -148,12 +154,7 @@ class ConnectorFlower:
         federation_name = self.flwr_run_params.get("federation_name")
         flwr_app_name = self.flwr_run_params.get("flwr_app_name")
 
-        os.environ["TMPDIR"] = os.environ["FLWR_HOME"]
-
-        if self.flwr_run_params.get("patch"):
-            command = ["python", "src/patch/flwr_run_patch.py", "run", f"./src/{flwr_app_name}"]
-        else:
-            command = ["flwr", "run", f"./src/{flwr_app_name}"]
+        command = ["flwr", "run", f"./src/{flwr_app_name}"]
 
         if federation_name:
             command.append(federation_name)

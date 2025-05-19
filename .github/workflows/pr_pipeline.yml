@@ -1,4 +1,4 @@
-name: OpenFL PR Pipeline
+name: OpenFL PR Pipeline # Please do not modify the name of this workflow
 
 on:
   pull_request:
@@ -54,11 +54,21 @@ jobs:
   windows:
     name: Windows pytest coverage and workspace runs
     uses: ./.github/workflows/windows.yml
+
+  task_runner_connectivity:
+    name: TaskRunner Connectivity E2E
+    uses: ./.github/workflows/task_runner_connectivity_e2e.yml
     
   task_runner_e2e:
     name: TaskRunner E2E
     uses: ./.github/workflows/task_runner_basic_e2e.yml
-  
+
+  task_runner_fedeval_e2e:
+    name: TaskRunner FedEval E2E
+    uses: ./.github/workflows/task_runner_fedeval_e2e.yml
+    with:
+      models: '["keras/mnist"]'
+
   task_runner_resiliency_e2e:
     name: TaskRunner Resiliency E2E
     uses: ./.github/workflows/task_runner_resiliency_e2e.yml
