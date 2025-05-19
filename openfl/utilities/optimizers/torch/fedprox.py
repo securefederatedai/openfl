@@ -75,6 +75,7 @@ class FedProxOptimizer(Optimizer):
             "mu": mu,
             "nesterov": nesterov,
             "weight_decay": weight_decay,
+            "w_old": None,  # Initialize w_old as None
         }
 
         if nesterov and (momentum <= 0 or dampening != 0):
@@ -115,7 +116,11 @@ class FedProxOptimizer(Optimizer):
             nesterov = group["nesterov"]
             mu = group["mu"]
             w_old = group["w_old"]
-            for p, w_old_p in zip(group["params"], w_old):
+            
+            # Skip FedProx regularization if w_old is not set or mu is 0
+            apply_proximal = w_old is not None and mu > 0
+            
+            for i, p in enumerate(group["params"]):
                 if p.grad is None:
                     continue
                 d_p = p.grad
@@ -132,7 +137,9 @@ class FedProxOptimizer(Optimizer):
                         d_p = d_p.add(buf, alpha=momentum)
                     else:
                         d_p = buf
-                if w_old is not None:
+                if apply_proximal:
+                    # Apply proximal term: mu * (p - w_old_p)
+                    w_old_p = w_old[i]
                     d_p.add_(p - w_old_p, alpha=mu)
                 p.add_(d_p, alpha=-group["lr"])
 
@@ -212,6 +219,7 @@ class FedProxAdam(Optimizer):
             "weight_decay": weight_decay,
             "amsgrad": amsgrad,
             "mu": mu,
+            "w_old": None,  # Initialize w_old as None
         }
         super().__init__(params, defaults)
 
@@ -348,10 +356,17 @@ class FedProxAdam(Optimizer):
             mu (float): Proximal term coefficient.
             w_old: The old weights.
         """
+        # Skip FedProx regularization if w_old is not set or mu is 0
+        apply_proximal = w_old is not None and mu > 0
+            
         for i, param in enumerate(params):
-            w_old_p = w_old[i]
             grad = grads[i]
-            grad.add_(param - w_old_p, alpha=mu)
+            
+            # Apply proximal term only if we have valid old weights and mu > 0
+            if apply_proximal:
+                w_old_p = w_old[i]
+                grad.add_(param - w_old_p, alpha=mu)
+                
             exp_avg = exp_avgs[i]
             exp_avg_sq = exp_avg_sqs[i]
             step = state_steps[i]
