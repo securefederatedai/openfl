@@ -2,7 +2,7 @@
 %% SPDX-License-Identifier: Apache-2.0
 
 classDiagram
-    class torch.utils.data.Dataset {
+    class torch_utils_data_Dataset {
         +__len__() int
         +__getitem__(index: int) Any
     }
@@ -14,9 +14,10 @@ classDiagram
     }
 
     class VerifiableMapStyleDataset {
+        <<abstract>>
         +__len__() int
         +__getitem__(index: int) Any
-        +create_datasets() void <<abstract>>
+        +create_datasets() void*
     }
 
     class VerifiableImageFolder {
@@ -26,9 +27,10 @@ classDiagram
     }
 
     class FolderDataset {
+        <<abstract>>
         +__len__() int
         +__getitem__(index: int) Any
-        +load_file(file_path: str) void <<abstract>>
+        +load_file(file_path: str) void*
     }
 
     class ImageFolder {
@@ -37,8 +39,8 @@ classDiagram
         +load_file(file_path: str) void
     }
 
-    torch.utils.data.Dataset <|.. VerifiableMapStyleDataset
-    torch.utils.data.Dataset <|.. FolderDataset
+    torch_utils_data_Dataset <|.. VerifiableMapStyleDataset
+    torch_utils_data_Dataset <|.. FolderDataset
     VerifiableMapStyleDataset o-- VerifiableDatasetInfo
     VerifiableMapStyleDataset <|-- VerifiableImageFolder
     VerifiableMapStyleDataset o-- FolderDataset

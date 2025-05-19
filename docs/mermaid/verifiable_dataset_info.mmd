@@ -3,10 +3,10 @@
 
 classDiagram
     class VerifiableDatasetInfo {
-        +str label
-        +DataSource[] data_sources
-        +dict[str, str] metadata
-        +HASH root_hash
+        +label: str
+        +data_sources: DataSource[] 
+        +metadata: dict[str, str] 
+        +root_hash: HASH 
 
         +verify_dataset(root_hash: HASH)
         +verify_single_file(file_path: str, file_hash: HASH)
@@ -16,8 +16,8 @@ classDiagram
 
     class DataSource {
         <<abstract>>
-        +str name
-        +DataSourceType type
+        +name: str 
+        +type: DataSourceType 
         +compute_file_hash(path: str) str
         +enumerate_files() Generator~str~
         +read_blob(path: str) bytes
@@ -27,20 +27,20 @@ classDiagram
     }
 
     class LocalDataSource {
-        +str base_path
+        +base_path: str
         ...
     }
 
     class S3DataSource {
-        +str uri
-        +str endpoint
+        +uri: str 
+        +endpoint: str
         ...
     }
 
     class AzureBlobDataSource {
-        +str name
-        +str container_string
-        +str folder_prefix
+        +name: str 
+        +container_string: str 
+        +folder_prefix: str
         ...
     }
 
