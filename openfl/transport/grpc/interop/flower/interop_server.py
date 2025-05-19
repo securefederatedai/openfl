@@ -50,7 +50,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
         """Starts the gRPC server."""
         self.server = grpc.server(ThreadPoolExecutor(max_workers=cpu_count()))
         grpcadapter_pb2_grpc.add_GrpcAdapterServicer_to_server(self, self.server)
-        self.server.add_insecure_port(f'{interop_server_host}:{interop_server_port}')
+        self.port = self.server.add_insecure_port(f'{interop_server_host}:{interop_server_port}')
         self.server.start()
         logger.info(f"OpenFL local gRPC server started, listening on port {self.port}.")
 
