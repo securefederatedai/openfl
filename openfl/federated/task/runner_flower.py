@@ -66,9 +66,9 @@ class FlowerTaskRunner(TaskRunner):
                 includes:
                     interop_server (object): The FlowerInteropServer instance.
                     interop_server_host (str): The address of the interop server.
-                    interop_server_port (int): The port for the interop server.
                     clientappio_api_port (int): The port for the clientappio API.
                     local_simulation (bool): Flag for local simulation to dynamically adjust ports.
+                    interop_server_port (int): The port for the interop server.
         """
 
         def message_callback():

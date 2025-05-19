@@ -1,0 +1,4 @@
+prepare_for_interop:
+  function : start_client_adapter
+  kwargs   :
+    interop_server_port : 0 # interop server port, 0 to dynamically allocate
