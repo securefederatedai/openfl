@@ -2,18 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import threading
 import queue
-import grpc
-from concurrent.futures import ThreadPoolExecutor
-from flwr.proto import grpcadapter_pb2_grpc
-from openfl.transport.grpc.interop.flower.message_conversion import (
-    flower_to_openfl_message, openfl_to_flower_message
-)
-from multiprocessing import cpu_count
 import signal
-import psutil
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import cpu_count
+
+import grpc
+import psutil
+from flwr.proto import grpcadapter_pb2_grpc
+
+from openfl.transport.grpc.interop.flower.message_conversion import (
+    flower_to_openfl_message,
+    openfl_to_flower_message,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
         """Starts the gRPC server."""
         self.server = grpc.server(ThreadPoolExecutor(max_workers=cpu_count()))
         grpcadapter_pb2_grpc.add_GrpcAdapterServicer_to_server(self, self.server)
-        self.port = self.server.add_insecure_port(f'{interop_server_host}:{interop_server_port}')
+        self.port = self.server.add_insecure_port(f"{interop_server_host}:{interop_server_port}")
         self.server.start()
         logger.info(f"OpenFL local gRPC server started, listening on port {self.port}.")
 
@@ -63,7 +66,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             self.termination_event.set()
 
     def SendReceive(self, request, context):
-        """ Handles incoming gRPC requests by putting them into the request queue and waiting for the response.
+        """Handles incoming gRPC requests by putting them into the request queue and waiting for the response.
         Args:
             request: The incoming gRPC request.
             context: The gRPC context.
@@ -88,8 +91,8 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             openfl_response = self.send_message_to_client(openfl_request)
 
             # Check to end experiment
-            if hasattr(openfl_response, 'metadata'):
-                if openfl_response.metadata['end_experiment'] == 'True':
+            if hasattr(openfl_response, "metadata"):
+                if openfl_response.metadata["end_experiment"] == "True":
                     self.end_experiment_callback()
 
             # Send response to Flower client
@@ -99,6 +102,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
 
     def handle_signals(self, supernode_process):
         """Sets up signal handlers for graceful shutdown."""
+
         def signal_handler(_sig, _frame):
             self.terminate_supernode_process(supernode_process)
             self.stop_server()
@@ -133,7 +137,9 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             process.terminate()
             process.wait(timeout=timeout)
         except psutil.TimeoutExpired:
-            logger.debug(f"Timeout expired while waiting for process {process.pid} to terminate. Killing the process.")
+            logger.debug(
+                f"Timeout expired while waiting for process {process.pid} to terminate. Killing the process."
+            )
             process.kill()
         except psutil.NoSuchProcess:
             logger.debug(f"Process {process.pid} does not exist. Skipping.")

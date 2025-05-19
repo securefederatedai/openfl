@@ -16,7 +16,7 @@ from yaml import SafeDumper, dump, safe_load
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
-from openfl.utilities.utils import getfqdn_env, generate_port
+from openfl.utilities.utils import generate_port, getfqdn_env
 
 SETTINGS = "settings"
 TEMPLATE = "template"
@@ -324,7 +324,6 @@ class Plan:
             for key, value in self.config["tasks"][SETTINGS].items():
                 if value == AUTO:
                     self.config["tasks"][SETTINGS][key] = generate_port(self.hash)
-  
 
     def get_assigner(self):
         """Get the plan task assigner."""

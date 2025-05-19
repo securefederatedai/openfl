@@ -7,6 +7,7 @@
 import importlib
 import logging
 from enum import Enum
+from os.path import splitext
 from time import sleep
 from typing import List, Optional
 
@@ -16,7 +17,6 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
 from openfl.utilities import TensorKey
-from os.path import splitext
 
 logger = logging.getLogger(__name__)
 
@@ -619,7 +619,11 @@ class Collaborator:
             response = self.client.send_message_to_server(message, self.collaborator_name)
             return response
 
-        interop_server = getattr(interop_server_module, interop_server_class)(receive_message_from_interop)
+        interop_server = getattr(interop_server_module, interop_server_class)(
+            receive_message_from_interop
+        )
         # Pass all keys in self.task_config['settings'] through to prepare_for_interop kwargs
-        self.task_config["prepare_for_interop"]["kwargs"].update(self.task_config.get("settings", {}))
+        self.task_config["prepare_for_interop"]["kwargs"].update(
+            self.task_config.get("settings", {})
+        )
         self.task_config["prepare_for_interop"]["kwargs"]["interop_server"] = interop_server
