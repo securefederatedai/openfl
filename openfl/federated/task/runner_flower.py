@@ -11,13 +11,9 @@ import numpy as np
 from pathlib import Path
 import socket
 from openfl.utilities.utils import generate_port
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
-
-flwr_home = os.path.join(os.getcwd(), "save/.flwr")
-
-os.environ["FLWR_HOME"] = flwr_home
-os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class FlowerTaskRunner(TaskRunner):
     """
@@ -36,6 +32,13 @@ class FlowerTaskRunner(TaskRunner):
             **kwargs: Additional parameters to pass to the functions.
         """
         super().__init__(**kwargs)
+
+        self.flwr_dir = kwargs.get('flwr_dir')
+        if is_directory_traversal(self.flwr_dir):
+            logger.error("Flower app directory path is out of the OpenFL workspace scope.")
+        else: 
+            os.makedirs(self.flwr_dir, exist_ok=True)
+            os.environ["FLWR_HOME"] = self.flwr_dir
 
         if self.data_loader is None:
             flwr_app_name = kwargs.get('flwr_app_name')
@@ -201,32 +204,29 @@ def install_flower_FAB(flwr_app_name):
     Args:
         flwr_app_name (str): The name of the Flower application.
     """
-    flwr_dir = os.environ["FLWR_HOME"]
-
-    # Change the current working directory to the Flower directory
-    os.chdir(flwr_dir)
-
     # Run the build command
     build_command = [
         "flwr",
         "build",
         "--app",
-        os.path.join("..", "..", "src", flwr_app_name)
+        os.path.join("src", flwr_app_name)
     ]
     subprocess.check_call(build_command)
 
     # List .fab files after running the build command
-    fab_files = list(Path(flwr_dir).glob("*.fab"))
+    fab_files = list(Path.cwd().glob("*.fab"))
 
     # Determine the newest .fab file
     newest_fab_file = max(fab_files, key=os.path.getmtime)
 
     # Run the install command using the newest .fab file
-    subprocess.check_call([
+    install_command = [
         "flwr",
         "install",
         str(newest_fab_file)
-    ])
+    ]
+    subprocess.check_call(install_command)
+    os.remove(newest_fab_file)
 
 def get_dynamic_port(base_port, collaborator_name):
     """

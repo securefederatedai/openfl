@@ -10,13 +10,9 @@ import sys
 import signal
 
 from openfl.transport.grpc.interop import FlowerInteropClient
+from openfl.utilities.path_check import is_directory_traversal
 
 import os
-
-flwr_home = os.path.join(os.getcwd(), "save/.flwr")
-
-os.environ["FLWR_HOME"] = flwr_home
-os.makedirs(os.environ["FLWR_HOME"], exist_ok=True)
 
 class ConnectorFlower:
     """
@@ -33,9 +29,10 @@ class ConnectorFlower:
                  flwr_app_name=None,
                  federation_name=None,
                  automatic_shutdown=True,
+                 flwr_dir=None,
                  **kwargs):
         """
-        Initialize the ConnectorFlower instance.
+        Initialize the ConnectorFlower instance by setting up the necessary server commands.
 
         Args:
             superlink_host (str): Host address for the Flower SuperLink.
@@ -46,10 +43,18 @@ class ConnectorFlower:
             flwr_app_name (str, optional): Name of the Flower application to run. Defaults to None.
             federation_name (str, optional): Name of the federation. Defaults to None.
             automatic_shutdown (bool, optional): Whether to enable automatic shutdown. Defaults to True.
+            flwr_dir (str, optional): Directory for Flower app. Defaults to None.
             **kwargs: Additional keyword arguments.
         """
         super().__init__()
         self._process = None
+
+        self.flwr_dir = flwr_dir
+        if is_directory_traversal(self.flwr_dir):
+            logger.error("Flower app directory path is out of the OpenFL workspace scope.")
+        else: 
+            os.makedirs(self.flwr_dir, exist_ok=True)
+            os.environ["FLWR_HOME"] = self.flwr_dir
 
         self.automatic_shutdown = automatic_shutdown
         self.signal_shutdown_sent = False
