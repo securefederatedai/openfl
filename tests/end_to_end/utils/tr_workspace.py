@@ -389,23 +389,32 @@ def prepare_data_for_s3(request):
     """
     num_collaborators = request.config.num_collaborators
   
-    hist_data_path = Path.cwd().absolute() / 'data' # We cannot change it, as the data loader is using this path without any input
-
     s3_obj = s3_helper.S3Helper()
 
-    local_s3_mount_path = os.path.join(Path().home(), request.config.results_dir, "minio_data")
-
     # Start the minio server
-    s3_obj.start_minio_server(data_dir=local_s3_mount_path)
-    log.info("Started minio server")
+    try:
+        s3_obj.start_minio_server(
+            data_dir=os.path.join(Path().home(), request.config.results_dir, "minio_data")
+        )
+        log.info("Started minio server")
+    except Exception as e:
+        raise ex.MinioServerStartException(
+            f"Failed to start minio server. Error: {e}"
+        )
 
     # Create the buckets for each collaborator
     # The bucket name will be bucket-1, bucket-2, ..., bucket-n
     # where n is the number of collaborators
     for index in range(1, num_collaborators + 1):
-        s3_obj.create_bucket(bucket_name=f"bucket-{index}")
-        log.info(f"Created bucket bucket-{index}")
+        try:
+            s3_obj.create_bucket(bucket_name=f"bucket-{index}")
+            log.info(f"Created bucket bucket-{index}")
+        except Exception as e:
+            raise ex.S3BucketCreationException(
+                f"Failed to create bucket bucket-{index}. Error: {e}"
+            )
 
+    # List the buckets to verify
     s3_obj.list_buckets()
 
     # Import the dataloader module for torch/histology to download the data
@@ -413,11 +422,40 @@ def prepare_data_for_s3(request):
     dataloader_module = importlib.import_module("openfl-workspace.torch.histology.src.dataloader")
 
     # Download the data for torch/histology in current folder as internally it uses the current folder as data path
-    HistologyDataset = dataloader_module.HistologyDataset
-    HistologyDataset()
+    try:
+        dataloader_module.HistologyDataset()
+        log.info(f"Downloaded data for {constants.ModelName.TORCH_HISTOLOGY_S3.value}")
+    except Exception as e:
+        raise ex.DataDownloadException(
+            f"Failed to download data for {constants.ModelName.TORCH_HISTOLOGY_S3.value}. Error: {e}"
+        )
 
+    # Distibute the downloaded data/folders among the collaborators
+    hist_data_path = Path.cwd().absolute() / 'data' # We cannot change it, as the data loader is using this path without any input
+    try:
+        distribute_data_to_collaborators(num_collaborators, hist_data_path)
+    except Exception as e:
+        raise ex.DataSetupException(
+            f"Failed to distribute data to collaborators. Error: {e}"
+        )
+
+    # Copy the data to the S3 buckets by equally distributing the data among the
+    # collaborators
+    for index in range(1, num_collaborators + 1):
+        bucket_name = f"bucket-{index}"
+        folder_path = hist_data_path / str(index)
+        try:
+            s3_obj.upload_directory(dir_path=folder_path, bucket_name=bucket_name)
+            log.info(f"Uploaded data to bucket {bucket_name} from {folder_path}")
+        except Exception as e:
+            raise ex.DataUploadToS3Exception(
+                f"Failed to upload data to bucket {bucket_name}. Error: {e}"
+            )
+
+
+def distribute_data_to_collaborators(num_collaborators, data_path):
     # If data_path has only one folder, go inside it and use its subfolders
-    all_entries = [f for f in hist_data_path.iterdir() if f.is_dir()]
+    all_entries = [f for f in data_path.iterdir() if f.is_dir()]
     if len(all_entries) == 1:
         # Use subfolders inside the single folder
         all_folders = [f for f in all_entries[0].iterdir() if f.is_dir()]
@@ -434,7 +472,7 @@ def prepare_data_for_s3(request):
 
     start = 0
     for index in range(1, num_collaborators + 1):
-        collaborator_data_path = hist_data_path / str(index)
+        collaborator_data_path = data_path / str(index)
         collaborator_data_path.mkdir(parents=True, exist_ok=True)
         end = start + folders_per_collab[index - 1]
         for folder in all_folders[start:end]:
@@ -442,14 +480,6 @@ def prepare_data_for_s3(request):
             # Here we move; use shutil.copytree if you want to copy instead
             folder.rename(collaborator_data_path / folder.name)
         start = end
-
-    # Copy the data to the S3 buckets by equally distributing the data among the
-    # collaborators
-    for index in range(1, num_collaborators + 1):
-        bucket_name = f"bucket-{index}"
-        folder_path = hist_data_path / str(index)
-        s3_obj.upload_directory(dir_path=folder_path, bucket_name=bucket_name)
-        log.info(f"Uploaded data to bucket {bucket_name} from {folder_path}")
 
 
 def verify_model_prepare_data_for_s3(request):
