@@ -395,7 +395,7 @@ jobs:
         with:
           test_type: "With_TLS"
 
-  test_with_s3:
+  test_with_s3: # Run it only if the runner machine has enough memory and CPU
     name: With S3 (torch/histology_s3, 3.11)
     needs: input_selection
     runs-on: ubuntu-22.04
