@@ -368,7 +368,7 @@ def _verify_completion_for_participant(
         # If None, it means the process is still running
         # This is applicable for native process only
         if participant.start_process:
-            if participant.start_process.poll():
+            if participant.start_process.poll() or not len(intr_helper.get_pids_for_active_command(participant.name)):
                 log.info(f"No processes found for participant {participant.name}")
                 break
             else:
@@ -1071,7 +1071,11 @@ def validate_round_increment(inp_round, database_file, total_rounds, timeout=300
         if current_round > inp_round + 1:
             log.info(f"Round number has increased from {inp_round} to {current_round}")
             return current_round
-        log.info(f"Round number has not increased. Retrying in {sleep_interval} seconds...")
+        # Check if already at the final round (round no. index starts with 0)
+        if current_round + 1 == total_rounds:
+            log.info(f"Already at the final round")
+            return current_round
+        log.info(f"Round number has not increased from {inp_round}. Retrying in {sleep_interval} seconds...")
         time.sleep(sleep_interval)
     log.warning(f"Round number has not increased from {inp_round} after {timeout} seconds")
     return False
