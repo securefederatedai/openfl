@@ -1,21 +1,18 @@
 # Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from logging import getLogger
-
-logger = getLogger(__name__)
-
 import os
 import signal
 import subprocess
 import sys
+from logging import getLogger
 
 import psutil
 
 from openfl.transport.grpc.interop import FlowerInteropClient
 from openfl.utilities.path_check import is_directory_traversal
 
-pass
+logger = getLogger(__name__)
 
 
 class ConnectorFlower:
@@ -48,7 +45,8 @@ class ConnectorFlower:
             insecure (bool): Whether to use insecure connections. Defaults to True.
             flwr_app_name (str, optional): Name of the Flower application to run. Defaults to None.
             federation_name (str, optional): Name of the federation. Defaults to None.
-            automatic_shutdown (bool, optional): Whether to enable automatic shutdown. Defaults to True.
+            automatic_shutdown (bool, optional): Whether to enable automatic shutdown. 
+                Defaults to True.
             flwr_dir (str, optional): Directory for Flower app within the OpenFL workspace.
                 Plan.yaml configuration defaults to `save/.flwr`
             **kwargs: Additional keyword arguments.
@@ -93,7 +91,8 @@ class ConnectorFlower:
         Create and return a FlowerInteropClient instance using the superlink parameters.
 
         Returns:
-            FlowerInteropClient: An instance configured with the connector address and server rounds.
+            FlowerInteropClient: An instance configured with the connector address 
+            and server rounds.
         """
         connector_port = self.superlink_params.get("fleet_api_port")
         connector_address = f"{self.superlink_host}:{connector_port}"
@@ -204,10 +203,14 @@ class ConnectorFlower:
         return command
 
     def start(self):
-        """Launch the `flower-superlink` and `flwr run` subprocesses using the constructed commands."""
+        """
+        Launch the `flower-superlink` and `flwr run` subprocesses 
+        using the constructed commands.
+        """
         if self._process is None:
             logger.info(
-                f"[OpenFL Connector] Starting server process: {' '.join(self.flwr_superlink_command)}"
+                f"[OpenFL Connector] Starting server process: "
+                f"{' '.join(self.flwr_superlink_command)}"
             )
             self._process = subprocess.Popen(self.flwr_superlink_command)
             logger.info(f"[OpenFL Connector] Server process started with PID: {self._process.pid}")
@@ -216,7 +219,8 @@ class ConnectorFlower:
 
         if hasattr(self, "flwr_run_command") and self.flwr_run_command:
             logger.info(
-                f"[OpenFL Connector] Starting `flwr run` subprocess: {' '.join(self.flwr_run_command)}"
+                f"[OpenFL Connector] Starting `flwr run` "
+                f"subprocess: {' '.join(self.flwr_run_command)}"
             )
             subprocess.run(self.flwr_run_command)
 
@@ -241,7 +245,10 @@ class ConnectorFlower:
                 sub_processes = main_process.children(recursive=True)
                 for sub_process in sub_processes:
                     logger.info(
-                        f"[OpenFL Connector] Stopping server subprocess with PID: {sub_process.pid}..."
+                        (
+                            f"[OpenFL Connector] Stopping server subprocess "
+                            f"with PID: {sub_process.pid}..."
+                        )
                     )
                     sub_process.terminate()
                 _, still_alive = psutil.wait_procs(sub_processes, timeout=1)

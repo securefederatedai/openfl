@@ -34,7 +34,8 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
         Initialize.
 
         Args:
-            send_message_to_client (Callable): A callable function to send messages to the OpenFL client.
+            send_message_to_client (Callable): A callable function to send messages 
+                to the OpenFL client.
         """
         self.send_message_to_client = send_message_to_client
         self.end_experiment_callback = None
@@ -66,7 +67,10 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             self.termination_event.set()
 
     def SendReceive(self, request, context):
-        """Handles incoming gRPC requests by putting them into the request queue and waiting for the response.
+        """
+        Handles incoming gRPC requests by putting them into the request 
+        queue and waiting for the response.
+
         Args:
             request: The incoming gRPC request.
             context: The gRPC context.
@@ -138,7 +142,8 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
             process.wait(timeout=timeout)
         except psutil.TimeoutExpired:
             logger.debug(
-                f"Timeout expired while waiting for process {process.pid} to terminate. Killing the process."
+                f"Timeout expired while waiting for process {process.pid} "
+                "to terminate. Killing the process."
             )
             process.kill()
         except psutil.NoSuchProcess:
