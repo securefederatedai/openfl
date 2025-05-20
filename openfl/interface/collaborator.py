@@ -22,6 +22,7 @@ from openfl.cryptography.ca import sign_certificate
 from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
 from openfl.cryptography.participant import generate_csr
 from openfl.federated import Plan
+from openfl.federated.data.sources.data_sources_json_parser import DataSourcesJsonParser
 from openfl.interface.cli_helper import CERT_DIR
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import rmtree
@@ -221,6 +222,49 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
         with open(data_yaml, "w", encoding="utf-8") as f:
             for key, val in d.items():
                 f.write(f"{key}{separator}{val}\n")
+
+
+@collaborator.command(name="calchash")
+@option(
+    "-j",
+    "--data_path",
+    type=ClickPath(exists=True),
+    help=(
+        "Path to directory containing sources.json file defining the data sources of the dataset. "
+        "This file should contain a JSON object with the data sources to be registered. For 'local'"
+        " type, 'params' must include: 'path'. For 's3' type, 'params' must include: 'uri', "
+        "'access_key_env_name', 'secret_key_env_name', 'secret_name', and optionally 'endpoint'."
+    ),
+)
+def calchash(data_path):
+    """Generates a hash for the dataset whose data sources are defined in `datasources.json`.
+
+    The hash, saved as `hash.txt` in the same directory, can later
+    be used in custom data loaders to validate and track dataset consistency.
+    """
+
+    if data_path and is_directory_traversal(data_path):
+        logger.error("Data path is out of the openfl workspace scope.")
+        sys.exit(1)
+    if not os.path.isdir(data_path):
+        logger.error("The data path must be a directory.")
+        sys.exit(1)
+
+    datasources_json_path = os.path.join(data_path, "datasources.json")
+    if not os.path.isfile(datasources_json_path):
+        logger.error(
+            "The directory must contain a file named 'datasources.json' at the first level."
+        )
+        sys.exit(1)
+    with open(datasources_json_path, "r", encoding="utf-8") as file:
+        data = file.read()
+    vds = DataSourcesJsonParser.parse(data)
+    root_hash = vds.create_dataset_hash()
+    hash_file_path = os.path.join(data_path, "hash.txt")
+    with open(hash_file_path, "w", encoding="utf-8") as hash_file:
+        hash_file.write(root_hash)
+
+    logger.info(f"Dataset hash calculated and saved to {hash_file_path}. Hash: {root_hash}")
 
 
 @collaborator.command(name="generate-cert-request")
