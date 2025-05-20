@@ -34,7 +34,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
         Initialize.
 
         Args:
-            send_message_to_client (Callable): A callable function to send messages 
+            send_message_to_client (Callable): A callable function to send messages
                 to the OpenFL client.
         """
         self.send_message_to_client = send_message_to_client
@@ -68,7 +68,7 @@ class FlowerInteropServer(grpcadapter_pb2_grpc.GrpcAdapterServicer):
 
     def SendReceive(self, request, context):
         """
-        Handles incoming gRPC requests by putting them into the request 
+        Handles incoming gRPC requests by putting them into the request
         queue and waiting for the response.
 
         Args:

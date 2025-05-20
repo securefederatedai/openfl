@@ -45,7 +45,7 @@ class ConnectorFlower:
             insecure (bool): Whether to use insecure connections. Defaults to True.
             flwr_app_name (str, optional): Name of the Flower application to run. Defaults to None.
             federation_name (str, optional): Name of the federation. Defaults to None.
-            automatic_shutdown (bool, optional): Whether to enable automatic shutdown. 
+            automatic_shutdown (bool, optional): Whether to enable automatic shutdown.
                 Defaults to True.
             flwr_dir (str, optional): Directory for Flower app within the OpenFL workspace.
                 Plan.yaml configuration defaults to `save/.flwr`
@@ -91,7 +91,7 @@ class ConnectorFlower:
         Create and return a FlowerInteropClient instance using the superlink parameters.
 
         Returns:
-            FlowerInteropClient: An instance configured with the connector address 
+            FlowerInteropClient: An instance configured with the connector address
             and server rounds.
         """
         connector_port = self.superlink_params.get("fleet_api_port")
@@ -167,7 +167,8 @@ class ConnectorFlower:
         if not self.signal_shutdown_sent:
             self.signal_shutdown_sent = True
             logger.info(
-                "[OpenFL Connector] Experiment has ended. Sending signal to shut down Flower components."
+                "[OpenFL Connector] Experiment has ended. Sending signal "
+                "to shut down Flower components."
             )
 
         return False
@@ -204,7 +205,7 @@ class ConnectorFlower:
 
     def start(self):
         """
-        Launch the `flower-superlink` and `flwr run` subprocesses 
+        Launch the `flower-superlink` and `flwr run` subprocesses
         using the constructed commands.
         """
         if self._process is None:
@@ -226,7 +227,8 @@ class ConnectorFlower:
 
         if hasattr(self, "flwr_serverapp_command") and self.flwr_serverapp_command:
             logger.info(
-                f"[OpenFL Connector] Starting server app subprocess: {' '.join(self.flwr_serverapp_command)}"
+                f"[OpenFL Connector] Starting server app subprocess: "
+                f"{' '.join(self.flwr_serverapp_command)}"
             )
             self.interop_client.set_is_flwr_serverapp_running_callback(
                 self.is_flwr_serverapp_running
