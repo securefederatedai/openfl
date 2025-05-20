@@ -34,7 +34,7 @@ def mock_s3_bucket():
 @pytest.fixture
 def s3_data_source(mock_s3_bucket):
     """Creates an S3DataSource instance for the test bucket."""
-    return S3DataSource(f"s3://{mock_s3_bucket}/")
+    return S3DataSource("s3ds", f"s3://{mock_s3_bucket}/")
 
 def test_enumerate_files(s3_data_source, mock_s3_bucket):
     """Test that enumerate_files returns full S3 URIs."""
@@ -84,7 +84,7 @@ def test_compute_file_hash_default(s3_data_source, mock_s3_bucket):
 @pytest.fixture
 def s3_data_source_with_hash(mock_s3_bucket):
     """Creates an S3DataSource instance with a custom hash function."""
-    return S3DataSource(f"s3://{mock_s3_bucket}/", hash_func=sha384)
+    return S3DataSource("s3ds", f"s3://{mock_s3_bucket}/", hash_func=sha384)
 
 
 def test_compute_file_hash_with_function(s3_data_source_with_hash, mock_s3_bucket):

@@ -16,6 +16,7 @@ class LocalDataSource(DataSource):
 
     def __init__(
         self,
+        name: str,
         source_path: Path,
         base_path,
         hash_func: Callable[..., "hashlib._Hash"] = sha384,
@@ -25,17 +26,19 @@ class LocalDataSource(DataSource):
         Initialize a LocalDataSource object.
 
         Args:
+            name (str): The name of the data source.
             source_path (Path): The path to the source data, relative to base_path.
             base_path (Path): The base path to the data source.
             hash_func (Callable[..., hashlib._Hash]): The hash function from hashlib
             to use to hash the data.
             max_dataset_size (int): The maximum size of the dataset in GB.
         """
-        super().__init__(DataSourceType.LOCAL)
+        super().__init__(DataSourceType.LOCAL, name)
         self.source_path = Path(source_path)
         if not super().is_valid_hash_function(hash_func):
             raise ValueError(
-                f"Invalid hash function: {hash_func.__name__}. Must be a hashlib function."
+                f"Data source {self.name}: Invalid hash function: {hash_func.__name__}."
+                " Must be a hashlib function."
             )
         self.hash_func = hash_func
         self.max_dataset_size = max_dataset_size
@@ -58,8 +61,8 @@ class LocalDataSource(DataSource):
                         total_size_gb = total_size_bytes / (1024**3)
                         if total_size_gb > self.max_dataset_size:
                             raise ValueError(
-                                f"Total dataset size: {total_size_gb:.2f} GB exceeds "
-                                f"{self.max_dataset_size} GB"
+                                f"Data source {self.name}: Total dataset size: {total_size_gb:.2f}"
+                                f" GB exceeds {self.max_dataset_size} GB"
                             )
                     yield str(file_path)
 
@@ -69,8 +72,8 @@ class LocalDataSource(DataSource):
                 total_size_gb = total_size_bytes / (1024**3)
                 if total_size_gb > self.max_dataset_size:
                     raise ValueError(
-                        f"Total dataset size: {total_size_gb:.2f} GB exceeds "
-                        f"{self.max_dataset_size} GB"
+                        f"Data source {self.name}: Total dataset size: {total_size_gb:.2f}"
+                        f" GB exceeds {self.max_dataset_size} GB"
                     )
             yield str(full_path)
 
@@ -94,6 +97,7 @@ class LocalDataSource(DataSource):
         hash_func = getattr(hashlib, ds_dict.get("hash_func", "sha384"), None)
         max_dataset_size = ds_dict.get("max_dataset_size", 0)
         return cls(
+            name=ds_dict["name"],
             source_path=source_path,
             base_path=base_path,
             hash_func=hash_func,

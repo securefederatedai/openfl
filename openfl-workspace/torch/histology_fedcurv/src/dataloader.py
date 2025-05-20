@@ -33,19 +33,41 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
             data_path: The file path to the data
             batch_size: The batch size of the data loader
             **kwargs: Additional arguments, passed to super init
-             and load_mnist_shard
+             and load_histology_shard
         """
         super().__init__(batch_size, random_seed=0, **kwargs)
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
-            shard_num=int(data_path), **kwargs)
+        # Set Histology-specific default attributes
+        self.feature_shape = [3, 150, 150]
+        self.num_classes = 8
+
+        X_train, y_train, X_valid, y_valid = load_histology_shard(
+            shard_num=int(data_path),
+            feature_shape=self.feature_shape,
+            num_classes=self.num_classes,
+            **kwargs
+        )
 
         self.X_train = X_train
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
 
-        self.num_classes = num_classes
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [3, 150, 150] for Histology images.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (8 for Histology dataset).
+        """
+        return self.num_classes
 
 
 class HistologyDataset(ImageFolder):
@@ -130,7 +152,7 @@ def _load_raw_datashards(shard_num, collaborator_count, train_split_ratio=0.8):
     return (X_train, y_train), (X_valid, y_valid)
 
 
-def load_histology_shard(shard_num, collaborator_count,
+def load_histology_shard(shard_num, collaborator_count, feature_shape=None, num_classes=None,
                          categorical=False, channels_last=False, **kwargs):
     """
     Load the Histology dataset.
@@ -138,6 +160,8 @@ def load_histology_shard(shard_num, collaborator_count,
     Args:
         shard_num (int): The shard to use from the dataset
         collaborator_count (int): The number of collaborators in the federation
+        feature_shape (list, optional): The shape of input features.
+        num_classes (int, optional): Number of classes.
         categorical (bool): True = convert the labels to one-hot encoded
          vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -145,15 +169,12 @@ def load_histology_shard(shard_num, collaborator_count,
         **kwargs: Additional parameters to pass to the function
 
     Returns:
-        list: The input shape
-        int: The number of classes
         numpy.ndarray: The training data
         numpy.ndarray: The training labels
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    img_rows, img_cols = 150, 150
-    num_classes = 8
+    img_rows, img_cols = feature_shape[1], feature_shape[2]
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
         shard_num, collaborator_count)
@@ -161,11 +182,9 @@ def load_histology_shard(shard_num, collaborator_count,
     if channels_last:
         X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 3)
         X_valid = X_valid.reshape(X_valid.shape[0], img_rows, img_cols, 3)
-        input_shape = (img_rows, img_cols, 3)
     else:
         X_train = X_train.reshape(X_train.shape[0], 3, img_rows, img_cols)
         X_valid = X_valid.reshape(X_valid.shape[0], 3, img_rows, img_cols)
-        input_shape = (3, img_rows, img_cols)
 
     logger.info(f'Histology > X_train Shape : {X_train.shape}')
     logger.info(f'Histology > y_train Shape : {y_train.shape}')
@@ -177,4 +196,4 @@ def load_histology_shard(shard_num, collaborator_count,
         y_train = one_hot(y_train, num_classes)
         y_valid = one_hot(y_valid, num_classes)
 
-    return input_shape, num_classes, X_train, y_train, X_valid, y_valid
+    return X_train, y_train, X_valid, y_valid

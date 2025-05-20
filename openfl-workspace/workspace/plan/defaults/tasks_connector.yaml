@@ -1,4 +1,4 @@
-start_client_adapter:
+prepare_for_interop:
   function : start_client_adapter
   kwargs   :
-    local_server_port : 0 # local grpc server, 0 to dynamically allocate
+    interop_server_port : 0 # interop server port, 0 to dynamically allocate

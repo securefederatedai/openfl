@@ -7,7 +7,7 @@ import re
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import nbformat
 from nbdev.export import nb_export
@@ -18,8 +18,9 @@ class CodeAnalyzer:
       Provides code extraction and transformation functionality
 
     Attributes:
-        script_path (Path): Absolute path to the python script generated.
         script_name (str): Name of the generated python script.
+        script_path (Path): Absolute path to the python script generated.
+        requirements (List[str]): List of pip libraries found in the script.
         exported_script_module (ModuleType): The imported module object of the generated script.
         available_modules_in_exported_script (list): List of available attributes in the
             exported script.
@@ -43,7 +44,8 @@ class CodeAnalyzer:
                 f"{self.script_name}.py",
             )
         ).resolve()
-        self.__comment_flow_execution()
+        self.requirements = self._get_requirements()
+        self.__modify_experiment_script()
 
     def __get_exp_name(self, notebook_path: Path) -> str:
         """Extract experiment name from Jupyter notebook
@@ -84,17 +86,70 @@ class CodeAnalyzer:
 
         return Path(output_path).joinpath(export_filename).resolve()
 
-    def __comment_flow_execution(self) -> None:
-        """Comment out lines containing '.run()' in the specified Python script"""
-        run_statement = ".run()"
+    def __modify_experiment_script(self) -> None:
+        """Modifies the given python script by commenting out following code:
+        - occurences of flflow.run()
+        - instance of FederatedRuntime
+        """
+        runtime_class = "FederatedRuntime"
+        instantiation_info = self.__extract_class_instantiation_info(runtime_class)
+        instance_name = instantiation_info.get("instance_name", [])
 
-        with self.script_path.open("r") as f:
-            data = f.readlines()
-        for idx, line in enumerate(data):
-            if run_statement in line:
-                data[idx] = f"# {line}"
-        with self.script_path.open("w") as f:
-            f.writelines(data)
+        with open(self.script_path, "r") as file:
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+
+        code = self.__comment_flow_execution(code)
+        code = self.__comment_class_instance(code, instance_name)
+
+        with open(self.script_path, "w") as file:
+            file.write(code)
+
+    def __comment_class_instance(self, script_code: str, instance_name: List[str]) -> str:
+        """
+        Comments out specified class instance in the provided script
+        Args:
+            script_code (str): Script content to be analyzed
+            instance_name (List[str]): The name of the instance
+
+        Returns:
+            str: The updated script with the specified instance lines commented out
+        """
+        tree = ast.parse(script_code)
+        lines = script_code.splitlines()
+        lines_to_comment = set()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Assign, ast.Expr)):
+                if any(
+                    isinstance(subnode, ast.Name) and subnode.id in instance_name
+                    for subnode in ast.walk(node)
+                ):
+                    for i in range(node.lineno - 1, node.end_lineno):
+                        lines_to_comment.add(i)
+        modified_lines = [
+            f"# {line}" if idx in lines_to_comment else line for idx, line in enumerate(lines)
+        ]
+        updated_script = "\n".join(modified_lines)
+
+        return updated_script
+
+    def __comment_flow_execution(self, script_code: str) -> str:
+        """
+        Comment out lines containing '.run()' in the specified Python script
+        Args:
+            script_code(str): Script content to be analyzed
+
+        Returns:
+            str: The modified script with run_statement commented out
+        """
+        run_statement = ".run()"
+        lines = script_code.splitlines()
+        for idx, line in enumerate(lines):
+            stripped_line = line.strip()
+            if not stripped_line.startswith("#") and run_statement in stripped_line:
+                lines[idx] = f"# {line}"
+        updated_script = "\n".join(lines)
+
+        return updated_script
 
     def __import_generated_script(self) -> None:
         """
@@ -161,26 +216,30 @@ class CodeAnalyzer:
                 return attr
         raise ValueError("No flow class found that inherits from FLSpec")
 
-    def __extract_class_initializing_args(self, class_name) -> Dict[str, Any]:
-        """Provided name of the class returns expected arguments and it's
-        values in form of dictionary.
+    def __extract_class_instantiation_info(self, class_name: str) -> Dict[str, Any]:
+        """
+        Extracts the instance name and its initialization arguments (both positional and keyword)
+        for the given class
         Args:
-            class_name (str): The name of the class.
+            class_name (str): The name of the class
 
         Returns:
-            Dict[str, Any]: A dictionary containing the expected arguments and their values.
+            Dict[str, Any]: A dictionary containing 'args', 'kwargs', and 'instance_name'
         """
-        instantiation_args = {"args": {}, "kwargs": {}}
+        instantiation_args = {"args": {}, "kwargs": {}, "instance_name": []}
 
-        with open(self.script_path, "r") as s:
-            tree = ast.parse(s.read())
-
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-                    if node.func.id == class_name:
-                        # We found an instantiation of the class
-                        instantiation_args["args"] = self._extract_positional_args(node.args)
-                        instantiation_args["kwargs"] = self._extract_keyword_args(node.keywords)
+        with open(self.script_path, "r") as file:
+            code = "".join(line for line in file if not line.lstrip().startswith(("!", "%")))
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                if isinstance(node.value.func, ast.Name) and node.value.func.id == class_name:
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            instantiation_args["instance_name"].append(target.id)
+                    # We found an instantiation of the class
+                    instantiation_args["args"] = self._extract_positional_args(node.value.args)
+                    instantiation_args["kwargs"] = self._extract_keyword_args(node.value.keywords)
 
         return instantiation_args
 
@@ -235,41 +294,25 @@ class CodeAnalyzer:
             value = value.lstrip("[").rstrip("]")
         return value
 
-    def get_requirements(self) -> Tuple[List[str], List[int], List[str]]:
+    def _get_requirements(self) -> List[str]:
         """Extract pip libraries from the script
 
         Returns:
-            tuple: A tuple containing:
-                requirements (list of str): List of pip libraries found in the script.
-                line_nos (list of int): List of line numbers where "pip install" commands are found.
-                data (list of str): The entire script data as a list of lines.
+            requirements (List[str]): List of pip libraries found in the script.
         """
         data = None
         with self.script_path.open("r") as f:
             requirements = []
-            line_nos = []
             data = f.readlines()
-            for i, line in enumerate(data):
+            for _, line in enumerate(data):
                 line = line.strip()
                 if "pip install" in line:
-                    line_nos.append(i)
                     # Avoid commented lines, libraries from *.txt file, or openfl.git
                     # installation
                     if not line.startswith("#") and "-r" not in line and "openfl.git" not in line:
                         requirements.append(f"{line.split(' ')[-1].strip()}\n")
 
-            return requirements, line_nos, data
-
-    def remove_lines(self, data: List[str], line_nos: List[int]) -> None:
-        """Removes pip install lines from the script
-        Args:
-            data (List[str]): The entire script data as a list of lines.
-            line_nos (List[int]): List of line numbers where "pip install" commands are found.
-        """
-        with self.script_path.open("w") as f:
-            for i, line in enumerate(data):
-                if i not in line_nos:
-                    f.write(line)
+            return requirements
 
     def get_flow_class_details(self, parent_class) -> Dict[str, Any]:
         """
@@ -285,7 +328,7 @@ class CodeAnalyzer:
         """
         flow_class_name = self.__get_class_name(parent_class)
         expected_arguments = self.__get_class_arguments(flow_class_name)
-        init_args = self.__extract_class_initializing_args(flow_class_name)
+        init_args = self.__extract_class_instantiation_info(flow_class_name)
 
         return {
             "flow_class_name": flow_class_name,

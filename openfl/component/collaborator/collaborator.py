@@ -4,6 +4,7 @@
 
 """Collaborator module."""
 
+import importlib
 import logging
 from enum import Enum
 from time import sleep
@@ -75,6 +76,7 @@ class Collaborator:
         write_logs=False,
         callbacks: Optional[List] = [],
         secure_aggregation=False,
+        interop_mode=False,
     ):
         """Initialize the Collaborator object.
 
@@ -142,6 +144,15 @@ class Collaborator:
                 callbacks.append(secure_aggregation_callback)
             else:
                 callbacks = [secure_aggregation_callback]
+
+        # Interoperability mode
+        self._interop_mode_enabled = interop_mode
+        if self._interop_mode_enabled:
+            callbacks.append(
+                callbacks_module.LambdaCallback(
+                    on_experiment_begin=lambda logs=None: self.prepare_interop_server()
+                )
+            )
 
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
@@ -584,3 +595,26 @@ class Collaborator:
                 continue
             masked_metric = np.add(self._private_mask, tensor_dict[tensor_key])
             tensor_dict[tensor_key] = np.add(masked_metric, self._shared_mask)
+
+    def prepare_interop_server(self):
+        """
+        Prepare the interoperability server.
+
+        This function initializes the interoperability server and sets up
+        the callback for receiving messages from the interop server.
+        It also sets the interop server in the task configuration to be used
+        by the Task Runner.
+        """
+
+        # Initialize the interop server
+        framework = self.task_config["settings"]["interop_server"]
+        module = importlib.import_module(framework)
+
+        def receive_message_from_interop(message):
+            """Receive message from interop server."""
+            # Process the request and return a response
+            response = self.client.send_message_to_server(message, self.collaborator_name)
+            return response
+
+        interop_server = module.FlowerInteropServer(receive_message_from_interop)
+        self.task_config["prepare_for_interop"]["kwargs"]["interop_server"] = interop_server
