@@ -52,7 +52,7 @@ jobs:
         with:
           test_type: "TLS_Connectivity_gRPC"
           
-Uncomment once Rest API PR is merged
+# Uncomment once Rest API PR is merged
   test_rest_connectivity:
     name: Task Runner Rest connectivity (no-op, 3.11, rest)
     if: |
