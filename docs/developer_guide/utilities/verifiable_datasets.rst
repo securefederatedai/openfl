@@ -7,8 +7,6 @@ Verifiable Datasets and Data Sources
 
 .. _verifiable_datasets_overview:
 
-Overview
-
 To accommodate for the proliferation of data sources and the need for trusted datasets, OpenFL provides a hierarchy of utility classes to build and verify datasets. 
 This includes an extensible class hierarchy that enables the creation of datasets from various data sources, such as local file system, object storage and others.
 
