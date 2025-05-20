@@ -3,7 +3,7 @@
 
 import pytest
 import logging
-import os 
+import os
 
 
 from tests.end_to_end.utils.tr_common_fixtures import (

@@ -33,7 +33,7 @@ permissions:
 # DO NOT use double quotes for the values of the environment variables
 env:
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
-  MODEL_NAME: "federated_analytics/histogram"
+  MODEL_NAME: federated_analytics/histogram
   PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 

@@ -22,7 +22,7 @@ class ModelName(Enum):
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
     NO_OP = "no-op"
     FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
-    
+
 class AnalyticsModelName(Enum):
     """
     Enum class to define the model names for analytics.
