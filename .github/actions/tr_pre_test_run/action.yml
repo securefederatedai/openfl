@@ -20,3 +20,19 @@ runs:
         pip install .
         pip install -r test-requirements.txt
       shell: bash
+
+    - name: Install MinIO
+      id: install_minio
+      run: |
+        wget https://dl.min.io/server/minio/release/linux-amd64/minio
+        chmod +x minio
+        sudo mv minio /usr/local/bin/
+      shell: bash
+
+    - name: Install MinIO Client
+      id: install_minio_client
+      run: |
+        wget https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/
+      shell: bash
