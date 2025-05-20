@@ -32,7 +32,7 @@ on:
           - keras/mnist
           - keras/torch/mnist
           - keras/jax/mnist
-          # - torch/histology_s3
+          - torch/histology_s3
       python_version:
         description: "Python version"
         required: false
@@ -55,7 +55,7 @@ on:
           - test_memory_logs
           - test_straggler_check
           - test_eden_compression
-          # - test_with_s3
+          - test_with_s3
         required: false
 
 permissions:
