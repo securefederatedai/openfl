@@ -25,7 +25,9 @@ connector :
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
-  template : src.collaborator.CollaboratorFlower
+  template : openfl.component.Collaborator
+  settings: 
+    interop_mode : True
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
@@ -51,12 +53,12 @@ assigner :
       - name  : Connector_Flower
         percentage : 1.0
         tasks : 
-          - start_client_adapter
+          - prepare_for_interop
 
 tasks :
   defaults : plan/defaults/tasks_connector.yaml
   settings :
-    connect_to : Flower
+    interop_server: src.grpc.connector.flower.interop_server
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
