@@ -24,7 +24,7 @@ class SmokersHealthDataLoader(DataLoader):
         2. Saves the downloaded file as a ZIP archive in the `./data` directory.
         3. Extracts the contents of the ZIP archive into the `data` directory.
         """
-        
+
         download_path = os.path.expanduser('./data/smokers_health.zip')
         subprocess.run(
             [

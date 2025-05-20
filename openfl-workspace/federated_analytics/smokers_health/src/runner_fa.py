@@ -59,14 +59,11 @@ class FederatedAnalyticsTaskRunner(TaskRunner):
         results = self.analytics_task(**kwargs)
         tags = ("analytics",)
         origin = col_name
-        for metric_name, metric_value in results.items():
-            print(f"Key: {metric_name}, Value: {metric_value}")
         output_metric_dict = {
             # TensorKey(metric_name, origin, round_num, False, tags): metric_value
             TensorKey(metric_name, origin, round_num, False, tags): np.array(metric_value) if not isinstance(metric_value, np.ndarray) else metric_value
             for metric_name, metric_value in results.items()
         }
-        print("type(output_metric_dict):", type(output_metric_dict))
         return output_metric_dict, output_metric_dict
 
     def analytics_task(self, **kwargs):

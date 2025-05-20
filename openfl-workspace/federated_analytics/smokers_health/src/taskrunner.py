@@ -53,10 +53,10 @@ class SmokersHealthAnalytics(FederatedAnalyticsTaskRunner):
     # Process blood pressure data
     def process_blood_pressure(self, bp_series):
         """
-        Processes a series of blood pressure readings and calculates the mean 
+        Processes a series of blood pressure readings and calculates the mean
         systolic and diastolic values.
         Args:
-            bp_series (pd.Series): A pandas Series containing blood pressure 
+            bp_series (pd.Series): A pandas Series containing blood pressure
                 readings in the format "systolic/diastolic" (e.g., "120/80").
         Returns:
             pd.DataFrame: A DataFrame with two columns:
@@ -66,7 +66,7 @@ class SmokersHealthAnalytics(FederatedAnalyticsTaskRunner):
             - Invalid or non-numeric blood pressure readings are ignored.
             - If all readings are invalid, the resulting means will be None.
         """
-        
+
         systolic, diastolic = zip(*bp_series.str.split('/').map(
             lambda x: (
                 float(x[0]) if x[0].replace('.', '', 1).isdigit() else None,
