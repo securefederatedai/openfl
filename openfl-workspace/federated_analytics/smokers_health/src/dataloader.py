@@ -10,6 +10,19 @@ class SmokersHealthDataLoader(DataLoader):
     def __init__(self, batch_size, data_path, **kwargs):
         super().__init__(**kwargs)
 
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
+
+        # Load actual data if a data path is provided
+        try:
+            int(data_path)
+        except ValueError:
+            raise ValueError(
+                f"Expected '{data_path}' to be representable as `int`, "
+                "as it refers to the data shard number used by the collaborator."
+            )
+
         # Download and prepare data
         self._download_raw_data()
         self.data_shard = self.load_data_shard(
