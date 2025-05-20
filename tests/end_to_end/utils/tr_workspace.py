@@ -6,10 +6,12 @@ import concurrent.futures
 import logging
 import os
 from pathlib import Path
+import importlib
 
 import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.s3_helper as s3_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 import tests.end_to_end.utils.docker_helper as dh
@@ -97,6 +99,8 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
+    verify_model_prepare_data_for_s3(request)
+
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
@@ -141,6 +145,8 @@ def create_tr_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            data_path="data" if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value else None,
+            calc_hash=True if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value else False,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
@@ -148,7 +154,7 @@ def create_tr_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value, constants.ModelName.TORCH_HISTOLOGY_S3.value]:
+    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
         fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:
@@ -373,3 +379,84 @@ def create_tr_dws_workspace(request, eval_scope=False):
         local_bind_path=local_bind_path,
         model_name=request.config.model_name,
     )
+
+
+def prepare_data_for_s3(request):
+    """
+    Prepare data for S3. Includes starting minio server, creating bucket, and uploading data.
+    Args:
+        request (object): Pytest request object.
+    """
+    num_collaborators = request.config.num_collaborators
+  
+    hist_data_path = Path.cwd().absolute() / 'data' # We cannot change it, as the data loader is using this path without any input
+
+    s3_obj = s3_helper.S3Helper()
+
+    local_s3_mount_path = os.path.join(Path().home(), request.config.results_dir, "minio_data")
+
+    # Start the minio server
+    s3_obj.start_minio_server(data_dir=local_s3_mount_path)
+    log.info("Started minio server")
+
+    # Create the buckets for each collaborator
+    # The bucket name will be bucket-1, bucket-2, ..., bucket-n
+    # where n is the number of collaborators
+    for index in range(1, num_collaborators + 1):
+        s3_obj.create_bucket(bucket_name=f"bucket-{index}")
+        log.info(f"Created bucket bucket-{index}")
+
+    s3_obj.list_buckets()
+
+    # Import the dataloader module for torch/histology to download the data
+    # As the folder name contains hyphen, we need to use importlib to import the module
+    dataloader_module = importlib.import_module("openfl-workspace.torch.histology.src.dataloader")
+
+    # Download the data for torch/histology in current folder as internally it uses the current folder as data path
+    HistologyDataset = dataloader_module.HistologyDataset
+    HistologyDataset()
+
+    # If data_path has only one folder, go inside it and use its subfolders
+    all_entries = [f for f in hist_data_path.iterdir() if f.is_dir()]
+    if len(all_entries) == 1:
+        # Use subfolders inside the single folder
+        all_folders = [f for f in all_entries[0].iterdir() if f.is_dir()]
+    else:
+        all_folders = all_entries
+    all_folders.sort()  # For deterministic split
+
+    num_folders = len(all_folders)
+    folders_per_collab = [num_folders // num_collaborators] * num_collaborators
+
+    # Distribute the remainder (if any) to the first few collaborators
+    for i in range(num_folders % num_collaborators):
+        folders_per_collab[i] += 1
+
+    start = 0
+    for index in range(1, num_collaborators + 1):
+        collaborator_data_path = hist_data_path / str(index)
+        collaborator_data_path.mkdir(parents=True, exist_ok=True)
+        end = start + folders_per_collab[index - 1]
+        for folder in all_folders[start:end]:
+            # Move or copy the folder to the collaborator's directory
+            # Here we move; use shutil.copytree if you want to copy instead
+            folder.rename(collaborator_data_path / folder.name)
+        start = end
+
+    # Copy the data to the S3 buckets by equally distributing the data among the
+    # collaborators
+    for index in range(1, num_collaborators + 1):
+        bucket_name = f"bucket-{index}"
+        folder_path = hist_data_path / str(index)
+        s3_obj.upload_directory(dir_path=folder_path, bucket_name=bucket_name)
+        log.info(f"Uploaded data to bucket {bucket_name} from {folder_path}")
+
+
+def verify_model_prepare_data_for_s3(request):
+    s3_marker = request.node.get_closest_marker("task_runner_with_s3")
+    if s3_marker and request.config.model_name.lower() != constants.ModelName.TORCH_HISTOLOGY_S3.value:
+        raise ex.S3Exception(
+            "S3 marker is only applicable for torch/histology_s3 model. "
+            "Please remove the marker for other models."
+        )
+    prepare_data_for_s3(request)

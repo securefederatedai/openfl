@@ -129,3 +129,8 @@ class FlowerAppException(Exception):
 class ProcessKillException(Exception):
     """Exception for process kill"""
     pass
+
+
+class HashCalculationException(Exception):
+    """Exception for hash calculation of collaborator's data path"""
+    pass

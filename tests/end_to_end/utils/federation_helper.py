@@ -570,7 +570,7 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(index, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -578,13 +578,15 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         index (int): Index of the collaborator. Starts with 1.
         workspace_path (str): Workspace path
         local_bind_path (str): Local bind path
+        data_path (str): Data path
+        calc_hash (bool): Flag to indicate if hash calculation is required
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{index}",
-            data_directory_path=index,
+            data_directory_path=index if data_path is None else data_path,
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
         create_persistent_store(collaborator.name, local_bind_path)
@@ -612,6 +614,30 @@ def setup_collaborator(index, workspace_path, local_bind_path):
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
+    # For S3 scenario
+    if calc_hash:
+        json_data = s3_helper.create_collaborator_datasource_json(
+            collab_index=index,
+            bucket_name=f"bucket-{index}"
+        )
+        # Modify the data/collaborator{index}/datasources.json file
+        # to include the data path for the collaborator
+        data_source_file = os.path.join(
+            local_col_ws_path, "data", "datasources.json"
+        )
+        with open(data_source_file, "w") as file:
+            json.dump(json_data, file, indent=4)
+        log.info(f"Modified data source file for {collaborator.name}: {data_source_file}")
+
+        try:
+            # Calculate hash for the collaborator
+            log.info(f"Calculating hash for {collaborator.name}")
+            collaborator.calculate_hash()
+        except Exception as e:
+            raise ex.HashCalculationException(
+                f"Failed to calculate hash for {collaborator.name}: {e}"
+            )
+
     return collaborator
 
 
@@ -636,8 +662,6 @@ def setup_collaborator_data(collaborators, model_name, local_bind_path):
             download_higgs_data(collaborators, local_bind_path)
         elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
             download_flower_data(collaborators, local_bind_path)
-        elif model_name == constants.ModelName.TORCH_HISTOLOGY_S3.value:
-            download_s3_data(collaborators, local_bind_path)
 
     log.info("Data setup is complete for all the collaborators")
 
@@ -703,23 +727,6 @@ def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path
             )
     except Exception as e:
         raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-
-
-def download_s3_data(collaborators, local_bind_path):
-    """
-    Download the data for the model and copy to the respective collaborator workspaces
-    Also modify the data.yaml file for all the collaborators
-    Args:
-        collaborators (list): List of collaborator objects
-        local_bind_path (str): Local bind path
-    Returns:
-        bool: True if successful, else False
-    """
-    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
-    # TODO - add logic to get the data just like torch/histology
-    # Create a bucket in S3 and upload the data to the bucket
-    s3_obj = s3_helper.S3Helper()
-    bucket_name = s3_obj.create_bucket("test-bucket")
 
 
 def download_flower_data(collaborators, local_bind_path):

@@ -5,6 +5,7 @@ import os
 import logging
 import tempfile
 
+import tests.end_to_end.utils.constants as constants
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.ssh_helper as ssh
@@ -242,6 +243,29 @@ class Collaborator():
             log.info(
                 f"Pinged from {self.name} and tracking the logs in {self.res_file}."
             )
+        except Exception as e:
+            log.error(f"{error_msg}: {e}")
+            raise e
+        return True
+
+    def calculate_hash(self):
+        """
+        Calculate the hash of the data directory and store in hash.txt file
+        Returns:
+            bool: True if successful, else False
+        """
+        try:
+            log.info(f"Calculating hash for {self.collaborator_name}")
+            cmd = f"fx collaborator calchash --data_path {self.data_directory_path}"
+            error_msg = "Failed to calculate hash"
+            return_code, output, error = fh.run_command(
+                cmd,
+                error_msg=error_msg,
+                container_id=self.container_id,
+                workspace_path=self.workspace_path,
+            )
+            fh.verify_cmd_output(output, return_code, error, error_msg, f"Calculated hash for {self.collaborator_name}")
+
         except Exception as e:
             log.error(f"{error_msg}: {e}")
             raise e

@@ -6,7 +6,7 @@ import logging
 
 from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,
-    fx_federation_tr_dws,
+    fx_federation_tr_dws
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 
@@ -57,7 +57,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
 
 
-@pytest.mark.task_runner_basic_connectivity
+@pytest.mark.task_runner_connectivity
 def test_federation_connectivity(request, fx_federation_tr):
     """
     Verify that the collaborator can ping the aggregator. If Ping successful, collaborator can start the training.
@@ -75,9 +75,10 @@ def test_federation_connectivity(request, fx_federation_tr):
         assert fed_helper.ping_from_collaborator(col), f"Ping failed from {col.name} to aggregator"
 
 
+@pytest.mark.task_runner_with_s3
 def test_federation_with_s3_bucket(request, fx_federation_tr):
     """
-    Test federation with S3 bucket.
+    Test federation with S3 bucket. Model name - torch/histology_s3
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr (Fixture): Pytest fixture for native task runner
