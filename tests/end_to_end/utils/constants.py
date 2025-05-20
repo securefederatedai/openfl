@@ -22,6 +22,9 @@ class ModelName(Enum):
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
     NO_OP = "no-op"
     FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
+    KERAS_2DUNET = "keras/2dunet"
+    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
+
 
 class AnalyticsModelName(Enum):
     """
