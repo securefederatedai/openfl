@@ -99,7 +99,7 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
-    verify_model_prepare_data_for_s3(request)
+    colab_bucket_mapping_list = verify_model_prepare_data_for_s3(request)
 
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
@@ -139,17 +139,32 @@ def create_tr_workspace(request, eval_scope=False):
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
-    futures = [
-        executor.submit(
-            fh.setup_collaborator,
-            index,
-            workspace_path=workspace_path,
-            local_bind_path=local_bind_path,
-            data_path="data" if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value else None,
-            calc_hash=True if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value else False,
-        )
-        for index in range(1, request.config.num_collaborators+1)
-    ]
+    if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value:
+        futures = [
+            executor.submit(
+                fh.setup_collaborator,
+                index,
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
+                data_path="data",
+                calc_hash=True,
+                colab_bucket_mapping=next(
+                    (item for item in colab_bucket_mapping_list if item["collaborator"] == f"collaborator{index}"),
+                    None
+                ),
+            )
+            for index in range(1, request.config.num_collaborators+1)
+        ]
+    else:        
+        futures = [
+            executor.submit(
+                fh.setup_collaborator,
+                index,
+                workspace_path=workspace_path,
+                local_bind_path=local_bind_path,
+            )
+            for index in range(1, request.config.num_collaborators+1)
+        ]
     collaborators = [f.result() for f in futures]
 
     # Data setup requires total no of collaborators, thus keeping the function call
@@ -381,42 +396,17 @@ def create_tr_dws_workspace(request, eval_scope=False):
     )
 
 
-def prepare_data_for_s3(request):
+def prepare_data_for_s3(s3_obj, request):
     """
     Prepare data for S3. Includes starting minio server, creating bucket, and uploading data.
     Args:
+        s3_obj (object): S3 helper object.
         request (object): Pytest request object.
+    Returns:
+        dict: A dictionary containing the bucket mapping for each collaborator.
     """
     num_collaborators = request.config.num_collaborators
   
-    s3_obj = s3_helper.S3Helper()
-
-    # Start the minio server
-    try:
-        s3_obj.start_minio_server(
-            data_dir=os.path.join(Path().home(), request.config.results_dir, "minio_data")
-        )
-        log.info("Started minio server")
-    except Exception as e:
-        raise ex.MinioServerStartException(
-            f"Failed to start minio server. Error: {e}"
-        )
-
-    # Create the buckets for each collaborator
-    # The bucket name will be bucket-1, bucket-2, ..., bucket-n
-    # where n is the number of collaborators
-    for index in range(1, num_collaborators + 1):
-        try:
-            s3_obj.create_bucket(bucket_name=f"bucket-{index}")
-            log.info(f"Created bucket bucket-{index}")
-        except Exception as e:
-            raise ex.S3BucketCreationException(
-                f"Failed to create bucket bucket-{index}. Error: {e}"
-            )
-
-    # List the buckets to verify
-    s3_obj.list_buckets()
-
     # Import the dataloader module for torch/histology to download the data
     # As the folder name contains hyphen, we need to use importlib to import the module
     dataloader_module = importlib.import_module("openfl-workspace.torch.histology.src.dataloader")
@@ -439,18 +429,57 @@ def prepare_data_for_s3(request):
             f"Failed to distribute data to collaborators. Error: {e}"
         )
 
-    # Copy the data to the S3 buckets by equally distributing the data among the
-    # collaborators
+    # Start minio server, create S3 buckets and upload the data to S3
+    try:
+        s3_obj.start_minio_server(
+            data_dir=os.path.join(Path().home(), request.config.results_dir, constants.MINIO_DATA_FOLDER)
+        )
+        log.info("Started minio server")
+    except Exception as e:
+        raise ex.MinioServerStartException(
+            f"Failed to start minio server. Error: {e}"
+        )
+
+    # Create the buckets for each collaborator
+    # The bucket name will be bucket-1, bucket-2, ..., bucket-n
+    # where n is the number of collaborators
+    colab_bucket_mapping_list = []
+    bucket_name = None
     for index in range(1, num_collaborators + 1):
-        bucket_name = f"bucket-{index}"
-        folder_path = hist_data_path / str(index)
         try:
-            s3_obj.upload_directory(dir_path=folder_path, bucket_name=bucket_name)
-            log.info(f"Uploaded data to bucket {bucket_name} from {folder_path}")
+            folder_path = hist_data_path / str(index)
+            if index % 2 == 0:
+                bucket_list = []
+                for suffix in ["01", "02"]:
+                    bucket_name = f"bucket-{index}-{suffix}"
+                    s3_obj.create_bucket(bucket_name=bucket_name)
+                    log.info(f"Created bucket {bucket_name}")
+                    bucket_list.append(bucket_name)
+                colab_bucket_mapping_list.append({
+                    "collaborator": f"collaborator{index}",
+                    "local_data_path": str(folder_path),
+                    "buckets": bucket_list
+                })
+            else:
+                bucket_name = f"bucket-{index}"
+                s3_obj.create_bucket(bucket_name=bucket_name)
+                log.info(f"Created bucket {bucket_name}")
+                colab_bucket_mapping_list.append({
+                    "collaborator": f"collaborator{index}",
+                    "local_data_path": str(folder_path),
+                    "buckets": [bucket_name]
+                })
         except Exception as e:
-            raise ex.DataUploadToS3Exception(
-                f"Failed to upload data to bucket {bucket_name}. Error: {e}"
+            raise ex.S3BucketCreationException(
+                f"Failed to create bucket {bucket_name} for collaborator{index}. Error: {e}"
             )
+
+    log.info(f"Bucket mapping: {colab_bucket_mapping_list}")
+
+    # List the buckets to verify
+    s3_obj.list_buckets()
+
+    return colab_bucket_mapping_list
 
 
 def distribute_data_to_collaborators(num_collaborators, data_path):
@@ -489,4 +518,12 @@ def verify_model_prepare_data_for_s3(request):
             "S3 marker is only applicable for torch/histology_s3 model. "
             "Please remove the marker for other models."
         )
-    prepare_data_for_s3(request)
+    s3_obj = s3_helper.S3Helper()
+
+    colab_bucket_mapping_list = prepare_data_for_s3(s3_obj, request)
+
+    # Copy the data to the S3 buckets by equally distributing the data among the collaborators
+    s3_helper.upload_data_to_s3(s3_obj, colab_bucket_mapping_list)
+    log.info("Uploaded data to S3 buckets")
+
+    return colab_bucket_mapping_list

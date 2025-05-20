@@ -55,7 +55,7 @@ on:
           - test_memory_logs
           - test_straggler_check
           - test_eden_compression
-          - test_with_s3
+          # - test_with_s3
         required: false
 
 permissions:

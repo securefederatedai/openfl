@@ -570,7 +570,7 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False):
+def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False, colab_bucket_mapping=None):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -580,6 +580,7 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
         local_bind_path (str): Local bind path
         data_path (str): Data path
         calc_hash (bool): Flag to indicate if hash calculation is required
+        colab_bucket_mapping (dict): Mapping of collaborator and its datasources
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
@@ -617,8 +618,7 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
     # For S3 scenario
     if calc_hash:
         json_data = s3_helper.create_collaborator_datasource_json(
-            collab_index=index,
-            bucket_name=f"bucket-{index}"
+            colab_bucket_mapping=colab_bucket_mapping,
         )
         # Modify the data/collaborator{index}/datasources.json file
         # to include the data path for the collaborator

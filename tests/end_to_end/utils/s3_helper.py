@@ -15,6 +15,7 @@ import fnmatch
 from pathlib import Path
 
 import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.exceptions as ex
 
 log = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class S3Helper:
 
     def start_minio_server(
         self,
-        data_dir=None,
+        data_dir,
         access_key=None,
         secret_key=None,
         address=None,
@@ -99,7 +100,7 @@ class S3Helper:
         Start a MinIO server as a subprocess.
 
         Args:
-            data_dir: Directory to store data (default: from constants.MINIO_DATA_DIR)
+            data_dir: Directory to store data
             access_key: MinIO access key (default: from instance)
             secret_key: MinIO secret key (default: from instance)
             address: Address to bind the MinIO server (default: from instance)
@@ -144,9 +145,10 @@ class S3Helper:
             else:
                 log.warning("MinIO server running but PID not found. Please check manually.")
 
-        # Set default values
+        # Throw error if data_dir is not provided
         if data_dir is None:
-            data_dir = os.path.expanduser(f"{constants.MINIO_DATA_DIR}")
+            log.error("Data directory is required to start MinIO server.")
+            return None
 
         # Create data directory if it doesn't exist
         os.makedirs(data_dir, exist_ok=True)
@@ -215,7 +217,7 @@ class S3Helper:
         log.info("MinIO server started successfully.")
         return process
 
-    def create_bucket(self, bucket_name=constants.MINIO_BUCKET_NAME):
+    def create_bucket(self, bucket_name):
         """
         Create a new bucket if it doesn't exist.
 
@@ -683,31 +685,89 @@ class S3Helper:
         return matches
 
 
-def create_collaborator_datasource_json(collab_index, bucket_name=constants.MINIO_BUCKET_NAME, endpoint=constants.MINIO_URL):
+def create_collaborator_datasource_json(colab_bucket_mapping, endpoint=constants.MINIO_URL):
     """
     Create a datasources.json file for a collaborator.
 
     Args:
-        collab_index (int): Collaborator index (used for S3 URI path)
-        bucket_name (str): S3 bucket name
+        colab_bucket_mapping (dict): Mapping of given collaborator with its datasources
         endpoint (str): S3 endpoint URL
 
     Returns:
         JSON object: JSON object representing the datasource configuration
     """
-    uri = f"s3://{bucket_name}"
+    collaborator_name = colab_bucket_mapping["collaborator"]
+    buckets = colab_bucket_mapping["buckets"]
+    local_data_path = colab_bucket_mapping["local_data_path"]
+    index = int(''.join(filter(str.isdigit, collaborator_name)))
+    data = {}
 
-    json_data = {
-        f"s3_ds{collab_index}": {
+    for i, bucket in enumerate(buckets, 1):
+        ds_key = f"s3_ds{i}"
+        data[ds_key] = {
+            "type": "s3",
             "params": {
                 "access_key_env_name": "MINIO_ROOT_USER",
                 "endpoint": endpoint,
                 "secret_key_env_name": "MINIO_ROOT_PASSWORD",
-                "secret_name": f"vault_secret_name{collab_index}",
-                "uri": uri
-            },
-            "type": "s3"
+                "secret_name": f"vault_secret_name{i}",
+                "uri": f"s3://{bucket}/"
+            }
         }
-    }
+    # Add local datasource for odd collaborators (collaborator index is odd)
+    if index is not None and index % 2 == 1:
+        data[f"local_ds{index}"] = {
+            "type": "local",
+            "params": {
+                "path": str(Path(local_data_path).relative_to(Path.cwd()))
+            }
+        }
 
-    return json_data
+    return data
+
+
+def upload_data_to_s3(s3_obj, colab_bucket_mapping_list):
+    """
+    Upload data to S3 buckets based on the provided mapping.
+    Args:
+        s3_obj (S3Helper): S3Helper object for S3 operations
+        colab_bucket_mapping_list (list): List of dictionaries containing collaborator and bucket mapping
+    Returns:
+        bool: True if upload was successful, raises DataUploadToS3Exception exception otherwise
+    """
+    for colab in colab_bucket_mapping_list:
+        folder_path = Path(colab["local_data_path"])
+        buckets = colab["buckets"]
+        if len(buckets) == 2:
+            # Split the folder contents equally for two buckets
+            all_items = sorted([item for item in folder_path.iterdir() if item.is_dir() or item.is_file()])
+            mid = len(all_items) // 2
+            split_items = [all_items[:mid], all_items[mid:]]
+            for i, bucket_name in enumerate(buckets):
+                temp_dir = folder_path / f"tmp_upload_{i+1}"
+                temp_dir.mkdir(exist_ok=True)
+                for item in split_items[i]:
+                    dest = temp_dir / item.name
+                    if item.is_dir():
+                        shutil.copytree(item, dest)
+                    else:
+                        shutil.copy2(item, dest)
+                try:
+                    s3_obj.upload_directory(dir_path=temp_dir, bucket_name=bucket_name)
+                    log.info(f"Uploaded data to bucket {bucket_name} from {temp_dir}")
+                except Exception as e:
+                    raise ex.DataUploadToS3Exception(
+                        f"Failed to upload data to bucket {bucket_name}. Error: {e}"
+                    )
+                shutil.rmtree(temp_dir)
+        else:
+            # Only one bucket, upload the whole folder
+            bucket_name = buckets[0]
+            try:
+                s3_obj.upload_directory(dir_path=folder_path, bucket_name=bucket_name)
+                log.info(f"Uploaded data to bucket {bucket_name} from {folder_path}")
+            except Exception as e:
+                raise ex.DataUploadToS3Exception(
+                    f"Failed to upload data to bucket {bucket_name}. Error: {e}"
+                )
+    return True

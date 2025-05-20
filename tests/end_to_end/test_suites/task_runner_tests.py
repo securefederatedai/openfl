@@ -6,7 +6,7 @@ import logging
 
 from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,
-    fx_federation_tr_dws
+    fx_federation_tr_dws,
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 
