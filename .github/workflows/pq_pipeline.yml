@@ -157,7 +157,18 @@ jobs:
     uses: ./.github/workflows/task_runner_flower_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
-
+  # wf federated evaluation
+  wf_federated_evaluation:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: Workflow Federated Evaluation E2E
+    needs: wf_secagg_e2e
+    uses: ./.github/workflows/wf_federated_evaluation.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+    secrets: inherit
+  # run code scanning tools
   run_trivy:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
@@ -206,6 +217,8 @@ jobs:
       task_runner_dockerized_e2e,
       task_runner_secret_ssl_e2e,
       task_runner_flower_app_pytorch,
+      task_runner_connectivity_e2e,
+      wf_federated_evaluation,
       run_trivy,
       run_bandit
     ]
