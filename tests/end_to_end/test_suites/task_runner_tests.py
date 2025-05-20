@@ -91,6 +91,7 @@ def test_federation_with_s3_bucket(request, fx_federation_tr):
         fx_federation_tr,
         test_env=request.config.test_env,
         num_rounds=request.config.num_rounds,
+        time_for_each_round=300,
     ), "Federation completion failed"
 
     best_agg_score = fed_helper.get_best_agg_score(fx_federation_tr.aggregator.tensor_db_file)

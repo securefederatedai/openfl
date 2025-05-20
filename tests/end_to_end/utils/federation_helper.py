@@ -272,13 +272,14 @@ def run_federation_for_dws(fed_obj, use_tls):
     return True
 
 
-def verify_federation_run_completion(fed_obj, test_env, num_rounds):
+def verify_federation_run_completion(fed_obj, test_env, num_rounds, time_for_each_round=100):
     """
     Verify the completion of the process for all the participants
     Args:
         fed_obj (object): Federation fixture object
         test_env (str): Test environment
         num_rounds (int): Number of rounds
+        time_for_each_round (int): Time for each round (in seconds)
     Returns:
         list: List of response (True or False) for all the participants
     """
@@ -292,6 +293,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             participant,
             num_rounds,
             num_collaborators=len(fed_obj.collaborators),
+            time_for_each_round=time_for_each_round,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
