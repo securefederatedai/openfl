@@ -20,6 +20,14 @@ class FedProxOptimizer(Optimizer):
     It introduces a proximal term to the federated averaging algorithm to
     reduce the impact of devices with outlying updates.
 
+    IMPORTANT: This optimizer requires a reference to the original (global) model parameters 
+    to calculate the proximal term. These must be set explicitly using the set_old_weights() 
+    method before training begins. The old weights (w_old) must match the order and structure 
+    of the model's parameters. Typically, w_old should be set to the initial global model 
+    parameters received from the aggregator at the beginning of each round.
+    
+    If mu > 0 and w_old is not set, the optimizer will raise a ValueError.
+
     Paper: https://arxiv.org/pdf/1812.06127.pdf
 
     Attributes:
@@ -67,7 +75,12 @@ class FedProxOptimizer(Optimizer):
         if weight_decay < 0.0:
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
         if mu < 0.0:
-            raise ValueError(f"Invalid mu value: {mu}")
+            import warnings
+            warnings.warn(
+                f"Negative mu value ({mu}) will cause the proximal term to reward "
+                f"deviations from global weights, which may be counterintuitive.",
+                UserWarning,
+            )
         defaults = {
             "dampening": dampening,
             "lr": lr,
@@ -117,8 +130,15 @@ class FedProxOptimizer(Optimizer):
             mu = group["mu"]
             w_old = group["w_old"]
             
-            # Skip FedProx regularization if w_old is not set or mu is 0
-            apply_proximal = w_old is not None and mu > 0
+            # Check if FedProx regularization should be applied (mu > 0)
+            if mu > 0 and w_old is None:
+                raise ValueError(
+                    "FedProx requires old weights to be set when mu > 0. "
+                    "Please call set_old_weights() before optimization step."
+                )
+            
+            # Apply proximal term when mu != 0
+            apply_proximal = w_old is not None and mu != 0
             
             for i, p in enumerate(group["params"]):
                 if p.grad is None:
@@ -147,9 +167,20 @@ class FedProxOptimizer(Optimizer):
 
     def set_old_weights(self, old_weights):
         """Set the global weights parameter to `old_weights` value.
+        
+        This method must be called before training begins to set the reference point for
+        calculating the proximal term in FedProx. Typically, this should be set to the
+        initial global model parameters received from the aggregator at the beginning
+        of each federated learning round.
+        
+        If mu > 0 and this method is not called, the optimizer will raise a ValueError
+        during the optimization step.
 
         Args:
-            old_weights: The old weights to be set.
+            old_weights: List of parameter tensors representing the global model weights.
+                         Must match the order and structure of the model's parameters
+                         being optimized (typically obtained by calling
+                         [p.clone().detach() for p in model.parameters()]).
         """
         for param_group in self.param_groups:
             param_group["w_old"] = old_weights
@@ -159,6 +190,14 @@ class FedProxAdam(Optimizer):
     """FedProxAdam optimizer.
 
     Implements the FedProx optimization algorithm with Adam optimizer.
+
+    IMPORTANT: This optimizer requires a reference to the original (global) model parameters 
+    to calculate the proximal term. These must be set explicitly using the set_old_weights() 
+    method before training begins. The old weights (w_old) must match the order and structure 
+    of the model's parameters. Typically, w_old should be set to the initial global model 
+    parameters received from the aggregator at the beginning of each round.
+    
+    If mu > 0 and w_old is not set, the optimizer will raise a ValueError.
 
     Attributes:
         params: Parameters to be stored for optimization.
@@ -211,7 +250,12 @@ class FedProxAdam(Optimizer):
         if not 0.0 <= weight_decay:
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
         if mu < 0.0:
-            raise ValueError(f"Invalid mu value: {mu}")
+            import warnings
+            warnings.warn(
+                f"Negative mu value ({mu}) will cause the proximal term to reward "
+                f"deviations from global weights, which may be counterintuitive.",
+                UserWarning,
+            )
         defaults = {
             "lr": lr,
             "betas": betas,
@@ -231,9 +275,20 @@ class FedProxAdam(Optimizer):
 
     def set_old_weights(self, old_weights):
         """Set the global weights parameter to `old_weights` value.
+        
+        This method must be called before training begins to set the reference point for
+        calculating the proximal term in FedProx. Typically, this should be set to the
+        initial global model parameters received from the aggregator at the beginning
+        of each federated learning round.
+        
+        If mu > 0 and this method is not called, the optimizer will raise a ValueError
+        during the optimization step.
 
         Args:
-            old_weights: The old weights to be set.
+            old_weights: List of parameter tensors representing the global model weights.
+                         Must match the order and structure of the model's parameters
+                         being optimized (typically obtained by calling
+                         [p.clone().detach() for p in model.parameters()]).
         """
         for param_group in self.param_groups:
             param_group["w_old"] = old_weights
@@ -356,8 +411,15 @@ class FedProxAdam(Optimizer):
             mu (float): Proximal term coefficient.
             w_old: The old weights.
         """
-        # Skip FedProx regularization if w_old is not set or mu is 0
-        apply_proximal = w_old is not None and mu > 0
+        # Check if FedProx regularization should be applied (mu > 0)
+        if mu > 0 and w_old is None:
+            raise ValueError(
+                "FedProx requires old weights to be set when mu > 0. "
+                "Please call set_old_weights() before optimization step."
+            )
+            
+        # Apply proximal term when mu != 0
+        apply_proximal = w_old is not None and mu != 0
             
         for i, param in enumerate(params):
             grad = grads[i]
