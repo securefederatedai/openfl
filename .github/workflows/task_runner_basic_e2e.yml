@@ -32,6 +32,7 @@ on:
           - keras/mnist
           - keras/torch/mnist
           - keras/jax/mnist
+          - torch/histology_s3
       python_version:
         description: "Python version"
         required: false
@@ -166,7 +167,7 @@ jobs:
         id: run_tests
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
-          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          -m task_runner_with_s3 --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
 
