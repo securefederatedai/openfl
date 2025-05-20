@@ -76,13 +76,11 @@ class NotebookTools:
         and append to workspace/requirements.txt
         """
         try:
-            requirements, requirements_line_numbers, data = self.code_analyzer.get_requirements()
             requirements_filepath = str(
                 self.output_workspace_path.joinpath("requirements.txt").resolve()
             )
             with open(requirements_filepath, "a") as f:
-                f.writelines(requirements)
-            self.code_analyzer.remove_lines(data, requirements_line_numbers)
+                f.writelines(self.code_analyzer.requirements)
 
             print(f"Successfully generated {requirements_filepath}")
 

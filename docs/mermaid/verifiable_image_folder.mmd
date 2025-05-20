@@ -1,0 +1,50 @@
+%% Copyright 2025 Intel Corporation
+%% SPDX-License-Identifier: Apache-2.0
+
+classDiagram
+    class torch_utils_data_Dataset {
+        +__len__() int
+        +__getitem__(index: int) Any
+    }
+
+    class VerifiableDatasetInfo {
+        +verify_dataset(root_hash: HASH)
+        +verify_single_file(file_path: str, file_hash: HASH)
+        +from_json(json_str: str) VerifiableDatasetInfo
+    }
+
+    class VerifiableMapStyleDataset {
+        <<abstract>>
+        +__len__() int
+        +__getitem__(index: int) Any
+        +create_datasets() void*
+    }
+
+    class VerifiableImageFolder {
+        +__len__() int
+        +__getitem__(index: int) Any
+        +create_datasets() void
+    }
+
+    class FolderDataset {
+        <<abstract>>
+        +__len__() int
+        +__getitem__(index: int) Any
+        +load_file(file_path: str) void*
+    }
+
+    class ImageFolder {
+        +__len__() int
+        +__getitem__(index: int) Any
+        +load_file(file_path: str) void
+    }
+
+    torch_utils_data_Dataset <|.. VerifiableMapStyleDataset
+    torch_utils_data_Dataset <|.. FolderDataset
+    VerifiableMapStyleDataset o-- VerifiableDatasetInfo
+    VerifiableMapStyleDataset <|-- VerifiableImageFolder
+    VerifiableMapStyleDataset o-- FolderDataset
+    FolderDataset <|-- ImageFolder
+
+    style torch_utils_data_Dataset fill:#D3D3D3,stroke:#000,stroke-width:1px
+    style VerifiableDatasetInfo fill:#FFFFE0,stroke:#000,stroke-width:1px
