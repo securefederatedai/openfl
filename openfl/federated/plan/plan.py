@@ -364,16 +364,11 @@ class Plan:
             tasks[task]["aggregation_type"] = aggregation_type
         return tasks
 
-    def get_aggregator(self, tensor_dict=None):
+    def get_aggregator(self):
         """Get federation aggregator.
 
         This method retrieves the federation aggregator. If the aggregator
-        does not exist, it is built using the configuration settings and the
-        provided tensor dictionary.
-
-        Args:
-            tensor_dict (dict, optional): The initial tensor dictionary to use
-                when building the aggregator. Defaults to None.
+        does not exist, it is built using the configuration settings.
 
         Returns:
             self.aggregator_ (Aggregator): The federation aggregator.
@@ -401,7 +396,7 @@ class Plan:
         # TODO: Load callbacks from plan.
 
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(**defaults)
 
         return self.aggregator_
 
