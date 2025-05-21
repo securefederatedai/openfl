@@ -14,6 +14,7 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     KERAS_TORCH_MNIST = "keras/torch/mnist"
     TORCH_HISTOLOGY = "torch/histology"
+    TORCH_HISTOLOGY_S3 = "torch/histology_s3"
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
@@ -62,6 +63,7 @@ EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
 COL_TLS_END_MSG = "TLS connection established."
 
+
 class TransportProtocol(Enum):
     """
     Enum class to define the transport protocol.
@@ -71,3 +73,13 @@ class TransportProtocol(Enum):
 
 AGGREGATOR_REST_CLIENT = "Starting Aggregator REST Server"
 AGGREGATOR_GRPC_CLIENT = "Starting Aggregator gRPC Server"
+
+# For S3 and MinIO
+MINIO_ROOT_USER = "minioadmin"
+MINIO_ROOT_PASSWORD = "minioadmin"
+MINIO_HOST = "localhost"
+MINIO_PORT = 9000
+MINIO_CONSOLE_PORT = 9001
+MINIO_URL = f"http://{MINIO_HOST}:{MINIO_PORT}"
+MINIO_CONSOLE_URL = f"http://{MINIO_HOST}:{MINIO_CONSOLE_PORT}"
+MINIO_DATA_FOLDER = "minio_data"

@@ -158,6 +158,16 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
+  tr_verifiable_dataset_e2e:
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')
+    name: TaskRunner Verifiable Dataset E2E
+    needs: task_runner_e2e
+    uses: ./.github/workflows/tr_verifiable_dataset_e2e.yml
+    with:
+      commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
+
   run_trivy:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
@@ -198,6 +208,7 @@ jobs:
       wf_mnist_local_runtime,
       wf_watermark_e2e,
       wf_secagg_e2e,
+      task_runner_connectivity_e2e,
       task_runner_e2e,
       task_runner_resiliency_e2e,
       task_runner_fedeval_e2e,
@@ -206,6 +217,7 @@ jobs:
       task_runner_dockerized_e2e,
       task_runner_secret_ssl_e2e,
       task_runner_flower_app_pytorch,
+      tr_verifiable_dataset_e2e,
       run_trivy,
       run_bandit
     ]
