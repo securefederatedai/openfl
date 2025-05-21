@@ -99,7 +99,8 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
-    colab_bucket_mapping_list = verify_model_prepare_data_for_s3(request)
+    if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value:
+        colab_bucket_mapping_list = prepare_data_for_s3(request)
 
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
@@ -398,15 +399,21 @@ def create_tr_dws_workspace(request, eval_scope=False):
     )
 
 
-def prepare_data_for_s3(s3_obj, request):
+def prepare_data_for_s3(request):
     """
     Prepare data for S3. Includes starting minio server, creating bucket, and uploading data.
     Args:
-        s3_obj (object): S3 helper object.
         request (object): Pytest request object.
     Returns:
         dict: A dictionary containing the bucket mapping for each collaborator.
+        Example -
+        [
+            {'collaborator': 'collaborator1', 'local_data_path': '/home/azureuser/openfl/data/1', 'buckets': ['bucket-1']},
+            {'collaborator': 'collaborator2', 'local_data_path': '/home/azureuser/openfl/data/2', 'buckets': ['bucket-2-01', 'bucket-2-02']}
+        ]
     """
+    s3_obj = s3_helper.S3Helper()
+
     num_collaborators = request.config.num_collaborators
 
     # Import the dataloader module for torch/histology to download the data
@@ -482,6 +489,9 @@ def prepare_data_for_s3(s3_obj, request):
     # List the buckets to verify
     s3_obj.list_buckets()
 
+    # Copy the data to the S3 buckets by equally distributing the data among the collaborators
+    s3_helper.upload_data_to_s3(s3_obj, colab_bucket_mapping_list)
+
     return colab_bucket_mapping_list
 
 
@@ -530,34 +540,3 @@ def distribute_data_to_collaborators(num_collaborators, data_path):
             # Here we move; use shutil.copytree if you want to copy instead
             folder.rename(collaborator_data_path / folder.name)
         start = end
-
-
-def verify_model_prepare_data_for_s3(request):
-    """
-    Verify if the model is torch/histology_s3 and prepare data for S3.
-    Args:
-        request (object): Pytest request object.
-    Returns:
-        list: A list of dictionaries containing the bucket mapping for each collaborator.
-        Example -
-        [
-            {'collaborator': 'collaborator1', 'local_data_path': '/home/azureuser/openfl/data/1', 'buckets': ['bucket-1']},
-            {'collaborator': 'collaborator2', 'local_data_path': '/home/azureuser/openfl/data/2', 'buckets': ['bucket-2-01', 'bucket-2-02']}
-        ]
-    Raises:
-        S3Exception: If the model is not torch/histology_s3.
-    """
-    s3_marker = request.node.get_closest_marker("task_runner_with_s3")
-    if s3_marker and request.config.model_name.lower() != constants.ModelName.TORCH_HISTOLOGY_S3.value:
-        raise ex.S3Exception(
-            "S3 marker is only applicable for torch/histology_s3 model. "
-            "Please remove the marker for other models."
-        )
-    s3_obj = s3_helper.S3Helper()
-
-    colab_bucket_mapping_list = prepare_data_for_s3(s3_obj, request)
-
-    # Copy the data to the S3 buckets by equally distributing the data among the collaborators
-    s3_helper.upload_data_to_s3(s3_obj, colab_bucket_mapping_list)
-
-    return colab_bucket_mapping_list
