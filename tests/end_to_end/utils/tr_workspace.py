@@ -139,6 +139,8 @@ def create_tr_workspace(request, eval_scope=False):
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
+    # In case of torch/histology_s3, we need to pass the data path, flag to calculate hash
+    # and bucket mapping to the setup_collaborator function
     if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value:
         futures = [
             executor.submit(
@@ -484,6 +486,24 @@ def prepare_data_for_s3(s3_obj, request):
 
 
 def distribute_data_to_collaborators(num_collaborators, data_path):
+    """
+    Distribute the data among the collaborators uniformly.
+    Example: Assuming num_collaborators is 3
+        If data_path has folder Kather_texture_2016_image_tiles_5000 (torch/histology) which further has 8 subfolders,
+        then the data will be distributed as:
+            collaborator1: 1 / first 3 subfolders
+            collaborator2: 2 / next 3 subfolders
+            collaborator3: 3 / last 2 subfolders
+        If data_path itself has multiple folders say 8, then the data will be distributed as:
+            collaborator1: 1 / first 3 folders
+            collaborator2: 2 / next 3 folders
+            collaborator3: 3 / last 2 folders
+    Args:
+        num_collaborators (int): Number of collaborators.
+        data_path (str): Path to the data directory.
+    Raises:
+        Exception: If the data distribution fails.
+    """
     # If data_path has only one folder, go inside it and use its subfolders
     all_entries = [f for f in data_path.iterdir() if f.is_dir()]
     if len(all_entries) == 1:
@@ -513,6 +533,20 @@ def distribute_data_to_collaborators(num_collaborators, data_path):
 
 
 def verify_model_prepare_data_for_s3(request):
+    """
+    Verify if the model is torch/histology_s3 and prepare data for S3.
+    Args:
+        request (object): Pytest request object.
+    Returns:
+        list: A list of dictionaries containing the bucket mapping for each collaborator.
+        Example -
+        [
+            {'collaborator': 'collaborator1', 'local_data_path': '/home/azureuser/openfl/data/1', 'buckets': ['bucket-1']},
+            {'collaborator': 'collaborator2', 'local_data_path': '/home/azureuser/openfl/data/2', 'buckets': ['bucket-2-01', 'bucket-2-02']}
+        ]
+    Raises:
+        S3Exception: If the model is not torch/histology_s3.
+    """
     s3_marker = request.node.get_closest_marker("task_runner_with_s3")
     if s3_marker and request.config.model_name.lower() != constants.ModelName.TORCH_HISTOLOGY_S3.value:
         raise ex.S3Exception(
@@ -525,6 +559,5 @@ def verify_model_prepare_data_for_s3(request):
 
     # Copy the data to the S3 buckets by equally distributing the data among the collaborators
     s3_helper.upload_data_to_s3(s3_obj, colab_bucket_mapping_list)
-    log.info("Uploaded data to S3 buckets")
 
     return colab_bucket_mapping_list
