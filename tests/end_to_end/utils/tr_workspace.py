@@ -413,8 +413,9 @@ def prepare_data_for_s3(s3_obj, request):
 
     # Download the data for torch/histology in current folder as internally it uses the current folder as data path
     try:
+        log.info(f"Downloading data for {constants.ModelName.TORCH_HISTOLOGY_S3.value}")
         dataloader_module.HistologyDataset()
-        log.info(f"Downloaded data for {constants.ModelName.TORCH_HISTOLOGY_S3.value}")
+        log.info("Download completed")
     except Exception as e:
         raise ex.DataDownloadException(
             f"Failed to download data for {constants.ModelName.TORCH_HISTOLOGY_S3.value}. Error: {e}"

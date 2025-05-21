@@ -177,12 +177,12 @@ class S3Helper:
             "--console-address",
             console_address,
         ]
-
-        log.info(f"Starting MinIO server with data directory: {data_dir}")
-        log.info(f"Server endpoint: http://{address}")
-        log.info(f"Console endpoint: http://{console_address}")
-        log.info(f"Access key: {access_key}")
-        log.info(f"Secret key: {secret_key}")
+        log.info(
+            "Starting MinIO server with below configurations:"
+            f"\n  - Data Directory: {data_dir}"
+            f"\n  - Address: {address}"
+            f"\n  - Console Address: {console_address}"
+        )
 
         # Start the process
         process = subprocess.Popen(
