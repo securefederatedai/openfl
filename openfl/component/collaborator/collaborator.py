@@ -14,7 +14,7 @@ import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
-from openfl.transport.grpc.aggregator_client import AggregatorGRPCClient
+from openfl.transport.grpc.aggregator_client import AggregatorClientInterface
 from openfl.utilities import TensorKey
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class Collaborator:
         collaborator_name,
         aggregator_uuid,
         federation_uuid,
-        client: AggregatorGRPCClient,
+        client: AggregatorClientInterface,
         task_runner,
         task_config,
         opt_treatment="RESET",
