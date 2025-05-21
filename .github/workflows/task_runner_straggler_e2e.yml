@@ -52,7 +52,7 @@ jobs:
           test_type: "With_TLS_Percentage"
 
   test_straggler_cutoff:
-    name: Cutoff Policy (torch/mnist_straggler_check, 3.11)
+    name: Cutoff Policy Rest API (torch/mnist_straggler_check, 3.11)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -82,4 +82,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS_Cutoff"
+          test_type: "With_TLS_Cutoff_Rest"

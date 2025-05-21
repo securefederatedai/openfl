@@ -81,7 +81,7 @@ jobs:
           test_type: "FedEval_With_TLS"
 
   test_without_tls_restapi:
-    name: Without TLS
+    name: Without TLS Rest API
     if: | # Skip for PR pipeline
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
@@ -122,10 +122,10 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "FedEval_Without_TLS"
+          test_type: "FedEval_Without_TLS_REST"
 
   test_without_client_auth_restapi:
-    name: Without Client Auth
+    name: Without Client Auth Rest API
     if: | # Skip for PR pipeline
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
@@ -166,4 +166,4 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "FedEval_Without_Client_Auth"
+          test_type: "FedEval_Without_Client_Auth_REST"
