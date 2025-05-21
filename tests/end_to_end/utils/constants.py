@@ -14,6 +14,7 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     KERAS_TORCH_MNIST = "keras/torch/mnist"
     TORCH_HISTOLOGY = "torch/histology"
+    TORCH_HISTOLOGY_S3 = "torch/histology_s3"
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
@@ -21,6 +22,9 @@ class ModelName(Enum):
     GANDLF_SEG_TEST = "gandlf_seg_test"
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
     NO_OP = "no-op"
+    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
+    FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
+    FEDERATED_ANALYTICS_SMOKERS_HEALTH = "federated_analytics/smokers_health"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
@@ -60,3 +64,13 @@ COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.z
 EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
 COL_TLS_END_MSG = "TLS connection established."
+
+# For S3 and MinIO
+MINIO_ROOT_USER = "minioadmin"
+MINIO_ROOT_PASSWORD = "minioadmin"
+MINIO_HOST = "localhost"
+MINIO_PORT = 9000
+MINIO_CONSOLE_PORT = 9001
+MINIO_URL = f"http://{MINIO_HOST}:{MINIO_PORT}"
+MINIO_CONSOLE_URL = f"http://{MINIO_HOST}:{MINIO_CONSOLE_PORT}"
+MINIO_DATA_FOLDER = "minio_data"
