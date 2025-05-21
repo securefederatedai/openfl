@@ -24,7 +24,7 @@ runs:
       id: tar_files
       if: ${{ always() }}
       run: |
-        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" $HOME/results
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" --exclude="minio_data" $HOME/results
         # Model name might contain forward slashes, convert them to underscore. 
         tmp=${{ env.MODEL_NAME }}
         echo "MODEL_NAME_MODIFIED=${tmp//\//_}" >> $GITHUB_ENV

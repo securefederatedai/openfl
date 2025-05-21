@@ -18,6 +18,7 @@ import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.interruption_helper as intr_helper
+import tests.end_to_end.utils.s3_helper as s3_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
 from tests.end_to_end.utils.generate_report import convert_to_json
@@ -271,13 +272,14 @@ def run_federation_for_dws(fed_obj, use_tls):
     return True
 
 
-def verify_federation_run_completion(fed_obj, test_env, num_rounds):
+def verify_federation_run_completion(fed_obj, test_env, num_rounds, time_for_each_round=100):
     """
     Verify the completion of the process for all the participants
     Args:
         fed_obj (object): Federation fixture object
         test_env (str): Test environment
         num_rounds (int): Number of rounds
+        time_for_each_round (int): Time for each round (in seconds)
     Returns:
         list: List of response (True or False) for all the participants
     """
@@ -291,6 +293,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             participant,
             num_rounds,
             num_collaborators=len(fed_obj.collaborators),
+            time_for_each_round=time_for_each_round,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -569,7 +572,7 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(index, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False, colab_bucket_mapping=None):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -577,13 +580,16 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         index (int): Index of the collaborator. Starts with 1.
         workspace_path (str): Workspace path
         local_bind_path (str): Local bind path
+        data_path (str): Data path
+        calc_hash (bool): Flag to indicate if hash calculation is required
+        colab_bucket_mapping (dict): Mapping of collaborator and its datasources
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{index}",
-            data_directory_path=index,
+            data_directory_path=index if data_path is None else data_path,
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
         create_persistent_store(collaborator.name, local_bind_path)
@@ -610,6 +616,28 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         collaborator.create_collaborator()
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
+
+    # Calculate the hash of collaborator datasource (specific to torch/histology_s3 model). 
+    if calc_hash:
+        json_data = s3_helper.create_collaborator_datasource_json(
+            colab_bucket_mapping=colab_bucket_mapping,
+        )
+        # Modify the data/collaborator{index}/datasources.json file
+        # to include the data path for the collaborator
+        data_source_file = os.path.join(
+            local_col_ws_path, "data", "datasources.json"
+        )
+        with open(data_source_file, "w") as file:
+            json.dump(json_data, file, indent=4)
+        log.debug(f"Modified data source file for {collaborator.name}: {data_source_file}")
+
+        try:
+            # Calculate hash for the collaborator
+            collaborator.calculate_hash()
+        except Exception as e:
+            raise ex.HashCalculationException(
+                f"Failed to calculate hash for {collaborator.name}: {e}"
+            )
 
     return collaborator
 
