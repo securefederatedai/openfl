@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
@@ -26,14 +26,14 @@ def set_num_rounds(request):
     # Set the number of rounds to 1
     log.info("Setting number of rounds to 1 for analytics test")
     request.config.num_rounds = 1
-    if request.config.model_name not in [member.value for member in constants.AnalyticsModelName.__members__.values()]:
+    if "federated_analytics" in request.config.model_name:
         pytest.skip(
             f"Model name {request.config.model_name} is not supported for this test. "
             "Please use a different model name."
         )
 
 
-@pytest.mark.task_runner_analytics
+@pytest.mark.task_runner_fed_analytics
 def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
     """
     Test federation via native task runner.

@@ -1,7 +1,7 @@
 ---
-# Task Runner Analytics E2E tests for bare metal approach
+# Task Runner Federated Analytics E2E tests for bare metal approach
 
-name: Task_Runner_Analytics_E2E  # Please do not modify the name as it is used in the composite action
+name: Task_Runner_Fed_Analytics_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
   workflow_call:
@@ -62,8 +62,8 @@ jobs:
       - name: Run Federated Analytics Histogram
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_analytics_tests.py \
-          -m task_runner_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          python -m pytest -s tests/end_to_end/test_suites/tr_fed_analytics_tests.py \
+          -m task_runner_fed_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Federated analytics histogram test run completed"
 
       - name: Post test run
@@ -97,8 +97,8 @@ jobs:
       - name: Run Federated Analytics Smokers Health
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_analytics_tests.py \
-          -m task_runner_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          python -m pytest -s tests/end_to_end/test_suites/tr_fed_analytics_tests.py \
+          -m task_runner_fed_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Federated analytics smokers health test run completed"
 
       - name: Post test run

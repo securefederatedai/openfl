@@ -158,13 +158,13 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-  task_runner_analytics_e2e:
+  task_runner_fed_analytics_e2e:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Analytics E2E
     needs: task_runner_e2e
-    uses: ./.github/workflows/task_runner_analytics_e2e.yml
+    uses: ./.github/workflows/task_runner_fed_analytics_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
@@ -209,7 +209,7 @@ jobs:
       wf_watermark_e2e,
       wf_secagg_e2e,
       task_runner_e2e,
-      task_runner_analytics_e2e,
+      task_runner_fed_analytics_e2e,
       task_runner_resiliency_e2e,
       task_runner_fedeval_e2e,
       task_runner_secure_agg_e2e,
