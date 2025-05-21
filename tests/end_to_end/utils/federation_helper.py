@@ -617,7 +617,7 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
-    # For S3 scenario
+    # Calculate the hash of collaborator datasource (specific to torch/histology_s3 model). 
     if calc_hash:
         json_data = s3_helper.create_collaborator_datasource_json(
             colab_bucket_mapping=colab_bucket_mapping,
