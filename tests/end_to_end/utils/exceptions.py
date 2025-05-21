@@ -129,3 +129,28 @@ class FlowerAppException(Exception):
 class ProcessKillException(Exception):
     """Exception for process kill"""
     pass
+
+
+class HashCalculationException(Exception):
+    """Exception for hash calculation of collaborator's data path"""
+    pass
+
+
+class MinioServerStartException(Exception):
+    """Exception for minio server start"""
+    pass
+
+
+class S3BucketCreationException(Exception):
+    """Exception for S3 bucket creation"""
+    pass
+
+
+class DataDownloadException(Exception):
+    """Exception for data download"""
+    pass
+
+
+class DataUploadToS3Exception(Exception):
+    """Exception for data upload to S3"""
+    pass
