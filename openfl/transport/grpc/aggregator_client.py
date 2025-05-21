@@ -11,6 +11,7 @@ from typing import Optional, Tuple
 import grpc
 
 from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
+from openfl.protocols.aggregator_client_interface import AggregatorClientInterface
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 
 logger = logging.getLogger(__name__)
@@ -165,8 +166,10 @@ def _resend_data_on_reconnection(func):
     return wrapper
 
 
-class AggregatorGRPCClient:
+class AggregatorGRPCClient(AggregatorClientInterface):
     """Collaborator-side gRPC client that talks to the aggregator.
+
+    This class implements a gRPC client for communicating with an aggregator.
 
     Attributes:
         agg_addr (str): Aggregator address.

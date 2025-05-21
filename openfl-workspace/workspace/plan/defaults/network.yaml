@@ -8,3 +8,4 @@ settings:
     require_client_auth        : True
     cert_folder                : cert
     enable_atomic_connections  : False
+    transport_protocol         : grpc

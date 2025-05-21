@@ -92,8 +92,8 @@ def start_(plan, authorized_cols, task_group):
         logger.info(f"Setting aggregator to assign: {task_group} task_group")
 
     logger.info("🧿 Starting the Aggregator Service.")
-
-    parsed_plan.get_server().serve()
+    server = parsed_plan.get_server()
+    server.serve()
 
 
 @aggregator.command(name="generate-cert-request")
