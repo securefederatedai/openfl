@@ -259,7 +259,7 @@ def run_federation(fed_obj):
         _ = set_keras_backend(fed_obj.model_name)
 
     # Start the aggregator
-    start_aggregator(fed_obj.aggregator)
+    start_aggregator(fed_obj)
     
     for participant in fed_obj.collaborators:
         try:
