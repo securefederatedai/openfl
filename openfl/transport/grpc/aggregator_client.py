@@ -344,7 +344,7 @@ class AggregatorGRPCClient:
     def get_aggregated_tensors(
         self,
         tensor_keys,
-        require_lossless,
+        require_lossless: bool = True,
     ) -> List[base_pb2.NamedTensor]:
         """
         Get aggregated tensors from the aggregator.
