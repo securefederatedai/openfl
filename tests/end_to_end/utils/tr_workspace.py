@@ -121,6 +121,7 @@ def create_tr_workspace(request, eval_scope=False):
         workspace_path=agg_workspace_path,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
+        transport_protocol=request.config.transport_protocol
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -141,6 +142,7 @@ def create_tr_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
@@ -213,6 +215,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
         workspace_path=agg_workspace_path,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
+        transport_protocol=request.config.transport_protocol
     )
 
     # Currently plan initialization internally checks data path in data.yaml
@@ -316,6 +319,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
         workspace_path=agg_workspace_path,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
+        transport_protocol=request.config.transport_protocol
     )
 
     collaborators = []
@@ -326,6 +330,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol
         )
         for index in range(1, request.config.num_collaborators + 1)
     ]

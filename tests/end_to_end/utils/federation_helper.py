@@ -219,7 +219,31 @@ def copy_file_between_participants(
     )
     return True
 
-
+def check_aggregator_protocol_log(aggregator):
+    """
+    Check if the aggregator started with the correct protocol by inspecting its log file.
+    Args:
+        aggregator (object): Aggregator object with res_file and transport_protocol attributes.
+    Raises:
+        Exception: If the expected protocol start message is not found in the logs.
+    """
+    with open(aggregator.res_file, "r") as file:
+        lines = [line.strip() for line in file.readlines()]
+    last_lines = lines[-5:]
+    if aggregator.transport_protocol == "rest":
+        expected_msg = constants.AGGREGATOR_REST_CLIENT
+        protocol_name = "REST"
+    else:
+        expected_msg = constants.AGGREGATOR_GRPC_CLIENT
+        protocol_name = "gRPC"
+    msg_received = [line for line in last_lines if expected_msg in line]
+    if not msg_received:
+        raise Exception(
+            f"Aggregator did not start with {protocol_name} protocol. Check the logs for more details"
+        )
+    log.info(f"Aggregator started with {protocol_name} protocol")
+    
+    
 def run_federation(fed_obj):
     """
     Start the federation
@@ -240,7 +264,7 @@ def run_federation(fed_obj):
         except Exception as e:
             log.error(f"Failed to start {participant.name}: {e}")
             raise e
-
+    check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 
@@ -430,7 +454,8 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         dh.cleanup_docker_containers()
         dh.remove_docker_network()
         dh.create_docker_network()
-
+    
+    request.config.transport_protocol = "rest" if request.config.tr_rest_api else "grpc"
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"Number of collaborators: {request.config.num_collaborators}\n"
@@ -439,6 +464,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"Client authentication: {request.config.require_client_auth}\n"
         f"TLS: {request.config.use_tls}\n"
         f"Secure Aggregation: {request.config.secure_agg}\n"
+        f"Transport protocol: {request.config.transport_protocol}\n"
         f"Memory Logs: {request.config.log_memory_usage}\n"
         f"Results directory: {request.config.results_dir}\n"
         f"Workspace path: {workspace_path}"
@@ -569,7 +595,7 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(index, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path, transport_protocol="grpc"):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -577,6 +603,7 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         index (int): Index of the collaborator. Starts with 1.
         workspace_path (str): Workspace path
         local_bind_path (str): Local bind path
+        transport_protocol (str): Transport protocol (default: "grpc")
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
@@ -585,6 +612,7 @@ def setup_collaborator(index, workspace_path, local_bind_path):
             collaborator_name=f"collaborator{index}",
             data_directory_path=index,
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
+            transport_protocol=transport_protocol
         )
         create_persistent_store(collaborator.name, local_bind_path)
 
@@ -1173,7 +1201,7 @@ def start_aggregator(fed_obj):
     except Exception as e:
         log.error(f"Failed to start aggregator: {e}")
         raise e
-
+    check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 

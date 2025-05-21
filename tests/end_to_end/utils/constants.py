@@ -17,6 +17,7 @@ class ModelName(Enum):
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
+    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
     XGB_HIGGS = "xgb_higgs"
     GANDLF_SEG_TEST = "gandlf_seg_test"
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
@@ -60,3 +61,13 @@ COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.z
 EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
 COL_TLS_END_MSG = "TLS connection established."
+
+class TransportProtocol(Enum):
+    """
+    Enum class to define the transport protocol.
+    """
+    GRPC = "grpc"
+    REST = "rest"
+
+AGGREGATOR_REST_CLIENT = "Starting Aggregator REST Server"
+AGGREGATOR_GRPC_CLIENT = "Starting Aggregator gRPC Server"
