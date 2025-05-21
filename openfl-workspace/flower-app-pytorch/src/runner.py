@@ -51,30 +51,40 @@ class FlowerTaskRunner(TaskRunner):
 
         self.shutdown_requested = False  # Flag to signal shutdown
 
-    def start_client_adapter(self, interop_server, **kwargs):
+    def start_client_adapter(self,
+                             col_name=None,
+                             round_num=None,
+                             input_tensor_dict=None,
+                             **kwargs):
         """
-        Start the local gRPC server and the Flower SuperNode.
+        Start the FlowerInteropServer and the Flower SuperNode.
 
         Args:
-            interop_server: The local gRPC server instance.
-            **kwargs: Additional parameters, including 'local_server_port'.
+            col_name (str, optional): The collaborator name. Defaults to None.
+            round_num (int, optional): The current round number. Defaults to None.
+            input_tensor_dict (dict, optional): The input tensor dictionary. Defaults to None.
+            **kwargs: Additional parameters for configuration.
+                includes:
+                    interop_server (object): The FlowerInteropServer instance.
+                    interop_server_port (int): The port for the interop server.
         """
-        local_server_port = kwargs.get('local_server_port')
 
         def message_callback():
             self.shutdown_requested = True
 
-        # Set the callback for ending the experiment
+        interop_server = kwargs.get('interop_server')
+        interop_server_port = kwargs.get('interop_server_port')
         interop_server.set_end_experiment_callback(message_callback)
-        interop_server.start_server(local_server_port)
+        interop_server.start_server(interop_server_port)
 
-        local_server_port = interop_server.get_port()
+        # interop server sets port dynamically
+        interop_server_port = interop_server.get_port()
 
         command = [
             "flower-supernode",
             "--insecure",
             "--grpc-adapter",
-            "--superlink", f"127.0.0.1:{local_server_port}",
+            "--superlink", f"127.0.0.1:{interop_server_port}",
             "--clientappio-api-address", f"127.0.0.1:{self.client_port}",
             "--node-config", f"data-path='{self.data_path}'"
         ]
@@ -93,7 +103,7 @@ class FlowerTaskRunner(TaskRunner):
 
         if self.sgx_enabled:
             # Check if port is open before starting the client app
-            while not is_port_open('127.0.0.1', local_server_port):
+            while not is_port_open('127.0.0.1', interop_server_port):
                 time.sleep(0.5)
 
             time.sleep(1) # Add a small delay after confirming the port is open
@@ -115,6 +125,14 @@ class FlowerTaskRunner(TaskRunner):
                 interop_server.terminate_supernode_process(supernode_process)
                 interop_server.stop_server()
             time.sleep(0.1)
+
+        # Collaborator expects these dictionaries, but they are not used in this context
+        # as Flower will handle the tensors internally.
+        global_output_tensor_dict = {}
+        local_output_tensor_dict = {}
+
+        return global_output_tensor_dict, local_output_tensor_dict
+
 
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
@@ -160,6 +178,9 @@ class FlowerTaskRunner(TaskRunner):
         """Initialize tensor keys for functions. Currently not implemented."""
         pass
 
+    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+        """Get tensor keys for functions. Return empty dict."""
+        return {}
 
 def install_flower_FAB(flwr_app_name):
     """

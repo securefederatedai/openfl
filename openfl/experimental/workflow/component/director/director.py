@@ -105,7 +105,7 @@ class Director:
                             private_key=self.private_key,
                             tls=self.tls,
                             director_config=self.director_config,
-                            install_requirements=False,
+                            install_requirements=self.install_requirements,
                         )
                     )
                     # Adding the experiment to collaborators queues
