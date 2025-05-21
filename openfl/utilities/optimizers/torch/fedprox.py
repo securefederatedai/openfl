@@ -177,7 +177,7 @@ class FedProxOptimizer(Optimizer):
             self._validate_old_weights(mu, w_old)
 
             # Apply proximal term when mu != 0
-            apply_proximal = w_old is not None and mu != 0
+            apply_proximal = w_old is not None
 
             for i, p in enumerate(group["params"]):
                 if p.grad is None:
@@ -536,7 +536,7 @@ class FedProxAdam(Optimizer):
         self._validate_old_weights(mu, w_old)
 
         # Apply proximal term when mu != 0
-        apply_proximal = w_old is not None and mu != 0
+        apply_proximal = w_old is not None
 
         for i, param in enumerate(params):
             grad = grads[i]
