@@ -1,0 +1,56 @@
+%% Copyright 2025 Intel Corporation
+%% SPDX-License-Identifier: Apache-2.0
+
+classDiagram
+    class VerifiableDatasetInfo {
+        +label: str
+        +data_sources: DataSource[] 
+        +metadata: dict[str, str] 
+        +root_hash: HASH 
+
+        +verify_dataset(root_hash: HASH)
+        +verify_single_file(file_path: str, file_hash: HASH)
+        +to_json() str
+        +from_json(json_str: str) VerifiableDatasetInfo
+    }
+
+    class DataSource {
+        <<abstract>>
+        +name: str 
+        +type: DataSourceType 
+        +compute_file_hash(path: str) str
+        +enumerate_files() Generator~str~
+        +read_blob(path: str) bytes
+        +from_dict(ds_dict: dict) DataSource
+        +is_valid_hash_function(func) bool
+        +to_dict() dict
+    }
+
+    class LocalDataSource {
+        +base_path: str
+        ...
+    }
+
+    class S3DataSource {
+        +uri: str 
+        +endpoint: str
+        ...
+    }
+
+    class AzureBlobDataSource {
+        +name: str 
+        +container_string: str 
+        +folder_prefix: str
+        ...
+    }
+
+    VerifiableDatasetInfo "1" o-- "*" DataSource
+    DataSource <|-- LocalDataSource
+    DataSource <|-- S3DataSource
+    DataSource <|-- AzureBlobDataSource
+
+    style VerifiableDatasetInfo fill:#FFFFE0,stroke:#000,stroke-width:1px
+    style DataSource fill:#FFFFE0,stroke:#000,stroke-width:1px
+    style LocalDataSource fill:#FFFFE0,stroke:#000,stroke-width:1px
+    style S3DataSource fill:#FFFFE0,stroke:#000,stroke-width:1px
+    style AzureBlobDataSource fill:#FFFFE0,stroke:#000,stroke-width:1px
