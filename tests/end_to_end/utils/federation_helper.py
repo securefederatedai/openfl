@@ -220,7 +220,7 @@ def copy_file_between_participants(
     )
     return True
 
-def check_aggregator_protocol_log(aggregator):
+def _check_aggregator_protocol_log(aggregator):
     """
     Check if the aggregator started with the correct protocol by inspecting its log file.
     Args:
@@ -258,14 +258,15 @@ def run_federation(fed_obj):
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+    # Start the aggregator
+    start_aggregator(fed_obj.aggregator)
+    
+    for participant in fed_obj.collaborators:
         try:
-            # Start the participant
             participant.start()
         except Exception as e:
             log.error(f"Failed to start {participant.name}: {e}")
             raise e
-    check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 
@@ -1229,7 +1230,7 @@ def start_aggregator(fed_obj):
     except Exception as e:
         log.error(f"Failed to start aggregator: {e}")
         raise e
-    check_aggregator_protocol_log(fed_obj.aggregator)
+    _check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 
