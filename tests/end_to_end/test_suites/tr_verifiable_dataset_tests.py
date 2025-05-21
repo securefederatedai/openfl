@@ -14,6 +14,14 @@ log = logging.getLogger(__name__)
 def test_federation_with_s3_bucket(request, fx_federation_tr):
     """
     Test federation with S3 bucket. Model name - torch/histology_s3
+    Steps:
+    1. Start the minio server, create buckets for every collaborator.
+    2. Download data using torch/histology dataloader and upload data to the buckets.
+    3. Create a datasources.json file for each collaborator which will contain the S3 bucket and/or local datasources.
+    4. Calculate hash for each collaborator's data (it generates hash.txt file under the data directory).
+    5. Start the federation (internally the hash is verified as well).
+    6. Verify the completion of the federation run.
+    7. Verify the best aggregated score.
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr (Fixture): Pytest fixture for native task runner
