@@ -1,4 +1,4 @@
-# Copyright 2020-2025 Intel Corporation
+# Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -45,12 +45,12 @@ class S3Helper:
             "MINIO_ROOT_PASSWORD", "minioadmin"
         )
         self.region = region
-        
+
         # Extract host and port from endpoint_url
         url_parts = self.endpoint_url.split('://')[-1].split(':')
         self.minio_host = url_parts[0]
         self.minio_port = int(url_parts[1]) if len(url_parts) > 1 else 9000
-        
+
         # Set default URLs
         self.minio_url = f"{self.minio_host}:{self.minio_port}"
         self.minio_console_url = f"{self.minio_host}:{self.minio_port + 1}"
@@ -68,11 +68,11 @@ class S3Helper:
     def is_minio_server_running(self, host='localhost', port=9000):
         """
         Check if a MinIO server is running on the specified host and port.
-        
+
         Args:
             host: Host name (default: localhost)
             port: Port number (default: 9000)
-            
+
         Returns:
             bool: True if MinIO server is running, False otherwise
         """
@@ -115,7 +115,7 @@ class S3Helper:
         console_address = console_address or self.minio_console_url
         access_key = access_key or self.access_key
         secret_key = secret_key or self.secret_key
-        
+
         # Parse address to get host and port
         try:
             host, port = address.split(':')

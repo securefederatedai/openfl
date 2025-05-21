@@ -155,7 +155,7 @@ def create_tr_workspace(request, eval_scope=False):
             )
             for index in range(1, request.config.num_collaborators+1)
         ]
-    else:        
+    else:
         futures = [
             executor.submit(
                 fh.setup_collaborator,
@@ -406,7 +406,7 @@ def prepare_data_for_s3(s3_obj, request):
         dict: A dictionary containing the bucket mapping for each collaborator.
     """
     num_collaborators = request.config.num_collaborators
-  
+
     # Import the dataloader module for torch/histology to download the data
     # As the folder name contains hyphen, we need to use importlib to import the module
     dataloader_module = importlib.import_module("openfl-workspace.torch.histology.src.dataloader")
