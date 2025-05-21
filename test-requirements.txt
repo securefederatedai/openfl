@@ -1,8 +1,10 @@
 docker
+Flask==3.1.0
 lxml==5.3.1
 paramiko
 pytest==8.3.5
 pytest-asyncio==0.26.0
+pytest-cov>=2.10.0
 pytest-mock==3.14.0
 defusedxml==0.7.1
 matplotlib==3.10.1
@@ -14,3 +16,4 @@ boto3>=1.37.19
 moto==5.1.1
 torchvision==0.22.0
 azure-storage-blob==12.25.1
+cryptography>=3.4.0
