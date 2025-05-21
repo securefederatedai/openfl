@@ -63,11 +63,8 @@ def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
         results = f.read()
     try:
         results_json = json.loads(results)
-        log.info("Result:\n%s", json.dumps(results_json, indent=4))
     except json.JSONDecodeError as e:
         log.warning("Results file is not valid JSON. Raw content:\n%s", results)
         raise e
     
     assert results, f"Results file {result_path} is empty"
-
-   
