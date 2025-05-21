@@ -33,7 +33,7 @@ def set_num_rounds(request):
         )
 
 
-@pytest.mark.task_runner_basic
+@pytest.mark.task_runner_analytics
 def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
     """
     Test federation via native task runner.

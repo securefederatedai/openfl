@@ -24,6 +24,7 @@ class ModelName(Enum):
     FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
     KERAS_2DUNET = "keras/2dunet"
     KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
+    FEDERATED_ANALYTICS_SMOKERS_HEALTH = "federated_analytics/smokers_health"
 
 
 class AnalyticsModelName(Enum):
@@ -31,6 +32,7 @@ class AnalyticsModelName(Enum):
     Enum class to define the model names for analytics.
     """
     FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
+    FEDERATED_ANALYTICS_SMOKERS_HEALTH = "federated_analytics/smokers_health"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
