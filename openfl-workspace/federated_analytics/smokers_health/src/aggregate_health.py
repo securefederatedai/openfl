@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 from openfl.interface.aggregation_functions.core import AggregationFunction
 

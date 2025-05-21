@@ -40,6 +40,6 @@ tasks:
   analytics:
     function: analytics
     aggregation_type:
-      template: src.aggregatehealth.AggregateHealthMetrics
+      template: src.aggregate_health.AggregateHealthMetrics
     kwargs:
       columns: ['age', 'sex', 'current_smoker', 'heart_rate', 'blood_pressure', 'cigs_per_day', 'chol']

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from src.runner_fa import FederatedAnalyticsTaskRunner
 import pandas as pd
 import numpy as np
