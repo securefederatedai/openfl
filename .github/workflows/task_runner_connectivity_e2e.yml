@@ -53,7 +53,7 @@ jobs:
           test_type: "TLS_Connectivity_gRPC"
           
   test_rest_connectivity:
-    name: Task Runner Rest connectivity (no-op, 3.11, rest)
+    name: Task Runner Rest connectivity (no-op, 3.11)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch') ||
