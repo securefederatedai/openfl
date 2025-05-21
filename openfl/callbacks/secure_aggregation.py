@@ -295,5 +295,6 @@ class SecAggBootstrapping(Callback):
         Returns:
             bytes: The aggregated tensor data in bytes.
         """
-        tensor = self.client.get_aggregated_tensor(key_name, -1, False, ("secagg",), True)
+        key = TensorKey(key_name, self.name, -1, False, ("secagg",))
+        tensor = self.client.get_aggregated_tensors([key], require_lossless=True)[0]
         return json.loads(tensor.data_bytes)

@@ -6,7 +6,6 @@
 import json
 import logging
 import queue
-import time
 from threading import Lock
 from typing import List, Optional
 
@@ -17,7 +16,7 @@ from openfl.component.aggregator.straggler_handling import StragglerPolicy, Wait
 from openfl.databases import PersistentTensorDB, TensorDB
 from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
-from openfl.protocols import base_pb2, utils
+from openfl.protocols import utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 
@@ -84,7 +83,6 @@ class Aggregator:
         single_col_cert_common_name=None,
         compression_pipeline=None,
         db_store_rounds=1,
-        initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
         callbacks: Optional[List] = [],
@@ -92,31 +90,6 @@ class Aggregator:
         persistent_db_path=None,
         secure_aggregation=False,
     ):
-        """Initializes the Aggregator.
-
-        Args:
-            aggregator_uuid (int): Aggregation ID.
-            federation_uuid (str): Federation ID.
-            authorized_cols (list of str): The list of IDs of enrolled
-                collaborators.
-            init_state_path (str): The location of the initial weight file.
-            best_state_path (str): The file location to store the weight of
-                the best model.
-            last_state_path (str): The file location to store the latest
-                weight.
-            assigner: Assigner object.
-            straggler_handling_policy (optional): Straggler handling policy.
-            rounds_to_train (int, optional): Number of rounds to train.
-                Defaults to 256.
-            single_col_cert_common_name (str, optional): Common name for single
-                collaborator certificate. Defaults to None.
-            compression_pipeline (optional): Compression pipeline. Defaults to
-                NoCompressionPipeline.
-            db_store_rounds (int, optional): Rounds to store in TensorDB.
-                Defaults to 1.
-            initial_tensor_dict (dict, optional): Initial tensor dictionary.
-            callbacks: List of callbacks to be used during the experiment.
-        """
         self.round_number = 0
         self.next_model_round_number = 0
 
@@ -206,20 +179,10 @@ class Aggregator:
             last_state_path=self.last_state_path,
         )
 
-        if initial_tensor_dict:
-            self._load_initial_tensors_from_dict(initial_tensor_dict)
-            self.model = utils.construct_model_proto(
-                tensor_dict=initial_tensor_dict,
-                round_number=0,
-                tensor_pipe=self.compression_pipeline,
-            )
-        else:
-            if self.connector:
-                # The model definition will be handled by the respective framework
-                self.model = {}
-            else:
-                self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
-                self._load_initial_tensors()  # keys are TensorKeys
+        self.model = {}
+        if not self.connector:
+            self.model = utils.load_proto(self.init_state_path)
+            self._load_initial_tensors()  # keys are TensorKeys
 
         self._secure_aggregation_enabled = secure_aggregation
         if self._secure_aggregation_enabled:
@@ -330,23 +293,6 @@ class Aggregator:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
 
-        tensor_key_dict = {
-            TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
-            for k, v in tensor_dict.items()
-        }
-        # all initial model tensors are loaded here
-        self.tensor_db.cache_tensor(tensor_key_dict)
-        logger.debug("This is the initial tensor_db: %s", self.tensor_db)
-
-    def _load_initial_tensors_from_dict(self, tensor_dict):
-        """Load all of the tensors required to begin federated learning.
-
-        Required tensors are: \
-            1. Initial model.
-
-        Returns:
-            None
-        """
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
             for k, v in tensor_dict.items()
@@ -486,10 +432,7 @@ class Aggregator:
 
         # first, if it is time to quit, inform the collaborator
         if self._time_to_quit():
-            logger.info(
-                "Sending signal to collaborator %s to shutdown...",
-                collaborator_name,
-            )
+            logger.info("Sending signal to collaborator %s to shutdown...", collaborator_name)
             self.quit_job_sent_to.append(collaborator_name)
 
             tasks = None
@@ -611,74 +554,28 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        if "compressed" in tags or require_lossless:
-            compress_lossless = True
-        else:
-            compress_lossless = False
-
         if not self._check_tags(tags, requested_by):
             logger.error(
-                "Tag check failed: unauthorized tags detected. Only '%s' is allowed.", requested_by
+                "Collaborator `%s` is not allowed to fetch tensor with tags `%s`.",
+                requested_by,
+                tags,
             )
             return NamedTensor()
 
-        # TODO the TensorDB doesn't support compressed data yet.
-        # The returned tensor will be recompressed anyway.
+        # We simply remove compression-related tags because serializer adds them.
         if "compressed" in tags:
             tags = change_tags(tags, remove_field="compressed")
         if "lossy_compressed" in tags:
             tags = change_tags(tags, remove_field="lossy_compressed")
 
+        # Fetch tensor
         tensor_key = TensorKey(tensor_name, self.uuid, round_number, report, tags)
-        tensor_name, origin, round_number, report, tags = tensor_key
-
-        if "aggregated" in tags and "delta" in tags and round_number != 0:
-            agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("aggregated",))
-        else:
-            agg_tensor_key = tensor_key
-
-        nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
-
-        start_retrieving_time = time.time()
-        while nparray is None:
-            logger.debug("Waiting for tensor_key %s", agg_tensor_key)
-            time.sleep(5)
-            nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
-            if (time.time() - start_retrieving_time) > 60:
-                break
-
+        nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
         if nparray is None:
-            raise ValueError(f"Aggregator does not have an aggregated tensor for {tensor_key}")
+            raise ValueError(f"Aggregator does not have `{tensor_key}`")
 
-        # quite a bit happens in here, including compression, delta handling,
-        # etc...
-        # we might want to cache these as well
-        named_tensor = self._nparray_to_named_tensor(
-            agg_tensor_key, nparray, send_model_deltas=True, compress_lossless=compress_lossless
-        )
-
-        return named_tensor
-
-    def _nparray_to_named_tensor(self, tensor_key, nparray, send_model_deltas, compress_lossless):
-        """Construct the NamedTensor Protobuf.
-
-        Also includes logic to create delta, compress tensors with the
-            TensorCodec, etc.
-
-        Args:
-            tensor_key (TensorKey): Tensor key.
-            nparray (np.array): Numpy array.
-            send_model_deltas (bool): Whether to send model deltas.
-            compress_lossless (bool): Whether to compress lossless.
-
-        Returns:
-            tensor_key (TensorKey): Tensor key.
-            nparray (np.array): Numpy array.
-
-        """
-        tensor_name, origin, round_number, report, tags = tensor_key
-        # Secure aggregation setup tensor.
-        if "secagg" in tags:
+        # Serialize (and compress) the tensor
+        if "secagg" in tensor_key.tags:
             import numpy as np
 
             class NumpyEncoder(json.JSONEncoder):
@@ -695,43 +592,10 @@ class Aggregator:
             )
 
             return named_tensor
-        # if we have an aggregated tensor, we can make a delta
-        if "aggregated" in tags and send_model_deltas:
-            # Should get the pretrained model to create the delta. If training
-            # has happened, Model should already be stored in the TensorDB
-            model_tk = TensorKey(tensor_name, origin, round_number - 1, report, ("model",))
 
-            model_nparray = self.tensor_db.get_tensor_from_cache(model_tk)
-
-            assert model_nparray is not None, (
-                "The original model layer should be present if the latest "
-                "aggregated model is present"
-            )
-            delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                tensor_key, nparray, model_nparray
-            )
-            delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
-                delta_tensor_key, delta_nparray, lossless=compress_lossless
-            )
-            named_tensor = utils.construct_named_tensor(
-                delta_comp_tensor_key,
-                delta_comp_nparray,
-                metadata,
-                lossless=compress_lossless,
-            )
-
-        else:
-            # Assume every other tensor requires lossless compression
-            compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
-                tensor_key, nparray, require_lossless=True
-            )
-            named_tensor = utils.construct_named_tensor(
-                compressed_tensor_key,
-                compressed_nparray,
-                metadata,
-                lossless=compress_lossless,
-            )
-
+        named_tensor = utils.serialize_tensor(
+            tensor_key, nparray, self.tensor_codec, lossless=require_lossless
+        )
         return named_tensor
 
     def _collaborator_task_completed(self, collaborator, task_name, round_num):
@@ -830,45 +694,47 @@ class Aggregator:
             self._is_collaborator_done(collaborator_name, round_number)
             self._end_of_round_with_stragglers_check()
 
-        task_key = TaskResultKey(task_name, collaborator_name, round_number)
-
-        # we mustn't have results already
         if self._collaborator_task_completed(collaborator_name, task_name, round_number):
             logger.warning(
-                f"Aggregator already has task results from collaborator {collaborator_name}"
-                f" for task {task_key}"
+                f"Aggregator already has task results from collaborator {collaborator_name} "
+                f"for task {task_name} in round {round_number}. Ignoring..."
             )
             return
 
-        # By giving task_key it's own weight, we can support different
-        # training/validation weights
-        # As well as eventually supporting weights that change by round
-        # (if more data is added)
+        # Record collaborator individual weightage/contribution for federated averaging
+        task_key = TaskResultKey(task_name, collaborator_name, round_number)
         self.collaborator_task_weight[task_key] = data_size
 
-        # initialize the list of tensors that go with this task
-        # Setting these incrementally is leading to missing values
+        # Process named tensors
         task_results = []
-
+        result_tensor_dict = {}
         for named_tensor in named_tensors:
-            # quite a bit happens in here, including decompression, delta
-            # handling, etc...
-            tensor_key, value = self._process_named_tensor(named_tensor, collaborator_name)
+            # Deserialize
+            tensor_key, nparray = utils.deserialize_tensor(named_tensor, self.tensor_codec)
+
+            # Update origin/tags
+            updated_tags = change_tags(tensor_key.tags, add_field=collaborator_name)
+            tensor_key = tensor_key._replace(origin=self.uuid, tags=updated_tags)
+
+            # Record
+            result_tensor_dict[tensor_key] = nparray
+            task_results.append(tensor_key)
 
             if "metric" in tensor_key.tags:
-                # Caution: This schema must be followed. It is also used in
-                # gRPC message streams for director/envoy.
+                assert nparray.ndim == 0, (
+                    f"Expected metric to be a scalar, got shape {nparray.shape}"
+                )
                 metrics = {
                     "round": round_number,
                     "metric_origin": collaborator_name,
                     "task_name": task_name,
                     "metric_name": tensor_key.tensor_name,
-                    "metric_value": float(value),
+                    "metric_value": float(nparray),
                 }
                 self.metric_queue.put(metrics)
 
-            task_results.append(tensor_key)
-
+        # Store results in TensorDB
+        self.tensor_db.cache_tensor(result_tensor_dict)
         self.collaborator_tasks_results[task_key] = task_results
 
         # Check if collaborator or round is done.
@@ -895,97 +761,6 @@ class Aggregator:
                 logger.warning(f"Identified stragglers: {self.stragglers}")
             self._end_of_round_check()
 
-    def _process_named_tensor(self, named_tensor, collaborator_name):
-        """Extract the named tensor fields.
-
-        Performs decompression, delta computation, and inserts results into
-        TensorDB.
-
-        Args:
-            named_tensor (protobuf NamedTensor): Named tensor.
-                protobuf that will be extracted from and processed
-            collaborator_name (str): Collaborator name.
-                Collaborator name is needed for proper tagging of resulting
-                tensorkeys.
-
-        Returns:
-            tensor_key (TensorKey): Tensor key.
-                The tensorkey extracted from the protobuf.
-            nparray (np.array): Numpy array.
-                The numpy array associated with the returned tensorkey.
-        """
-        raw_bytes = named_tensor.data_bytes
-        metadata = [
-            {
-                "int_to_float": proto.int_to_float,
-                "int_list": proto.int_list,
-                "bool_list": proto.bool_list,
-            }
-            for proto in named_tensor.transformer_metadata
-        ]
-        # The tensor has already been transferred to aggregator,
-        # so the newly constructed tensor should have the aggregator origin
-        tensor_key = TensorKey(
-            named_tensor.name,
-            self.uuid,
-            named_tensor.round_number,
-            named_tensor.report,
-            tuple(named_tensor.tags),
-        )
-        tensor_name, origin, round_number, report, tags = tensor_key
-
-        assert "compressed" in tags or "lossy_compressed" in tags, (
-            f"Named tensor {tensor_key} is not compressed"
-        )
-        if "compressed" in tags:
-            dec_tk, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=True,
-            )
-            dec_name, dec_origin, dec_round_num, dec_report, dec_tags = dec_tk
-            # Need to add the collaborator tag to the resulting tensor
-            new_tags = change_tags(dec_tags, add_field=collaborator_name)
-
-            # layer.agg.n.trained.delta.col_i
-            decompressed_tensor_key = TensorKey(
-                dec_name, dec_origin, dec_round_num, dec_report, new_tags
-            )
-        if "lossy_compressed" in tags:
-            dec_tk, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=False,
-            )
-            dec_name, dec_origin, dec_round_num, dec_report, dec_tags = dec_tk
-            new_tags = change_tags(dec_tags, add_field=collaborator_name)
-            # layer.agg.n.trained.delta.lossy_decompressed.col_i
-            decompressed_tensor_key = TensorKey(
-                dec_name, dec_origin, dec_round_num, dec_report, new_tags
-            )
-
-        if "delta" in tags:
-            base_model_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("model",))
-            base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tensor_key)
-            if base_model_nparray is None:
-                raise ValueError(f"Base model {base_model_tensor_key} not present in TensorDB")
-            final_tensor_key, final_nparray = self.tensor_codec.apply_delta(
-                decompressed_tensor_key,
-                decompressed_nparray,
-                base_model_nparray,
-            )
-        else:
-            final_tensor_key = decompressed_tensor_key
-            final_nparray = decompressed_nparray
-
-        assert final_nparray is not None, f"Could not create tensorkey {final_tensor_key}"
-        self.tensor_db.cache_tensor({final_tensor_key: final_nparray})
-        logger.debug("Created TensorKey: %s", final_tensor_key)
-
-        return final_tensor_key, final_nparray
-
     def _prepare_trained(self, tensor_name, origin, round_number, report, agg_results):
         """Prepare aggregated tensorkey tags.
 
@@ -996,82 +771,13 @@ class Aggregator:
             report (bool): Whether to report.
             agg_results (np.array): Aggregated results.
         """
-        # The aggregated tensorkey tags should have the form of
-        # 'trained' or 'trained.lossy_decompressed'
-        # They need to be relabeled to 'aggregated' and
-        # reinserted. Then delta performed, compressed, etc.
-        # then reinserted to TensorDB with 'model' tag
-
-        # First insert the aggregated model layer with the
-        # correct tensorkey
         agg_tag_tk = TensorKey(tensor_name, origin, round_number + 1, report, ("aggregated",))
         self.tensor_db.cache_tensor({agg_tag_tk: agg_results})
 
-        # Create delta and save it in TensorDB
-        base_model_tk = TensorKey(tensor_name, origin, round_number, report, ("model",))
-        base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
-        if base_model_nparray is not None and self.use_delta_updates:
-            delta_tk, delta_nparray = self.tensor_codec.generate_delta(
-                agg_tag_tk, agg_results, base_model_nparray
-            )
-        else:
-            # This condition is possible for base model
-            # optimizer states (i.e. Adam/iter:0, SGD, etc.)
-            # These values couldn't be present for the base
-            # model because no training occurs on the aggregator
-            delta_tk, delta_nparray = agg_tag_tk, agg_results
-
-        # Compress lossless/lossy
-        compressed_delta_tk, compressed_delta_nparray, metadata = self.tensor_codec.compress(
-            delta_tk, delta_nparray
-        )
-
-        # TODO extend the TensorDB so that compressed data is
-        #  supported. Once that is in place
-        # the compressed delta can just be stored here instead
-        # of recreating it for every request
-
-        # Decompress lossless/lossy
-        decompressed_delta_tk, decompressed_delta_nparray = self.tensor_codec.decompress(
-            compressed_delta_tk, compressed_delta_nparray, metadata
-        )
-
-        self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
-
-        # Apply delta (unless delta couldn't be created)
-        if base_model_nparray is not None and self.use_delta_updates:
-            logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
-            new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
-                decompressed_delta_tk,
-                decompressed_delta_nparray,
-                base_model_nparray,
-            )
-        else:
-            new_model_tk, new_model_nparray = (
-                decompressed_delta_tk,
-                decompressed_delta_nparray,
-            )
-
-        # Now that the model has been compressed/decompressed
-        # with delta operations,
-        # Relabel the tags to 'model'
-        (
-            new_model_tensor_name,
-            new_model_origin,
-            new_model_round_number,
-            new_model_report,
-            new_model_tags,
-        ) = new_model_tk
-        final_model_tk = TensorKey(
-            new_model_tensor_name,
-            new_model_origin,
-            new_model_round_number,
-            new_model_report,
-            ("model",),
-        )
-        self.next_model_round_number = new_model_round_number
-        # Finally, cache the updated model tensor
-        self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
+        # Relabel the tags to 'model' and cache the updated model tensor
+        final_model_tk = agg_tag_tk._replace(tags=("model",))
+        self.next_model_round_number = final_model_tk.round_number
+        self.tensor_db.cache_tensor({final_model_tk: agg_results})
 
     def _compute_validation_related_task_metrics(self, task_name) -> dict:
         """Compute all validation related metrics.
@@ -1091,7 +797,6 @@ class Aggregator:
         )
         # Leave out straggler for the round even if they've partially
         # completed given tasks
-        collaborators_for_task = []
         collaborators_for_task = [
             c for c in all_collaborators_for_task if c in self.collaborators_done
         ]
@@ -1160,14 +865,10 @@ class Aggregator:
                         if not self.assigner.is_task_group_evaluation():
                             logger.info(
                                 f"Round {round_number}: saved the best model with score "
-                                "{agg_results:f}"
+                                f"{agg_results:f}"
                             )
                             self._save_model(round_number, self.best_state_path)
-                        else:
-                            logger.info(
-                                f"Round {round_number}: best score observed {agg_results:f} "
-                                "(model not saved in evaluation mode)"
-                            )
+
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 

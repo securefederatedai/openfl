@@ -11,7 +11,7 @@ import "openfl/protocols/base.proto";
 service Aggregator {
   rpc Ping(PingRequest) returns (PingResponse) {}
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
-  rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
+  rpc GetAggregatedTensors(GetAggregatedTensorsRequest) returns (GetAggregatedTensorsResponse) {}
   rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
   rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
@@ -42,6 +42,14 @@ message Task {
   bool apply_local = 4;
 }
 
+message TensorSpec {
+  string tensor_name = 1;
+  int32 round_number = 2;
+  bool report = 3;
+  repeated string tags = 4;
+  bool require_lossless = 5;
+}
+
 message GetTasksResponse {
   MessageHeader header = 1;
   int32 round_number = 2;
@@ -51,20 +59,14 @@ message GetTasksResponse {
   bool quit = 5;  // these three are exclusive
 }
 
-message GetAggregatedTensorRequest {
+message GetAggregatedTensorsRequest {
   MessageHeader header = 1;
-  string tensor_name = 2;
-  int32 round_number = 3;
-  bool report = 4;
-  repeated string	tags = 5;
-  bool require_lossless = 6;
+  repeated TensorSpec tensor_specs = 2;
 }
 
-// we'll actually send this as a data stream
-message GetAggregatedTensorResponse {
+message GetAggregatedTensorsResponse {
   MessageHeader header = 1;
-  int32 round_number = 2;
-  NamedTensor tensor = 3;
+  repeated NamedTensor tensors = 2;
 }
 
 // we'll actually send this as a data stream

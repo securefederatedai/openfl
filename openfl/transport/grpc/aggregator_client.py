@@ -6,11 +6,11 @@
 
 import logging
 import time
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import grpc
 
-from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, base_pb2, utils
 from openfl.protocols.aggregator_client_interface import AggregatorClientInterface
 from openfl.transport.grpc.common import create_header, create_insecure_channel, create_tls_channel
 
@@ -344,27 +344,20 @@ class AggregatorGRPCClient(AggregatorClientInterface):
 
     @_resend_data_on_reconnection
     @_atomic_connection
-    def get_aggregated_tensor(
+    def get_aggregated_tensors(
         self,
-        tensor_name,
-        round_number,
-        report,
-        tags,
-        require_lossless,
-    ):
+        tensor_keys,
+        require_lossless: bool = True,
+    ) -> List[base_pb2.NamedTensor]:
         """
-        Get aggregated tensor from the aggregator.
+        Get aggregated tensors from the aggregator.
 
         Args:
-            collaborator_name (str): The name of the collaborator.
-            tensor_name (str): The name of the tensor.
-            round_number (int): The round number.
-            report (str): The report.
-            tags (List[str]): The tags.
+            tensor_keys (list): A list of tensor keys to fetch from aggregator.
             require_lossless (bool): Whether lossless compression is required.
 
         Returns:
-            aggregator_pb2.TensorProto: The aggregated tensor.
+            A list of `NamedTensor`s in the same order as requested.
         """
         header = create_header(
             sender=self.collaborator_name,
@@ -373,17 +366,24 @@ class AggregatorGRPCClient(AggregatorClientInterface):
             single_col_cert_common_name=self.single_col_cert_common_name,
         )
 
-        request = aggregator_pb2.GetAggregatedTensorRequest(
+        request = aggregator_pb2.GetAggregatedTensorsRequest(
             header=header,
-            tensor_name=tensor_name,
-            round_number=round_number,
-            report=report,
-            tags=tags,
-            require_lossless=require_lossless,
+            tensor_specs=[
+                aggregator_pb2.TensorSpec(
+                    tensor_name=k.tensor_name,
+                    round_number=k.round_number,
+                    report=k.report,
+                    tags=k.tags,
+                    require_lossless=require_lossless,
+                )
+                for k in tensor_keys
+            ],
         )
-        response = self.stub.GetAggregatedTensor(request)
+
+        response = self.stub.GetAggregatedTensors(request)
         self.validate_response(response)
-        return response.tensor
+        named_tensors = response.tensors
+        return named_tensors
 
     @_resend_data_on_reconnection
     @_atomic_connection
