@@ -13,7 +13,7 @@ import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.s3_helper as s3_helper
 import tests.end_to_end.utils.ssh_helper as ssh
-from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
+from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model, s3_bucket as s3_model
 import tests.end_to_end.utils.docker_helper as dh
 
 log = logging.getLogger(__name__)
@@ -412,7 +412,7 @@ def prepare_data_for_s3(request):
             {'collaborator': 'collaborator2', 'local_data_path': '/home/azureuser/openfl/data/2', 'buckets': ['bucket-2-01', 'bucket-2-02']}
         ]
     """
-    s3_obj = s3_helper.S3Helper()
+    s3_obj = s3_model.S3Bucket()
 
     num_collaborators = request.config.num_collaborators
 

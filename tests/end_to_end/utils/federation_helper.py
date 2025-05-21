@@ -629,11 +629,10 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
         )
         with open(data_source_file, "w") as file:
             json.dump(json_data, file, indent=4)
-        log.info(f"Modified data source file for {collaborator.name}: {data_source_file}")
+        log.debug(f"Modified data source file for {collaborator.name}: {data_source_file}")
 
         try:
             # Calculate hash for the collaborator
-            log.info(f"Calculating hash for {collaborator.name}")
             collaborator.calculate_hash()
         except Exception as e:
             raise ex.HashCalculationException(
