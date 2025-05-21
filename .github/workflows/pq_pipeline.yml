@@ -158,12 +158,11 @@ jobs:
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
 
-
   task_runner_fed_analytics_e2e:
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
-    name: TaskRunner Analytics E2E
+    name: TaskRunner Federated Analytics E2E
     needs: task_runner_e2e
     uses: ./.github/workflows/task_runner_fed_analytics_e2e.yml
     with:

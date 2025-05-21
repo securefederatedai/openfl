@@ -26,7 +26,7 @@ def set_num_rounds(request):
     # Set the number of rounds to 1
     log.info("Setting number of rounds to 1 for analytics test")
     request.config.num_rounds = 1
-    if "federated_analytics" in request.config.model_name:
+    if "federated_analytics" not in request.config.model_name:
         pytest.skip(
             f"Model name {request.config.model_name} is not supported for this test. "
             "Please use a different model name."
