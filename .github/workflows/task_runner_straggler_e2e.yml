@@ -51,8 +51,9 @@ jobs:
         with:
           test_type: "With_TLS_Percentage"
 
+  # Move it to Rest once issue is resolved https://github.com/securefederatedai/openfl/issues/1646
   test_straggler_cutoff:
-    name: Cutoff Policy Rest API (torch/mnist_straggler_check, 3.11)
+    name: Cutoff Policy API (torch/mnist_straggler_check, 3.11)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -75,11 +76,11 @@ jobs:
       - name: Run Task Runner cutofftime straggler tests
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_cutoff --tr_rest_api
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py -k test_straggler_cutoff
           echo "Task runner end to end test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "With_TLS_Cutoff_Rest"
+          test_type: "With_TLS_Cutoff"
