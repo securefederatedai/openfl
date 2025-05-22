@@ -254,7 +254,7 @@ def prepare_verifiable_dataset(request, dataset_type):
                 raise ex.AzureBlobContainerCreationException(
                     f"Failed to create container {container_name} for collaborator{index}. Error: {e}"
                 )
-    
+
             # Upload data to the container
             azure_blob_data = {
                 "type": "azure_blob",

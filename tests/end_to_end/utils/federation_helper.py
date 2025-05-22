@@ -6,7 +6,6 @@ import concurrent.futures
 import logging
 import yaml
 import os
-import json
 import subprocess   # nosec B404
 from pathlib import Path
 
@@ -247,7 +246,7 @@ def _check_aggregator_protocol_log(aggregator):
             f"Aggregator did not start with {aggregator.transport_protocol} protocol. Check the logs for more details"
         )
     log.info(f"Aggregator started with {aggregator.transport_protocol} protocol")
-    
+
 
 def run_federation(fed_obj):
     """
@@ -264,7 +263,7 @@ def run_federation(fed_obj):
 
     # Start the aggregator
     start_aggregator(fed_obj)
-    
+
     for participant in fed_obj.collaborators:
         try:
             participant.start()
@@ -462,7 +461,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         dh.cleanup_docker_containers()
         dh.remove_docker_network()
         dh.create_docker_network()
-    
+
     request.config.transport_protocol = defaults.TransportProtocol.REST.value if request.config.tr_rest_protocol else defaults.TransportProtocol.GRPC.value
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
