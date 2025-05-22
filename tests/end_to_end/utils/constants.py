@@ -74,7 +74,7 @@ class TransportProtocol(Enum):
     REST = "rest"
 
 AGGREGATOR_REST_CLIENT = "Starting Aggregator REST Server"
-AGGREGATOR_GRPC_CLIENT = "Starting Aggregator gRPC Server"
+AGGREGATOR_gRPC_CLIENT = "Starting Aggregator gRPC Server"
 
 # For S3 and MinIO
 MINIO_ROOT_USER = "minioadmin"

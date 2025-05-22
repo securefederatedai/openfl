@@ -21,7 +21,7 @@ class Aggregator():
     2. Starting the aggregator
     """
 
-    def __init__(self, agg_domain_name, workspace_path, eval_scope=False, container_id=None, transport_protocol="grpc"):
+    def __init__(self, agg_domain_name, workspace_path, transport_protocol, eval_scope=False, container_id=None):
         """
         Initialize the Aggregator class
         Args:
@@ -29,7 +29,7 @@ class Aggregator():
             workspace_path (str): Workspace path
             container_id (str): Container ID
             eval_scope (bool, optional): Scope of aggregator is evaluation. Default is False.
-            transport_protocol (str): Transport protocol (default: "grpc")
+            transport_protocol (str): Transport protocol (default: "gRPC")
         """
         self.name = "aggregator"
         self.agg_domain_name = agg_domain_name
@@ -89,7 +89,7 @@ class Aggregator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
 

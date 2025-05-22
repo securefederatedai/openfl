@@ -220,6 +220,7 @@ def copy_file_between_participants(
     )
     return True
 
+
 def _check_aggregator_protocol_log(aggregator):
     """
     Check if the aggregator started with the correct protocol by inspecting its log file.
@@ -228,21 +229,27 @@ def _check_aggregator_protocol_log(aggregator):
     Raises:
         Exception: If the expected protocol start message is not found in the logs.
     """
-    with open(aggregator.res_file, "r") as file:
-        lines = [line.strip() for line in file.readlines()]
-    last_lines = lines[-5:]
-    if aggregator.transport_protocol == "rest":
-        expected_msg = constants.AGGREGATOR_REST_CLIENT
-        protocol_name = "REST"
-    else:
-        expected_msg = constants.AGGREGATOR_GRPC_CLIENT
-        protocol_name = "gRPC"
-    msg_received = [line for line in last_lines if expected_msg in line]
-    if not msg_received:
+    start_time = time.time()
+    found = False
+    while time.time() - start_time < 30:
+        with open(aggregator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        last_lines = lines[-5:]
+        if aggregator.transport_protocol == constants.TransportProtocol.REST.value:
+            expected_msg = constants.AGGREGATOR_REST_CLIENT
+        else:
+            expected_msg = constants.AGGREGATOR_gRPC_CLIENT
+
+        msg_received = [line for line in last_lines if expected_msg.lower() in line.lower()]
+        if msg_received:
+            found = True
+            break
+        time.sleep(10)
+    if not found:
         raise Exception(
-            f"Aggregator did not start with {protocol_name} protocol. Check the logs for more details"
+            f"Aggregator did not start with {aggregator.transport_protocol} protocol. Check the logs for more details"
         )
-    log.info(f"Aggregator started with {protocol_name} protocol")
+    log.info(f"Aggregator started with {aggregator.transport_protocol} protocol")
     
     
 def run_federation(fed_obj):
@@ -459,7 +466,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         dh.remove_docker_network()
         dh.create_docker_network()
     
-    request.config.transport_protocol = "rest" if request.config.tr_rest_api else "grpc"
+    request.config.transport_protocol = constants.TransportProtocol.REST.value if request.config.tr_rest_protocol else constants.TransportProtocol.GRPC.value
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"Number of collaborators: {request.config.num_collaborators}\n"
@@ -610,16 +617,16 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
         data_path (str): Data path
         calc_hash (bool): Flag to indicate if hash calculation is required
         colab_bucket_mapping (dict): Mapping of collaborator and its datasources
-        transport_protocol (str): Transport protocol (default: "grpc")
+        transport_protocol (str): Transport protocol (default: "gRPC")
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{index}",
+            transport_protocol=transport_protocol,
             data_directory_path=index if data_path is None else data_path,
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
-            transport_protocol=transport_protocol
         )
         create_persistent_store(collaborator.name, local_bind_path)
 

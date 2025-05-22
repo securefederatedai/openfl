@@ -53,7 +53,7 @@ env:
   COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
 
 jobs:
-  resiliency_in_native_grpc:
+  resiliency_in_native_gRPC:
     name: Resiliency in gRPC (torch/mnist, 3.10)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
@@ -84,7 +84,7 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "Resiliency_Native_Grpc"
+          test_type: "Resiliency_Native_gRPC"
   
   # Uncomment below once Issue is resolved - https://github.com/securefederatedai/openfl/issues/1646
   # resiliency_in_native_rest:
@@ -111,7 +111,7 @@ jobs:
   #       run: |
   #         python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
   #         -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-  #         --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }} --tr_rest_api
+  #         --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }} --tr_rest_protocol
   #         echo "Task runner end to end test run completed"
 
   #     - name: Post test run

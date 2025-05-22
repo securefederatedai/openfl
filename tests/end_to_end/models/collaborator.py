@@ -23,7 +23,7 @@ class Collaborator():
     4. Starting the collaborator
     """
 
-    def __init__(self, collaborator_name=None, data_directory_path=None, workspace_path=None, container_id=None, transport_protocol="grpc"):
+    def __init__(self, collaborator_name, transport_protocol, data_directory_path=None, workspace_path=None, container_id=None):
         """
         Initialize the Collaborator class
         Args:
@@ -31,7 +31,7 @@ class Collaborator():
             data_directory_path (str): Data directory path
             workspace_path (str): Workspace path
             container_id (str): Container ID
-            transport_protocol (str): Transport protocol (default: "grpc")
+            transport_protocol (str): Transport protocol (default: "gRPC")
         """
         self.name = collaborator_name
         self.collaborator_name = collaborator_name
@@ -146,7 +146,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
 
@@ -238,7 +238,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
             log.info(
