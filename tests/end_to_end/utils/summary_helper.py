@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.exceptions as ex
 from tests.end_to_end.utils import federation_helper as fed_helper
 
@@ -119,7 +119,7 @@ def print_task_runner_score():
     summary_file = _get_summary_file()
 
     # Validate the model name and create the workspace name
-    if not model_name.upper() in constants.ModelName._member_names_:
+    if not model_name.upper() in defaults.ModelName._member_names_:
         print(
             f"Invalid model name: {model_name}. Skipping writing to GitHub step summary"
         )

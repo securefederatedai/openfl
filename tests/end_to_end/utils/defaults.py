@@ -31,7 +31,7 @@ NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
 SUCCESS_MARKER = "✔️ OK"
 
-# Docker specific constants
+# Docker specific defaults
 CREATE_OPENFL_NW = "docker network create"
 REMOVE_OPENFL_NW = "docker network rm"
 DOCKER_NETWORK_NAME = "openfl"
@@ -41,7 +41,6 @@ DEFAULT_OPENFL_DOCKERFILE = "openfl-docker/Dockerfile.base"
 AGG_WORKSPACE_PATH = "{}/aggregator/workspace" # example - /tmp/my_federation/aggregator/workspace
 COL_WORKSPACE_PATH = "{}/{}/workspace"  # example - /tmp/my_federation/collaborator1/workspace
 AGG_PLAN_PATH = "{}/aggregator/workspace/plan"  # example - /tmp/my_federation/aggregator/workspace/plan
-COL_PLAN_PATH = "{}/{}/workspace/plan"  # example - /tmp/my_federation/collaborator1/workspace/plan
 
 COL_DATA_FILE = "{}/{}/workspace/plan/data.yaml"  # example - /tmp/my_federation/collaborator1/workspace/plan/data.yaml
 
@@ -74,3 +73,11 @@ MINIO_CONSOLE_PORT = 9001
 MINIO_URL = f"http://{MINIO_HOST}:{MINIO_PORT}"
 MINIO_CONSOLE_URL = f"http://{MINIO_HOST}:{MINIO_CONSOLE_PORT}"
 MINIO_DATA_FOLDER = "minio_data"
+
+# For Azure Blob Storage
+AZURE_STORAGE_HOST = "localhost"
+AZURE_STORAGE_PORT = 10000
+AZURE_STORAGE_ENDPOINTS_PROTOCOL = "http"
+AZURE_STORAGE_ACCOUNT_NAME = "devstoreaccount1"
+AZURE_STORAGE_ACCOUNT_KEY = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+AZURE_BLOB_ENDPOINT = f"{AZURE_STORAGE_ENDPOINTS_PROTOCOL}://{AZURE_STORAGE_HOST}:{AZURE_STORAGE_PORT}/{AZURE_STORAGE_ACCOUNT_NAME}"
