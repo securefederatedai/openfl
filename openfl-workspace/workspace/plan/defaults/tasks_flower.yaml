@@ -1,0 +1,11 @@
+prepare_for_interop:
+  function : start_client_adapter
+  kwargs   :
+    {}
+
+settings:
+  interop_server       : openfl.transport.grpc.interop.FlowerInteropServer
+  interop_server_host  : 127.0.0.1
+  interop_server_port  : auto 
+  clientappio_api_port : auto
+  local_simulation     : True

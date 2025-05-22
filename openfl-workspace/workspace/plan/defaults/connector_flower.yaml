@@ -1,0 +1,8 @@
+template : openfl.component.ConnectorFlower
+settings :
+    automatic_shutdown   : True
+    insecure             : True
+    superlink_host       : 127.0.0.1
+    serverappio_api_port : auto
+    fleet_api_port       : auto 
+    exec_api_port        : auto
