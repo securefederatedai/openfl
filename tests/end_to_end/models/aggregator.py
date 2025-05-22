@@ -6,7 +6,6 @@ import os
 import tempfile
 
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.ssh_helper as ssh
 
