@@ -131,7 +131,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Dockerized E2E
-    needs: task_runner_straggler_e2e
+    needs: task_runner_resiliency_e2e
     uses: ./.github/workflows/task_runner_dockerized_ws_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}
@@ -173,7 +173,7 @@ jobs:
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
     name: TaskRunner Verifiable Dataset E2E
-    needs: task_runner_e2e
+    needs: task_runner_connectivity_e2e
     uses: ./.github/workflows/tr_verifiable_dataset_e2e.yml
     with:
       commit_id: ${{ needs.set_commit_id_for_all_jobs.outputs.commit_id }}

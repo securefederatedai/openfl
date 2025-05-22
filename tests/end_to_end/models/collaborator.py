@@ -23,7 +23,7 @@ class Collaborator():
     4. Starting the collaborator
     """
 
-    def __init__(self, collaborator_name=None, data_directory_path=None, workspace_path=None, container_id=None):
+    def __init__(self, collaborator_name, transport_protocol, data_directory_path=None, workspace_path=None, container_id=None):
         """
         Initialize the Collaborator class
         Args:
@@ -31,12 +31,14 @@ class Collaborator():
             data_directory_path (str): Data directory path
             workspace_path (str): Workspace path
             container_id (str): Container ID
+            transport_protocol (str): Transport protocol (default: "gRPC")
         """
         self.name = collaborator_name
         self.collaborator_name = collaborator_name
         self.data_directory_path = data_directory_path
         self.workspace_path = workspace_path
         self.container_id = container_id
+        self.transport_protocol = transport_protocol
         self.res_file = None # Result file to track the logs
         self.start_process = None # Process associated with the aggregator start command
 
@@ -144,7 +146,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
 
@@ -236,7 +238,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
             log.info(
