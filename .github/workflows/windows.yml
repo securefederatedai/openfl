@@ -70,7 +70,7 @@ jobs:
           pip install .
       - name: Test TaskRunner API
         run: |
-          python -m tests.github.test_hello_federation --template torch/mnist_rest --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --transport-protocol rest --save-model output_model
+          python -m tests.github.test_hello_federation --template torch/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --transport-protocol rest --save-model output_model
 
   torch_mnist_eden_compression: # from taskrunner_eden_pipeline.yml - torch/mnist_eden_compression
     if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')
