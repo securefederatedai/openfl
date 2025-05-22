@@ -223,8 +223,13 @@ def prepare_verifiable_dataset(request, dataset_type):
                 )
 
             collaborator_name = f"collaborator{index}"
-            # TODO - Noopur - Upload data to the bucket assuming the data is already distributed among collaborators
-            # s3_obj.upload_directory(dir_path=data_path / str(index), bucket_name=bucket_name)
+            local_dir = data_path / str(index)
+            s3_obj.upload_directory(dir_path=local_dir, bucket_name=bucket_name)
+
+            # Remove local data after successful upload if only s3 is used
+            if dataset_type == "s3":
+                shutil.rmtree(local_dir)
+                log.info(f"Removed local data folder {local_dir} after successful S3 upload.")
 
             s3_data = {
                 "params": {
@@ -254,7 +259,7 @@ def prepare_verifiable_dataset(request, dataset_type):
                 raise ex.AzureBlobContainerCreationException(
                     f"Failed to create container {container_name} for collaborator{index}. Error: {e}"
                 )
-
+            local_dir = data_path / str(index)
             # Upload data to the container
             azure_blob_data = {
                 "type": "azure_blob",
@@ -266,9 +271,14 @@ def prepare_verifiable_dataset(request, dataset_type):
             local_data = {
                 "type": "local",
                 "params": {
-                    "path": data_path / str(index)
+                    "path": local_dir
                 }
             }
+            # Remove local data after successful upload if only azure_blob is used
+            if dataset_type == "azure_blob":
+                shutil.rmtree(local_dir)
+                log.info(f"Removed local data folder {local_dir} after successful Azure Blob upload.")
+
             if collaborator_name not in colab_data_mapping:
                 colab_data_mapping[collaborator_name] = {}
             colab_data_mapping[f"collaborator{index}"]["azure_blob_data"] = azure_blob_data
@@ -356,6 +366,15 @@ def distribute_data_to_collaborators(num_collaborators, data_path):
             folder.rename(collaborator_data_path / folder.name)
             assigned_folders.append(str(dest))
         start = end
+
+    # Remove all files/folders from 'data' except collaborator folders (1, 2, 3, ...)
+    for entry in data_path.iterdir():
+        if entry.is_dir() and entry.name not in [str(i) for i in range(1, num_collaborators + 1)]:
+            shutil.rmtree(entry)
+            log.info(f"Removed folder {entry} from data path")
+        elif entry.is_file() and entry.name.endswith(".zip"):
+            os.remove(entry)
+            log.info(f"Removed zip file {entry} from data path")
 
 
 def download_histology_data(data_path):
