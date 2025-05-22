@@ -221,6 +221,37 @@ def copy_file_between_participants(
     return True
 
 
+def _check_aggregator_protocol_log(aggregator):
+    """
+    Check if the aggregator started with the correct protocol by inspecting its log file.
+    Args:
+        aggregator (object): Aggregator object with res_file and transport_protocol attributes.
+    Raises:
+        Exception: If the expected protocol start message is not found in the logs.
+    """
+    start_time = time.time()
+    found = False
+    while time.time() - start_time < 30:
+        with open(aggregator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        last_lines = lines[-5:]
+        if aggregator.transport_protocol == constants.TransportProtocol.REST.value:
+            expected_msg = constants.AGGREGATOR_REST_CLIENT
+        else:
+            expected_msg = constants.AGGREGATOR_gRPC_CLIENT
+
+        msg_received = [line for line in last_lines if expected_msg.lower() in line.lower()]
+        if msg_received:
+            found = True
+            break
+        time.sleep(10)
+    if not found:
+        raise Exception(
+            f"Aggregator did not start with {aggregator.transport_protocol} protocol. Check the logs for more details"
+        )
+    log.info(f"Aggregator started with {aggregator.transport_protocol} protocol")
+    
+    
 def run_federation(fed_obj):
     """
     Start the federation
@@ -234,14 +265,15 @@ def run_federation(fed_obj):
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+    # Start the aggregator
+    start_aggregator(fed_obj)
+    
+    for participant in fed_obj.collaborators:
         try:
-            # Start the participant
             participant.start()
         except Exception as e:
             log.error(f"Failed to start {participant.name}: {e}")
             raise e
-
     return True
 
 
@@ -433,7 +465,8 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         dh.cleanup_docker_containers()
         dh.remove_docker_network()
         dh.create_docker_network()
-
+    
+    request.config.transport_protocol = constants.TransportProtocol.REST.value if request.config.tr_rest_protocol else constants.TransportProtocol.GRPC.value
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"Number of collaborators: {request.config.num_collaborators}\n"
@@ -442,6 +475,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"Client authentication: {request.config.require_client_auth}\n"
         f"TLS: {request.config.use_tls}\n"
         f"Secure Aggregation: {request.config.secure_agg}\n"
+        f"Transport protocol: {request.config.transport_protocol}\n"
         f"Memory Logs: {request.config.log_memory_usage}\n"
         f"Results directory: {request.config.results_dir}\n"
         f"Workspace path: {workspace_path}"
@@ -572,7 +606,7 @@ def verify_cmd_output(
             raise Exception(f"{error_msg}: {error}")
 
 
-def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False, colab_bucket_mapping=None):
+def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False, colab_bucket_mapping=None, transport_protocol="grpc"):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -583,12 +617,14 @@ def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, c
         data_path (str): Data path
         calc_hash (bool): Flag to indicate if hash calculation is required
         colab_bucket_mapping (dict): Mapping of collaborator and its datasources
+        transport_protocol (str): Transport protocol (default: "gRPC")
     """
     local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     try:
         collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{index}",
+            transport_protocol=transport_protocol,
             data_directory_path=index if data_path is None else data_path,
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
@@ -1201,7 +1237,7 @@ def start_aggregator(fed_obj):
     except Exception as e:
         log.error(f"Failed to start aggregator: {e}")
         raise e
-
+    _check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 

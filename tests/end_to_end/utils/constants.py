@@ -18,11 +18,11 @@ class ModelName(Enum):
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
+    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
     XGB_HIGGS = "xgb_higgs"
     GANDLF_SEG_TEST = "gandlf_seg_test"
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
     NO_OP = "no-op"
-    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
     FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
     FEDERATED_ANALYTICS_SMOKERS_HEALTH = "federated_analytics/smokers_health"
 
@@ -64,6 +64,17 @@ COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.z
 EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
 COL_TLS_END_MSG = "TLS connection established."
+
+
+class TransportProtocol(Enum):
+    """
+    Enum class to define the transport protocol.
+    """
+    GRPC = "grpc"
+    REST = "rest"
+
+AGGREGATOR_REST_CLIENT = "Starting Aggregator REST Server"
+AGGREGATOR_gRPC_CLIENT = "Starting Aggregator gRPC Server"
 
 # For S3 and MinIO
 MINIO_ROOT_USER = "minioadmin"

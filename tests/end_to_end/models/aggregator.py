@@ -21,7 +21,7 @@ class Aggregator():
     2. Starting the aggregator
     """
 
-    def __init__(self, agg_domain_name, workspace_path, eval_scope=False, container_id=None):
+    def __init__(self, agg_domain_name, workspace_path, transport_protocol, eval_scope=False, container_id=None):
         """
         Initialize the Aggregator class
         Args:
@@ -29,12 +29,14 @@ class Aggregator():
             workspace_path (str): Workspace path
             container_id (str): Container ID
             eval_scope (bool, optional): Scope of aggregator is evaluation. Default is False.
+            transport_protocol (str): Transport protocol (default: "gRPC")
         """
         self.name = "aggregator"
         self.agg_domain_name = agg_domain_name
         self.workspace_path = workspace_path
         self.eval_scope = eval_scope
         self.container_id = container_id
+        self.transport_protocol = transport_protocol
         self.tensor_db_file = os.path.join(self.workspace_path, "local_state", "tensor.db")
         self.res_file = None # Result file to track the logs
         self.start_process = None # Process associated with the aggregator start command
@@ -87,7 +89,7 @@ class Aggregator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
 

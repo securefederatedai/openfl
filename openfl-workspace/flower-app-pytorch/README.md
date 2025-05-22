@@ -28,7 +28,7 @@ Then create a certificate authority (CA)
 fx workspace certify
 ```
 
-This will create a workspace in your current working directory called `./my_workspace` as well as install the Flower app defined in `./app-pytorch.` This will be where the experiment takes place. The CA will be used to sign the certificates of the collaborators.
+This will create a workspace in your current working directory called `./my_workspace` as well as install the Flower app defined in `./src/app-pytorch.` This will be where the experiment takes place. The CA will be used to sign the certificates of the collaborators.
 
 ### Setup Data
 We will be using CIFAR10 dataset. You can install an automatically partition it into 2 using the `./src/setup_data.py` script provided.
@@ -63,44 +63,52 @@ data/
 Notice under `./plan`, you will find the familiar OpenFL YAML files to configure the experiment. `cols.yaml` and `data.yaml` will be populated by the collaborators that will run the Flower client app and the respective data shard or directory they will perform their training and testing on.
 `plan.yaml` configures the experiment itself. The Open-Flower integration makes a few key changes to the `plan.yaml`:
 
-1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. The `SuperLink` parameters can be configured using `connector.settings.superlink_params`. If nothing is supplied, it will simply run `flower-superlink --insecure` with the command's default settings as dictated by Flower. It also includes the option to run the flwr run command via `connector.settings.flwr_run_params`. If `flwr_run_params` are not provided, the user will be expected to run `flwr run <app>` from the aggregator machine to initiate the experiment. Additionally, the `ConnectorFlower` has an additional setting `connector.settings.automatic_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously. 
+1. Introduction of a new top-level key (`connector`) to configure a newly introduced component called `ConnectorFlower`. This component is run by the aggregator and is responsible for initializing the Flower `SuperLink` and connecting to the OpenFL server. Under `settings`, you will find the parameters for both the `flower-superlink` and `flower run` commands. All parameters are configuration by the user. By default, the `flower-superlink` will be run in `insecure` mode. The default `fleet_api_port` and `exec_api_port` will be automatically assigned, while the `exec_api_port` should be set to match the address configured in `./src/app-pytorch/pyproject.toml`. This is not set dynamically. In addition, since OpenFL handles cross network communication, `superlink_host` is set to a local host by default. For the `flwr run` command, the user should ensure that the `federation_name` and `flwr_app_name` is consistent with what is defined in `./src/<flwr_app_name>` (if different than `app-pytorch`) and `./src/<flwr_app_name>/pyproject.toml`. The Flower directory `flwr_dir` is set to save the FAB in `save/.flwr`. Should a user configure this, the save directory must be located inside the workspace. Additionally, the `ConnectorFlower` has a setting `automatic_shutdown` which is default set to `True`. When set to `True`, the task runner will shut the SuperNode at the completion of an experiment, otherwise, it will run continuously. 
 
 ```yaml
 connector:
   defaults: plan/defaults/connector.yaml
   template: openfl.component.ConnectorFlower
   settings:
-    automatic_shutdown: True
-    superlink_params:
-      insecure: True
-      serverappio-api-address: 127.0.0.1:9091
-      fleet-api-address: 127.0.0.1:9092
-      exec-api-address: 127.0.0.1:9093
-    flwr_run_params:
-      flwr_app_name: "app-pytorch"
-      federation_name: "local-poc"
+    automatic_shutdown: true
+    insecure: true
+    exec_api_port: 9093
+    fleet_api_port: 57085
+    serverappio_api_port: 58873
+    federation_name: local-poc
+    flwr_app_name: app-pytorch
+    flwr_dir: save/.flwr
+    superlink_host: 127.0.0.1
 ```
 
-2. `FlowerTaskRunner` which will execute the `start_client_adapter` task. This task starts the Flower SuperNode and makes a connection to the OpenFL client.
+2. `FlowerTaskRunner` which will execute the `start_client_adapter` task. This task starts the Flower SuperNode and makes a connection to the OpenFL client. In addition, you will notice there are settings for the `flwr_app_name`, `flwr_dir`, and `sgx_enabled`. `flwr_app_name` and `flwr_dir` are for prebuilding and installing the Flower app and should follow the convention as the `Connector` settings. `sgx_enabled` enables secure execution of the Flower `ClientApp` within an Intel<sup>®</sup> SGX enclave. When set to `True`, the task runner will launch the client app in an isolated process suitable for enclave execution and handle additional setup required for SGX compatibility (see [Running in Intel<sup>®</sup> SGX Enclave](#running-in-intel®-sgx-enclave) for details).
 
 ```yaml
 task_runner:
   defaults: plan/defaults/task_runner.yaml
-  template: openfl.federated.task.runner_flower.FlowerTaskRunner
+  template: openfl.federated.task.FlowerTaskRunner
+  settings :
+    flwr_app_name : app-pytorch
+    flwr_dir : save/.flwr
+    sgx_enabled: False
 ```
 
 3. `FlowerDataLoader` with similar high-level functionality to other dataloaders.
 
-4. `Task` - we introduce a `tasks_connector.yaml` that will allow the collaborator to connect to Flower framework via the interop server. It also handles the task runner's `start_client_adapter` method, which actually starts the Flower component and interop server. By setting `local_server_port` to 0, the port is dynamically allocated. This is mainly for local experiments to avoid overlapping the ports.
+4. `Task` - we introduce a `tasks_connector.yaml` that will allow the collaborator to connect to Flower framework via the interop server. It also handles the task runner's `start_client_adapter` method, which actually starts the Flower component and interop server. In the `settings`, the `interop_server` points to the `FlowerInteropServer` module that will establish connect between the OpenFL client and the Flower `SuperNode`. Like the `SuperLink` the host is set to the local host because OpenFL handles cross network communication. The `interop_server_port` and `clientappio_api_port` are automatically allocated by OpenFL. Setting `local_simulation` to `True` will further offest the ports based on the collaborator names in order to avoid overlapping ports. This is not an issue when collaborators are remote.
 
 ```yaml
 tasks:
   prepare_for_interop:
     function: start_client_adapter
-    kwargs:
-      interop_server_port: 0
+    kwargs: {}
   settings:
-    interop_server: src.grpc.connector.flower.interop_server
+    clientappio_api_port: 59731
+    interop_server: openfl.transport.grpc.interop.FlowerInteropServer
+    interop_server_host: 127.0.0.1
+    interop_server_port: 51807
+    local_simulation: true
+
 ```
 
 5.`Collaborator` has an additional setting `interop_mode` which will invoke a callback to prepare the interop server that'll eventually be started by the Task Runner

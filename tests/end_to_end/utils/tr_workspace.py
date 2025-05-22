@@ -99,6 +99,9 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
+    if not request.config.model_name:
+        raise ex.ModelNameException("Model name is not set in the request")
+    
     if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value:
         colab_bucket_mapping_list = prepare_data_for_s3(request)
 
@@ -124,6 +127,7 @@ def create_tr_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -140,6 +144,7 @@ def create_tr_workspace(request, eval_scope=False):
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
+
     # In case of torch/histology_s3, we need to pass the data path, flag to calculate hash
     # and bucket mapping to the setup_collaborator function
     if request.config.model_name.lower() == constants.ModelName.TORCH_HISTOLOGY_S3.value:
@@ -149,6 +154,7 @@ def create_tr_workspace(request, eval_scope=False):
                 index,
                 workspace_path=workspace_path,
                 local_bind_path=local_bind_path,
+                transport_protocol=request.config.transport_protocol,
                 data_path="data",
                 calc_hash=True,
                 colab_bucket_mapping=next(
@@ -165,9 +171,11 @@ def create_tr_workspace(request, eval_scope=False):
                 index,
                 workspace_path=workspace_path,
                 local_bind_path=local_bind_path,
+                transport_protocol=request.config.transport_protocol,
             )
             for index in range(1, request.config.num_collaborators+1)
         ]
+
     collaborators = [f.result() for f in futures]
 
     # Data setup requires total no of collaborators, thus keeping the function call
@@ -235,6 +243,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -273,7 +282,8 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
             fh.setup_collaborator,
             index,
             workspace_path=workspace_path,
-            local_bind_path=local_bind_path
+            local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
@@ -338,6 +348,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -350,6 +361,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators + 1)
     ]

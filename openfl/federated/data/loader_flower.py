@@ -1,10 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """FlowerDataLoader module."""
 
-from openfl.federated.data.loader import DataLoader
 import os
+
+from openfl.federated.data.loader import DataLoader
 
 
 class FlowerDataLoader(DataLoader):
@@ -25,7 +26,7 @@ class FlowerDataLoader(DataLoader):
 
         Raises:
             FileNotFoundError: If the specified data path does not exist.
-         """
+        """
         super().__init__(**kwargs)
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"The specified data path does not exist: {data_path}")
