@@ -1,11 +1,13 @@
 # Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from flwr.proto import grpcadapter_pb2
-from openfl.protocols import aggregator_pb2
 import importlib
-from google.protobuf.message import DecodeError
 import logging
+
+from flwr.proto import grpcadapter_pb2
+from google.protobuf.message import DecodeError
+
+from openfl.protocols import aggregator_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,7 @@ def openfl_to_flower_message(openfl_message):
         flower_message.ParseFromString(openfl_message.message.npbytes)
         return flower_message
 
+
 def deserialize_flower_message(flower_message):
     """
     Deserialize the grpc_message_content of a Flower message using the module and class name
@@ -93,8 +96,8 @@ def deserialize_flower_message(flower_message):
     """
     # Access metadata directly
     metadata = flower_message.metadata
-    module_name = metadata.get('grpc-message-module')
-    qualname = metadata.get('grpc-message-qualname')
+    module_name = metadata.get("grpc-message-module")
+    qualname = metadata.get("grpc-message-qualname")
 
     # Import the module
     try:
