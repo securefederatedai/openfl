@@ -53,7 +53,7 @@ jobs:
 
   # Move it to Rest once issue is resolved https://github.com/securefederatedai/openfl/issues/1646
   test_straggler_cutoff:
-    name: Cutoff Policy API (torch/mnist_straggler_check, 3.11)
+    name: Cutoff Policy (torch/mnist_straggler_check, 3.11)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
