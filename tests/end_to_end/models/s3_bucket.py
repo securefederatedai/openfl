@@ -14,7 +14,7 @@ from botocore.exceptions import ClientError
 import fnmatch
 from pathlib import Path
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 
 log = logging.getLogger(__name__)
 
@@ -28,9 +28,9 @@ class S3Bucket():
 
     def __init__(
         self,
-        endpoint_url=constants.MINIO_URL,
-        access_key=constants.MINIO_ROOT_USER,
-        secret_key=constants.MINIO_ROOT_PASSWORD,
+        endpoint_url=defaults.MINIO_URL,
+        access_key=defaults.MINIO_ROOT_USER,
+        secret_key=defaults.MINIO_ROOT_PASSWORD,
         region="us-east-1",
     ):
         """

@@ -6,7 +6,7 @@ import os
 import tempfile
 
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.ssh_helper as ssh
 
 
@@ -48,13 +48,13 @@ class Aggregator():
         try:
             cmd = f"fx aggregator generate-cert-request --fqdn {self.agg_domain_name}"
             error_msg = "Failed to generate the sign request"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, f"Generated a sign request for {self.name}")
+            helper.verify_cmd_output(output, return_code, error, error_msg, f"Generated a sign request for {self.name}")
 
         except Exception as e:
             raise ex.CSRGenerationException(f"Failed to generate sign request for {self.name}: {e}")

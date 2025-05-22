@@ -11,7 +11,7 @@ from tests.end_to_end.utils.tr_common_fixtures import (
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 import json
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 
 log = logging.getLogger(__name__)
 
