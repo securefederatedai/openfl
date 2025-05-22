@@ -118,4 +118,4 @@ jobs:
   #       uses: ./.github/actions/tr_post_test_run
   #       if: ${{ always() }}
   #       with:
-  #         test_type: "Resiliency_Native_Rest"
+  #         test_type: "Resiliency_Native_REST"
