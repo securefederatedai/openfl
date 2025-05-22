@@ -15,8 +15,13 @@ from yaml import SafeDumper, dump, safe_load
 
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
-from openfl.utilities.utils import getfqdn_env
+from openfl.transport import (
+    AggregatorGRPCClient,
+    AggregatorGRPCServer,
+    AggregatorRESTClient,
+    AggregatorRESTServer,
+)
+from openfl.utilities.utils import generate_port, getfqdn_env
 
 SETTINGS = "settings"
 TEMPLATE = "template"
@@ -312,9 +317,18 @@ class Plan:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
 
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
-            self.config["network"][SETTINGS]["agg_port"] = (
-                int(self.hash[:8], 16) % (60999 - 49152) + 49152
-            )
+            self.config["network"][SETTINGS]["agg_port"] = generate_port(self.hash)
+
+        if "connector" in self.config:
+            # automatically generate ports for Flower interoperability components
+            # if they are set to AUTO
+            for key, value in self.config["connector"][SETTINGS].items():
+                if value == AUTO:
+                    self.config["connector"][SETTINGS][key] = generate_port(self.hash)
+
+            for key, value in self.config["tasks"][SETTINGS].items():
+                if value == AUTO:
+                    self.config["tasks"][SETTINGS][key] = generate_port(self.hash)
 
     def get_assigner(self):
         """Get the plan task assigner."""
@@ -542,8 +556,6 @@ class Plan:
         else:
             defaults[SETTINGS]["client"] = self.get_client(
                 collaborator_name,
-                self.aggregator_uuid,
-                self.federation_uuid,
                 root_certificate,
                 private_key,
                 certificate,
@@ -557,13 +569,11 @@ class Plan:
     def get_client(
         self,
         collaborator_name,
-        aggregator_uuid,
-        federation_uuid,
         root_certificate=None,
         private_key=None,
         certificate=None,
     ):
-        """Get gRPC client for the specified collaborator.
+        """Get gRPC or REST client for the specified collaborator.
 
         Args:
             collaborator_name (str): Name of the collaborator.
@@ -577,8 +587,38 @@ class Plan:
                 Defaults to None.
 
         Returns:
-            AggregatorGRPCClient: gRPC client for the specified collaborator.
+            AggregatorGRPCClient or AggregatorRESTClient: gRPC or REST client for the collaborator.
         """
+        client_args = self.get_client_args(
+            collaborator_name,
+            root_certificate,
+            private_key,
+            certificate,
+        )
+        network_cfg = self.config["network"][SETTINGS]
+        protocol = network_cfg.get("transport_protocol", "grpc").lower()
+
+        if self.client_ is None:
+            self.client_ = self._get_client(protocol, **client_args)
+
+        return self.client_
+
+    def _get_client(self, protocol, **kwargs):
+        if protocol == "rest":
+            client = AggregatorRESTClient(**kwargs)
+        elif protocol == "grpc":
+            client = AggregatorGRPCClient(**kwargs)
+        else:
+            raise ValueError(f"Unsupported transport_protocol '{protocol}'")
+        return client
+
+    def get_client_args(
+        self,
+        collaborator_name,
+        root_certificate=None,
+        private_key=None,
+        certificate=None,
+    ):
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
             root_certificate = "cert/cert_chain.crt"
@@ -593,14 +633,10 @@ class Plan:
         client_args["certificate"] = certificate
         client_args["private_key"] = private_key
 
-        client_args["aggregator_uuid"] = aggregator_uuid
-        client_args["federation_uuid"] = federation_uuid
+        client_args["aggregator_uuid"] = self.aggregator_uuid
+        client_args["federation_uuid"] = self.federation_uuid
         client_args["collaborator_name"] = collaborator_name
-
-        if self.client_ is None:
-            self.client_ = AggregatorGRPCClient(**client_args)
-
-        return self.client_
+        return client_args
 
     def get_server(
         self,
@@ -609,7 +645,7 @@ class Plan:
         certificate=None,
         **kwargs,
     ):
-        """Get gRPC server of the aggregator instance.
+        """Get gRPC or REST server of the aggregator instance.
 
         Args:
             root_certificate (str, optional): Root certificate for the server.
@@ -621,8 +657,29 @@ class Plan:
             **kwargs: Additional keyword arguments.
 
         Returns:
-            AggregatorGRPCServer: gRPC server of the aggregator instance.
+            Aggregator Server: returns either gRPC or REST server of the aggregator instance.
         """
+        server_args = self.get_server_args(root_certificate, private_key, certificate, kwargs)
+
+        server_args["aggregator"] = self.get_aggregator()
+        network_cfg = self.config["network"][SETTINGS]
+        protocol = network_cfg.get("transport_protocol", "grpc").lower()
+
+        if self.server_ is None:
+            self.server_ = self._get_server(protocol, **server_args)
+
+        return self.server_
+
+    def _get_server(self, protocol, **kwargs):
+        if protocol == "rest":
+            server = AggregatorRESTServer(**kwargs)
+        elif protocol == "grpc":
+            server = AggregatorGRPCServer(**kwargs)
+        else:
+            raise ValueError(f"Unsupported transport_protocol '{protocol}'")
+        return server
+
+    def get_server_args(self, root_certificate, private_key, certificate, kwargs):
         common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
 
         if not root_certificate or not private_key or not certificate:
@@ -638,13 +695,7 @@ class Plan:
         server_args["root_certificate"] = root_certificate
         server_args["certificate"] = certificate
         server_args["private_key"] = private_key
-
-        server_args["aggregator"] = self.get_aggregator()
-
-        if self.server_ is None:
-            self.server_ = AggregatorGRPCServer(**server_args)
-
-        return self.server_
+        return server_args
 
     def save_model_to_state_file(self, tensor_dict, round_number, output_path):
         """Save model weights to a protobuf state file.

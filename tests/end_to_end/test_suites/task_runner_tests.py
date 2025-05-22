@@ -57,7 +57,7 @@ def test_federation_via_dockerized_workspace(request, fx_federation_tr_dws):
     log.info(f"Model best aggregated score post {request.config.num_rounds} is {best_agg_score}")
 
 
-@pytest.mark.task_runner_basic_connectivity
+@pytest.mark.task_runner_connectivity
 def test_federation_connectivity(request, fx_federation_tr):
     """
     Verify that the collaborator can ping the aggregator. If Ping successful, collaborator can start the training.
