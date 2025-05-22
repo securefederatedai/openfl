@@ -51,6 +51,8 @@ def main():
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
     save_model = args.save_model
     transport_protocol = args.transport_protocol
+    if transport_protocol not in ['grpc', 'rest']:  # Updated to include 'rest' as a valid option
+        raise ValueError(f"Invalid transport protocol: {transport_protocol}. Use 'grpc' or 'rest'.")
 
     # START
     # =====
