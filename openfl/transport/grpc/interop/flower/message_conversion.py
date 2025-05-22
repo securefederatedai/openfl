@@ -1,9 +1,12 @@
+# Copyright 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from flwr.proto import grpcadapter_pb2
+
 from openfl.protocols import aggregator_pb2
 
-def flower_to_openfl_message(flower_message,
-                             header=None,
-                             end_experiment=False):
+
+def flower_to_openfl_message(flower_message, header=None, end_experiment=False):
     """
     Convert a Flower MessageContainer to an OpenFL InteropMessage.
 
@@ -39,6 +42,7 @@ def flower_to_openfl_message(flower_message,
         # Add flag to check if experiment has ended
         openfl_message.metadata.update({"end_experiment": str(end_experiment)})
         return openfl_message
+
 
 def openfl_to_flower_message(openfl_message):
     """
