@@ -141,6 +141,7 @@ def create_tr_workspace(request, eval_scope=False):
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
+
     # In case of torch/histology_s3, we need to pass the data path, flag to calculate hash
     # and bucket mapping to the setup_collaborator function
     futures = [
