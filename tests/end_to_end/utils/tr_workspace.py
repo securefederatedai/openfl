@@ -99,6 +99,9 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
+    if not request.config.model_name:
+        raise ex.ModelNameException("Model name is not set in the request")
+
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
@@ -121,6 +124,7 @@ def create_tr_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -145,6 +149,7 @@ def create_tr_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
@@ -216,6 +221,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -254,7 +260,8 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
             fh.setup_collaborator,
             index,
             workspace_path=workspace_path,
-            local_bind_path=local_bind_path
+            local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
@@ -319,6 +326,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -331,6 +339,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators + 1)
     ]
