@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 import signal
+import socket
 import shutil
 import atexit
 import boto3
@@ -136,17 +137,15 @@ class S3Bucket():
 
             log.info("MinIO server already running. Cleaning up for fresh start.")
 
-            # If running is a list of PIDs, kill them
             if isinstance(running, list):
-                for pid in running:
-                    try:
-                        os.kill(pid, signal.SIGTERM)
-                        log.info(f"Killed MinIO process with PID {pid}")
-                    except Exception as e:
-                        log.warning(f"Could not kill PID {pid}: {e}")
-                time.sleep(2)  # Give time for processes to terminate
+                self._kill_processes(running)
             else:
                 log.warning("MinIO server running but PID not found. Please check manually.")
+            
+            # Wait for port to be released
+            if not self._wait_for_port_release(port, host):
+                log.error("Port is still in use. Cannot start MinIO server.")
+                return None
 
         # Throw error if data_dir is not provided
         if data_dir is None:
@@ -233,7 +232,8 @@ class S3Bucket():
         try:
             # Check if bucket already exists
             self.client.head_bucket(Bucket=bucket_name)
-            log.info(f"Bucket {bucket_name} already exists.")
+            log.info(f"Bucket {bucket_name} already exists. Deleting all objects in the bucket.")
+            self.delete_all_objects(bucket_name)
             return True
         except ClientError as e:
             # If bucket doesn't exist, create it
@@ -429,7 +429,7 @@ class S3Bucket():
             log.error(f"Error downloading from {bucket_name}/{prefix}: {e}")
             return count
 
-    def list_objects(self, bucket_name, prefix="", recursive=True, max_items=None):
+    def list_objects(self, bucket_name, prefix="", recursive=True, max_items=None, print=True):
         """
         List objects in a bucket with an optional prefix.
 
@@ -438,6 +438,7 @@ class S3Bucket():
             prefix: Prefix filter for objects
             recursive: If False, emulates directory listing with delimiters
             max_items: Maximum number of items to return
+            print: If True, prints the list of objects
 
         Returns:
             list: List of object keys
@@ -475,9 +476,10 @@ class S3Bucket():
                     for prefix in page["CommonPrefixes"]:
                         objects.append(prefix["Prefix"])
 
-            log.info(f"Found {len(objects)} objects in {bucket_name}/{prefix}")
-            for obj in objects:
-                log.info(f"- {obj}")
+            if print:
+                log.info(f"Found {len(objects)} objects in {bucket_name}/{prefix}")
+                for obj in objects:
+                    log.info(f"- {obj}")
 
             return objects
         except ClientError as e:
@@ -549,7 +551,7 @@ class S3Bucket():
         """
         try:
             # List all objects with the prefix
-            objects = self.list_objects(bucket_name, prefix)
+            objects = self.list_objects(bucket_name, prefix, print=False)
 
             # Delete the objects in batches
             count = 0
@@ -686,3 +688,36 @@ class S3Bucket():
             log.info(f"- {obj}")
 
         return matches
+
+    def _kill_processes(self, pids):
+        """Kill processes by PID (SIGTERM, then SIGKILL if needed)."""
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGTERM)
+                log.info(f"Killed MinIO process with PID {pid} (SIGTERM)")
+                time.sleep(1)
+                # Check if process is still alive
+                try:
+                    os.kill(pid, 0)
+                    # Still alive, force kill
+                    os.kill(pid, signal.SIGKILL)
+                    log.info(f"Force killed MinIO process with PID {pid} (SIGKILL)")
+                except OSError:
+                    # Process is gone
+                    pass
+            except Exception as e:
+                log.warning(f"Could not kill PID {pid}: {e}")
+        time.sleep(2)  # Give time for processes to terminate
+
+    def _wait_for_port_release(self, port, host="127.0.0.1", timeout=10):
+        """Wait until the port is free, or timeout (seconds) is reached."""
+        waited = 0
+        while waited < timeout:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                if s.connect_ex((host, port)) != 0:
+                    return True  # Port is free
+            log.info(f"Waiting for port {port} to be released...")
+            time.sleep(1)
+            waited += 1
+        log.error(f"Port {port} is still in use after waiting {timeout} seconds.")
+        return False

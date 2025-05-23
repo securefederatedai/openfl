@@ -12,7 +12,7 @@ import json
 
 import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.exceptions as ex
-from tests.end_to_end.models import s3_bucket as s3_model
+from tests.end_to_end.models import az_storage as az_storage_model ,s3_bucket as s3_model
 
 log = logging.getLogger(__name__)
 
@@ -180,111 +180,216 @@ def common_download_for_higgs_and_flower(collaborators, local_bind_path):
 
 def prepare_verifiable_dataset(request, dataset_type):
     """
-    Prepare data for S3. Includes starting minio server, creating bucket, and uploading data.
+    Prepare data for S3, Azurite and/or local datasource based on <dataset_type>.
     Args:
         request (object): Pytest request object.
         dataset_type (str): Type of dataset to prepare. Valid values - s3, azure_blob, all.
-    Returns:
-        dict: A dictionary containing the bucket mapping for each collaborator.
-        Example -
-        [
-            {'collaborator': 'collaborator1', 'local_data_path': '/home/azureuser/openfl/data/1', 'buckets': ['bucket-1']},
-            {'collaborator': 'collaborator2', 'local_data_path': '/home/azureuser/openfl/data/2', 'buckets': ['bucket-2-01', 'bucket-2-02']}
-        ]
     """
+    if dataset_type not in ["s3", "azure_blob", "all"]:
+        raise ValueError(f"Invalid dataset_type: {dataset_type}. Valid values are 's3', 'azure_blob', 'all'.")
+
     num_collaborators = request.config.num_collaborators
     data_path = Path.cwd().absolute() / 'data'
-    download_histology_data(data_path)
-    distribute_data_to_collaborators(num_collaborators, data_path)
-    colab_data_mapping = {}
     home_dir = Path().home()
     results_path = os.path.join(home_dir, request.config.results_dir)
+    colab_data_mapping = {}
 
-    if dataset_type in ["s3", "all"]:
-        s3_obj = s3_model.S3Bucket()
-        # Start minio server, create S3 buckets and upload the data to S3
+    # Download the histology data and distribute it among collaborators
+    # The data is downloaded in the current working directory under 'data' subfolder
+    download_histology_data(data_path)
+    distribute_data_to_collaborators(num_collaborators, data_path)
+
+    if dataset_type == "all":
+        colab_data_mapping = handle_all_dataset_type(num_collaborators, data_path, request)
+    else:
+        if dataset_type == "s3":
+            colab_data_mapping = upload_all_to_s3(num_collaborators, data_path, request)
+        elif dataset_type == "azure_blob":
+            colab_data_mapping = upload_all_to_azure_blob(num_collaborators, data_path, request)
+
+    # Create a datasources.json file for each collaborator
+    write_datasources_json(num_collaborators, colab_data_mapping, results_path)
+
+
+def upload_all_to_s3(num_collaborators, data_path, request):
+    """Upload all data for each collaborator to S3."""
+    s3_obj = s3_model.S3Bucket()
+    colab_data_mapping = {}
+
+    # Start minio server, create S3 buckets and upload the data to S3
+    try:
+        if s3_obj.start_minio_server(
+            data_dir=os.path.join(Path().home(), request.config.results_dir, defaults.MINIO_DATA_FOLDER)
+        ):
+            log.info("Started minio server")
+        else:
+            raise ex.MinioServerStartException(
+                "Failed to start minio server. Please check the logs for more details."
+            )
+    except Exception as e:
+        raise ex.MinioServerStartException(
+            f"Failed to start minio server. Error: {e}"
+        )
+
+    for index in range(1, num_collaborators + 1):
+        bucket_name = f"col{index}-bucket{index}"
         try:
+            s3_obj.create_bucket(bucket_name=bucket_name)
+        except Exception as e:
+            raise ex.S3BucketCreationException(
+                f"Failed to create bucket {bucket_name} for collaborator{index}. Error: {e}"
+            )
+
+        collaborator_name = f"collaborator{index}"
+        local_dir = data_path / str(index)
+        s3_obj.upload_directory(dir_path=local_dir, bucket_name=bucket_name)
+
+        s3_data = {
+            "type": "s3",
+            "params": {
+                "access_key_env_name": "MINIO_ROOT_USER",
+                "endpoint": defaults.MINIO_URL,
+                "secret_key_env_name": "MINIO_ROOT_PASSWORD",
+                "secret_name": "vault_secret_name1",
+                "uri": f"s3://{bucket_name}/"
+            }
+        }
+        if collaborator_name not in colab_data_mapping:
+            colab_data_mapping[collaborator_name] = {}
+        colab_data_mapping[collaborator_name]["s3_data"] = s3_data
+        shutil.rmtree(local_dir) # Remove local data after successful upload
+    return colab_data_mapping
+
+
+def upload_all_to_azure_blob(num_collaborators, data_path, request):
+    """Upload all data for each collaborator to Azure Blob (Azurite)."""
+    az_blob_obj = az_storage_model.AzureStorage()
+    colab_data_mapping = {}
+    try:
+        az_blob_obj.start_azurite_container()
+    except Exception as e:
+        # Continue if azurite container already exists (mainly for local testing)
+        if "is already in use by container" in str(e):
+            log.info("Azurite container already exists. Skipping creation.")
+        else:
+            raise ex.AzureBlobContainerCreationException(
+                f"Failed to start azurite container. Error: {e}"
+            )
+
+    # Create container
+    for index in range(1, num_collaborators + 1):
+        container_name = f"col{index}-container{index}"
+        try:
+            az_blob_obj.create_container(container_name)
+            log.info(f"Created container {container_name}")
+        except Exception as e:
+            if "specified container already exists" in str(e):
+                az_blob_obj.delete_container(container_name)
+                az_blob_obj.create_container(container_name)
+            else:
+                raise ex.AzureBlobContainerCreationException(
+                    f"Failed to create container {container_name} for collaborator{index}. Error: {e}"
+                )
+        collaborator_name = f"collaborator{index}"
+        local_dir = data_path / str(index)
+        # Upload data to the container
+        az_blob_obj.upload_data_to_container(
+            container_name=container_name,
+            data_path=local_dir
+        )
+        azure_blob_data = {
+            "type": "azure_blob",
+            "params": {
+                "connection_string": az_blob_obj.connection_string,
+                "container_name": container_name
+            }
+        }
+        if collaborator_name not in colab_data_mapping:
+            colab_data_mapping[collaborator_name] = {}
+        colab_data_mapping[collaborator_name]["azure_blob_data"] = azure_blob_data
+        shutil.rmtree(local_dir)  # Remove local data after successful upload
+    return colab_data_mapping
+
+
+def handle_all_dataset_type(num_collaborators, data_path, request):
+    """
+    For 'all' dataset_type, split the data into 3 non-overlapping parts and assign to S3, Azure Blob, and local.
+    """
+    all_folders = sorted([f for f in data_path.iterdir() if f.is_dir()])
+    total = len(all_folders)
+    split_size = total // 3
+    splits = [
+        all_folders[:split_size],
+        all_folders[split_size:2*split_size],
+        all_folders[2*split_size:]
+    ]
+    colab_data_mapping = {}
+
+    for index in range(1, num_collaborators + 1):
+        collaborator_name = f"collaborator{index}"
+        local_dir = data_path / str(index)
+        local_dir.mkdir(parents=True, exist_ok=True)
+        assigned_folders = splits[index-1]
+        for folder in assigned_folders:
+            dest = local_dir / folder.name
+            shutil.copytree(folder, dest)
+        if index == 1:
+            # S3
+            s3_obj = s3_model.S3Bucket()
+            bucket_name = f"col{index}-bucket{index}"
             s3_obj.start_minio_server(
                 data_dir=os.path.join(Path().home(), request.config.results_dir, defaults.MINIO_DATA_FOLDER)
             )
-            log.info("Started minio server")
-        except Exception as e:
-            raise ex.MinioServerStartException(
-                f"Failed to start minio server. Error: {e}"
-            )
-
-        for index in range(1, num_collaborators + 1):
-            bucket_name = f"col{index}-bucket{index}"
-            try:
-                s3_obj.create_bucket(bucket_name=bucket_name)
-            except Exception as e:
-                raise ex.S3BucketCreationException(
-                    f"Failed to create bucket {bucket_name} for collaborator{index}. Error: {e}"
-                )
-
-            collaborator_name = f"collaborator{index}"
-            local_dir = data_path / str(index)
+            s3_obj.create_bucket(bucket_name=bucket_name)
             s3_obj.upload_directory(dir_path=local_dir, bucket_name=bucket_name)
-
-            # Remove local data after successful upload if only s3 is used
-            if dataset_type == "s3":
-                shutil.rmtree(local_dir)
-                log.info(f"Removed local data folder {local_dir} after successful S3 upload.")
-
             s3_data = {
+                "type": "s3",
                 "params": {
                     "access_key_env_name": "MINIO_ROOT_USER",
                     "endpoint": defaults.MINIO_URL,
                     "secret_key_env_name": "MINIO_ROOT_PASSWORD",
                     "secret_name": "vault_secret_name1",
                     "uri": f"s3://{bucket_name}/"
-                },
-                "type": "s3"
+                }
             }
-            if collaborator_name not in colab_data_mapping:
-                colab_data_mapping[collaborator_name] = {}
-            colab_data_mapping[collaborator_name]["s3_data"] = s3_data
-
-    # Also create local data path for each collaborator
-    if dataset_type in ["azure_blob", "all"]:
-        # TODO: Implement Azure Blob Storage setup
-        log.info("Azure Blob Storage setup is not implemented yet.")
-        # Create container
-        for index in range(1, num_collaborators + 1):
+            colab_data_mapping[collaborator_name] = {"s3_data": s3_data}
+        elif index == 2:
+            # Azure Blob
+            az_blob_obj = az_storage_model.AzureStorage()
+            az_blob_obj.start_azurite_container()
             container_name = f"col{index}-container{index}"
-            try:
-                # s3_obj.create_container(container_name=container_name)
-                log.info(f"Created container {container_name}")
-            except Exception as e:
-                raise ex.AzureBlobContainerCreationException(
-                    f"Failed to create container {container_name} for collaborator{index}. Error: {e}"
-                )
-            local_dir = data_path / str(index)
-            # Upload data to the container
+            az_blob_obj.create_container(container_name)
+            az_blob_obj.upload_data_to_container(container_name=container_name, data_path=local_dir)
             azure_blob_data = {
                 "type": "azure_blob",
                 "params": {
-                    "connection_string": f"DefaultEndpointsProtocol={defaults.AZURE_STORAGE_ENDPOINTS_PROTOCOL};AccountName={defaults.AZURE_STORAGE_ACCOUNT_NAME};AccountKey={defaults.AZURE_STORAGE_ACCOUNT_KEY};BlobEndpoint={defaults.AZURE_BLOB_ENDPOINT};",
+                    "connection_string": az_blob_obj.connection_string,
                     "container_name": container_name
                 }
             }
+            colab_data_mapping[collaborator_name] = {"azure_blob_data": azure_blob_data}
+        elif index == 3:
+            # Local
             local_data = {
                 "type": "local",
                 "params": {
-                    "path": local_dir
+                    "path": str(local_dir.relative_to(Path.cwd()))
                 }
             }
-            # Remove local data after successful upload if only azure_blob is used
-            if dataset_type == "azure_blob":
-                shutil.rmtree(local_dir)
-                log.info(f"Removed local data folder {local_dir} after successful Azure Blob upload.")
+            colab_data_mapping[collaborator_name] = {"local_data": local_data}
+        shutil.rmtree(local_dir)  # Remove local data after successful upload
 
-            if collaborator_name not in colab_data_mapping:
-                colab_data_mapping[collaborator_name] = {}
-            colab_data_mapping[f"collaborator{index}"]["azure_blob_data"] = azure_blob_data
-            colab_data_mapping[f"collaborator{index}"]["local_data"] = local_data
+    return colab_data_mapping
 
-    # Create a datasources.json file for each collaborator
+
+def write_datasources_json(num_collaborators, colab_data_mapping, results_path):
+    """
+    Create a datasources.json file for each collaborator.
+    Args:
+        num_collaborators (int): Number of collaborators.
+        colab_data_mapping (dict): Mapping of collaborator names to their data sources.
+        results_path (str): Path to the results directory.
+    """
     for index in range(1, num_collaborators + 1):
         collaborator_name = f"collaborator{index}"
         col_mapping = colab_data_mapping[collaborator_name]
@@ -360,11 +465,10 @@ def distribute_data_to_collaborators(num_collaborators, data_path):
         collaborator_data_path = data_path / str(index)
         collaborator_data_path.mkdir(parents=True, exist_ok=True)
         end = start + folders_per_collab[index - 1]
-        assigned_folders = []
         for folder in all_folders[start:end]:
             dest = collaborator_data_path / folder.name
-            folder.rename(collaborator_data_path / folder.name)
-            assigned_folders.append(str(dest))
+            if folder.parent != collaborator_data_path:
+                folder.rename(dest)
         start = end
 
     # Remove all files/folders from 'data' except collaborator folders (1, 2, 3, ...)
@@ -382,10 +486,10 @@ def download_histology_data(data_path):
     Download the histology data using its dataloader module.
     The data is downloaded in the current working directory under 'data' subfolder.
     """
-    # Check if data already exists
+    # Check if data already exists, if yes delete the folder and download again
     if data_path.exists() and any(data_path.iterdir()):
-        log.info(f"Data already exists in {data_path}. Skipping download.")
-        return
+        log.info("Data already exists. Deleting the folder and downloading again..")
+        shutil.rmtree(data_path)
 
     # Import the dataloader module for torch/histology to download the data
     # As the folder name contains hyphen, we need to use importlib to import the module
