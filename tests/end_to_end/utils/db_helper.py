@@ -54,7 +54,7 @@ class DBHelper:
         return key_value_dict
 
 
-def get_key_value_from_db(key, database_file, max_retries=10, sleep_interval=5):
+def get_key_value_from_db(key, database_file, max_retries=15, sleep_interval=10):
     """
     Get value by key from the database file
     Args:

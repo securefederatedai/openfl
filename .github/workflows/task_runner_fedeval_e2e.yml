@@ -80,8 +80,8 @@ jobs:
         with:
           test_type: "FedEval_With_TLS"
 
-  test_without_tls:
-    name: Without TLS
+  test_without_tls_rest:
+    name: Without TLS Using Rest Protocol
     if: | # Skip for PR pipeline
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
@@ -115,17 +115,17 @@ jobs:
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls --tr_rest_protocol
           echo "Task runner end to end test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "FedEval_Without_TLS"
+          test_type: "FedEval_Without_TLS_REST"
 
-  test_without_client_auth:
-    name: Without Client Auth
+  test_without_client_auth_rest:
+    name: Without ClientAuth Using Rest Protocol
     if: | # Skip for PR pipeline
       ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
@@ -159,11 +159,11 @@ jobs:
         run: |
           python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
           -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth --tr_rest_protocol
           echo "Task runner end to end test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "FedEval_Without_Client_Auth"
+          test_type: "FedEval_Without_Client_Auth_REST"

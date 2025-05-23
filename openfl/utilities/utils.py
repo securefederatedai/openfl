@@ -263,3 +263,22 @@ def rmtree(path, ignore_errors=False):
         func(path)
 
     return shutil.rmtree(path, ignore_errors=ignore_errors, onerror=remove_readonly)
+
+
+def generate_port(hash, port_range=(49152, 60999)):
+    """
+    Generate a deterministic port number based on a hash and a unique key.
+
+    Args:
+        hash (str): A string representing the hash of the plan.
+        port_range (tuple): A tuple containing the minimum and maximum port
+            numbers (inclusive). The default range is (49152, 60999).
+
+    Returns:
+        int: A port number within the specified range.
+    """
+    min_port, max_port = port_range
+    # Use the first 8 characters of the unique hash to ensure deterministic output
+    hash_segment = hash[:8]
+    port = int(hash_segment, 16) % (max_port - min_port) + min_port
+    return port

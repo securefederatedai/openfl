@@ -21,7 +21,7 @@ from openfl.transport import (
     AggregatorRESTClient,
     AggregatorRESTServer,
 )
-from openfl.utilities.utils import getfqdn_env
+from openfl.utilities.utils import generate_port, getfqdn_env
 
 SETTINGS = "settings"
 TEMPLATE = "template"
@@ -317,9 +317,18 @@ class Plan:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
 
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
-            self.config["network"][SETTINGS]["agg_port"] = (
-                int(self.hash[:8], 16) % (60999 - 49152) + 49152
-            )
+            self.config["network"][SETTINGS]["agg_port"] = generate_port(self.hash)
+
+        if "connector" in self.config:
+            # automatically generate ports for Flower interoperability components
+            # if they are set to AUTO
+            for key, value in self.config["connector"][SETTINGS].items():
+                if value == AUTO:
+                    self.config["connector"][SETTINGS][key] = generate_port(self.hash)
+
+            for key, value in self.config["tasks"][SETTINGS].items():
+                if value == AUTO:
+                    self.config["tasks"][SETTINGS][key] = generate_port(self.hash)
 
     def get_assigner(self):
         """Get the plan task assigner."""

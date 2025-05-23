@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--col1-data-path', default='1')
     parser.add_argument('--col2-data-path', default='2')
     parser.add_argument('--save-model')
+    parser.add_argument('--transport-protocol', default='grpc', help='Transport protocol for communication')
 
     origin_dir = Path.cwd().resolve()
     args = parser.parse_args()
@@ -49,11 +50,14 @@ def main():
     col1, col2 = args.col1, args.col2
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
     save_model = args.save_model
+    transport_protocol = args.transport_protocol
+    if transport_protocol not in ['grpc', 'rest']:  # Updated to include 'rest' as a valid option
+        raise ValueError(f"Invalid transport protocol: {transport_protocol}. Use 'grpc' or 'rest'.")
 
     # START
     # =====
     # Make sure you are in a Python virtual environment with the FL package installed.
-    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train, transport_protocol)
     certify_aggregator(fqdn)
 
     workspace_root = Path().resolve()  # Get the absolute directory path for the workspace
