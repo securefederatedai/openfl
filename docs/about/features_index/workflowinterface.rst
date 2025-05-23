@@ -238,7 +238,7 @@ Some important points to remember while creating callback function and private a
     - *Private attributes* needs to be set after instantiating the participant.
     - **Known Limitations**: When using a `callable` to initialize *private attributes* that are **not serializable**, users should be aware of following limitations:
         * `checkpoint` should not be enabled with `LocalRuntime`. Users should ensure that default (disabled) setting of checkpoint is used or it is explicitly disabled :code:`flow = FederatedFlow( ..., checkpoint = false)`
-        * filtering of attributes (via `include` or `exclude`) cannot be used during the  transition from aggregator step to collaborator steps. The flow logic must be updated to avoid filtering in steps that transition control from aggregator to collaborators
+        * filtering of attributes (via `include` or `exclude`) cannot be used during the  transition from aggregator step to collaborator steps. This limitation applies to **all attributes** if any non-serializable private attribute is present in aggregator. The flow logic must be updated to avoid filtering in steps that transition control from aggregator to collaborators
 
 Now let's see how the runtime for a flow is assigned, and the flow gets run:
 
