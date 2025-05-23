@@ -1,9 +1,15 @@
 # Copyright 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import importlib
+import logging
+
 from flwr.proto import grpcadapter_pb2
+from google.protobuf.message import DecodeError
 
 from openfl.protocols import aggregator_pb2
+
+logger = logging.getLogger(__name__)
 
 
 def flower_to_openfl_message(flower_message, header=None, end_experiment=False):
@@ -28,6 +34,14 @@ def flower_to_openfl_message(flower_message, header=None, end_experiment=False):
         # If the input is already an OpenFL message, return it as-is
         return flower_message
     else:
+        # Check if the Flower message can be deserialized, log a warning if not
+        try:
+            deserialized_message = deserialize_flower_message(flower_message)
+            if deserialized_message is None:
+                logger.warning("Failed to introspect Flower message.")
+        except Exception as e:
+            logger.warning(f"Exception during Flower message introspection: {e}")
+
         # Create the OpenFL message
         openfl_message = aggregator_pb2.InteropMessage()
         # Set the MessageHeader fields based on the provided sender and receiver
@@ -67,3 +81,43 @@ def openfl_to_flower_message(openfl_message):
         flower_message = grpcadapter_pb2.MessageContainer()
         flower_message.ParseFromString(openfl_message.message.npbytes)
         return flower_message
+
+
+def deserialize_flower_message(flower_message):
+    """
+    Deserialize the grpc_message_content of a Flower message using the module and class name
+    specified in the metadata.
+
+    Args:
+        flower_message: The Flower message containing the metadata and binary content.
+
+    Returns:
+        The deserialized message object, or None if deserialization fails.
+    """
+    # Access metadata directly
+    metadata = flower_message.metadata
+    module_name = metadata.get("grpc-message-module")
+    qualname = metadata.get("grpc-message-qualname")
+
+    # Import the module
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError as e:
+        print(f"Failed to import module: {module_name}. Error: {e}")
+        return None
+
+    # Get the message class
+    try:
+        message_class = getattr(module, qualname)
+    except AttributeError as e:
+        print(f"Failed to get message class '{qualname}' from module '{module_name}'. Error: {e}")
+        return None
+
+    # Deserialize the content
+    try:
+        message = message_class.FromString(flower_message.grpc_message_content)
+    except DecodeError as e:
+        print(f"Failed to deserialize message content. Error: {e}")
+        return None
+
+    return message
