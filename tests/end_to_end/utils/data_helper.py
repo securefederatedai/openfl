@@ -205,7 +205,7 @@ def prepare_verifiable_dataset(request, dataset_type):
         if dataset_type == "s3":
             colab_data_mapping = upload_all_to_s3(num_collaborators, data_path, request)
         elif dataset_type == "azure_blob":
-            colab_data_mapping = upload_all_to_azure_blob(num_collaborators, data_path, request)
+            colab_data_mapping = upload_all_to_azure_blob(num_collaborators, data_path)
 
     # Create a datasources.json file for each collaborator
     write_datasources_json(num_collaborators, colab_data_mapping, results_path)
@@ -213,16 +213,14 @@ def prepare_verifiable_dataset(request, dataset_type):
 
 def upload_all_to_s3(num_collaborators, data_path, request):
     """Upload all data for each collaborator to S3."""
-    s3_obj = s3_model.S3Bucket()
     colab_data_mapping = {}
+    minio_obj = s3_model.MinioServer()
 
     # Start minio server, create S3 buckets and upload the data to S3
     try:
-        if s3_obj.start_minio_server(
+        if not minio_obj.start_minio_server(
             data_dir=os.path.join(Path().home(), request.config.results_dir, defaults.MINIO_DATA_FOLDER)
         ):
-            log.info("Started minio server")
-        else:
             raise ex.MinioServerStartException(
                 "Failed to start minio server. Please check the logs for more details."
             )
@@ -231,6 +229,7 @@ def upload_all_to_s3(num_collaborators, data_path, request):
             f"Failed to start minio server. Error: {e}"
         )
 
+    s3_obj = s3_model.S3Bucket()
     for index in range(1, num_collaborators + 1):
         bucket_name = f"col{index}-bucket{index}"
         try:
@@ -261,31 +260,27 @@ def upload_all_to_s3(num_collaborators, data_path, request):
     return colab_data_mapping
 
 
-def upload_all_to_azure_blob(num_collaborators, data_path, request):
+def upload_all_to_azure_blob(num_collaborators, data_path):
     """Upload all data for each collaborator to Azure Blob (Azurite)."""
-    az_blob_obj = az_storage_model.AzureStorage()
+    azurite_obj = az_storage_model.AzuriteStorage()
     colab_data_mapping = {}
     try:
-        az_blob_obj.start_azurite_container()
+        azurite_obj.start_azurite_container()
     except Exception as e:
-        # Continue if azurite container already exists (mainly for local testing)
-        if "is already in use by container" in str(e):
-            log.info("Azurite container already exists. Skipping creation.")
-        else:
-            raise ex.AzureBlobContainerCreationException(
-                f"Failed to start azurite container. Error: {e}"
-            )
+        raise ex.AzureBlobContainerCreationException(
+            f"Failed to start azurite container. Error: {e}"
+        )
 
     # Create container
     for index in range(1, num_collaborators + 1):
         container_name = f"col{index}-container{index}"
         try:
-            az_blob_obj.create_container(container_name)
+            azurite_obj.create_container(container_name)
             log.info(f"Created container {container_name}")
         except Exception as e:
             if "specified container already exists" in str(e):
-                az_blob_obj.delete_container(container_name)
-                az_blob_obj.create_container(container_name)
+                azurite_obj.delete_container(container_name)
+                azurite_obj.create_container(container_name)
             else:
                 raise ex.AzureBlobContainerCreationException(
                     f"Failed to create container {container_name} for collaborator{index}. Error: {e}"
@@ -293,14 +288,14 @@ def upload_all_to_azure_blob(num_collaborators, data_path, request):
         collaborator_name = f"collaborator{index}"
         local_dir = data_path / str(index)
         # Upload data to the container
-        az_blob_obj.upload_data_to_container(
+        azurite_obj.upload_data_to_container(
             container_name=container_name,
             data_path=local_dir
         )
         azure_blob_data = {
             "type": "azure_blob",
             "params": {
-                "connection_string": az_blob_obj.connection_string,
+                "connection_string": azurite_obj.connection_string,
                 "container_name": container_name
             }
         }
@@ -315,69 +310,124 @@ def handle_all_dataset_type(num_collaborators, data_path, request):
     """
     For 'all' dataset_type, split the data into 3 non-overlapping parts and assign to S3, Azure Blob, and local.
     """
-    all_folders = sorted([f for f in data_path.iterdir() if f.is_dir()])
-    total = len(all_folders)
-    split_size = total // 3
-    splits = [
-        all_folders[:split_size],
-        all_folders[split_size:2*split_size],
-        all_folders[2*split_size:]
-    ]
     colab_data_mapping = {}
 
+    # Create objects for minio and azurite
+    minio_obj = s3_model.MinioServer()
+    try:
+        if not minio_obj.start_minio_server(
+            data_dir=os.path.join(Path().home(), request.config.results_dir, defaults.MINIO_DATA_FOLDER)
+        ):
+            raise ex.MinioServerStartException(
+                "Failed to start minio server. Please check the logs for more details."
+            )
+    except Exception as e:
+        raise ex.MinioServerStartException(
+            f"Failed to start minio server. Error: {e}"
+        )
+
+    s3_obj = s3_model.S3Bucket()
+
+    azurite_obj = az_storage_model.AzuriteStorage()
+    try:
+        azurite_obj.start_azurite_container()
+    except Exception as e:
+        raise ex.AzureBlobContainerCreationException(
+            f"Failed to start azurite container. Error: {e}"
+        )
+
+    # Upload data to S3, Azure Blob and local for each collaborator
     for index in range(1, num_collaborators + 1):
         collaborator_name = f"collaborator{index}"
         local_dir = data_path / str(index)
-        local_dir.mkdir(parents=True, exist_ok=True)
-        assigned_folders = splits[index-1]
-        for folder in assigned_folders:
-            dest = local_dir / folder.name
-            shutil.copytree(folder, dest)
-        if index == 1:
-            # S3
-            s3_obj = s3_model.S3Bucket()
-            bucket_name = f"col{index}-bucket{index}"
-            s3_obj.start_minio_server(
-                data_dir=os.path.join(Path().home(), request.config.results_dir, defaults.MINIO_DATA_FOLDER)
-            )
-            s3_obj.create_bucket(bucket_name=bucket_name)
-            s3_obj.upload_directory(dir_path=local_dir, bucket_name=bucket_name)
-            s3_data = {
-                "type": "s3",
-                "params": {
-                    "access_key_env_name": "MINIO_ROOT_USER",
-                    "endpoint": defaults.MINIO_URL,
-                    "secret_key_env_name": "MINIO_ROOT_PASSWORD",
-                    "secret_name": "vault_secret_name1",
-                    "uri": f"s3://{bucket_name}/"
-                }
+        all_files = sorted([f for f in local_dir.iterdir() if f.is_dir() or f.is_file()])
+
+        total = len(all_files)
+        split_size = total // 3
+        splits = [
+            all_files[:split_size],
+            all_files[split_size:2*split_size],
+            all_files[2*split_size:]
+        ]
+
+        # Prepare temp dirs for each split
+        s3_dir = local_dir / "s3_part"
+        azure_dir = local_dir / "azure_part"
+        local_part_dir = local_dir / "local_part"
+        for d in [s3_dir, azure_dir, local_part_dir]:
+            d.mkdir(parents=True, exist_ok=True)
+
+        # Move files to their respective dirs
+        for f in splits[0]:
+            shutil.move(str(f), s3_dir / f.name)
+        for f in splits[1]:
+            shutil.move(str(f), azure_dir / f.name)
+        for f in splits[2]:
+            shutil.move(str(f), local_part_dir / f.name)
+
+        # Ensure each part has at least one folder (copy from the largest part if needed)
+        part_dirs = [s3_dir, azure_dir, local_part_dir]
+        part_counts = [len(list(d.iterdir())) for d in part_dirs]
+        if any(count == 0 for count in part_counts):
+            # Find the largest part
+            largest_idx = part_counts.index(max(part_counts))
+            largest_dir = part_dirs[largest_idx]
+            largest_files = list(largest_dir.iterdir())
+            for idx, count in enumerate(part_counts):
+                if count == 0 and largest_files:
+                    # Copy (not move) the first folder/file from the largest part
+                    src = largest_files[0]
+                    dst = part_dirs[idx] / src.name
+                    if src.is_dir():
+                        shutil.copytree(src, dst)
+                    else:
+                        shutil.copy2(src, dst)
+
+        # S3 data
+        bucket_name = f"col{index}-bucket{index}"
+        s3_obj.create_bucket(bucket_name=bucket_name)
+        s3_obj.upload_directory(dir_path=s3_dir, bucket_name=bucket_name)
+        s3_data = {
+            "type": "s3",
+            "params": {
+                "access_key_env_name": "MINIO_ROOT_USER",
+                "endpoint": defaults.MINIO_URL,
+                "secret_key_env_name": "MINIO_ROOT_PASSWORD",
+                "secret_name": "vault_secret_name1",
+                "uri": f"s3://{bucket_name}/"
             }
-            colab_data_mapping[collaborator_name] = {"s3_data": s3_data}
-        elif index == 2:
-            # Azure Blob
-            az_blob_obj = az_storage_model.AzureStorage()
-            az_blob_obj.start_azurite_container()
-            container_name = f"col{index}-container{index}"
-            az_blob_obj.create_container(container_name)
-            az_blob_obj.upload_data_to_container(container_name=container_name, data_path=local_dir)
-            azure_blob_data = {
-                "type": "azure_blob",
-                "params": {
-                    "connection_string": az_blob_obj.connection_string,
-                    "container_name": container_name
-                }
+        }
+
+        # Azure Blob data
+        container_name = f"col{index}-container{index}"
+        azurite_obj.create_container(container_name)
+        azurite_obj.upload_data_to_container(container_name=container_name, data_path=azure_dir)
+        azure_blob_data = {
+            "type": "azure_blob",
+            "params": {
+                "connection_string": azurite_obj.connection_string,
+                "container_name": container_name
             }
-            colab_data_mapping[collaborator_name] = {"azure_blob_data": azure_blob_data}
-        elif index == 3:
-            # Local
-            local_data = {
-                "type": "local",
-                "params": {
-                    "path": str(local_dir.relative_to(Path.cwd()))
-                }
+        }
+
+        # Local data
+        local_data = {
+            "type": "local",
+            "params": {
+                "path": str(local_part_dir.relative_to(Path.cwd()))
             }
-            colab_data_mapping[collaborator_name] = {"local_data": local_data}
-        shutil.rmtree(local_dir)  # Remove local data after successful upload
+        }
+        # Print local data objects count
+        log.info(f"Retained {len(list(local_part_dir.rglob('*')))} files in local data for {collaborator_name}")
+        colab_data_mapping[collaborator_name] = {
+            "s3_data": s3_data,
+            "azure_blob_data": azure_blob_data,
+            "local_data": local_data
+        }
+        # Clean up temp dirs after upload if needed
+        # shutil.rmtree(s3_dir)
+        # shutil.rmtree(azure_dir)
+        # local_part_dir is kept for local access
 
     return colab_data_mapping
 
