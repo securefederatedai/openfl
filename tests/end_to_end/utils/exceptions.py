@@ -154,3 +154,8 @@ class DataDownloadException(Exception):
 class DataUploadToS3Exception(Exception):
     """Exception for data upload to S3"""
     pass
+
+
+class AzureBlobContainerCreationException(Exception):
+    """Exception for Azure Blob container creation"""
+    pass
