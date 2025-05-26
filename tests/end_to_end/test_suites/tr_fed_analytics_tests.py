@@ -11,7 +11,7 @@ from tests.end_to_end.utils.tr_common_fixtures import (
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
 import json
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
     Args:
         request (Fixture): Pytest fixture
         fx_federation_tr (Fixture): Pytest fixture for native task runner
-    """   
+    """
     # Start the federation
     assert fed_helper.run_federation(fx_federation_tr)
 
@@ -50,7 +50,7 @@ def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
         test_env=request.config.test_env,
         num_rounds=request.config.num_rounds,
     ), "Federation completion failed"
-    
+
     # verify that results get saved in save/results.json
     result_path = os.path.join(
         fx_federation_tr.aggregator.workspace_path,
@@ -58,13 +58,13 @@ def test_federation_analytics(request, set_num_rounds, fx_federation_tr):
         "result.json"
     )
     assert os.path.exists(result_path), f"Results file {result_path} does not exist"
-    
+
     with open(result_path, "r") as f:
         results = f.read()
     try:
-        results_json = json.loads(results)
+        json.loads(results)
     except json.JSONDecodeError as e:
         log.warning("Results file is not valid JSON. Raw content:\n%s", results)
         raise e
-    
+
     assert results, f"Results file {result_path} is empty"

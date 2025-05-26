@@ -8,6 +8,8 @@ import time
 import concurrent.futures
 
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.helper as helper
+import tests.end_to_end.utils.wf_helper as wf_helper
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +64,7 @@ def test_federated_runtime_301_watermarking(request):
     # This might not be true for all notebooks, thus keeping it as a separate step
     os.chdir(nb_workspace_path)
 
-    assert fh.run_notebook(
+    assert wf_helper.run_notebook(
         notebook_path=notebook_path,
         output_notebook_path=result_path + "/" + "MNIST_Watermarking_output.ipynb"
     ), "Notebook run failed"
@@ -126,7 +128,7 @@ def test_federated_runtime_secure_aggregation(request):
     # This might not be true for all notebooks, thus keeping it as a separate step
     os.chdir(nb_workspace_path)
 
-    assert fh.run_notebook(
+    assert wf_helper.run_notebook(
         notebook_path=notebook_path,
         output_notebook_path=result_path + "/" + "MNIST_SecAgg_output.ipynb"
     ), "Notebook run failed"
@@ -150,7 +152,7 @@ def activate_experimental_feature(workspace_path):
     # Activate the experimental feature
     cmd = f"fx experimental activate"
     error_msg = "Failed to activate the experimental feature"
-    return_code, output, error = fh.run_command(
+    return_code, output, error = helper.run_command(
         cmd,
         workspace_path=workspace_path,
         error_msg=error_msg,
