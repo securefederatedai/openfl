@@ -212,7 +212,7 @@ def construct_model_proto(tensor_dict, round_number, tensor_pipe):
     return base_pb2.ModelProto(tensors=named_tensors)
 
 
-def deconstruct_model_proto(model_proto, compression_pipeline):
+def deconstruct_model_proto(model_proto, compression_pipeline, just_keys=False):
     """Deconstruct model proto.
 
     This function takes a model protobuf and a compression pipeline,
@@ -236,9 +236,12 @@ def deconstruct_model_proto(model_proto, compression_pipeline):
     #  (currently none are held out).
     tensor_dict = {}
     for key in bytes_dict:
-        tensor_dict[key] = compression_pipeline.backward(
-            data=bytes_dict[key], transformer_metadata=metadata_dict[key]
-        )
+        if just_keys:
+            tensor_dict[key] = None
+        else:
+            tensor_dict[key] = compression_pipeline.backward(
+                data=bytes_dict[key], transformer_metadata=metadata_dict[key]
+            )
     return tensor_dict, round_number
 
 

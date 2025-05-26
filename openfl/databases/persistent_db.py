@@ -118,6 +118,7 @@ class PersistentTensorDB:
             )
             new_id = cursor.lastrowid
             self.conn.commit()
+            cursor.close()
         return new_id
 
     def get_task_result_by_id(self, task_result_id: int):

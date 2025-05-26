@@ -15,7 +15,7 @@ import numpy as np
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
-from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
+from openfl.interface.aggregation_functions import SecureWeightedAverage, SequentialWeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
@@ -367,7 +367,7 @@ class Aggregator:
         """
         # Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
-            self.model, compression_pipeline=self.compression_pipeline
+            self.model, compression_pipeline=self.compression_pipeline, just_keys=True
         )
         tensor_keys = [
             TensorKey(k, self.uuid, round_number, False, ("model",))
@@ -787,9 +787,8 @@ class Aggregator:
 
         if self.persistent_db:
             # Save task and its metadata for recovery
-            serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
-            self.persistent_db.save_task_results(
-                collaborator_name, round_number, task_name, data_size, serialized_tensors
+            self.save_persistent_db(
+                collaborator_name, round_number, task_name, data_size, named_tensors
             )
             logger.debug(
                 f"Persisting task results {task_name} from {collaborator_name} round {round_number}"
@@ -801,6 +800,15 @@ class Aggregator:
 
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
+        )
+
+    def save_persistent_db(
+        self, collaborator_name, round_number, task_name, data_size, named_tensors
+    ):
+        serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
+
+        self.persistent_db.save_task_results(
+            collaborator_name, round_number, task_name, data_size, serialized_tensors
         )
 
     def process_task_results(
@@ -1127,7 +1135,7 @@ class Aggregator:
             # Check if secure aggregation is enabled, set aggregation function.
             agg_function = task_agg_function
             if "metric" in tags:
-                agg_function = WeightedAverage()
+                agg_function = SequentialWeightedAverage()
             elif self._secure_aggregation_enabled:
                 agg_function = SecureWeightedAverage()
             agg_results = self.tensor_db.get_aggregated_tensor(

@@ -176,7 +176,7 @@ class TensorDB:
                 report=row["report"],
                 tags=row["tags"],
             )
-            tensor_dict[tensor_key] = np.array(row["nparray"])
+            tensor_dict[tensor_key] = np.asarray(row["nparray"])
 
         return tensor_dict
 
