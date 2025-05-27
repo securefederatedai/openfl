@@ -15,7 +15,6 @@ from yaml import SafeDumper, dump, safe_load
 
 from openfl.interface.aggregation_functions import (
     AggregationFunction,
-    WeightedAverage,
     SequentialWeightedAverage,
 )
 from openfl.interface.cli_helper import WORKSPACE
