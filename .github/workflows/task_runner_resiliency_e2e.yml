@@ -57,6 +57,10 @@ jobs:
     name: Resiliency in gRPC (torch/mnist, 3.10)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
     env:
       MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
       PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
@@ -91,6 +95,10 @@ jobs:
   #   name: Resiliency in REST (keras/tensorflow/mnist, 3.11)
   #   runs-on: ubuntu-22.04
   #   timeout-minutes: 30
+  # if: |
+  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+  #     (github.event_name == 'workflow_dispatch') ||
+  #     (github.event.pull_request.draft == false)
   #   env:
   #     MODEL_NAME: ${{ inputs.model_name || 'keras/tensorflow/mnist' }}
   #     PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}

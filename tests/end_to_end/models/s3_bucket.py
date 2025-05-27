@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 import signal
+import socket
 import shutil
 import atexit
 import boto3
@@ -14,66 +15,42 @@ from botocore.exceptions import ClientError
 import fnmatch
 from pathlib import Path
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 
 log = logging.getLogger(__name__)
 
 
-class S3Bucket():
+class MinioServer():
     """
-    A class to manage S3 bucket operations using boto3.
-    This class provides methods to create, delete, upload, download,
-    and list objects in S3 buckets, as well as manage MinIO server.
+    A class to manage MinIO server operations.
+    This class provides methods to start, stop, and check the status of a MinIO server.
     """
-
     def __init__(
         self,
-        endpoint_url=constants.MINIO_URL,
-        access_key=constants.MINIO_ROOT_USER,
-        secret_key=constants.MINIO_ROOT_PASSWORD,
-        region="us-east-1",
+        access_key=defaults.MINIO_ROOT_USER,
+        secret_key=defaults.MINIO_ROOT_PASSWORD,
+        minio_url=defaults.MINIO_URL,
+        minio_console_url=defaults.MINIO_CONSOLE_URL,
     ):
         """
-        Initialize S3Helper with connection details.
+        Initialize MinIO server with connection details.
 
         Args:
-            endpoint_url: The S3 endpoint URL (default: http://localhost:9000 for MinIO)
-            access_key: The access key (if None, uses MINIO_ROOT_USER env variable)
-            secret_key: The secret key (if None, uses MINIO_ROOT_PASSWORD env variable)
-            region: The region name (default: us-east-1, required by boto3 but not used by MinIO)
+            access_key: MinIO access key (default: from instance)
+            secret_key: MinIO secret key (default: from instance)
+            minio_url: MinIO server URL (default: from instance)
+            minio_console_url: MinIO console URL (default: from instance)
         """
-        self.endpoint_url = endpoint_url
-        self.access_key = access_key or os.environ.get("MINIO_ROOT_USER", "minioadmin")
-        self.secret_key = secret_key or os.environ.get(
-            "MINIO_ROOT_PASSWORD", "minioadmin"
-        )
-        self.region = region
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.minio_url = minio_url.split("://")[-1]
+        self.minio_console_url = minio_console_url.split("://")[-1]
 
-        # Extract host and port from endpoint_url
-        url_parts = self.endpoint_url.split('://')[-1].split(':')
-        self.minio_host = url_parts[0]
-        self.minio_port = int(url_parts[1]) if len(url_parts) > 1 else 9000
-
-        # Set default URLs
-        self.minio_url = f"{self.minio_host}:{self.minio_port}"
-        self.minio_console_url = f"{self.minio_host}:{self.minio_port + 1}"
-
-        # Initialize S3 client
-        self.client = boto3.client(
-            "s3",
-            endpoint_url=self.endpoint_url,
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key,
-            config=Config(signature_version="s3v4"),
-            region_name=self.region,
-        )
-
-    def is_minio_server_running(self, host='localhost', port=9000):
+    def is_minio_server_running(self, port=9000):
         """
         Check if a MinIO server is running on the specified host and port.
 
         Args:
-            host: Host name (default: localhost)
             port: Port number (default: 9000)
 
         Returns:
@@ -90,63 +67,40 @@ class S3Bucket():
             pass
         return None
 
-    def start_minio_server(
-        self,
-        data_dir,
-        access_key=None,
-        secret_key=None,
-        address=None,
-        console_address=None,
-        clean_start=True,
-    ):
+    def start_minio_server(self, data_dir):
         """
         Start a MinIO server as a subprocess.
 
         Args:
             data_dir: Directory to store data
-            access_key: MinIO access key (default: from instance)
-            secret_key: MinIO secret key (default: from instance)
-            address: Address to bind the MinIO server (default: from instance)
-            console_address: Address to bind the MinIO console (default: from instance)
-            clean_start: If True, terminate existing server and clean data (default: False)
 
         Returns:
             subprocess.Popen: The process object for the MinIO server
         """
         # Use instance values if not provided
-        address = address or self.minio_url
-        console_address = console_address or self.minio_console_url
-        access_key = access_key or self.access_key
-        secret_key = secret_key or self.secret_key
 
         # Parse address to get host and port
         try:
-            host, port = address.split(':')
+            host, port = self.minio_url.split(':')
             port = int(port)
         except ValueError:
             host = 'localhost'
             port = 9001
 
         # Check if MinIO server is already running
-        running = self.is_minio_server_running(host, port)
+        running = self.is_minio_server_running(port)
         if running:
-            if not clean_start:
-                log.info("MinIO server already running. Skipping startup.")
-                return None
-
             log.info("MinIO server already running. Cleaning up for fresh start.")
 
-            # If running is a list of PIDs, kill them
             if isinstance(running, list):
-                for pid in running:
-                    try:
-                        os.kill(pid, signal.SIGTERM)
-                        log.info(f"Killed MinIO process with PID {pid}")
-                    except Exception as e:
-                        log.warning(f"Could not kill PID {pid}: {e}")
-                time.sleep(2)  # Give time for processes to terminate
+                self._kill_processes(running)
             else:
                 log.warning("MinIO server running but PID not found. Please check manually.")
+            
+            # Wait for port to be released
+            if not self._wait_for_port_release(port, host):
+                log.error("Port is still in use. Cannot start MinIO server.")
+                return None
 
         # Throw error if data_dir is not provided
         if data_dir is None:
@@ -167,8 +121,8 @@ class S3Bucket():
         # This is important for MinIO to pick up the access and secret keys
         # and for the subprocess to inherit them
         env = os.environ.copy()
-        env["MINIO_ROOT_USER"] = os.environ["MINIO_ROOT_USER"] = access_key
-        env["MINIO_ROOT_PASSWORD"] = os.environ["MINIO_ROOT_PASSWORD"] = secret_key
+        env["MINIO_ROOT_USER"] = os.environ["MINIO_ROOT_USER"] = self.access_key
+        env["MINIO_ROOT_PASSWORD"] = os.environ["MINIO_ROOT_PASSWORD"] = self.secret_key
 
         # Start MinIO server
         cmd = [
@@ -176,15 +130,15 @@ class S3Bucket():
             "server",
             data_dir,
             "--address",
-            address,
+            self.minio_url,
             "--console-address",
-            console_address,
+            self.minio_console_url,
         ]
         log.info(
             "Starting MinIO server with below configurations:"
             f"\n  - Data Directory: {data_dir}"
-            f"\n  - Address: {address}"
-            f"\n  - Console Address: {console_address}"
+            f"\n  - Address: {self.minio_url}"
+            f"\n  - Console Address: {self.minio_console_url}"
         )
 
         # Start the process
@@ -220,6 +174,89 @@ class S3Bucket():
         log.info("MinIO server started successfully.")
         return process
 
+    def _kill_processes(self, pids):
+        """Kill processes by PID (SIGTERM, then SIGKILL if needed)."""
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGTERM)
+                log.info(f"Killed MinIO process with PID {pid} (SIGTERM)")
+                time.sleep(1)
+                # Check if process is still alive
+                try:
+                    os.kill(pid, 0)
+                    # Still alive, force kill
+                    os.kill(pid, signal.SIGKILL)
+                    log.info(f"Force killed MinIO process with PID {pid} (SIGKILL)")
+                except OSError:
+                    # Process is gone
+                    pass
+            except Exception as e:
+                log.warning(f"Could not kill PID {pid}: {e}")
+        time.sleep(2)  # Give time for processes to terminate
+
+    def _wait_for_port_release(self, port, host="127.0.0.1", timeout=10):
+        """Wait until the port is free, or timeout (seconds) is reached."""
+        waited = 0
+        while waited < timeout:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                if s.connect_ex((host, port)) != 0:
+                    return True  # Port is free
+            log.info(f"Waiting for port {port} to be released...")
+            time.sleep(1)
+            waited += 1
+        log.error(f"Port {port} is still in use after waiting {timeout} seconds.")
+        return False
+
+
+class S3Bucket():
+    """
+    A class to manage S3 bucket operations using boto3.
+    This class provides methods to create, delete, upload, download,
+    and list objects in S3 buckets, as well as manage MinIO server.
+    """
+
+    def __init__(
+        self,
+        endpoint_url=defaults.MINIO_URL,
+        access_key=defaults.MINIO_ROOT_USER,
+        secret_key=defaults.MINIO_ROOT_PASSWORD,
+        region=None,
+    ):
+        """
+        Initialize S3Helper with connection details.
+
+        Args:
+            endpoint_url: The S3 endpoint URL (default: http://localhost:9000 for MinIO)
+            access_key: The access key (if None, uses MINIO_ROOT_USER env variable)
+            secret_key: The secret key (if None, uses MINIO_ROOT_PASSWORD env variable)
+            region: The region name (default: None, required by boto3 but not used by MinIO or on local server)
+        """
+        self.endpoint_url = endpoint_url
+        self.access_key = access_key or os.environ.get("MINIO_ROOT_USER", "minioadmin")
+        self.secret_key = secret_key or os.environ.get(
+            "MINIO_ROOT_PASSWORD", "minioadmin"
+        )
+        self.region = region
+
+        # Extract host and port from endpoint_url
+        url_parts = self.endpoint_url.split('://')[-1].split(':')
+        self.minio_host = url_parts[0]
+        self.minio_port = int(url_parts[1]) if len(url_parts) > 1 else 9000
+
+        # Set default URLs
+        self.minio_url = f"{self.minio_host}:{self.minio_port}"
+        self.minio_console_url = f"{self.minio_host}:{self.minio_port + 1}"
+
+        # Initialize S3 client
+        self.client = boto3.client(
+            "s3",
+            endpoint_url=self.endpoint_url,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key,
+            config=Config(signature_version="s3v4"),
+            region_name=self.region,
+        )
+
     def create_bucket(self, bucket_name):
         """
         Create a new bucket if it doesn't exist.
@@ -233,7 +270,8 @@ class S3Bucket():
         try:
             # Check if bucket already exists
             self.client.head_bucket(Bucket=bucket_name)
-            log.info(f"Bucket {bucket_name} already exists.")
+            log.info(f"Bucket {bucket_name} already exists. Deleting all objects in the bucket.")
+            self.delete_all_objects(bucket_name)
             return True
         except ClientError as e:
             # If bucket doesn't exist, create it
@@ -429,7 +467,7 @@ class S3Bucket():
             log.error(f"Error downloading from {bucket_name}/{prefix}: {e}")
             return count
 
-    def list_objects(self, bucket_name, prefix="", recursive=True, max_items=None):
+    def list_objects(self, bucket_name, prefix="", recursive=True, max_items=None, print=True):
         """
         List objects in a bucket with an optional prefix.
 
@@ -438,6 +476,7 @@ class S3Bucket():
             prefix: Prefix filter for objects
             recursive: If False, emulates directory listing with delimiters
             max_items: Maximum number of items to return
+            print: If True, prints the list of objects
 
         Returns:
             list: List of object keys
@@ -475,9 +514,10 @@ class S3Bucket():
                     for prefix in page["CommonPrefixes"]:
                         objects.append(prefix["Prefix"])
 
-            log.info(f"Found {len(objects)} objects in {bucket_name}/{prefix}")
-            for obj in objects:
-                log.info(f"- {obj}")
+            if print:
+                log.info(f"Found {len(objects)} objects in {bucket_name}/{prefix}")
+                for obj in objects:
+                    log.info(f"- {obj}")
 
             return objects
         except ClientError as e:
@@ -549,7 +589,7 @@ class S3Bucket():
         """
         try:
             # List all objects with the prefix
-            objects = self.list_objects(bucket_name, prefix)
+            objects = self.list_objects(bucket_name, prefix, print=False)
 
             # Delete the objects in batches
             count = 0
