@@ -51,8 +51,9 @@ jobs:
         with:
           test_type: "With_TLS_Percentage"
 
+  # Move it to Rest once issue is resolved https://github.com/securefederatedai/openfl/issues/1646
   test_straggler_cutoff:
-    name: Cutoff Policy (torch/mnist_straggler_check, 3.10)
+    name: Cutoff Policy (torch/mnist_straggler_check, 3.11)
     if: |
       (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
       (github.event_name == 'workflow_dispatch')
@@ -60,7 +61,7 @@ jobs:
     timeout-minutes: 30
     env:
       MODEL_NAME: 'torch/mnist_straggler_check'
-      PYTHON_VERSION: '3.10'
+      PYTHON_VERSION: '3.11'
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl

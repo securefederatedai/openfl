@@ -6,7 +6,7 @@ import logging
 import tempfile
 
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.ssh_helper as ssh
 
 log = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class Collaborator():
     4. Starting the collaborator
     """
 
-    def __init__(self, collaborator_name=None, data_directory_path=None, workspace_path=None, container_id=None):
+    def __init__(self, collaborator_name, transport_protocol, data_directory_path=None, workspace_path=None, container_id=None):
         """
         Initialize the Collaborator class
         Args:
@@ -31,12 +31,14 @@ class Collaborator():
             data_directory_path (str): Data directory path
             workspace_path (str): Workspace path
             container_id (str): Container ID
+            transport_protocol (str): Transport protocol (default: "gRPC")
         """
         self.name = collaborator_name
         self.collaborator_name = collaborator_name
         self.data_directory_path = data_directory_path
         self.workspace_path = workspace_path
         self.container_id = container_id
+        self.transport_protocol = transport_protocol
         self.res_file = None # Result file to track the logs
         self.start_process = None # Process associated with the aggregator start command
 
@@ -50,13 +52,13 @@ class Collaborator():
             log.info(f"Generating a sign request for {self.collaborator_name}")
             cmd = f"fx collaborator generate-cert-request -n {self.collaborator_name}"
             error_msg = "Failed to generate the sign request"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, f"Generated a sign request for {self.collaborator_name}")
+            helper.verify_cmd_output(output, return_code, error, error_msg, f"Generated a sign request for {self.collaborator_name}")
 
         except Exception as e:
             log.error(f"{error_msg}: {e}")
@@ -72,13 +74,13 @@ class Collaborator():
         try:
             cmd = f"fx collaborator create -n {self.collaborator_name} -d {self.data_directory_path}"
             error_msg = f"Failed to create {self.collaborator_name}"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output, return_code, error, error_msg,
                 f"Created {self.collaborator_name} with the data directory {self.data_directory_path}"
             )
@@ -100,14 +102,14 @@ class Collaborator():
         try:
             cmd = f"fx collaborator certify --import {zip_name}"
             error_msg = f"Failed to import and certify the CSR for {self.collaborator_name}"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path if not with_docker else "",
                 with_docker=with_docker,
             )
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output, return_code, error, error_msg,
                 f"Successfully imported and certified the CSR for {self.collaborator_name} with zip {zip_name}"
             )
@@ -144,7 +146,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
 
@@ -182,13 +184,13 @@ class Collaborator():
             # Assumption - workspace.zip is present in the collaborator workspace
             cmd = f"fx workspace import --archive {self.workspace_path}/workspace.zip"
             error_msg = "Failed to import the workspace"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=os.path.join(self.workspace_path, ".."), # Import the workspace to the parent directory
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, f"Imported the workspace for {self.collaborator_name}")
+            helper.verify_cmd_output(output, return_code, error, error_msg, f"Imported the workspace for {self.collaborator_name}")
 
         except Exception as e:
             log.error(f"{error_msg}: {e}")
@@ -236,7 +238,7 @@ class Collaborator():
                 cmd=command,
                 work_dir=self.workspace_path,
                 redirect_to_file=bg_file,
-                check_sleep=60,
+                check_sleep=30,
                 env=env
             )
             log.info(
@@ -257,13 +259,13 @@ class Collaborator():
             log.info(f"Calculating hash for {self.collaborator_name}")
             cmd = f"fx collaborator calchash --data_path {self.data_directory_path}"
             error_msg = "Failed to calculate hash"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 error_msg=error_msg,
                 container_id=self.container_id,
                 workspace_path=self.workspace_path,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, f"Calculated hash for {self.collaborator_name}")
+            helper.verify_cmd_output(output, return_code, error, error_msg, f"Calculated hash for {self.collaborator_name}")
 
         except Exception as e:
             log.error(f"{error_msg}: {e}")

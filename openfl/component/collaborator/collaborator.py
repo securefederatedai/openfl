@@ -7,6 +7,7 @@
 import importlib
 import logging
 from enum import Enum
+from os.path import splitext
 from time import sleep
 from typing import List, Optional
 
@@ -607,8 +608,10 @@ class Collaborator:
         """
 
         # Initialize the interop server
-        framework = self.task_config["settings"]["interop_server"]
-        module = importlib.import_module(framework)
+        interop_server_template = self.task_config["settings"]["interop_server"]
+        interop_server_class = splitext(interop_server_template)[1].strip(".")
+        interop_server_module_path = splitext(interop_server_template)[0]
+        interop_server_module = importlib.import_module(interop_server_module_path)
 
         def receive_message_from_interop(message):
             """Receive message from interop server."""
@@ -616,5 +619,11 @@ class Collaborator:
             response = self.client.send_message_to_server(message, self.collaborator_name)
             return response
 
-        interop_server = module.FlowerInteropServer(receive_message_from_interop)
+        interop_server = getattr(interop_server_module, interop_server_class)(
+            receive_message_from_interop
+        )
+        # Pass all keys in self.task_config['settings'] through to prepare_for_interop kwargs
+        self.task_config["prepare_for_interop"]["kwargs"].update(
+            self.task_config.get("settings", {})
+        )
         self.task_config["prepare_for_interop"]["kwargs"]["interop_server"] = interop_server

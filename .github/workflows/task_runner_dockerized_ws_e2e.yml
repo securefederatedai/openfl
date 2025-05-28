@@ -180,7 +180,7 @@ jobs:
           test_type: "DWS_Without_Client_Auth"
 
   test_memory_logs:
-    name: With Memory Logs
+    name: With Memory Logs REST
     needs: input_selection
     if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
@@ -212,11 +212,11 @@ jobs:
           python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
           -k test_log_memory_usage_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
-          --log_memory_usage
+          --log_memory_usage --tr_rest_protocol
           echo "Task runner memory logs test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "DWS_With_Memory_Logs"
+          test_type: "DWS_With_Memory_Logs_REST"

@@ -52,37 +52,36 @@ jobs:
         with:
           test_type: "TLS_Connectivity_gRPC"
           
-# Uncomment once Rest API PR is merged
-  # test_rest_connectivity:
-  #   name: Task Runner Rest connectivity (no-op, 3.11, rest)
-  #   if: |
-  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
-  #     (github.event_name == 'workflow_dispatch') ||
-  #     (github.event.pull_request.draft == false)
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 30
-  #   env:
-  #     MODEL_NAME: 'no-op'
-  #     PYTHON_VERSION: '3.11'
-  #   steps:
-  #     - name: Checkout OpenFL repository
-  #       id: checkout_openfl
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ env.COMMIT_ID }}
+  test_rest_connectivity:
+    name: Task Runner Rest connectivity (no-op, 3.11)
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      MODEL_NAME: 'no-op'
+      PYTHON_VERSION: '3.11'
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
 
-  #     - name: Pre test run
-  #       uses: ./.github/actions/tr_pre_test_run
-  #       if: ${{ always() }}
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
 
-  #     - name: Run Task Runner rest connectivity test
-  #       id: run_tests
-  #       run: |
-  #         python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name ${{ env.MODEL_NAME }} --tr_rest_api
-  #         echo "Task runner end to end test run completed"
+      - name: Run Task Runner rest connectivity test
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -k test_federation_connectivity --model_name ${{ env.MODEL_NAME }} --tr_rest_protocol
+          echo "Task runner end to end test run completed"
 
-  #     - name: Post test run
-  #       uses: ./.github/actions/tr_post_test_run
-  #       if: ${{ always() }}
-  #       with:
-  #         test_type: "TLS_Connectivity_REST"
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "TLS_Connectivity_REST"
