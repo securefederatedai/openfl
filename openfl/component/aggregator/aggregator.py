@@ -15,7 +15,7 @@ import numpy as np
 import openfl.callbacks as callbacks_module
 from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
-from openfl.interface.aggregation_functions import SecureWeightedAverage, SequentialWeightedAverage
+from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
@@ -1135,7 +1135,7 @@ class Aggregator:
             # Check if secure aggregation is enabled, set aggregation function.
             agg_function = task_agg_function
             if "metric" in tags:
-                agg_function = SequentialWeightedAverage()
+                agg_function = WeightedAverage()
             elif self._secure_aggregation_enabled:
                 agg_function = SecureWeightedAverage()
             agg_results = self.tensor_db.get_aggregated_tensor(

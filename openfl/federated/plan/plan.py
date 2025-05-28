@@ -15,7 +15,7 @@ from yaml import SafeDumper, dump, safe_load
 
 from openfl.interface.aggregation_functions import (
     AggregationFunction,
-    SequentialWeightedAverage,
+    WeightedAverage,
 )
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import (
@@ -367,7 +367,7 @@ class Plan:
         for task in tasks:
             aggregation_type = tasks[task].get("aggregation_type")
             if aggregation_type is None:
-                aggregation_type = SequentialWeightedAverage()
+                aggregation_type = WeightedAverage()
             elif isinstance(aggregation_type, dict):
                 if SETTINGS not in aggregation_type:
                     aggregation_type[SETTINGS] = {}
