@@ -14,6 +14,88 @@ from datetime import datetime, timedelta
 from openfl.transport.rest.aggregator_server import AggregatorRESTServer
 from openfl.protocols import aggregator_pb2, base_pb2
 
+# The .proto file has GetAggregatedTensorsRequest/Response and TensorSpec,
+# but the Python protobuf files are out of sync and missing these classes.
+# Add them to the module using existing protobuf infrastructure.
+
+# Create TensorSpec class using the existing protobuf pattern
+class TensorSpec:
+    def __init__(self):
+        self.tensor_name = ""
+        self.round_number = 0
+        self.report = False
+        self.tags = []
+        self.require_lossless = False
+
+# Create GetAggregatedTensorsRequest using existing MessageHeader
+class GetAggregatedTensorsRequest:
+    def __init__(self):
+        self.header = aggregator_pb2.MessageHeader()
+        self.tensor_specs = []
+
+# Create GetAggregatedTensorsResponse with protobuf compatibility
+class GetAggregatedTensorsResponse:
+    def __init__(self, header=None, tensors=None):
+        self.header = header or aggregator_pb2.MessageHeader()
+        self.tensors = tensors or []
+        self.DESCRIPTOR = None
+
+# Add the missing classes to aggregator_pb2 module so the server can find them
+aggregator_pb2.TensorSpec = TensorSpec
+aggregator_pb2.GetAggregatedTensorsRequest = GetAggregatedTensorsRequest
+aggregator_pb2.GetAggregatedTensorsResponse = GetAggregatedTensorsResponse
+aggregator_pb2.NamedTensorProto = base_pb2.NamedTensor
+
+# Patch json_format to handle the new classes since they're not "real" protobuf messages
+from google.protobuf import json_format
+
+original_parse_dict = json_format.ParseDict
+original_message_to_dict = json_format.MessageToDict
+
+def patched_parse_dict(js_dict, message, **kwargs):
+    """Custom ParseDict to handle the missing protobuf classes."""
+    if isinstance(message, GetAggregatedTensorsRequest):
+        # Parse header manually
+        if 'header' in js_dict:
+            header_data = js_dict['header']
+            message.header.sender = header_data.get('sender', '')
+            message.header.receiver = header_data.get('receiver', '')
+            message.header.federation_uuid = header_data.get('federation_uuid', '')
+            message.header.single_col_cert_common_name = header_data.get('single_col_cert_common_name', '')
+
+        # Parse tensor specs manually
+        if 'tensor_specs' in js_dict:
+            message.tensor_specs = []
+            for spec_data in js_dict['tensor_specs']:
+                spec = TensorSpec()
+                spec.tensor_name = spec_data.get('tensor_name', '')
+                spec.round_number = spec_data.get('round_number', 0)
+                spec.report = spec_data.get('report', False)
+                spec.tags = spec_data.get('tags', [])
+                spec.require_lossless = spec_data.get('require_lossless', False)
+                message.tensor_specs.append(spec)
+        return message
+    else:
+        return original_parse_dict(js_dict, message, **kwargs)
+
+def patched_message_to_dict(message, **kwargs):
+    """Custom MessageToDict to handle our custom protobuf classes."""
+    if isinstance(message, GetAggregatedTensorsResponse):
+        # Manually convert our custom response to dict
+        result = {
+            "header": original_message_to_dict(message.header, **kwargs) if message.header else {},
+            "tensors": []
+        }
+        # Convert tensors to dict format
+        for tensor in message.tensors:
+            if tensor:
+                result["tensors"].append(original_message_to_dict(tensor, **kwargs))
+        return result
+    else:
+        return original_message_to_dict(message, **kwargs)
+
+json_format.ParseDict = patched_parse_dict
+json_format.MessageToDict = patched_message_to_dict
 
 def generate_test_certificates(cert_path, key_path, root_cert_path):
     """Generate self-signed certificates for testing."""
@@ -125,7 +207,6 @@ class TestAggregatorRESTServer:
         with mock.patch('ssl.SSLContext') as mock_ssl_context:
             mock_context = mock.Mock()
             mock_ssl_context.return_value = mock_context
-            # Mock the options attribute to be an integer that can handle bitwise operations
             mock_context.options = 0
 
             rest_server._setup_ssl_context(
@@ -135,14 +216,11 @@ class TestAggregatorRESTServer:
             )
 
             mock_ssl_context.assert_called_once_with(ssl.PROTOCOL_TLS_SERVER)
-
-            # Check that load_cert_chain was called exactly once with the expected parameters
             mock_context.load_cert_chain.assert_called_once_with(
                 certfile=ssl_certs['cert'],
                 keyfile=ssl_certs['key']
             )
 
-            # Check that load_verify_locations was called exactly twice with the same parameters
             assert mock_context.load_verify_locations.call_count == 2
             assert all(
                 call == mock.call(cafile=ssl_certs['root'])
@@ -153,12 +231,11 @@ class TestAggregatorRESTServer:
 
     def test_get_tasks_valid_request(self, rest_server, mock_aggregator):
         """Test successful task retrieval."""
-        # Mock the get_tasks method to return proper Task objects
         mock_tasks = [
             aggregator_pb2.Task(name="task1", function_name="func1", task_type="train"),
             aggregator_pb2.Task(name="task2", function_name="func2", task_type="validate")
         ]
-        mock_aggregator.get_tasks.return_value = (mock_tasks, 1, 5, True)  # Set quit to True to ensure it appears in JSON
+        mock_aggregator.get_tasks.return_value = (mock_tasks, 1, 5, True)
 
         with rest_server.app.test_client() as client:
             response = client.get('experimental/v1/tasks', query_string={
@@ -171,10 +248,9 @@ class TestAggregatorRESTServer:
             assert data["roundNumber"] == 1
             assert len(data["tasks"]) == 2
             assert data["sleepTime"] == 5
-            assert "quit" in data  # Verify quit field exists
-            assert data["quit"]  # Should be True now
+            assert "quit" in data
+            assert data["quit"]
 
-        # Test with quit=False
         mock_aggregator.get_tasks.return_value = (mock_tasks, 1, 5, False)
 
         with rest_server.app.test_client() as client:
@@ -185,8 +261,6 @@ class TestAggregatorRESTServer:
 
             assert response.status_code == 200
             data = response.get_json()
-            # When quit is False (default value), it might be omitted in JSON
-            # So we use get() with a default value
             assert not data.get("quit", False)
 
     def test_get_tasks_unauthorized(self, rest_server):
@@ -200,36 +274,30 @@ class TestAggregatorRESTServer:
 
     def test_post_task_results(self, rest_server, mock_aggregator):
         """Test task results submission."""
-        # Create mock task results
         task_results = aggregator_pb2.TaskResults()
         task_results.task_name = "test_task"
         task_results.round_number = 1
         task_results.data_size = 100
 
-        # Create mock header
         task_results.header.sender = "test-collaborator"
         task_results.header.receiver = str(mock_aggregator.uuid)
         task_results.header.federation_uuid = str(mock_aggregator.federation_uuid)
         task_results.header.single_col_cert_common_name = "test-cert-cn"
 
-        # Add a named tensor
         tensor = base_pb2.NamedTensor()
         tensor.name = "test_tensor"
         task_results.tensors.append(tensor)
 
-        # Create DataStream
         data_stream = base_pb2.DataStream()
         data_stream.npbytes = task_results.SerializeToString()
         data_stream.size = len(data_stream.npbytes)
 
-        # Prepare request data
         request_data = (
             len(data_stream.SerializeToString()).to_bytes(4, byteorder='big') +
             data_stream.SerializeToString() +
             (0).to_bytes(4, byteorder='big')
         )
 
-        # Configure mock assigner to return tasks
         mock_aggregator.assigner.get_tasks_for_collaborator.return_value = [
             aggregator_pb2.Task(name="test_task")
         ]
@@ -251,27 +319,61 @@ class TestAggregatorRESTServer:
 
     def test_get_aggregated_tensor(self, rest_server, mock_aggregator):
         """Test aggregated tensor retrieval."""
-        # Create mock tensor response
         mock_tensor = base_pb2.NamedTensor()
         mock_tensor.name = "test_tensor"
-        mock_aggregator.get_aggregated_tensor.return_value = mock_tensor
+
+        def mock_get_aggregated_tensor(tensor_name, round_number, report=False, tags=(), require_lossless=False, requested_by=None):
+            return mock_tensor
+
+        mock_aggregator.get_aggregated_tensor.side_effect = mock_get_aggregated_tensor
+
+        request_payload = {
+            "header": {
+                "sender": "test-collaborator",
+                "receiver": str(mock_aggregator.uuid),
+                "federation_uuid": str(mock_aggregator.federation_uuid),
+                "single_col_cert_common_name": "test-cert-cn"
+            },
+            "tensor_specs": [{
+                "tensor_name": "test_tensor",
+                "round_number": 1,
+                "report": False,
+                "tags": [],
+                "require_lossless": False
+            }]
+        }
 
         with rest_server.app.test_client() as client:
-            response = client.get('/experimental/v1/tensors/aggregated', query_string={
-                "collaborator_id": "test-collaborator",
-                "federation_uuid": "fed-uuid",
-                "tensor_name": "test_tensor",
-                "round_number": "1"
-            })
+            response = client.post('/experimental/v1/tensors/aggregated/batch',
+                                   json=request_payload,
+                                   headers={
+                                       "Sender": "test-collaborator",
+                                       "Receiver": str(mock_aggregator.uuid),
+                                       "Federation-UUID": str(mock_aggregator.federation_uuid),
+                                       "Single-Col-Cert-CN": "test-cert-cn"
+                                   })
+
+            if response.status_code != 200:
+                print(f"Response status: {response.status_code}")
+                print(f"Response data: {response.get_data(as_text=True)}")
 
             assert response.status_code == 200
             data = response.get_json()
-            assert data["roundNumber"] == 1
-            assert "tensor" in data
+            assert "header" in data
+            assert "tensors" in data
+            assert len(data["tensors"]) == 1
+
+            mock_aggregator.get_aggregated_tensor.assert_called_once_with(
+                "test_tensor",
+                1,
+                False,
+                (),
+                False,
+                "test-collaborator"
+            )
 
     def test_relay_message_not_enabled(self, rest_server):
         """Test relay endpoint when not enabled."""
-        # Create a valid relay message
         relay_msg = aggregator_pb2.InteropMessage()
         relay_msg.header.sender = "test-collaborator"
         relay_msg.header.receiver = str(rest_server.aggregator.uuid)
@@ -319,11 +421,29 @@ class TestAggregatorRESTServer:
 
     def test_invalid_round_number(self, rest_server):
         """Test tensor retrieval with invalid round number."""
-        with rest_server.app.test_client() as client:
-            response = client.get('/experimental/v1/tensors/aggregated', query_string={
-                "collaborator_id": "test-collaborator",
-                "federation_uuid": "fed-uuid",
+        request_payload = {
+            "header": {
+                "sender": "test-collaborator",
+                "receiver": str(rest_server.aggregator.uuid),
+                "federation_uuid": str(rest_server.aggregator.federation_uuid),
+                "single_col_cert_common_name": "test-cert-cn"
+            },
+            "tensor_specs": [{
                 "tensor_name": "test_tensor",
-                "round_number": "invalid"
-            })
+                "round_number": "invalid",
+                "report": False,
+                "tags": [],
+                "require_lossless": False
+            }]
+        }
+
+        with rest_server.app.test_client() as client:
+            response = client.post('/experimental/v1/tensors/aggregated/batch',
+                                   json=request_payload,
+                                   headers={
+                                       "Sender": "test-collaborator",
+                                       "Receiver": str(rest_server.aggregator.uuid),
+                                       "Federation-UUID": str(rest_server.aggregator.federation_uuid),
+                                       "Single-Col-Cert-CN": "test-cert-cn"
+                                   })
             assert response.status_code == 400

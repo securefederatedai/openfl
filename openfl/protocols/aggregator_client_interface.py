@@ -24,13 +24,10 @@ class AggregatorClientInterface(ABC):
         pass
 
     @abstractmethod
-    def get_aggregated_tensor(
+    def get_aggregated_tensors(
         self,
-        tensor_name: str,
-        round_number: int,
-        report: bool,
-        tags: List[str],
-        require_lossless: bool,
+        tensor_keys,
+        require_lossless: bool = True,
     ) -> Any:
         """
         Retrieves the aggregated tensor.

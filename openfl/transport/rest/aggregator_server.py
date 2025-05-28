@@ -741,61 +741,97 @@ class AggregatorRESTServer:
     def _setup_tensor_route(self):
         """Set up the /tensors/aggregated endpoint."""
 
-        @self.app.route(f"/{self.api_prefix}/tensors/aggregated", methods=["GET"])
-        def get_aggregated_tensor():
-            """Endpoint for collaborators to retrieve an aggregated tensor."""
+        @self.app.route(f"/{self.api_prefix}/tensors/aggregated/batch", methods=["POST"])
+        def get_aggregated_tensors():
+            """Endpoint for collaborators to retrieve multiple aggregated tensors."""
             start_time = time.time()
 
             # Validate that this endpoint is not used in connector mode
             if self.use_connector:
-                abort(501, "GetAggregatedTensor not supported in connector mode")
+                abort(501, "GetAggregatedTensors not supported in connector mode")
 
-            # Get and validate collaborator identity
-            collaborator_id = request.args.get("collaborator_id")
-            federation_id = request.args.get("federation_uuid")
-
-            # Use the consolidated validation method
-            self._is_authorized(collaborator_id, federation_id)
-
-            # Extract tensor request parameters
-            tensor_name = request.args.get("tensor_name")
             try:
-                round_number = int(request.args.get("round_number", 0))
-            except (TypeError, ValueError):
-                abort(400, "Invalid round number")
-            report = request.args.get("report", "").lower() == "true"
-            tags = request.args.getlist("tags")
-            require_lossless = request.args.get("require_lossless", "").lower() == "true"
+                # Parse the incoming JSON to a GetAggregatedTensorsRequest protobuf message
+                request_data = request.get_json()
+                if not request_data:
+                    abort(400, "Invalid JSON payload")
 
-            # Get the tensor from aggregator - direct delegation to the aggregator
-            named_tensor = self.aggregator.get_aggregated_tensor(
-                tensor_name,
-                round_number,
-                report=report,
-                tags=tuple(tags),
-                require_lossless=require_lossless,
-                requested_by=collaborator_id,
-            )
+                tensors_request = aggregator_pb2.GetAggregatedTensorsRequest()
+                json_format.ParseDict(request_data, tensors_request, ignore_unknown_fields=True)
 
-            # Create response header using the standardized method
-            header = create_header(
-                sender=str(self.aggregator.uuid),
-                receiver=collaborator_id,
-                federation_uuid=str(self.aggregator.federation_uuid),
-                single_col_cert_common_name=self.aggregator.single_col_cert_common_name or "",
-            )
+                # Validate headers and get collaborator identity
+                collaborator_id = tensors_request.header.sender
+                federation_id = tensors_request.header.federation_uuid
 
-            # Create response with empty tensor if not found
-            response_proto = aggregator_pb2.GetAggregatedTensorResponse(
-                header=header,
-                round_number=round_number,
-                tensor=named_tensor
-                if named_tensor is not None
-                else aggregator_pb2.NamedTensorProto(),
-            )
+                # Use the consolidated validation method
+                self._is_authorized(collaborator_id, federation_id)
 
-            logger.debug(f"Tensor retrieval completed in {time.time() - start_time:.2f} seconds")
-            return jsonify(json_format.MessageToDict(response_proto))
+                # Validate request header similar to gRPC implementation
+                assert tensors_request.header.receiver == str(self.aggregator.uuid), (
+                    f"Header receiver mismatch. Expected: {self.aggregator.uuid}, "
+                    f"Got: {tensors_request.header.receiver}"
+                )
+
+                assert tensors_request.header.federation_uuid == str(
+                    self.aggregator.federation_uuid
+                ), (
+                    f"Federation UUID mismatch. Expected: {self.aggregator.federation_uuid}, "
+                    f"Got: {tensors_request.header.federation_uuid}"
+                )
+
+                expected_cn = self.aggregator.single_col_cert_common_name or ""
+                assert tensors_request.header.single_col_cert_common_name == expected_cn, (
+                    f"Single col cert CN mismatch. Expected: {expected_cn}, "
+                    f"Got: {tensors_request.header.single_col_cert_common_name}"
+                )
+
+                # Get tensors from aggregator - similar to gRPC implementation
+                logger.debug(
+                    f"Processing batch request for {len(tensors_request.tensor_specs)} tensors"
+                )
+
+                named_tensors = []
+                for ts in tensors_request.tensor_specs:
+                    named_tensor = self.aggregator.get_aggregated_tensor(
+                        ts.tensor_name,
+                        ts.round_number,
+                        ts.report,
+                        tuple(ts.tags),
+                        ts.require_lossless,
+                        collaborator_id,
+                    )
+                    # Add tensor to list (None tensors will be handled by the client)
+                    if named_tensor is not None:
+                        named_tensors.append(named_tensor)
+                    else:
+                        # Add empty tensor placeholder to maintain order
+                        named_tensors.append(aggregator_pb2.NamedTensorProto())
+
+                # Create response header using the standardized method
+                header = create_header(
+                    sender=str(self.aggregator.uuid),
+                    receiver=collaborator_id,
+                    federation_uuid=str(self.aggregator.federation_uuid),
+                    single_col_cert_common_name=self.aggregator.single_col_cert_common_name or "",
+                )
+
+                # Create response
+                response_proto = aggregator_pb2.GetAggregatedTensorsResponse(
+                    header=header, tensors=named_tensors
+                )
+
+                logger.debug(
+                    f"Batch tensor retrieval completed in {time.time() - start_time:.2f} seconds. "
+                    f"Returned {len(named_tensors)} tensors"
+                )
+                return jsonify(json_format.MessageToDict(response_proto))
+
+            except AssertionError as e:
+                logger.error(f"Header validation failed: {str(e)}")
+                abort(400, str(e))
+            except Exception as e:
+                logger.error(f"Error processing batch tensor request: {str(e)}")
+                abort(400, f"Error processing batch tensor request: {str(e)}")
 
     def _setup_relay_route(self):
         """Set up the /interop/relay endpoint."""

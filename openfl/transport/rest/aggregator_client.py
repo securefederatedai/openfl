@@ -443,46 +443,75 @@ class AggregatorRESTClient(AggregatorClientInterface):
         )
         return tasks_resp.tasks, tasks_resp.round_number, tasks_resp.sleep_time, tasks_resp.quit
 
-    def get_aggregated_tensor(
+    def get_aggregated_tensors(
         self,
-        tensor_name: str,
-        round_number: int,
-        report: bool,
-        tags: List[str],
-        require_lossless: bool,
-    ) -> Any:
-        """Get aggregated tensor with proper security settings."""
-        params = {
-            "sender": self.collaborator_name,
-            "receiver": self.aggregator_uuid,
-            "federation_uuid": self.federation_uuid,
-            "tensor_name": tensor_name,
-            "round_number": round_number,
-            "report": report,
-            "tags": tags,
-            "require_lossless": require_lossless,
-            "collaborator_id": self.collaborator_name,
+        tensor_keys,
+        require_lossless: bool = True,
+    ) -> List[base_pb2.NamedTensor]:
+        """
+        Get aggregated tensors from the aggregator.
+
+        Args:
+            tensor_keys (list): A list of tensor keys to fetch from aggregator.
+            require_lossless (bool): Whether lossless compression is required.
+
+        Returns:
+            A list of `NamedTensor`s in the same order as requested.
+        """
+        logger.debug(f"Requesting {len(tensor_keys)} aggregated tensors")
+
+        # Build the request payload similar to gRPC implementation
+        tensor_specs = []
+        for k in tensor_keys:
+            tensor_specs.append(
+                {
+                    "tensor_name": k.tensor_name,
+                    "round_number": k.round_number,
+                    "report": k.report,
+                    "tags": k.tags,
+                    "require_lossless": require_lossless,
+                }
+            )
+
+        request_data = {
+            "header": {
+                "sender": self.collaborator_name,
+                "receiver": self.aggregator_uuid,
+                "federation_uuid": self.federation_uuid,
+                "single_col_cert_common_name": self.single_col_cert_common_name or "",
+            },
+            "tensor_specs": tensor_specs,
         }
-        headers = {"Accept": "application/json", "Sender": self.collaborator_name}
-        url = f"{self.base_url}/tensors/aggregated"
+
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Sender": self.collaborator_name,
+        }
+        url = f"{self.base_url}/tensors/aggregated/batch"
         extended_timeout = (30, 600)  # 30 seconds connect, 10 minutes read timeout
+
         try:
-            logger.debug(f"Requesting aggregated tensor {tensor_name} for round {round_number}")
+            logger.debug(f"Requesting batch of {len(tensor_keys)} aggregated tensors")
             response = self._make_request(
-                "GET", url, params=params, headers=headers, timeout=extended_timeout
+                "POST",
+                url,
+                data=json_format.MessageToJson(
+                    aggregator_pb2.GetAggregatedTensorsRequest(**request_data)
+                ),
+                headers=headers,
+                timeout=extended_timeout,
             )
             data = response.json()
-            resp = aggregator_pb2.GetAggregatedTensorResponse()
+            resp = aggregator_pb2.GetAggregatedTensorsResponse()
             json_format.ParseDict(data, resp, ignore_unknown_fields=True)
-            logger.debug(f"Successfully retrieved tensor {tensor_name} for round {round_number}")
-            return resp.tensor
+            logger.debug(f"Successfully retrieved {len(resp.tensors)} aggregated tensors")
+            return resp.tensors
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 404:
-                # This is expected during round 0 or when tensor hasn't been aggregated yet
-                logger.debug(
-                    f"No aggregated tensor found for {tensor_name} at round {round_number}"
-                )
-                return None
+                # This is expected during round 0 or when tensors haven't been aggregated yet
+                logger.debug("No aggregated tensors found for the requested tensor keys")
+                return []
             raise
 
     def send_local_task_results(
