@@ -4,6 +4,10 @@
 from metaflow import Flow
 import logging
 import numpy as np
+from openfl.databases import TensorDB
+from openfl.utilities import TensorKey
+
+import tests.end_to_end.utils.exceptions as ex
 
 log = logging.getLogger(__name__)
 
@@ -112,3 +116,46 @@ def init_agg_pvt_attr_np():
               of a NumPy array of shape (10, 28, 28) filled with random values.
     """
     return {"test_loader": np.random.rand(10, 28, 28)}
+
+
+def callable_to_init_collab_unserializable_pvt_attrs():
+    """
+    Create and return a TensorDB
+    """
+    return {"col_tensor_db": TensorDB()}
+
+
+def callable_to_init_agg_unserializable_pvt_attrs():
+    """
+    Create and return a TensorDB
+    """
+    return {"agg_tensor_db": TensorDB()}
+
+
+def run_notebook(notebook_path, output_notebook_path):
+    """
+    Function to run the notebook.
+    Args:
+        notebook_path (str): Path to the notebook
+        participant_res_files (dict): Dictionary containing participant names and their result log files
+    Returns:
+        bool: True if successful, else False
+    """
+    import papermill as pm
+    try:
+        log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
+        output = pm.execute_notebook(
+            input_path=notebook_path,
+            output_path=output_notebook_path,
+            request_save_on_cell_execute=True,
+            autosave_cell_every=5, # autosave every 5 seconds
+            log_output=True,
+        )
+    except pm.exceptions.PapermillExecutionError as e:
+        log.error(f"PapermillExecutionError: {e}")
+        raise e
+
+    except ex.NotebookRunException as e:
+        log.error(f"Failed to run the notebook: {e}")
+        raise e
+    return True

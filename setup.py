@@ -94,7 +94,7 @@ setup(
         'tensorboardX',
         'protobuf>=4.21,<6.0.0',
         'grpcio>=1.56.2,<1.66.0',
-        'Flask==3.1.0',
+        'Flask==3.1.1',
     ],
     python_requires='>=3.10, <3.13',
     project_urls={

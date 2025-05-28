@@ -1,5 +1,5 @@
 docker
-Flask==3.1.0
+Flask==3.1.1
 lxml==5.3.1
 paramiko
 pytest==8.3.5

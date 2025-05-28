@@ -6,7 +6,7 @@ import logging
 import os
 
 from tests.end_to_end.utils.tr_common_fixtures import fx_federation_tr, fx_federation_tr_dws
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 from tests.end_to_end.utils import federation_helper as fed_helper, ssh_helper as ssh
 from tests.end_to_end.utils.generate_report import generate_memory_report, convert_to_json
 
@@ -66,7 +66,7 @@ def _log_memory_usage(request, fed_obj):
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_LOGFILE.format(fed_obj.workspace_path)
+    aggregator_memory_usage_file = defaults.AGG_MEM_USAGE_LOGFILE.format(fed_obj.workspace_path)
 
     assert os.path.exists(
         aggregator_memory_usage_file
@@ -84,7 +84,7 @@ def _log_memory_usage(request, fed_obj):
 
     # check memory usage entries for each collaborator
     for collaborator in fed_obj.collaborators:
-        collaborator_memory_usage_file = constants.COL_MEM_USAGE_LOGFILE.format(
+        collaborator_memory_usage_file = defaults.COL_MEM_USAGE_LOGFILE.format(
             fed_obj.workspace_path, collaborator.name
         )
         assert os.path.exists(

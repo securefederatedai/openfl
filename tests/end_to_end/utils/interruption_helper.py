@@ -7,7 +7,7 @@ import time
 import psutil
 import subprocess   # nosec B404
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.docker_helper as docker_helper
 import tests.end_to_end.utils.exceptions as ex
 
