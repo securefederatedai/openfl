@@ -22,7 +22,11 @@ To modify code, you need to fork the repository. Set up a development environmen
 
 ### Step 3. Create a Pull Request (PR)
 
-Once the change is ready, open a PR from your branch in your fork, to the `develop` branch in [securefederatedai/openfl](https://github.com/securefederatedai/openfl). OpenFL follows standard recommendations of PR formatting. Find more details [here](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
+Once the change is ready, open a PR from your branch in your fork, to the `develop` branch in [securefederatedai/openfl](https://github.com/securefederatedai/openfl). 
+
+OpenFL follows standard recommendations for PR formatting. Make sure to use the [Pull Request Template](https://github.com/securefederatedai/openfl/tree/develop/.github/pull_request_template.md) to provide a clear description of your changes, motivation, and relevant details.
+
+[How to write the perfect pull request](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
 
 ### Step 4. Sign your work
 
@@ -55,8 +59,7 @@ We recommend setting up a local dev environment. Clone your forked repo to your 
 ```shell
 git clone https://github.com/YOUR_GITHUB_USERNAME/openfl.git
 cd openfl
-pip install -U pip setuptools wheel
-pip install .
+pip install -e .
 pip install -r linters-requirements.txt
 ```
 
@@ -64,12 +67,18 @@ pip install -r linters-requirements.txt
 
 OpenFL uses [ruff](https://github.com/astral-sh/ruff) to lint/format code and [precommit](https://pre-commit.com/) checks.
 
-Run the following command at the **root** directory of the repo to format your code.
+Run the following command at the **root** directory of the repo to show lint errors.
+
+```
+sh scripts/lint.sh
+```
+
+To autoformat the code, run the following command:
 
 ```
 sh scripts/format.sh
 ```
-You may need to resolve errors that could not be resolved by autoformatting. To only show lint errors, run `sh scripts/lint.sh` at the **root** directory of the repo.
+You may need to resolve errors that could not be resolved by autoformatting.
 
 ### Docstrings
 Since docstrings cannot be verified programmatically, if you do write/edit a docstring, make sure to check them manually. OpenFL docstrings should follow the conventions below:
@@ -98,3 +107,8 @@ sphinx-build -b html -D nb_execution_mode=off docs docs/_build/html -j auto
 ```
 
 The `-j auto` option controls build parallelism. You may replace `auto` with a number to specify the number of jobs to run in parallel.
+
+Serve the documentation locally:
+```bash
+python -m http.server --directory docs/_build/html
+```

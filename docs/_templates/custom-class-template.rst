@@ -1,4 +1,9 @@
-{{ fullname | escape | underline}}
+{% set truncated_fullname = fullname.split('.')[-1] %}
+{% if truncated_fullname | length < 4 %}
+   {% set truncated_fullname = truncated_fullname.ljust(4) %}
+{% endif %}
+Class - {{ truncated_fullname | escape | underline}} 
+
 
 .. currentmodule:: {{ module }}
 

@@ -9,9 +9,14 @@ import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
-from tests.end_to_end.utils.logger import configure_logging
-from tests.end_to_end.utils.logger import logger as log
+from rich.console import Console
+from rich.logging import RichHandler
+
+from openfl.utilities.logging import setup_logger
 from tests.end_to_end.utils.conftest_helper import parse_arguments
+import tests.end_to_end.utils.docker_helper as dh
+
+log = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -25,9 +30,12 @@ def pytest_addoption(parser):
     parser.addoption("--num_collaborators")
     parser.addoption("--num_rounds")
     parser.addoption("--model_name")
+    parser.addoption("--workflow_backend")
+    parser.addoption("--tr_rest_protocol", action="store_true")
     parser.addoption("--disable_client_auth", action="store_true")
     parser.addoption("--disable_tls", action="store_true")
     parser.addoption("--log_memory_usage", action="store_true")
+    parser.addoption("--secure_agg", action="store_true")
 
 
 def pytest_configure(config):
@@ -45,11 +53,14 @@ def pytest_configure(config):
     config.require_client_auth = not args.disable_client_auth
     config.use_tls = not args.disable_tls
     config.log_memory_usage = args.log_memory_usage
+    config.secure_agg = args.secure_agg
+    config.tr_rest_protocol = args.tr_rest_protocol
+    config.workflow_backend = args.workflow_backend
     config.results_dir = config.getini("results_dir")
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_logging(pytestconfig):
+def setup_e2e_logging(pytestconfig):
     """
     Setup logging for the test session.
     Args:
@@ -65,8 +76,20 @@ def setup_logging(pytestconfig):
         os.makedirs(results_dir)
 
     # Setup a global logger to ensure logging works before any test-specific logs are set
-    configure_logging(f"{results_dir}/deployment.log", log_level)
-    return logging.getLogger()
+    logger = setup_logger(log_level=log_level, log_file=f"{results_dir}/deployment.log")
+
+    # Remove any existing RichHandler instances
+    logger.handlers = [h for h in logger.handlers if not isinstance(h, RichHandler)]
+
+    # Enable rich logging for console output specifically during GitHub workflow run
+    console = Console(width=160, force_terminal=True)
+    console_handler = RichHandler(
+        rich_tracebacks=True,
+        markup=True,
+        console=console,
+    )
+    logger.addHandler(console_handler)
+    return logger
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -192,20 +215,10 @@ def pytest_sessionfinish(session, exitstatus):
         shutil.rmtree(cache_dir, ignore_errors=False)
         log.debug(f"Cleared .pytest_cache directory at {cache_dir}")
 
-
-def pytest_configure(config):
-    """
-    Configure the pytest plugin.
-    Args:
-        config: pytest config object
-    """
-    # Declare some global variables
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    config.model_name = args.model_name
-    config.num_collaborators = args.num_collaborators
-    config.num_rounds = args.num_rounds
-    config.require_client_auth = not args.disable_client_auth
-    config.use_tls = not args.disable_tls
-    config.log_memory_usage = args.log_memory_usage
-    config.results_dir = config.getini("results_dir")
+    if dh.is_docker_running():
+        # Cleanup docker containers related to aggregator and collaborators, if any.
+        dh.cleanup_docker_containers(list_of_containers=["aggregator", "collaborator*"])
+        # Cleanup docker network created for openfl, if any.
+        dh.remove_docker_network(["openfl"])
+    else:
+        log.info("Docker is not running or not accessible. Skipping Docker cleanup steps.")

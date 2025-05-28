@@ -88,7 +88,7 @@ class Experiment:
         private_key: Optional[Union[Path, str]] = None,
         certificate: Optional[Union[Path, str]] = None,
         director_config: Path = None,
-        install_requirements: bool = False,
+        install_requirements: bool = True,
     ) -> Tuple[bool, Any]:
         """Run experiment.
 
@@ -103,7 +103,7 @@ class Experiment:
                 certificate for TLS. Defaults to None.
             director_config (Path): Path to director's config file
             install_requirements (bool, optional): A flag indicating if the
-                requirements should be installed. Defaults to False.
+                requirements should be installed. Defaults to True.
 
         Returns:
             List[Union[bool, Any]]:
@@ -172,11 +172,11 @@ class Experiment:
 
         logger.info("🧿 Created an Aggregator Server for %s experiment.", self.name)
         aggregator_grpc_server = plan.get_server(
+            director_config,
             root_certificate=root_certificate,
             certificate=certificate,
             private_key=private_key,
             tls=tls,
-            director_config=director_config,
         )
         return aggregator_grpc_server
 

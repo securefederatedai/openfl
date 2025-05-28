@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -12,7 +12,7 @@ import grpc
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
-from openfl.utilities import check_equal
+from openfl.protocols.utils import datastream_to_proto, proto_to_datastream
 
 
 class ConstantBackoff:
@@ -162,7 +162,7 @@ class AggregatorGRPCClient:
         Warns user that this is not recommended.
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri: The uniform resource identifier of the insecure channel
 
         Returns:
             An insecure gRPC channel object
@@ -180,11 +180,11 @@ class AggregatorGRPCClient:
         """Set an secure gRPC channel (i.e. TLS).
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri: The uniform resource identifier of the insecure channel
             root_certificate: The Certificate Authority filename
             disable_client_auth (boolean): True disabled client-side
              authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
+            certificate: The client certificate filename from the collaborator
              (signed by the certificate authority)
 
         Returns:
@@ -221,18 +221,23 @@ class AggregatorGRPCClient:
 
     def validate_response(self, reply, collaborator_name):
         """Validate the aggregator response."""
-        # check that the message was intended to go to this collaborator
-        check_equal(reply.header.receiver, collaborator_name, self.logger)
-        check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
-
-        # check that federation id matches
-        check_equal(reply.header.federation_uuid, self.federation_uuid, self.logger)
-
-        # check that there is aggrement on the single_col_cert_common_name
-        check_equal(
-            reply.header.single_col_cert_common_name,
-            self.single_col_cert_common_name or "",
-            self.logger,
+        assert reply.header.receiver == collaborator_name, (
+            f"Receiver in response header does not match collaborator name. "
+            f"Expected: {collaborator_name}, Actual: {reply.header.receiver}"
+        )
+        assert reply.header.sender == self.aggregator_uuid, (
+            f"Sender in response header does not match aggregator UUID. "
+            f"Expected: {self.aggregator_uuid}, Actual: {reply.header.sender}"
+        )
+        assert reply.header.federation_uuid == self.federation_uuid, (
+            f"Federation UUID in response header does not match. "
+            f"Expected: {self.federation_uuid}, Actual: {reply.header.federation_uuid}"
+        )
+        assert reply.header.single_col_cert_common_name == (
+            self.single_col_cert_common_name or ""
+        ), (
+            f"Single collaborator certificate common name in response header does not match. "
+            f"Expected: {self.single_col_cert_common_name or ''}, Actual: {reply.header.single_col_cert_common_name}"  # noqa: E501
         )
 
     def disconnect(self):
@@ -276,7 +281,7 @@ class AggregatorGRPCClient:
             execution_environment=clone_bytes,
         )
 
-        response = self.stub.SendTaskResults(request)
+        response = self.stub.SendTaskResults(proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
 
         return response.header
@@ -287,8 +292,8 @@ class AggregatorGRPCClient:
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
         request = aggregator_pb2.GetTasksRequest(header=self.header)
-
-        response = self.stub.GetTasks(request)
+        response_stream = self.stub.GetTasks(request)
+        response = datastream_to_proto(aggregator_pb2.GetTasksResponse(), response_stream)
         self.validate_response(response, collaborator_name)
 
         return (
@@ -312,7 +317,7 @@ class AggregatorGRPCClient:
             stream_buffer=stream_buffer,
         )
 
-        response = self.stub.CallCheckpoint(request)
+        response = self.stub.CallCheckpoint(proto_to_datastream(request))
         self.validate_response(response, collaborator_name)
 
         return response.header

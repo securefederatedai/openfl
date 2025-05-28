@@ -1,0 +1,35 @@
+# IMPORTANT - Rules defined later in the file take precedence, so we define a default first.
+
+# When editing descriptions, DO NOT add lines which:
+# - Have no users, such as:
+#     /foo/
+#   This means that no reviews are needed.
+# - Have one user, such as:
+#    /foo/ @some_user
+#   That means that some_user needs no reviews.
+# In the above cases, it is better to remove the line and use the default rule.
+
+# Repository level default ownership
+*                       aayush.garg@intel.com akshay.pant@intel.com giribabu.bikki@intel.com karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com preethi.asokan@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+
+# Folder level ownership
+/.github/               aayush.garg@intel.com akshay.pant@intel.com giribabu.bikki@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com preethi.asokan@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+
+/docs/                  celine.nalkara@intel.com eyal.rundstein@intel.com karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com rahul.garg@intel.com teodor.parvanov@intel.com
+
+/openfl-docker/         aayush.garg@intel.com giribabu.bikki@intel.com karan.shah@intel.com patrick.foley@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+
+/openfl-tutorials/      celine.nalkara@intel.com eyal.rundstein@intel.com karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com rahul.garg@intel.com teodor.parvanov@intel.com
+
+/openfl-workspace/      karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com teodor.parvanov@intel.com
+
+/openfl/                karan.shah@intel.com kevin.ta@intel.com patrick.foley@intel.com teodor.parvanov@intel.com
+
+/tests/                 akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com
+
+/scripts/               aayush.garg@intel.com giribabu.bikki@intel.com karan.shah@intel.com patrick.foley@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+
+# File level ownership
+CODEOWNERS              aayush.garg@intel.com giribabu.bikki@intel.com patrick.foley@intel.com preethi.asokan@intel.com rahul.garg@intel.com srikanth.enugula@intel.com teodor.parvanov@intel.com
+
+test-requirements.txt   akshay.pant@intel.com karan.shah@intel.com kevin.ta@intel.com noopur@intel.com patrick.foley@intel.com payal.chaurasiya@intel.com rahul.garg@intel.com rajith.krishnegowda@intel.com shailesh.pant@intel.com shailesh.tanwar@intel.com teodor.parvanov@intel.com

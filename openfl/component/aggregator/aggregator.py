@@ -1,18 +1,21 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
 
+import json
 import logging
 import queue
 import time
 from threading import Lock
 from typing import List, Optional
 
+import numpy as np
+
 import openfl.callbacks as callbacks_module
-from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
+from openfl.component.aggregator.straggler_handling import StragglerPolicy, WaitForAllPolicy
 from openfl.databases import PersistentTensorDB, TensorDB
-from openfl.interface.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import SecureWeightedAverage, WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.protocols.base_pb2 import NamedTensor
@@ -37,6 +40,8 @@ class Aggregator:
         uuid (int): Aggregator UUID.
         federation_uuid (str): Federation UUID.
         assigner: Object assigning tasks to collaborators.
+        connector (optional): Object responsible for managing interopability
+            with other frameworks. Defaults to None
         quit_job_sent_to (list): Collaborators sent a quit job.
         tensor_db (TensorDB): Object for tensor database.
         db_store_rounds* (int): Rounds to store in TensorDB.
@@ -72,8 +77,9 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
+        connector=None,
         use_delta_updates=True,
-        straggler_handling_policy=None,
+        straggler_handling_policy: StragglerPolicy = WaitForAllPolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
@@ -81,10 +87,10 @@ class Aggregator:
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[List] = [],
         persist_checkpoint=True,
         persistent_db_path=None,
-        task_group: str = "learning",
+        secure_aggregation=False,
     ):
         """Initializes the Aggregator.
 
@@ -100,7 +106,6 @@ class Aggregator:
                 weight.
             assigner: Assigner object.
             straggler_handling_policy (optional): Straggler handling policy.
-                Defaults to CutoffTimeBasedStragglerHandling.
             rounds_to_train (int, optional): Number of rounds to train.
                 Defaults to 256.
             single_col_cert_common_name (str, optional): Common name for single
@@ -111,9 +116,7 @@ class Aggregator:
                 Defaults to 1.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
             callbacks: List of callbacks to be used during the experiment.
-            task_group (str, optional): Selected task_group for assignment.
         """
-        self.task_group = task_group
         self.round_number = 0
         self.next_model_round_number = 0
 
@@ -127,23 +130,27 @@ class Aggregator:
         # FIXME: "" instead of None is for protobuf compatibility.
         self.single_col_cert_common_name = single_col_cert_common_name or ""
 
-        self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
-        )
-        self._end_of_round_check_done = [False] * rounds_to_train
-        self.stragglers = []
+        self.straggler_handling_policy = straggler_handling_policy()
 
         self.rounds_to_train = rounds_to_train
+        self.assigner = assigner
+        if self.assigner.is_task_group_evaluation():
+            self.rounds_to_train = 1
+            logger.info(f"For evaluation tasks setting rounds_to_train = {self.rounds_to_train}")
+
+        self._end_of_round_check_done = [False] * rounds_to_train
+        self.stragglers = []
 
         # if the collaborator requests a delta, this value is set to true
         self.authorized_cols = authorized_cols
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
-        self.assigner = assigner
+        self.connector = connector
+
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
-        if persist_checkpoint:
+        if persist_checkpoint and not self.assigner.is_task_group_evaluation():
             persistent_db_path = persistent_db_path or "tensor.db"
             logger.info(
                 "Persistent checkpoint is enabled, setting persistent db at path %s",
@@ -151,7 +158,9 @@ class Aggregator:
             )
             self.persistent_db = PersistentTensorDB(persistent_db_path)
         else:
-            logger.info("Persistent checkpoint is disabled")
+            logger.info(
+                "Either persistent checkpoint is disabled or the experiment is in evaluation mode"
+            )
             self.persistent_db = None
         # FIXME: I think next line generates an error on the second round
         # if it is set to 1 for the aggregator.
@@ -167,9 +176,6 @@ class Aggregator:
         self.best_state_path = best_state_path
         self.last_state_path = last_state_path
 
-        # TODO: Remove. Used in deprecated interactive and native APIs
-        self.best_tensor_dict: dict = {}
-        self.last_tensor_dict: dict = {}
         # these enable getting all tensors for a task
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
@@ -182,13 +188,25 @@ class Aggregator:
         self.use_delta_updates = use_delta_updates
 
         self.model = None  # Initialize the model attribute to None
-        if self.persistent_db and self._recover():
-            logger.info("recovered state of aggregator")
 
-        # The model is built by recovery if at least one round has finished
-        if self.model:
-            logger.info("Model was loaded by recovery")
-        elif initial_tensor_dict:
+        # Callback for FA. For FL the callback will not execute the code to
+        # save result for FA experiment.
+        callbacks.append(
+            callbacks_module.LambdaCallback(
+                on_round_end=lambda round_num, logs=None: self.save_analytics_result()
+            )
+        )
+        # Callbacks
+        self.callbacks = callbacks_module.CallbackList(
+            callbacks,
+            add_memory_profiler=log_memory_usage,
+            add_metric_writer=write_logs,
+            tensor_db=self.tensor_db,
+            origin="aggregator",
+            last_state_path=self.last_state_path,
+        )
+
+        if initial_tensor_dict:
             self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
                 tensor_dict=initial_tensor_dict,
@@ -196,18 +214,23 @@ class Aggregator:
                 tensor_pipe=self.compression_pipeline,
             )
         else:
-            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
-            self._load_initial_tensors()  # keys are TensorKeys
+            if self.connector:
+                # The model definition will be handled by the respective framework
+                self.model = {}
+            else:
+                self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
+                self._load_initial_tensors()  # keys are TensorKeys
 
-        self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
+        self._secure_aggregation_enabled = secure_aggregation
+        if self._secure_aggregation_enabled:
+            from openfl.utilities.secagg.bootstrap import SecAggSetup
 
-        # Callbacks
-        self.callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_memory_profiler=log_memory_usage,
-            add_metric_writer=write_logs,
-            origin="aggregator",
-        )
+            self.secagg = SecAggSetup(self.uuid, self.authorized_cols, self.tensor_db)
+
+        # Only recover from persistent DB if not in evaluation mode
+        if self.persistent_db and not self.assigner.is_task_group_evaluation():
+            if self._recover():
+                logger.info("Recovered state of aggregator")
 
         # TODO: Aggregator has no concrete notion of round_begin.
         # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
@@ -237,7 +260,7 @@ class Aggregator:
                 to_proto_tensor_dict, committed_round_number, self.compression_pipeline
             )
             # round number is the current round which is still in process
-            #  i.e. committed_round_number + 1
+            #  i.e. committed_round_number
             self.round_number = committed_round_number + 1
             logger.info(
                 "Recovery - loaded round number %s and best score %s",
@@ -301,8 +324,8 @@ class Aggregator:
         )
 
         # Check selected task_group before updating round number
-        if self.task_group == "evaluation":
-            logger.info(f"Skipping round_number check for {self.task_group} task_group")
+        if self.assigner.is_task_group_evaluation():
+            logger.info("Skipping round_number check for evaluation run")
         elif round_number > self.round_number:
             logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
@@ -352,6 +375,7 @@ class Aggregator:
         ]
         tensor_dict = {}
         tensor_tuple_dict = {}
+        next_round_tensors = {}
         for tk in tensor_keys:
             tk_name, _, _, _, _ = tk
             tensor_value = self.tensor_db.get_tensor_from_cache(tk)
@@ -363,8 +387,10 @@ class Aggregator:
                     round_number,
                 )
                 return
+
         if file_path == self.best_state_path:
             self.best_tensor_dict = tensor_dict
+
         if file_path == self.last_state_path:
             # Transaction to persist/delete all data needed to increment the round
             if self.persistent_db:
@@ -373,13 +399,14 @@ class Aggregator:
                         self.next_model_round_number, ("model",)
                     )
                 self.persistent_db.finalize_round(
-                    tensor_tuple_dict, next_round_tensors, self.round_number, self.best_model_score
+                    tensor_tuple_dict, next_round_tensors, round_number, self.best_model_score
                 )
                 logger.info(
                     "Persist model and clean task result for round %s",
                     round_number,
                 )
             self.last_tensor_dict = tensor_dict
+
         self.model = utils.construct_model_proto(
             tensor_dict, round_number, self.compression_pipeline
         )
@@ -429,7 +456,7 @@ class Aggregator:
         Returns:
             int: Sleep time.
         """
-        # Decrease sleep period for finer discretezation
+        # Decrease sleep period for finer discretization
         return 10
 
     def _time_to_quit(self):
@@ -541,14 +568,28 @@ class Aggregator:
             # Check if minimum collaborators reported results
             self._end_of_round_with_stragglers_check()
 
+    def _check_tags(self, tags: tuple[str, ...], allowed_col: str) -> bool:
+        """
+        Check if all tags are either the allowed collaborator or unauthorized.
+
+        This function verifies that no tag (except the explicitly allowed one)
+        belongs to the list of authorized collaborators.
+
+        Args:
+            tags (tuple[str, ...]): The set of tags to check.
+            allowed_col (str): The only authorized collaborator allowed in the tags.
+
+        Returns:
+            bool: True if all tags are valid, False if an unauthorized collaborator
+            (other than allowed_col) is found.
+        """
+        for tag in tags:
+            if tag in self.authorized_cols and tag != allowed_col:
+                return False
+        return True
+
     def get_aggregated_tensor(
-        self,
-        collaborator_name,
-        tensor_name,
-        round_number,
-        report,
-        tags,
-        require_lossless,
+        self, tensor_name, round_number, report, tags, require_lossless, requested_by
     ):
         """
         RPC called by collaborator.
@@ -557,12 +598,12 @@ class Aggregator:
         that matches the request.
 
         Args:
-            collaborator_name (str): Requested tensor key collaborator name.
             tensor_name (str): Name of the tensor.
             round_number (int): Actual round number.
             report (bool): Whether to report.
             tags (tuple[str, ...]): Tags.
             require_lossless (bool): Whether to require lossless.
+            requested_by (str): Request originator name.
 
         Returns:
             named_tensor (protobuf) :  NamedTensor, the tensor requested by the collaborator.
@@ -570,19 +611,19 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        logger.debug(
-            f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
-            f"for collaborator {collaborator_name}"
-        )
-
         if "compressed" in tags or require_lossless:
             compress_lossless = True
         else:
             compress_lossless = False
 
+        if not self._check_tags(tags, requested_by):
+            logger.error(
+                "Tag check failed: unauthorized tags detected. Only '%s' is allowed.", requested_by
+            )
+            return NamedTensor()
+
         # TODO the TensorDB doesn't support compressed data yet.
-        #  The returned tensor will
-        # be recompressed anyway.
+        # The returned tensor will be recompressed anyway.
         if "compressed" in tags:
             tags = change_tags(tags, remove_field="compressed")
         if "lossy_compressed" in tags:
@@ -636,6 +677,24 @@ class Aggregator:
 
         """
         tensor_name, origin, round_number, report, tags = tensor_key
+        # Secure aggregation setup tensor.
+        if "secagg" in tags:
+            import numpy as np
+
+            class NumpyEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, np.ndarray):
+                        return obj.tolist()
+                    return super().default(obj)
+
+            named_tensor = utils.construct_named_tensor(
+                tensor_key,
+                str.encode(json.dumps(nparray, cls=NumpyEncoder)),
+                {},
+                lossless=True,
+            )
+
+            return named_tensor
         # if we have an aggregated tensor, we can make a delta
         if "aggregated" in tags and send_model_deltas:
             # Should get the pretrained model to create the delta. If training
@@ -718,9 +777,17 @@ class Aggregator:
         Returns:
             None
         """
-        # Save task and its metadata for recovery
-        serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
+        # Check if secure aggregation is enabled.
+        if self._secure_aggregation_enabled:
+            secagg_setup = self.secagg.process_secagg_setup_tensors(named_tensors)
+            # Task results processing is not required if the tensors belong to
+            # secure aggregation setup stage.
+            if secagg_setup:
+                return
+
         if self.persistent_db:
+            # Save task and its metadata for recovery
+            serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
             self.persistent_db.save_task_results(
                 collaborator_name, round_number, task_name, data_size, serialized_tensors
             )
@@ -731,6 +798,7 @@ class Aggregator:
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
+
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
         )
@@ -756,6 +824,11 @@ class Aggregator:
                 f" for the wrong round: {round_number}. Ignoring..."
             )
             return
+
+        if self.connector:
+            # Skip to end of round check
+            self._is_collaborator_done(collaborator_name, round_number)
+            self._end_of_round_with_stragglers_check()
 
         task_key = TaskResultKey(task_name, collaborator_name, round_number)
 
@@ -798,10 +871,9 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        with self.lock:
-            self._is_collaborator_done(collaborator_name, round_number)
-
-            self._end_of_round_with_stragglers_check()
+        # Check if collaborator or round is done.
+        self._is_collaborator_done(collaborator_name, round_number)
+        self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -851,7 +923,7 @@ class Aggregator:
             }
             for proto in named_tensor.transformer_metadata
         ]
-        # The tensor has already been transfered to aggregator,
+        # The tensor has already been transferred to aggregator,
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
             named_tensor.name,
@@ -861,6 +933,7 @@ class Aggregator:
             tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
+
         assert "compressed" in tags or "lossy_compressed" in tags, (
             f"Named tensor {tensor_key} is not compressed"
         )
@@ -1016,7 +1089,7 @@ class Aggregator:
         all_collaborators_for_task = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
-        # Leave out straggler for the round even if they've paritally
+        # Leave out straggler for the round even if they've partially
         # completed given tasks
         collaborators_for_task = []
         collaborators_for_task = [
@@ -1051,7 +1124,12 @@ class Aggregator:
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-            agg_function = WeightedAverage() if "metric" in tags else task_agg_function
+            # Check if secure aggregation is enabled, set aggregation function.
+            agg_function = task_agg_function
+            if "metric" in tags:
+                agg_function = WeightedAverage()
+            elif self._secure_aggregation_enabled:
+                agg_function = SecureWeightedAverage()
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
                 collaborator_weight_dict,
@@ -1078,11 +1156,18 @@ class Aggregator:
                 if "validate_agg" in tags:
                     # Compare the accuracy of the model, potentially save it.
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        logger.info(
-                            f"Round {round_number}: saved the best model with score {agg_results:f}"
-                        )
                         self.best_model_score = agg_results
-                        self._save_model(round_number, self.best_state_path)
+                        if not self.assigner.is_task_group_evaluation():
+                            logger.info(
+                                f"Round {round_number}: saved the best model with score "
+                                "{agg_results:f}"
+                            )
+                            self._save_model(round_number, self.best_state_path)
+                        else:
+                            logger.info(
+                                f"Round {round_number}: best score observed {agg_results:f} "
+                                "(model not saved in evaluation mode)"
+                            )
             if "trained" in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
@@ -1104,30 +1189,48 @@ class Aggregator:
         if self._end_of_round_check_done[self.round_number]:
             return
 
-        # Compute all validation related metrics
         logs = {}
-        for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
-            logs.update(self._compute_validation_related_task_metrics(task_name))
-
-        # End of round callbacks.
-        self.callbacks.on_round_end(self.round_number, logs)
+        if not self.connector:
+            # Compute all validation related metrics
+            for task_name in self.assigner.get_all_tasks_for_round(self.round_number):
+                logs.update(self._compute_validation_related_task_metrics(task_name))
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        logger.info("Saving round %s model...", self.round_number)
-        self._save_model(self.round_number, self.last_state_path)
+        if not self.connector:
+            if not self._has_analytics_results() and not self.assigner.is_task_group_evaluation():
+                logger.info("Saving round %s model...", self.round_number)
+                self._save_model(self.round_number, self.last_state_path)
+            elif self._has_analytics_results():
+                logger.info(
+                    "Skipping model save for round %s due to federated analytics.",
+                    self.round_number,
+                )
+            else:
+                logger.info(
+                    "Skipping model save for round %s in evaluation mode.", self.round_number
+                )
+
+        # End of round callbacks.
+        # todo handle case when aggregator restarted before callback was successful
+        self.callbacks.on_round_end(self.round_number, logs)
 
         self.round_number += 1
+
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
+        self.collaborator_tasks_results = {}
+        self.collaborator_task_weight = {}
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
             logger.info("Experiment Completed. Cleaning up...")
+            # End of experiment callbacks.
+            self.callbacks.on_experiment_end()
         else:
             logger.info("Starting round %s...", self.round_number)
             # https://github.com/securefederatedai/openfl/pull/1195#discussion_r1879479537
@@ -1137,6 +1240,44 @@ class Aggregator:
         self.tensor_db.clean_up(self.db_store_rounds)
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
+
+    def _has_analytics_results(self):
+        """
+        Check if the current round has analytics results.
+
+        Returns:
+            bool: True if the current round has analytics results, False otherwise.
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        return len(analytics_result) > 0
+
+    def save_analytics_result(self):
+        """
+        Save analytics results to a JSON file.
+        This method retrieves tensors tagged with "analytics" for the current round
+        from the tensor database and saves them as a JSON file at the path specified
+        by `self.last_state_path`. The tensor values are converted to lists if they
+        are NumPy arrays.
+        The saved JSON file contains a dictionary where the keys are tensor names
+        and the values are the corresponding tensor data.
+        Logs the saved analytics result for reference.
+        Returns:
+            None
+        """
+        analytics_result = self.tensor_db.get_tensors_by_round_and_tags(
+            self.round_number, ("analytics",)
+        )
+        if len(analytics_result) > 0 and self.last_state_path:
+            with open(self.last_state_path, "w") as jsonfile:
+                analytics_result_json = {}
+                for tensorkey, values in analytics_result.items():
+                    if isinstance(values, np.ndarray):
+                        values = values.tolist()
+                    analytics_result_json[tensorkey.tensor_name] = values
+                json.dump(analytics_result_json, jsonfile, indent=4)
+            logger.debug(f"Analytics result: {analytics_result_json}")
 
     def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """

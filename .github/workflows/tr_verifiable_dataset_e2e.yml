@@ -1,0 +1,173 @@
+---
+# Task Runner Verifiable Dataset E2E
+
+name: TR_Verifiable_Dataset_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: "Number of rounds to train"
+        required: false
+        default: "2"
+        type: string
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+# DO NOT use double quotes for the values of the environment variables
+env:
+  NUM_ROUNDS: ${{ inputs.num_rounds || 2 }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  test_with_s3:
+    name: With S3 (torch/histology_s3, 3.11)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    if: ${{ github.workflow != 'OpenFL Product Quality Pipeline' }}
+    env:
+      MODEL_NAME: "torch/histology_s3"
+      PYTHON_VERSION: "3.11"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Install MinIO
+        id: install_minio
+        run: |
+          wget https://dl.min.io/server/minio/release/linux-amd64/minio
+          chmod +x minio
+          sudo mv minio /usr/local/bin/
+
+      - name: Install MinIO Client
+        id: install_minio_client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
+
+      - name: Run Task Runner E2E tests with S3
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_verifiable_dataset_tests.py \
+          -m task_runner_with_s3 --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task Runner E2E tests with S3 run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_S3"
+
+  test_with_azure_blob:
+    name: With Azure Blob (torch/histology_s3, 3.11)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    if: ${{ github.workflow != 'OpenFL Product Quality Pipeline' }}
+    env:
+      MODEL_NAME: "torch/histology_s3"
+      PYTHON_VERSION: "3.11"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Install Azurite
+        id: install_azurite
+        run: |
+          docker pull mcr.microsoft.com/azure-storage/azurite
+
+      - name: Run Task Runner E2E tests with Azure Blob
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_verifiable_dataset_tests.py \
+          -m task_runner_with_azure_blob --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task Runner E2E tests with Azure Blob run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_Azure_Blob"
+
+  test_with_all_ds:
+    name: With All Data Sources (torch/histology_s3, 3.11)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    env:
+      MODEL_NAME: "torch/histology_s3"
+      PYTHON_VERSION: "3.11"
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Install MinIO
+        id: install_minio
+        run: |
+          wget https://dl.min.io/server/minio/release/linux-amd64/minio
+          chmod +x minio
+          sudo mv minio /usr/local/bin/
+
+      - name: Install MinIO Client
+        id: install_minio_client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
+
+      - name: Install Azurite
+        id: install_azurite
+        run: |
+          docker pull mcr.microsoft.com/azure-storage/azurite
+
+      - name: Run Task Runner E2E tests with all data sources
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_verifiable_dataset_tests.py \
+          -m task_runner_with_all_ds --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task Runner E2E tests with Azure Blob run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_All_Datasources"

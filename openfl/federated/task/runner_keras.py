@@ -21,6 +21,10 @@ with catch_warnings():
     simplefilter(action="ignore")
     import keras
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class KerasTaskRunner(TaskRunner):
     """The base model for Keras models in the federation.
@@ -78,7 +82,7 @@ class KerasTaskRunner(TaskRunner):
     ):
         """
         Perform the training. Is expected to perform draws randomly, without
-        replacement until data is exausted. Then data is replaced and shuffled
+        replacement until data is exhausted. Then data is replaced and shuffled
         and draws continue.
 
         Args:
@@ -100,7 +104,7 @@ class KerasTaskRunner(TaskRunner):
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
-            self.logger.info("Run %s epoch of %s round", epoch, round_num)
+            logger.info("Run %s epoch of %s round", epoch, round_num)
             results = self.train_(
                 self.data_loader.get_train_loader(batch_size),
                 metrics=metrics,
@@ -116,9 +120,11 @@ class KerasTaskRunner(TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        output_model_dict = self.get_tensor_dict(
+            with_opt_vars=(self.opt_treatment == "CONTINUE_GLOBAL")
+        )
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # create global tensorkeys
@@ -161,8 +167,12 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == "CONTINUE_GLOBAL":
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        self.update_tensorkeys_for_functions()
         return global_tensor_dict, local_tensor_dict
+
+    def _initialize_metrics_result(self, batch_size):
+        # evaluation needed before metrics can be resolved
+        self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+        return self.model.get_metrics_result()
 
     def train_(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch. Override this function for custom training.
@@ -182,15 +192,14 @@ class KerasTaskRunner(TaskRunner):
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
         #  defined) then the model must be recompiled.
+
+        batch_size = kwargs.get("batch_size", 1)
         try:
             results = self.model.get_metrics_result()
+            if len(results) == 0:
+                results = self._initialize_metrics_result(batch_size)
         except ValueError:
-            if "batch_size" in kwargs:
-                batch_size = kwargs["batch_size"]
-            else:
-                batch_size = 1
-            # evaluation needed before metrics can be resolved
-            self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
+            self._initialize_metrics_result(batch_size)
             results = self.model.get_metrics_result()
 
         # TODO if there are new metrics in the flplan that were not included
@@ -225,10 +234,7 @@ class KerasTaskRunner(TaskRunner):
                 These correspond to acc, precision, f1_score, etc.
             dict: Empty dictionary.
         """
-        if "batch_size" in kwargs:
-            batch_size = kwargs["batch_size"]
-        else:
-            batch_size = 1
+        batch_size = kwargs.get("batch_size", 1)
 
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs["metrics"]
@@ -356,7 +362,7 @@ class KerasTaskRunner(TaskRunner):
 
             model_weights.update(opt_weights)
             if len(opt_weights) == 0:
-                self.logger.debug("WARNING: We didn't find variables for the optimizer.")
+                logger.debug("WARNING: We didn't find variables for the optimizer.")
         return model_weights
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
@@ -403,35 +409,6 @@ class KerasTaskRunner(TaskRunner):
         else:
             return self.required_tensorkeys_for_function[func_name]
 
-    def update_tensorkeys_for_functions(self):
-        """Update the required tensors for all publicly accessible methods that
-        could be called as part of a task.
-
-        By default, this is just all of the layers and optimizer of the model.
-        Custom tensors should be added to this function
-        """
-        # TODO complete this function. It is only needed for opt_treatment,
-        #  and making the model stateless
-
-        # Minimal required tensors for train function
-        model_layer_names = self._get_weights_names(self.model)
-        opt_names = self._get_weights_names(self.model.optimizer)
-        tensor_names = model_layer_names + opt_names
-        self.logger.debug("Updating model tensor names: %s", tensor_names)
-        self.required_tensorkeys_for_function["train_task"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
-        ]
-
-        # Validation may be performed on local or aggregated (global) model,
-        # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function["validate_task"] = {}
-        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
-            TensorKey(tensor_name, "LOCAL", 0, False, ("trained",)) for tensor_name in tensor_names
-        ]
-        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",)) for tensor_name in tensor_names
-        ]
-
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible methods that
         could be called as part of a task.
@@ -449,7 +426,7 @@ class KerasTaskRunner(TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
@@ -457,7 +434,6 @@ class KerasTaskRunner(TaskRunner):
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
                 output_model_dict,
                 **self.tensor_dict_split_fn_kwargs,
             )

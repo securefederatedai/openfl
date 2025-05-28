@@ -9,44 +9,29 @@ import os
 import re
 from pathlib import Path
 
-import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils.generate_report import convert_to_json
-
-# Initialize the XML parser
-parser = etree.XMLParser(recover=True, encoding="utf-8")
+import tests.end_to_end.utils.defaults as defaults
+import tests.end_to_end.utils.exceptions as ex
+from tests.end_to_end.utils import federation_helper as fed_helper
 
 result_path = os.path.join(Path().home(), "results")
-result_xml = os.path.join(result_path, "results.xml")
-if not os.path.exists(result_xml):
-    print(f"Results XML file not found at {result_xml}. Exiting...")
-    exit(1)
 
-tree = defused_parse(result_xml, parser=parser)
-
-# Get the root element
-testsuites = tree.getroot()
-
-
-def get_aggregated_accuracy(agg_log_file):
+def initialize_xml_parser():
     """
-    Get the aggregated accuracy from aggregator logs
-    Args:
-        agg_log_file: the aggregator log file
+    Initialize the XML parser and parse the results XML file.
     Returns:
-        agg_accuracy: the aggregated accuracy
+        testsuites: the root element of the parsed XML tree
     """
-    agg_accuracy = "Not Found"
-    if not os.path.exists(agg_log_file):
-        print(
-            f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy"
-        )
-        return agg_accuracy
+    parser = etree.XMLParser(recover=True, encoding="utf-8")
+    result_xml = os.path.join(result_path, "results.xml")
+    if not os.path.exists(result_xml):
+        print(f"Results XML file not found at {result_xml}. Exiting...")
+        exit(1)
 
-    agg_accuracy_dict = convert_to_json(agg_log_file)
-    agg_accuracy = agg_accuracy_dict[-1].get(
-        "aggregator/aggregated_model_validation/accuracy", "Not Found"
-    )
-    return agg_accuracy
+    tree = defused_parse(result_xml, parser=parser)
+
+    # Get the root element
+    testsuites = tree.getroot()
+    return testsuites
 
 
 def get_test_status(result):
@@ -76,6 +61,8 @@ def get_testcase_result():
     """
     database_list = []
     status = None
+    # Initialize the XML parser
+    testsuites = initialize_xml_parser()
     # Iterate over each testsuite in testsuites
     for testsuite in testsuites:
         # Populate testcase details in a dictionary
@@ -105,7 +92,7 @@ def get_testcase_result():
 
 def print_task_runner_score():
     """
-    Main function to get the test case results and aggregator logs
+    Function to get the test case results and aggregator logs
     And write the results to GitHub step summary
     IMP: Do not fail the test in any scenario
     """
@@ -129,26 +116,51 @@ def print_task_runner_score():
 
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
-    model_name = os.getenv("MODEL_NAME")
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    model_name = os.getenv("MODEL_NAME").replace("/", "_")
+    summary_file = _get_summary_file()
 
     # Validate the model name and create the workspace name
-    if not model_name.upper() in constants.ModelName._member_names_:
+    if not model_name.upper() in defaults.ModelName._member_names_:
         print(
             f"Invalid model name: {model_name}. Skipping writing to GitHub step summary"
         )
         return
 
-    # Assumption - result directory is present in the home directory
-    agg_log_file = os.path.join(
-        result_path,
+    # List all directories inside result_path
+    directories = [d for d in os.listdir(result_path) if os.path.isdir(os.path.join(result_path, d))]
+
+    # Find the directory that starts with 'test_'
+    test_specific_result_path = None
+    for directory in directories:
+        if directory.startswith('test_'):
+            test_specific_result_path = os.path.join(result_path, directory)
+            break
+
+    if not test_specific_result_path:
+        print("No directory starting with 'test_' found in the result path.")
+        return
+
+    best_score = "Not Found"
+    tensor_db_file = os.path.join(
+        test_specific_result_path,
         model_name,
         "aggregator",
         "workspace",
-        "logs",
-        "aggregator_metrics.txt",
+        "local_state",
+        "tensor.db",
     )
-    agg_accuracy = get_aggregated_accuracy(agg_log_file)
+    # If the federation run fails in between, tensor.db file won't be present
+    # In any scenario, we should not fail the script
+    if not os.path.exists(tensor_db_file):
+        print(f"File tensor.db not found at {tensor_db_file}.")
+    else:
+        try:
+            # Pass max retries=1 as we are printing the summary after completion itself
+            best_score = fed_helper.get_best_agg_score(tensor_db_file, max_retries=1)
+        except ex.TensorDBException as e:
+            print(f"Error reading tensor.db file: {e}.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     # Write the results to GitHub step summary file
     # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
@@ -164,14 +176,18 @@ def print_task_runner_score():
         )
         for item in result:
             print(
-                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |",
+                f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {best_score} |",
                 file=fh,
             )
 
 
-def print_federated_runtime_score():
-    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
-
+def print_federated_runtime_score(nb_name):
+    """
+    Function to get the federated runtime score from the director log file
+    And write the results to GitHub step summary
+    IMP: Do not fail the test in any scenario
+    """
+    summary_file = _get_summary_file()
     search_string = "Aggregated model validation score"
 
     last_occurrence = aggregated_model_score = None
@@ -179,20 +195,20 @@ def print_federated_runtime_score():
     # Assumption - result directory is present in the home directory
     dir_res_file = os.path.join(
         result_path,
-        "301_mnist_watermarking",
+        nb_name,
         "director.log",
     )
 
     # Open and read the log file
     with open(dir_res_file, "r") as file:
         for line in file:
-            if search_string in line:
+            if search_string.lower() in line.lower():
                 last_occurrence = line
 
     # Extract the value from the last occurrence
     if last_occurrence:
         match = re.search(
-            r"Aggregated model validation score = (\d+\.\d+)", last_occurrence
+            r"Aggregated model validation score = (\d+\.\d+)", last_occurrence, re.IGNORECASE
         )
         if match:
             aggregated_model_score = match.group(1)
@@ -211,6 +227,23 @@ def print_federated_runtime_score():
         print(f"| {aggregated_model_score} |", file=fh)
 
 
+def _get_summary_file():
+    """
+    Function to get the summary file path
+    Returns:
+        summary_file: Path to the summary file
+    """
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
+    print(f"Summary file: {summary_file}")
+
+    # Check if the fetched summary file is valid
+    if summary_file and os.path.isfile(summary_file):
+        return summary_file
+    else:
+        print("Invalid summary file. Exiting...")
+        exit(1)
+
+
 def fetch_args():
     """
     Function to fetch the commandline arguments.
@@ -222,6 +255,10 @@ def fetch_args():
     parser.add_argument(
         "--func_name", required=True, default="", type=str, help="Name of function to be called"
     )
+    # This argument is needed for workflow api and it value is set in the workflow during create_federated_runtime_participant_res_files as model_name
+    parser.add_argument(
+        "--nb_name", required=False, default="", type=str, help="Name of output folder"
+    )
     args = parser.parse_args()
     return args
 
@@ -230,7 +267,11 @@ if __name__ == "__main__":
     # Fetch input arguments
     args = fetch_args()
     func_name = args.func_name
+
     if func_name in ["print_task_runner_score", "print_local_runtime_score"]:
         print_task_runner_score()
     elif func_name == "print_federated_runtime_score":
-        print_federated_runtime_score()
+        nb_name = args.nb_name
+        if not nb_name:
+            raise ValueError("nb_name argument is required for print_federated_runtime_score function")
+        print_federated_runtime_score(nb_name)

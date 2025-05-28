@@ -85,7 +85,7 @@ class TestFlowReferenceWithInclude(FLSpec):
     @collaborator
     def test_create_collab_attr(self):
         """
-        Modify the attirbutes of aggregator to validate the references.
+        Modify the attributes of aggregator to validate the references.
         Create different types of objects.
         """
 
@@ -252,16 +252,13 @@ if __name__ == "__main__":
     for idx, collaborator_name in enumerate(collaborator_names):
         collaborators.append(Collaborator(name=collaborator_name))
 
-    local_runtime = LocalRuntime(
-        aggregator=aggregator,
-        collaborators=collaborators,
-    )
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
 
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "ray":
-            local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend="ray"
-            )
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators, backend=backend
+    )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 

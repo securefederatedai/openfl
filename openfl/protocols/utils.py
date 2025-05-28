@@ -1,11 +1,14 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """Proto utils."""
+
+import logging
 
 from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
+
+logger = logging.getLogger(__name__)
 
 
 def model_proto_to_bytes_and_metadata(model_proto):
@@ -294,7 +297,7 @@ def dump_proto(model_proto, fpath):
         f.write(s)
 
 
-def datastream_to_proto(proto, stream, logger=None):
+def datastream_to_proto(proto, stream):
     """Convert the datastream to the protobuf.
 
     Args:
@@ -305,20 +308,18 @@ def datastream_to_proto(proto, stream, logger=None):
     Returns:
         proto: The protobuf filled with the data stream.
     """
-    npbytes = b""
+    npbytes = bytearray()
     for chunk in stream:
-        npbytes += chunk.npbytes
+        npbytes.extend(chunk.npbytes)
 
     if len(npbytes) > 0:
-        proto.ParseFromString(npbytes)
-        if logger is not None:
-            logger.debug("datastream_to_proto parsed a %s.", type(proto))
+        proto.ParseFromString(bytes(npbytes))
         return proto
     else:
         raise RuntimeError(f"Received empty stream message of type {type(proto)}")
 
 
-def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
+def proto_to_datastream(proto, max_buffer_size=(2 * 1024 * 1024)):
     """Convert the protobuf to the datastream for the remote connection.
 
     Args:
@@ -333,11 +334,6 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
     npbytes = proto.SerializeToString()
     data_size = len(npbytes)
     buffer_size = data_size if max_buffer_size > data_size else max_buffer_size
-    logger.debug(
-        "Setting stream chunks with size %s for proto of type %s",
-        buffer_size,
-        type(proto),
-    )
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i : i + buffer_size]

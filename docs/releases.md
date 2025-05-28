@@ -1,4 +1,20 @@
 # Releases
+## 1.8
+[Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.8)
+
+### New Features
+- [**Secure Aggregation**](https://openfl.readthedocs.io/en/latest/about/features_index/secure_aggregation.html): A privacy-preserving aggregation algorithm for Federated Learning, based on secure multiparty computation (MPC) that helps protect intermediate model updates from introspection. OpenFL now supports Secure Aggregation via both Task Runner API and Workflow API.
+
+- [**OpenFL/Flower Interop**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/flower-app-pytorch): Showcasing how FL experiments defined using the Flower API can be run as OpenFL federations via TaskRunner API. This enables combining Flower's extensive library of FL algorithms with OpenFL's advanced security features, including trusted execution, secure communication, and explicit safeguards against data exfiltration.
+
+- [**Federated Evaluation**](https://openfl.readthedocs.io/en/latest/about/features_index/fed_eval.html): Enabling seamless switching from learning to evaluation in Task Runner API without redistributing the FL plan, which is particularly advantageous in large, geo-distributed federations. Furthermore, Federated Evaluation is now available via the [Workflow API](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/405_MNIST_FederatedEvaluation.ipynb).
+
+### Enhanced Developer Experience
+- **Removing Legacy APIs**: The Python Native API and the Interactive API have been removed, along with the accompanying examples and documentation.
+
+- **ML Frameworks Integration**: Upgraded PyTorch-based FL workspaces to 2.4.1, and provided additional [Keras 3 back-ends](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras) (incl. Jax and PyTorch).
+
+- **Enhanced Resilience**: OpenFL Task Runner API experiments can now recover from Collaborator and Aggregator restarts.
 
 ## 1.7
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.7)
@@ -15,7 +31,7 @@
 
 - **FL Workspace Dockerization**: Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). Follow the [updated instructions](https://github.com/securefederatedai/openfl/blob/develop/openfl-docker/README.md) to enhance the privacy and security of your FL experiments.
 
-- **Federated Evaluation via TaskRunner API**: OpenFL 1.7 further simplifies the creation of Federated Evaluation experiments via the TaskRunner API (see the example [FedEval workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch_cnn_mnist_fed_eval)).
+- **Federated Evaluation via TaskRunner API**: OpenFL 1.7 further simplifies the creation of Federated Evaluation experiments via the TaskRunner API (see the example [FedEval workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch/mnist_fed_eval)).
 
 - **Keras 3 API**: Upgrading the base TaskRunner classes and example workspaces to Keras 3 for building state-of-the-art FL experiments with TensorFlow (more backends to be included in the upcoming OpenFL releases).
 
@@ -28,7 +44,7 @@
 
 ### New Features and APIs: 
 - **Federated LLM fine-tuning**: 
-     - [**Horovod**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch_llm_horovod): Use horovod to efficiently train LLMs across multiple private clusters  
+     - [**Horovod**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch/llm_horovod): Use horovod to efficiently train LLMs across multiple private clusters  
      - **Neuralchat-7b fine-tuning**: Learn how to fine-tune [neuralchat-7b](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/LLM/neuralchat) using the Intel® Extension for Transformers and the workflow interface. 
 
 - **Workflow API enhancements**: Introducing an experimental [Workspace Export](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/1001_Workspace_Creation_from_JupyterNotebook.ipynb) feature that can be used to transform a Workflow API-based FL experiment into the TaskRunner API format for running in a distributed deployment. There is also groundwork laid for a future FederatedRuntime implementation for Workflow API, in addition to the currently supported LocalRuntime.  
@@ -133,7 +149,7 @@ The OpenFL v1.2 release contains the following updates:
 - New [Interactive Python API](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api) (experimental)
 - Example FedProx algorithm implementation for PyTorch and Tensorflow
 - `AggregationFunctionInterface` for custom aggregation functions 
-- Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_nlp)
+- Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras/nlp)
 - Fixed lossy compression pipelines and added an [example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_cnn_with_compression) for usage
 - Bug fixes and documentation improvements
 

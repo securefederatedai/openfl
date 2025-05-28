@@ -8,22 +8,31 @@ import shutil
 import random
 from metaflow import Step
 
-from tests.end_to_end.utils.wf_common_fixtures import fx_local_federated_workflow, fx_local_federated_workflow_prvt_attr
+from tests.end_to_end.utils.wf_common_fixtures import (
+    fx_local_federated_workflow,
+    fx_local_federated_workflow_prvt_attr,
+    fx_local_fed_wf_unserializable_pvt_attrs,
+)
+
 from tests.end_to_end.workflow.exclude_flow import TestFlowExclude
 from tests.end_to_end.workflow.include_exclude_flow import TestFlowIncludeExclude
 from tests.end_to_end.workflow.include_flow import TestFlowInclude
 from tests.end_to_end.workflow.internal_loop import TestFlowInternalLoop
 from tests.end_to_end.workflow.reference_flow import TestFlowReference
-from tests.end_to_end.workflow.reference_include_flow import TestFlowReferenceWithInclude
-from tests.end_to_end.workflow.reference_exclude import TestFlowReferenceWithExclude
 from tests.end_to_end.workflow.subset_flow import TestFlowSubsetCollaborators
-from tests.end_to_end.workflow.private_attr_wo_callable import TestFlowPrivateAttributesWoCallable
+from tests.end_to_end.workflow.private_attr_wo_callable import (
+    TestFlowPrivateAttributesWoCallable,
+)
 from tests.end_to_end.workflow.private_attributes_flow import TestFlowPrivateAttributes
 from tests.end_to_end.workflow.private_attr_both import TestFlowPrivateAttributesBoth
+from tests.end_to_end.workflow.unserializable_private_attr import (
+    TestFlowUnserializablePrivateAttributes,
+)
 
 from tests.end_to_end.utils import wf_helper as wf_helper
 
 log = logging.getLogger(__name__)
+
 
 def test_exclude_flow(request, fx_local_federated_workflow):
     """
@@ -75,7 +84,9 @@ def test_internal_loop(request, fx_local_federated_workflow):
     model = None
     optimizer = None
 
-    flflow = TestFlowInternalLoop(model, optimizer, request.config.num_rounds, checkpoint=True)
+    flflow = TestFlowInternalLoop(
+        model, optimizer, request.config.num_rounds, checkpoint=True
+    )
     flflow.runtime = fx_local_federated_workflow.runtime
     flflow.run()
 
@@ -89,25 +100,37 @@ def test_internal_loop(request, fx_local_federated_workflow):
         "end",
     ]
 
-    steps_present_in_cli, missing_steps_in_cli, extra_steps_in_cli = wf_helper.validate_flow(
-            flflow, expected_flow_steps
-        )
+    steps_present_in_cli, missing_steps_in_cli, extra_steps_in_cli = (
+        wf_helper.validate_flow(flflow, expected_flow_steps)
+    )
 
-    assert len(steps_present_in_cli) == len(expected_flow_steps), "Number of steps fetched from Datastore through CLI do not match the Expected steps provided"
-    assert len(missing_steps_in_cli) == 0, f"Following steps missing from Datastore: {missing_steps_in_cli}"
-    assert len(extra_steps_in_cli) == 0, f"Following steps are extra in Datastore: {extra_steps_in_cli}"
+    assert len(steps_present_in_cli) == len(
+        expected_flow_steps
+    ), "Number of steps fetched from Datastore through CLI do not match the Expected steps provided"
+    assert (
+        len(missing_steps_in_cli) == 0
+    ), f"Following steps missing from Datastore: {missing_steps_in_cli}"
+    assert (
+        len(extra_steps_in_cli) == 0
+    ), f"Following steps are extra in Datastore: {extra_steps_in_cli}"
     assert flflow.end_count == 1, "End function called more than one time"
 
-    log.info("\n  Summary of internal flow testing \n"
-             "No issues found and below are the tests that ran successfully\n"
-             "1. Number of training completed is equal to training rounds\n"
-             "2. CLI steps and Expected steps are matching\n"
-             "3. Number of tasks are aligned with number of rounds and number of collaborators\n"
-             "4. End function executed one time")
+    log.info(
+        "\n  Summary of internal flow testing \n"
+        "No issues found and below are the tests that ran successfully\n"
+        "1. Number of training completed is equal to training rounds\n"
+        "2. CLI steps and Expected steps are matching\n"
+        "3. Number of tasks are aligned with number of rounds and number of collaborators\n"
+        "4. End function executed one time"
+    )
     log.info("Successfully ended test_internal_loop")
 
 
-@pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_index", "int", None )], indirect=True)
+@pytest.mark.parametrize(
+    "fx_local_federated_workflow",
+    [("init_collaborator_private_attr_index", "int", None)],
+    indirect=True,
+)
 def test_reference_flow(request, fx_local_federated_workflow):
     """
     Test reference variables matched through out the flow
@@ -121,33 +144,11 @@ def test_reference_flow(request, fx_local_federated_workflow):
     log.info("Successfully ended test_reference_flow")
 
 
-def test_reference_include_flow(request, fx_local_federated_workflow):
-    """
-    Test reference variables matched if included else not
-    """
-    log.info("Starting test_reference_include_flow")
-    flflow = TestFlowReferenceWithInclude(checkpoint=True)
-    flflow.runtime = fx_local_federated_workflow.runtime
-    for i in range(request.config.num_rounds):
-        log.info(f"Starting round {i}...")
-        flflow.run()
-    log.info("Successfully ended test_reference_include_flow")
-
-
-def test_reference_exclude_flow(request, fx_local_federated_workflow):
-    """
-    Test reference variables matched if not excluded
-    """
-    log.info("Starting test_reference_exclude_flow")
-    flflow = TestFlowReferenceWithExclude(checkpoint=True)
-    flflow.runtime = fx_local_federated_workflow.runtime
-    for i in range(request.config.num_rounds):
-        log.info(f"Starting round {i}...")
-        flflow.run()
-    log.info("Successfully ended test_reference_exclude_flow")
-
-
-@pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborator_private_attr_name", "str", None )], indirect=True)
+@pytest.mark.parametrize(
+    "fx_local_federated_workflow",
+    [("init_collaborator_private_attr_name", "str", None)],
+    indirect=True,
+)
 def test_subset_collaborators(request, fx_local_federated_workflow):
     """
     Test the subset of collaborators in a federated workflow.
@@ -187,16 +188,16 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
         )
 
         assert len(list(step)) == len(subset_collaborators), (
-                f"...Flow only ran for {len(list(step))} "
-                + f"instead of the {len(subset_collaborators)} expected "
-                + f"collaborators- Testcase Failed."
-            )
+            f"...Flow only ran for {len(list(step))} "
+            + f"instead of the {len(subset_collaborators)} expected "
+            + f"collaborators- Testcase Failed."
+        )
         log.info(
             f"Found {len(list(step))} tasks for each of the "
             + f"{len(subset_collaborators)} collaborators"
         )
-        log.info(f'subset_collaborators = {subset_collaborators}')
-        log.info(f'collaborators_ran = {collaborators_ran}')
+        log.info(f"subset_collaborators = {subset_collaborators}")
+        log.info(f"collaborators_ran = {collaborators_ran}")
         for collaborator_name in subset_collaborators:
             assert collaborator_name in collaborators_ran, (
                 f"...Flow did not execute for "
@@ -206,7 +207,8 @@ def test_subset_collaborators(request, fx_local_federated_workflow):
 
     log.info(
         f"Testing FederatedFlow - Ending test for validating "
-        + f"the subset of collaborators.")
+        + f"the subset of collaborators."
+    )
     log.info("Successfully ended test_subset_collaborators")
 
 
@@ -223,7 +225,11 @@ def test_private_attr_wo_callable(request, fx_local_federated_workflow_prvt_attr
     log.info("Successfully ended test_private_attr_wo_callable")
 
 
-@pytest.mark.parametrize("fx_local_federated_workflow", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
+@pytest.mark.parametrize(
+    "fx_local_federated_workflow",
+    [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np")],
+    indirect=True,
+)
 def test_private_attributes(request, fx_local_federated_workflow):
     """
     Set private attribute through callable function
@@ -237,7 +243,11 @@ def test_private_attributes(request, fx_local_federated_workflow):
     log.info("Successfully ended test_private_attributes")
 
 
-@pytest.mark.parametrize("fx_local_federated_workflow_prvt_attr", [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np" )], indirect=True)
+@pytest.mark.parametrize(
+    "fx_local_federated_workflow_prvt_attr",
+    [("init_collaborate_pvt_attr_np", "int", "init_agg_pvt_attr_np")],
+    indirect=True,
+)
 def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
     """
     Set private attribute through callable function and direct assignment
@@ -249,3 +259,25 @@ def test_private_attr_both(request, fx_local_federated_workflow_prvt_attr):
         log.info(f"Starting round {i}...")
         flflow.run()
     log.info("Successfully ended test_private_attr_both")
+
+
+@pytest.mark.parametrize(
+    "fx_local_fed_wf_unserializable_pvt_attrs",
+    [
+        ("callable_to_init_collab_unserializable_pvt_attrs",
+        "int",
+        "callable_to_init_agg_unserializable_pvt_attrs")
+    ],
+    indirect=True,
+)
+def test_unserializable_private_attr(
+    request, fx_local_fed_wf_unserializable_pvt_attrs
+):
+    """
+    Validate unserializable objects are accessible as private attributes
+    """
+    log.info("Starting Test for unserializable private attributes")
+    flflow = TestFlowUnserializablePrivateAttributes(rounds=request.config.num_rounds, checkpoint=False)
+    flflow.runtime = fx_local_fed_wf_unserializable_pvt_attrs.runtime
+    flflow.run()
+    log.info("Successfully ended Test for unserializable private attributes")

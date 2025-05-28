@@ -5,6 +5,7 @@
 """XGBoostTaskRunner module."""
 
 import json
+import logging
 
 import numpy as np
 import xgboost as xgb
@@ -14,13 +15,14 @@ from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
+logger = logging.getLogger(__name__)
 
-def check_precision_loss(logger, converted_data, original_data):
+
+def check_precision_loss(converted_data, original_data):
     """
     Checks for precision loss during conversion to float32 and back.
 
     Parameters:
-    logger (Logger): The logger object to log warnings.
     converted_data (np.ndarray): The data that has been converted to float32.
     original_data (list): The original data to be checked for precision loss.
     """
@@ -47,11 +49,13 @@ class XGBoostTaskRunner(TaskRunner):
         the global model and required tensor keys for XGBoost tasks.
 
         Attributes:
-            global_model (xgb.Booster): The global XGBoost model.
+            bst (xgb.Booster): gradient-boosted tree model for XGBoost.
+            global_model (np.ndarray): The numpy array containing global XGBoost tree.
             required_tensorkeys_for_function (dict): A dictionary to store required tensor keys
                 for each function.
         """
         super().__init__(**kwargs)
+        self.bst = None
         self.global_model = None
         self.required_tensorkeys_for_function = {}
 
@@ -93,9 +97,9 @@ class XGBoostTaskRunner(TaskRunner):
         """
         data = self.data_loader.get_valid_dmatrix()
 
-        # during agg validation, self.bst will still be None. during local validation,
-        # it will have a value - no need to rebuild
-        if self.bst is None:
+        # during agg validation, rebuild self.bst from global model. during local validation,
+        # continue with trained self.bst, no need to rebuild
+        if kwargs["apply"] != "local":
             self.rebuild_model(input_tensor_dict)
 
         # if self.bst is still None after rebuilding, then there was no initial global model, so
@@ -157,7 +161,7 @@ class XGBoostTaskRunner(TaskRunner):
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict()
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
@@ -243,7 +247,7 @@ class XGBoostTaskRunner(TaskRunner):
             np.float32
         )
 
-        check_precision_loss(self.logger, latest_trees_float32_array, original_data=latest_trees)
+        check_precision_loss(latest_trees_float32_array, original_data=latest_trees)
 
         return {"local_tree": latest_trees_float32_array}
 
@@ -278,7 +282,7 @@ class XGBoostTaskRunner(TaskRunner):
         """
         output_model_dict = self.get_tensor_dict()
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         global_model_dict_val = global_model_dict
         local_model_dict_val = local_model_dict
@@ -335,6 +339,21 @@ class XGBoostTaskRunner(TaskRunner):
             global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
             self.bst = xgb.Booster()
             self.bst.load_model(global_model_byte_array)
+
+    def load_native(
+        self,
+        filepath,
+        **kwargs,
+    ):
+        """
+        Load XGBooster from a file specified by filepath.
+
+        Args:
+            filepath (str): Path to XGB booster file.
+            **kwargs: Additional keyword arguments.
+        """
+        self.bst = xgb.Booster()
+        self.bst.load_model(filepath)
 
     def save_native(
         self,

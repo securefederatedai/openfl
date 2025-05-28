@@ -73,7 +73,7 @@ class IpAddressParamType(click.ParamType):
                 address.
         """
         if not utils.is_api_adress(value):
-            self.fail(f"{value} is not a valid ip adress name", param, ctx)
+            self.fail(f"{value} is not a valid ip address name", param, ctx)
         return value
 
 

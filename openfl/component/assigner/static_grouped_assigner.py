@@ -32,6 +32,8 @@ class StaticGroupedAssigner(Assigner):
         \* - Plan setting.
     """
 
+    with_selected_task_group = Assigner.with_selected_task_group
+
     def __init__(self, task_groups, **kwargs):
         """Initializes the StaticGroupedAssigner.
 
@@ -42,6 +44,7 @@ class StaticGroupedAssigner(Assigner):
         self.task_groups = task_groups
         super().__init__(**kwargs)
 
+    @with_selected_task_group
     def define_task_assignments(self):
         """Define task assignments for each round and collaborator.
 
@@ -80,7 +83,7 @@ class StaticGroupedAssigner(Assigner):
             for col in group_col_list:
                 # For now, we assume that collaborators have the same tasks for
                 # every round
-                self.collaborator_tasks[col] = {i: group["tasks"] for i in range(self.rounds)}
+                self.collaborator_tasks[col] = dict.fromkeys(range(self.rounds), group["tasks"])
             # Now populate reverse lookup of tasks->group
             for task in group["tasks"]:
                 for round_ in range(self.rounds):

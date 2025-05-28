@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-import logging
 import os
 import re
 import sys
 import time
 import warnings
 from importlib import import_module
-from logging import basicConfig
 from pathlib import Path
 from sys import argv, path
 
@@ -26,39 +24,9 @@ from click import (
     pass_context,
     style,
 )
-from rich.console import Console
-from rich.logging import RichHandler
 
-from openfl.utilities import add_log_level
-
-
-def setup_logging(level="info", log_file=None):
-    """
-    Initialize logging settings.
-
-    Args:
-        level (str, optional): Logging verbosity level. Defaults to 'info'.
-        log_file (str, optional): The log file. Defaults to None.
-    """
-
-    metric = 25
-    add_log_level("METRIC", metric)
-
-    if isinstance(level, str):
-        level = level.upper()
-
-    handlers = []
-    if log_file:
-        fh = logging.FileHandler(log_file)
-        formatter = logging.Formatter(
-            "%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d"
-        )
-        fh.setFormatter(formatter)
-        handlers.append(fh)
-
-    console = Console(width=160)
-    handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format="%(message)s", datefmt="[%X]", handlers=handlers)
+import openfl
+from openfl.utilities.logging import setup_logger
 
 
 def disable_warnings():
@@ -156,20 +124,20 @@ class CLI(Group):
                     f"  {style('*', fg='green')} {style(name, fg='cyan'):<21} {help_str}" + "\n"
                 )
 
+    def invoke(self, ctx):
+        if ctx.params.get("version"):
+            echo(f"OpenFL version: {openfl.__version__}")
+            ctx.exit()
+        super().invoke(ctx)
+
 
 @group(cls=CLI)
 @option("-l", "--log-level", default="info", help="Logging verbosity level.")
 @option("--no-warnings", is_flag=True, help="Disable third-party warnings.")
+@option("-v", "--version", is_flag=True, help="Show version")
 @pass_context
-def cli(context, log_level, no_warnings):
-    """
-    Command-line Interface.
-
-    Args:
-        context (click.core.Context): Click context.
-        log_level (str): Logging verbosity level.
-        no_warnings (bool): Flag to disable third-party warnings.
-    """
+def cli(context, log_level, no_warnings, version):
+    """Command-line Interface."""
 
     context.ensure_object(dict)
     context.obj["log_level"] = log_level
@@ -196,7 +164,7 @@ def cli(context, log_level, no_warnings):
         full_path = (allowed_directory / log_file).resolve()
         if not str(full_path).startswith(str(allowed_directory)):
             raise ValueError("Log file path is not allowed")
-    setup_logging(log_level, log_file)
+    setup_logger(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
 

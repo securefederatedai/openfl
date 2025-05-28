@@ -1,3 +1,7 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
 envoy_three:
   callable_func:
     settings:

@@ -45,14 +45,16 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     return cls_attrs, valid_artifacts
 
 
-def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpoint"]):
+def generate_artifacts(
+    ctx, reserved_words=["next", "runtime", "input", "checkpoint", "execute_task_args"]
+):
     """Generates artifacts from the given context, excluding specified reserved
     words.
 
     Args:
         ctx (any): The context to generate artifacts from.
         reserved_words (list, optional): A list of reserved words to exclude.
-            Defaults to ["next", "runtime", "input", "checkpoint"].
+            Defaults to ["next", "runtime", "input", "checkpoint", "execute_task_args"].
 
     Returns:
         tuple: A tuple containing a generator of artifacts and a list of
@@ -69,7 +71,7 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpo
     return artifacts_iter, cls_attrs
 
 
-def filter_attributes(ctx, f, **kwargs):  # noqa: C901
+def filter_attributes(ctx, f, **kwargs):
     """Filters out attributes from the next task in the flow based on inclusion
     or exclusion.
 
@@ -84,36 +86,82 @@ def filter_attributes(ctx, f, **kwargs):  # noqa: C901
             attribute in 'include' or 'exclude' is not found in the context's
             attributes.
     """
-
     _, cls_attrs = generate_artifacts(ctx=ctx)
+
+    # Validate input arguments
+    _validate_include_exclude(kwargs, cls_attrs)
+
+    # Process the 'include' or 'exclude' lists
+    if "include" in kwargs:
+        _process_inclusion(ctx, cls_attrs, kwargs["include"], f)
+    elif "exclude" in kwargs:
+        _process_exclusion(ctx, cls_attrs, kwargs["exclude"], f)
+
+
+def _validate_include_exclude(kwargs, cls_attrs):
+    """Validates that 'include' and 'exclude' are not both present, and that
+    attributes in 'include' or 'exclude' exist in the context.
+
+    Args:
+        kwargs (dict): The keyword arguments passed to filter_attributes.
+        cls_attrs (list): The list of all attributes in the context.
+
+    Raises:
+        RuntimeError: If both 'include' and 'exclude' are present, or if any
+            attribute in 'include' or 'exclude' does not exist in the context.
+    """
     if "include" in kwargs and "exclude" in kwargs:
         raise RuntimeError("'include' and 'exclude' should not both be present")
-    elif "include" in kwargs:
+
+    if "include" in kwargs:
         assert isinstance(kwargs["include"], list)
-        for in_attr in kwargs["include"]:
-            if in_attr not in cls_attrs:
-                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
-        for attr in cls_attrs:
-            if attr not in kwargs["include"]:
-                delattr(ctx, attr)
-    elif "exclude" in kwargs:
+        for attr in kwargs["include"]:
+            if attr not in cls_attrs:
+                raise RuntimeError(f"Argument '{attr}' not found in flow task")
+
+    if "exclude" in kwargs:
         assert isinstance(kwargs["exclude"], list)
-        for in_attr in kwargs["exclude"]:
-            if in_attr not in cls_attrs:
-                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
-        for attr in cls_attrs:
-            if attr in kwargs["exclude"] and hasattr(ctx, attr):
-                delattr(ctx, attr)
+        for attr in kwargs["exclude"]:
+            if attr not in cls_attrs:
+                raise RuntimeError(f"Argument '{attr}' not found in flow task")
 
 
-def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
+def _process_inclusion(ctx, cls_attrs, include_list, f):
+    """Handles the inclusion logic: removes attributes not in the 'include' list.
+
+    Args:
+        ctx (any): The context to filter attributes from.
+        cls_attrs (list): The list of all attributes in the class.
+        include_list (list): The list of attributes to keep.
+        f (function): The task function to be processed.
+    """
+    for attr in cls_attrs:
+        if attr not in include_list:
+            delattr(ctx, attr)
+
+
+def _process_exclusion(ctx, cls_attrs, exclude_list, f):
+    """Handles the exclusion logic: removes attributes in the 'exclude' list.
+
+    Args:
+        ctx (any): The context to filter attributes from.
+        cls_attrs (list): The list of all attributes in the class.
+        exclude_list (list): The list of attributes to exclude.
+        f (function): The task function to be processed.
+    """
+    for attr in cls_attrs:
+        if attr in exclude_list and hasattr(ctx, attr):
+            delattr(ctx, attr)
+
+
+def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime", "execute_task_args"]):
     """Optionally saves the current state for the task just executed.
 
     Args:
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
         chkpnt_reserved_words (list, optional): A list of reserved words to
-            exclude from checkpointing. Defaults to ["next", "runtime"].
+            exclude from checkpointing. Defaults to ["next", "runtime", "execute_task_args"].
 
     Returns:
         step_stdout (io.StringIO): parent_func stdout
@@ -142,15 +190,15 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
-    # TODO for each GPU the funtion tries see if all participant usages fit
+    # TODO for each GPU the function tries see if all participant usages fit
     # into a GPU, it it doesn't it removes that participant from the
     # participant list, and adds it to the remaining_gpu_memory dict. So any
     # sum of GPU requirements above 1 triggers this.
-    # But at this point the funtion will raise an error because
+    # But at this point the function will raise an error because
     # remaining_gpu_memory is never cleared.
     # The participant list should remove the participant if it fits in the gpu
     # and save the partipant if it doesn't and continue to the next GPU to see
-    # if it fits in that one, only if we run out of GPUs should this funtion
+    # if it fits in that one, only if we run out of GPUs should this function
     # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(

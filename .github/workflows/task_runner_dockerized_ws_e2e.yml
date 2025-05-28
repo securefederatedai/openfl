@@ -4,6 +4,11 @@
 name: Task_Runner_Dockerized_E2E  # Please do not modify the name as it is used in the composite action
 
 on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       num_rounds:
@@ -16,6 +21,17 @@ on:
         required: false
         default: "2"
         type: string
+      jobs_to_run:
+        description: "Jobs to run"
+        type: choice
+        default: "all"
+        options:
+          - all
+          - test_with_tls
+          - test_without_tls
+          - test_without_client_auth
+          - test_memory_logs
+        required: false
 
 permissions:
   contents: read
@@ -24,16 +40,32 @@ permissions:
 env:
   NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  JOBS_TO_RUN: ${{ inputs.jobs_to_run || 'all' }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # default to current commit if not provided
 
 jobs:
-  test_with_tls_dockerized_ws:
-    name: tr_tls_dockerized_ws
+  input_selection:
+    name: Input value selection
+    runs-on: ubuntu-22.04
+    outputs:
+      selected_jobs: ${{ steps.input_selection.outputs.jobs_to_run }}
+    steps:
+      - name: Job to select input values
+        id: input_selection
+        run: |
+          echo "jobs_to_run=${{ env.JOBS_TO_RUN }}" >> "$GITHUB_OUTPUT"
+
+  test_with_tls:
+    name: With TLS
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_with_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
-        python_version: ["3.9", "3.10", "3.11"]
+        # IMP: Models requiring higher config might fail on current GitHub runners due to resource constraints.
+        model_name: ["keras/mnist"]
+        python_version: ["3.10", "3.11"] # Keras does not support Python 3.12
       fail-fast: false # do not immediately fail if one of the combinations fail
 
     env:
@@ -43,11 +75,9 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # needed for detecting changes
-          submodules: "true"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.COMMIT_ID }}
 
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
@@ -65,15 +95,17 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls_dockerized_ws"
+          test_type: "DWS_With_TLS"
 
-  test_with_non_tls_dockerized_ws:
-    name: tr_non_tls_dockerized_ws
+  test_without_tls:
+    name: Without TLS
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_tls'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -84,11 +116,9 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # needed for detecting changes
-          submodules: "true"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.COMMIT_ID }}
 
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
@@ -106,15 +136,17 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_non_tls_dockerized_ws"
+          test_type: "DWS_Without_TLS"
 
-  test_with_no_client_auth_dockerized_ws:
-    name: tr_no_client_auth_dockerized_ws
+  test_without_client_auth:
+    name: Without Client Auth
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_without_client_auth'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -125,11 +157,9 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # needed for detecting changes
-          submodules: "true"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.COMMIT_ID }}
 
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
@@ -147,15 +177,17 @@ jobs:
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_no_client_auth_dockerized_ws"
+          test_type: "DWS_Without_Client_Auth"
 
-  test_memory_logs_dockerized_ws:
-    name: tr_tls_memory_logs_dockerized_ws
+  test_memory_logs:
+    name: With Memory Logs REST
+    needs: input_selection
+    if: needs.input_selection.outputs.selected_jobs == 'all' || needs.input_selection.outputs.selected_jobs == 'test_memory_logs'
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       matrix:
-        model_name: ["keras_cnn_mnist"]
+        model_name: ["keras/mnist"]
         python_version: ["3.10"]
       fail-fast: false # do not immediately fail if one of the combinations fail
 
@@ -166,11 +198,9 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # needed for detecting changes
-          submodules: "true"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.COMMIT_ID }}
 
       - name: Pre test run
         uses: ./.github/actions/tr_pre_test_run
@@ -182,11 +212,11 @@ jobs:
           python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
           -k test_log_memory_usage_dockerized_ws --model_name ${{ env.MODEL_NAME }} \
           --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} \
-          --log_memory_usage
+          --log_memory_usage --tr_rest_protocol
           echo "Task runner memory logs test run completed"
 
       - name: Post test run
         uses: ./.github/actions/tr_post_test_run
         if: ${{ always() }}
         with:
-          test_type: "tr_tls_memory_logs_dockerized_ws"
+          test_type: "DWS_With_Memory_Logs_REST"

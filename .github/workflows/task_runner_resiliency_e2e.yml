@@ -1,0 +1,129 @@
+---
+# Task Runner E2E tests for resiliency. Currently only native tests are enabled.
+
+name: Task_Runner_Resiliency_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: "Number of rounds to train"
+        required: false
+        default: "30"
+        type: string
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+      model_name:
+        description: "Model name"
+        required: false
+        default: "torch/mnist"
+        type: choice
+        options:
+          - torch/mnist
+          - keras/mnist
+          - all
+      python_version:
+        description: "Python version"
+        required: false
+        default: "3.10"
+        type: choice
+        options:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+# DO NOT use double quotes for the values of the environment variables
+env:
+  NUM_ROUNDS: ${{ inputs.num_rounds || 30 }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
+  MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  resiliency_in_native_gRPC:
+    name: Resiliency in gRPC (torch/mnist, 3.10)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    env:
+      MODEL_NAME: ${{ inputs.model_name || 'torch/mnist' }}
+      PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests with TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Resiliency_Native_gRPC"
+  
+  # Uncomment below once Issue is resolved - https://github.com/securefederatedai/openfl/issues/1646
+  # resiliency_in_native_rest:
+  #   name: Resiliency in REST (keras/tensorflow/mnist, 3.11)
+  #   runs-on: ubuntu-22.04
+  #   timeout-minutes: 30
+  # if: |
+  #     (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+  #     (github.event_name == 'workflow_dispatch') ||
+  #     (github.event.pull_request.draft == false)
+  #   env:
+  #     MODEL_NAME: ${{ inputs.model_name || 'keras/tensorflow/mnist' }}
+  #     PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
+
+  #   steps:
+  #     - name: Checkout OpenFL repository
+  #       id: checkout_openfl
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ env.COMMIT_ID }}
+
+  #     - name: Pre test run
+  #       uses: ./.github/actions/tr_pre_test_run
+  #       if: ${{ always() }}
+
+  #     - name: Run Task Runner E2E tests with TLS
+  #       id: run_tests
+  #       run: |
+  #         python -m pytest -s tests/end_to_end/test_suites/tr_resiliency_tests.py \
+  #         -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+  #         --num_collaborators ${{ env.NUM_COLLABORATORS }} --num_rounds ${{ env.NUM_ROUNDS }} --tr_rest_protocol
+  #         echo "Task runner end to end test run completed"
+
+  #     - name: Post test run
+  #       uses: ./.github/actions/tr_post_test_run
+  #       if: ${{ always() }}
+  #       with:
+  #         test_type: "Resiliency_Native_REST"

@@ -29,7 +29,7 @@ class CallbackList(Callback):
         **params,
     ):
         super().__init__()
-        self.callbacks = _flatten(callbacks) if callbacks else []
+        self.callbacks = list(_flatten(callbacks)) if callbacks else []
 
         self._add_default_callbacks(add_memory_profiler, add_metric_writer)
 
@@ -77,11 +77,19 @@ class CallbackList(Callback):
 
     def on_experiment_begin(self, logs=None):
         for callback in self.callbacks:
-            callback.on_experiment_begin(logs)
+            callback.on_experiment_begin(logs=logs)
 
     def on_experiment_end(self, logs=None):
         for callback in self.callbacks:
             callback.on_experiment_end(logs)
+
+    def on_task_begin(self, task_name: str, round_num: int, logs=None):
+        for callback in self.callbacks:
+            callback.on_task_begin(task_name, round_num, logs)
+
+    def on_task_end(self, task_name: str, round_num: int, logs=None):
+        for callback in self.callbacks:
+            callback.on_task_end(task_name, round_num, logs)
 
 
 def _flatten(l):

@@ -5,9 +5,9 @@ import os
 import yaml
 import logging
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.exceptions as ex
-import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.ssh_helper as ssh
 
 log = logging.getLogger(__name__)
@@ -39,8 +39,8 @@ class ModelOwner():
         self.aggregator = None
         self.collaborators = []
         self.workspace_path = workspace_path
-        self.num_collaborators = constants.NUM_COLLABORATORS
-        self.rounds_to_train = constants.NUM_ROUNDS
+        self.num_collaborators = defaults.NUM_COLLABORATORS
+        self.rounds_to_train = defaults.NUM_ROUNDS
         self.log_memory_usage = log_memory_usage
         self.container_id = container_id
 
@@ -54,18 +54,25 @@ class ModelOwner():
 
             ws_path = self.workspace_path
 
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 f"fx workspace create --prefix {ws_path} --template {self.model_name}",
                 workspace_path="", # No workspace path required for this command
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output,
                 return_code,
                 error,
-                error_msg, f"Created the workspace {self.workspace_name} for the {self.model_name} model",
+                error_msg, f"Created the workspace for {self.model_name}",
                 raise_exception=True
+            )
+
+            return_code, output, error = helper.run_command(
+                "pip install -r requirements.txt",
+                workspace_path=ws_path,
+                error_msg="Failed to install the requirements",
+                container_id=self.container_id,
             )
 
         except Exception as e:
@@ -102,14 +109,14 @@ class ModelOwner():
         try:
             cmd = f"fx collaborator certify --request-pkg {zip_name} -s"
             error_msg = f"Failed to sign the CSR {zip_name}"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
 
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output,
                 return_code,
                 error,
@@ -138,7 +145,7 @@ class ModelOwner():
 
         try:
             with open(plan_file) as fp:
-                data = yaml.load(fp, Loader=yaml.FullLoader)
+                data = yaml.safe_load(fp)
 
             # NOTE: If more parameters need to be modified, add them here
             data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
@@ -149,35 +156,64 @@ class ModelOwner():
             data["aggregator"]["settings"]["write_logs"] = True
             data["collaborator"]["settings"]["write_logs"] = True
 
-            data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+            # GaNDLF dataloader neither has collaborator_count nor kwargs to support additional params
+            # Thus skipping below assignment for such scenarios.
+            if "collaborator_count" in data["data_loader"]["settings"]:
+                data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+
             data["network"]["settings"]["require_client_auth"] = param_config.require_client_auth
             data["network"]["settings"]["use_tls"] = param_config.use_tls
-
+            if param_config.tr_rest_protocol:
+                data["network"]["settings"]["transport_protocol"] = defaults.TransportProtocol.REST.value
+            if param_config.secure_agg:
+                data["aggregator"]["settings"]["secure_aggregation"] = True
             with open(plan_file, "w+") as write_file:
                 yaml.dump(data, write_file)
-
             log.info(f"Modified the plan with provided parameters.")
         except Exception as e:
             log.error(f"Failed to modify the plan: {e}")
             raise ex.PlanModificationException(f"Failed to modify the plan: {e}")
 
-    def initialize_plan(self, agg_domain_name):
+    def modify_straggler_policy(self, straggler_cutoff, plan_path):
+        """
+        Modify the plan to set the straggler cutoff
+        Args:
+            straggler_cutoff (dict): Straggler cutoff settings
+            plan_path (str): Path to the plan file
+        """
+        plan_file = os.path.join(plan_path, "plan.yaml")
+
+        try:
+            with open(plan_file) as fp:
+                data = yaml.safe_load(fp)
+            # Modify the plan with the provided straggler cutoff settings
+            data["straggler_handling_policy"] = straggler_cutoff
+            with open(plan_file, "w+") as write_file:
+                yaml.dump(data, write_file)
+            log.info(f"Modified the plan with straggler cutoff settings.")
+        except Exception as e:
+            log.error(f"Failed to modify the plan with straggler cutoff settings: {e}")
+            raise ex.PlanModificationException(f"Failed to modify the plan with straggler cutoff settings: {e}")
+
+    def initialize_plan(self, agg_domain_name, extra_args=""):
         """
         Initialize the plan
         Args:
             agg_domain_name (str): Aggregator domain name
+            extra_args (str): Extra arguments provided based on conditions
+                This will help remove if/else conditions inside this function
         """
         try:
             log.info("Initializing the plan. It will take some time to complete..")
-            cmd = f"fx plan initialize -a {agg_domain_name}"
+            cmd = f"fx plan initialize -a {agg_domain_name} {extra_args}"
             error_msg="Failed to initialize the plan"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output,
                 return_code,
                 error,
@@ -198,13 +234,13 @@ class ModelOwner():
             log.info("Certifying the workspace..")
             cmd = f"fx workspace certify"
             error_msg = "Failed to certify the workspace"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(
+            helper.verify_cmd_output(
                 output,
                 return_code,
                 error,
@@ -215,27 +251,21 @@ class ModelOwner():
         except Exception as e:
             raise ex.WorkspaceCertificationException(f"{error_msg}: {e}")
 
-    def dockerize_workspace(self):
+    def dockerize_workspace(self, image_name):
         """
         Dockerize the workspace. It internally uses workspace name as the image name
         """
         log.info("Dockerizing the workspace. It will take some time to complete..")
         try:
-            if not os.getenv("GITHUB_REPOSITORY") or not os.getenv("GITHUB_BRANCH"):
-                repo, branch = ssh.get_git_repo_and_branch()
-            else:
-                repo = os.getenv("GITHUB_REPOSITORY")
-                branch = os.getenv("GITHUB_BRANCH")
-
-            cmd = f"fx workspace dockerize --save --revision {repo}@{branch}"
+            cmd = f"fx workspace dockerize --base-image {image_name} --save"
             error_msg = "Failed to dockerize the workspace"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
+            helper.verify_cmd_output(output, return_code, error, error_msg, "Workspace dockerized successfully")
 
         except Exception as e:
             raise ex.WorkspaceDockerizationException(f"{error_msg}: {e}")
@@ -271,12 +301,12 @@ class ModelOwner():
             # This way even if there is a mismatch with some models having it blank
             # and others having values, it will be consistent
             with open(cols_file, "r", encoding="utf-8") as f:
-                doc = yaml.load(f, Loader=yaml.FullLoader)
+                doc = yaml.safe_load(f)
 
             doc["collaborators"] = []  # Create empty list
 
-            for i in range(num_collaborators):
-                col_name = "collaborator" + str(i+1)
+            for i in range(1, num_collaborators+1):
+                col_name = "collaborator" + str(i)
                 doc["collaborators"].append(col_name)
                 with open(cols_file, "w", encoding="utf-8") as f:
                     yaml.dump(doc, f)
@@ -299,13 +329,13 @@ class ModelOwner():
         try:
             cmd = f"fx aggregator certify --silent --fqdn {agg_domain_name}"
             error_msg = "Failed to certify the aggregator request"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, "CA signed the request from aggregator")
+            helper.verify_cmd_output(output, return_code, error, error_msg, "CA signed the request from aggregator")
 
         except Exception as e:
             raise ex.AggregatorCertificationException(f"{error_msg}: {e}")
@@ -317,13 +347,13 @@ class ModelOwner():
         try:
             cmd = "fx workspace export"
             error_msg = "Failed to export the workspace"
-            return_code, output, error = fh.run_command(
+            return_code, output, error = helper.run_command(
                 cmd,
                 workspace_path=self.workspace_path,
                 error_msg=error_msg,
                 container_id=self.container_id,
             )
-            fh.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
+            helper.verify_cmd_output(output, return_code, error, error_msg, "Workspace exported successfully")
 
         except Exception as e:
             raise ex.WorkspaceExportException(f"{error_msg}: {e}")

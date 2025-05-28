@@ -4,6 +4,7 @@
 
 """PyTorchTaskRunner module."""
 
+import logging
 from copy import deepcopy
 from typing import Iterator, Tuple
 
@@ -15,6 +16,8 @@ import tqdm
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
+
+logger = logging.getLogger(__name__)
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -43,10 +46,14 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
-        if device:
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        elif isinstance(device, str):
+            self.device = torch.device(device)
+        elif isinstance(device, torch.device):
             self.device = device
         else:
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            raise ValueError("Device must be None, a string, or a torch.device object.")
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -158,7 +165,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.train()
         self.to(self.device)
         for epoch in range(epochs):
-            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            logger.info(f"Run {epoch} epoch of {round_num} round")
             loader = self.data_loader.get_train_loader()
             if use_tqdm:
                 loader = tqdm.tqdm(loader, desc="train epoch")
@@ -171,9 +178,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        output_model_dict = self.get_tensor_dict(
+            with_opt_vars=(self.opt_treatment == "CONTINUE_GLOBAL")
+        )
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
@@ -348,7 +357,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+            output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
@@ -356,7 +365,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
                 output_model_dict,
                 **self.tensor_dict_split_fn_kwargs,
             )
@@ -418,9 +426,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = torch.load(filepath)
-        self.load_state_dict(pickle_dict[model_state_dict_key])
-        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        pickle_dict = torch.load(filepath, weights_only=True)  # nosec B614
+
+        if model_state_dict_key in pickle_dict and optimizer_state_dict_key in pickle_dict:
+            self.load_state_dict(pickle_dict[model_state_dict_key])
+            self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        else:
+            self.load_state_dict(pickle_dict)
 
     def save_native(
         self,
@@ -636,7 +648,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
                 if tag == "istensor":
                     new_v = torch.tensor(derived_opt_state_dict.pop(flat_key))
                 else:
-                    # Here (for currrently supported optimizers) the subkey
+                    # Here (for currently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
                     assert subkey == "step"
                     assert len(derived_opt_state_dict[flat_key]) == 1

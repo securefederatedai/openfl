@@ -2,9 +2,12 @@
 # Licensed subject to the terms of the separately executed evaluation license agreement between
 # Intel Corporation and you.
 
-from openfl.federated import XGBoostDataLoader
 import os
+
 import modin.pandas as pd
+
+from openfl.federated import XGBoostDataLoader
+
 
 class HiggsDataLoader(XGBoostDataLoader):
     """
@@ -19,8 +22,17 @@ class HiggsDataLoader(XGBoostDataLoader):
         X_valid (numpy.ndarray): Validation features.
         y_valid (numpy.ndarray): Validation labels.
     """
-    def __init__(self, data_path, **kwargs):
+    def __init__(self, data_path=None, **kwargs):
         super().__init__(**kwargs)
+
+        # Define default feature shape and number of classes for Higgs dataset
+        self.feature_shape = (28,)
+        self.num_classes = 2
+
+        # If data_path is None, this is being used for model initialization only
+        if data_path is None:
+            return
+
         X_train, y_train, X_valid, y_valid = load_Higgs(
             data_path, **kwargs
         )
@@ -28,6 +40,22 @@ class HiggsDataLoader(XGBoostDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
+
+    def get_feature_shape(self):
+        """Returns the shape of an example feature array.
+
+        Returns:
+            list: The shape of an example feature array [3, 150, 150] for Histology images.
+        """
+        return self.feature_shape
+
+    def get_num_classes(self):
+        """Returns the number of classes for classification tasks.
+
+        Returns:
+            int: The number of classes (8 for Histology dataset).
+        """
+        return self.num_classes
 
 
 def load_Higgs(data_path, **kwargs):

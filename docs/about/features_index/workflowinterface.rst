@@ -18,7 +18,7 @@ A new OpenFL interface that gives significantly more flexility to researchers in
 There are several modifications we make in our reimagined version of this interface that are necessary for federated learning:
 
 1. *Placement*: Metaflow's :code:`@step` decorator is replaced by placement decorators that specify where a task will run. In horizontal federated learning, there are server (or aggregator) and client (or collaborator) nodes. Tasks decorated by :code:`@aggregator` will run on the aggregator node, and :code:`@collaborator` will run on the collaborator node. These placement decorators are interpreted by *Runtime* implementations: these do the heavy lifting of figuring out how to get the state of the current task to another process or node. 
-2. *Runtime*: Each flow has a :code:`.runtime` attribute. The runtime encapsulates the details of the infrastucture where the flow will run. We support the LocalRuntime for simulating experiments on local node and FederatedRuntime to launch experiments on distributed infrastructure.
+2. *Runtime*: Each flow has a :code:`.runtime` attribute. The runtime encapsulates the details of the infrastructure where the flow will run. We support the LocalRuntime for simulating experiments on local node and FederatedRuntime to launch experiments on distributed infrastructure.
 3. *Conditional branches*: Perform different tasks if a criteria is met
 4. *Loops*: Internal loops are within a flow; this is necessary to support rounds of training where the same sequence of tasks is performed repeatedly.   
 
@@ -117,7 +117,7 @@ Prior interfaces in OpenFL support the standard horizontal FL training workflow:
     4. The collaborator performs validation with their local validation dataset on their locally trained model, and sends their validation metrics to the aggregator (locally_tuned_model_validation task)
     5. The aggregator applies an aggregation function (weighted average, FedCurv, FedProx, etc.) to the model weights, and reports the aggregate metrics.
 
-The Task Assigner determines the list of collaborator tasks to be performed, and both in the task runner API as well as the interactive API these tasks can be modified (to varying degrees). For example, to perform federated evaluation of a model, only the aggregated_model_validation task would be selected for the assigner's block of the federated plan. Equivalently for the interactive API, this can be done by only registering a single validation task. But there are many other types of workflows that can't be easily represented purely by training / validation tasks performed on a collaborator with a single model. An example is training a Federated Generative Adversarial Network (GAN); because this may be represented by separate generative and discriminator models, and could leak information about a collaborator dataset, the interface we provide should allow for better control over what gets sent over the network and how. Another common request we get is for validation with an aggregator's dataset after training. Prior to OpenFL 1.5, there has not a great way to support this in OpenFL.
+The Task Assigner determines the list of collaborator tasks to be performed, and these tasks can be modified to varying degrees. For example, to perform federated evaluation of a model, only the aggregated_model_validation task would be selected for the assigner's block of the federated plan. But there are many other types of workflows that can't be easily represented purely by training/validation tasks performed on a collaborator with a single model. An example is training a Federated Generative Adversarial Network (GAN); because this may be represented by separate generative and discriminator models, and could leak information about a collaborator dataset, the interface we provide should allow for better control over what gets sent over the network and how. Another common request we get is for validation with an aggregator's dataset after training. Prior to OpenFL 1.5, there has not been a great way to support this in OpenFL.
 
 Goals
 =====
@@ -236,6 +236,9 @@ Some important points to remember while creating callback function and private a
     - If no Callback Function or private attributes is specified then the Participant shall not have any *private attributes*
     - In above example multiple collaborators have the same callback function or private attributes. Depending on the Federated Learning requirements, user can specify unique callback function or private attributes for each Participant
     - *Private attributes* needs to be set after instantiating the participant.
+    - **Known Limitations**: When using a `callable` to initialize *private attributes* that are **not serializable**, users should be aware of following limitations:
+        * `checkpoint` should not be enabled with `LocalRuntime`. Users should ensure that default (disabled) setting of checkpoint is used or it is explicitly disabled :code:`flow = FederatedFlow( ..., checkpoint = false)`
+        * filtering of attributes (via `include` or `exclude`) cannot be used during the  transition from aggregator step to collaborator steps. This limitation applies to **all attributes** if any non-serializable private attribute is present in aggregator. The flow logic must be updated to avoid filtering in steps that transition control from aggregator to collaborators
 
 Now let's see how the runtime for a flow is assigned, and the flow gets run:
 
@@ -342,36 +345,42 @@ An example configuration file `director_config.yaml` is shown below:
 
 **Envoy: Participating nodes in the Federation**
 
-The `fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
+The :code:`fx envoy start` command is used to start the Envoy. You can run it with or without TLS, depending on your setup.
 
 **With TLS:**
 Use the following command:
 
 .. code-block:: shell
 
-    $ fx envoy start -n <envoy_name> -ec <path_to_envoy_config_yaml_file> -dh <director_host> -dp <director_port> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
+    $ fx envoy start -n <envoy_name> -c <path_to_envoy_config_yaml_file> -rc <root_certificate_path> -pk <private_key_path> -oc <api_certificate_path>
 
 **Without TLS:**
 Use the following command:
 
 .. code-block:: shell
 
-    $ fx envoy start -n <envoy_name> --disable-tls -ec <path_to_envoy_config_yaml_file>
+    $ fx envoy start -n <envoy_name> --disable-tls -c <path_to_envoy_config_yaml_file>
 
 **Explanation of Command Options**
 
 - `-n <envoy_name>`: Specifies the name of the Envoy.
-- `-ec <path_to_envoy_config_yaml_file>`: Path to the Envoy's configuration file.
-- `-dh <director_host>`: Hostname or IP address of the Director.
-- `-dp <director_port>`: Port on which the Director is running.
+- `-c <path_to_envoy_config_yaml_file>`: Path to the Envoy's configuration file.
 - `-rc <root_certificate_path>`: Path to the root certificate (used with TLS).
 - `-pk <private_key_path>`: Path to the private key file (used with TLS).
 - `-oc <api_certificate_path>`: Path to the API certificate file (used with TLS).
 - `--disable-tls`: Disables TLS encryption.
 
-The Envoy configuration file includes details about the private attributes. An example configuration file :code:`envoy_config.yaml` for :code:`envoy_one` is shown below:
+The Envoy configuration file includes details of director_host, director_port and private attributes. An example configuration file :code:`envoy_config.yaml` for :code:`settings` and :code:`envoy_one` is shown below:
+
+- Hostname (`director_host`)
+- Port (`director_port`)
+- Private attributes for envoy_one
 
 .. code-block:: yaml
+
+   settings:
+       director_host: localhost
+       director_port: 50050
 
    envoy_one:
        private_attributes: private_attributes.envoy_one_attrs
@@ -551,6 +560,7 @@ In a distributed environment consisting of Director, Envoys and User Node (where
 2.	**User Node**: The stdout and stderr logs are printed directly in the Jupyter notebook.
 
 **IMPORTANT**: While this information is useful for debugging, depending on your workflow it may require significant disk space. For this reason, checkpoint is disabled by default.
+
 
 Future Plans
 ==============

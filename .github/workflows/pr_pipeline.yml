@@ -1,0 +1,98 @@
+name: OpenFL PR Pipeline # Please do not modify the name of this workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.dockerignore'
+      - '.gitattributes'
+      - '.gitignore'
+      - 'CITATION'
+      - 'CODEOWNERS'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  bandit_code_scan:
+    name: Bandit Code Scan
+    # DO NOT remove the permissions block. Without this, these permissions are assumed as none in the called workflow and the workflow fails.
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    uses: ./.github/workflows/bandit.yml
+
+  check_code_format:
+    name: Check code format
+    uses: ./.github/workflows/lint.yml
+
+  docker_bench_security:
+    name: Docker Bench for Security
+    uses: ./.github/workflows/docker-bench-security.yml
+
+  fr_301_watermark_nb_run:
+    name: Federated Runtime Watermarking E2E
+    uses: ./.github/workflows/wf_watermarking_fed_runtime.yml
+
+  gandlf_taskrunner:
+    name: GaNDLF TaskRunner E2E
+    uses: ./.github/workflows/gandlf.yml
+
+  hadolint_security_scan:
+    name: Hadolint Security Scan
+    uses: ./.github/workflows/hadolint.yml
+
+  pytest_coverage:
+    name: Pytest and code coverage
+    uses: ./.github/workflows/pytest_coverage.yml
+
+  windows:
+    name: Windows pytest coverage and workspace runs
+    uses: ./.github/workflows/windows.yml
+
+  task_runner_connectivity:
+    name: TaskRunner Connectivity E2E
+    uses: ./.github/workflows/task_runner_connectivity_e2e.yml
+    
+  task_runner_e2e:
+    name: TaskRunner E2E
+    uses: ./.github/workflows/task_runner_basic_e2e.yml
+
+  task_runner_fedeval_e2e:
+    name: TaskRunner FedEval E2E
+    uses: ./.github/workflows/task_runner_fedeval_e2e.yml
+    with:
+      models: '["keras/mnist"]'
+
+  task_runner_resiliency_e2e:
+    name: TaskRunner Resiliency E2E
+    uses: ./.github/workflows/task_runner_resiliency_e2e.yml
+
+  task_runner_secure_agg_e2e:
+    name: TaskRunner Secure Aggregation E2E
+    uses: ./.github/workflows/task_runner_secure_agg_e2e.yml
+
+  tr_docker_gramine_direct:
+    name: TaskRunner (docker/gramine-direct)
+    uses: ./.github/workflows/tr_docker_gramine_direct.yml
+
+  tr_docker_native:
+    name: TaskRunner (docker/native)
+    uses: ./.github/workflows/tr_docker_native.yml
+
+  wf_functional_e2e:
+    name: Workflow Functional E2E
+    uses: ./.github/workflows/wf_functional_e2e.yml
+
+  workflow_interface_101_mnist:
+    name: Workflow Interface 101 MNIST Notebook
+    uses: ./.github/workflows/workflow_interface_101_mnist.yml
+
+  workflow_interface_tests:
+    name: Workflow Interface Tests
+    uses: ./.github/workflows/experimental_workflow_tests.yml

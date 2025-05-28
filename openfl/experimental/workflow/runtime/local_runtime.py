@@ -128,9 +128,9 @@ def ray_group_assign(collaborators, num_actors=1):
         """
 
         # once ray_grouped replaces the current ray runtime this class can be
-        # replaced with a funtion that returns the lambda funtion, using a
-        # funtion is necesary because this is used in setting multiple
-        # funtions in a loop and lambda takes the reference to self.f_name and
+        # replaced with a function that returns the lambda function, using a
+        # function is necessary because this is used in setting multiple
+        # functions in a loop and lambda takes the reference to self.f_name and
         # not the value so we need to change scope to avoid self.f_name from
         # changing as the loop  progresses
         def __init__(self, collaborator_actor, collaborator, f_name) -> None:
@@ -324,7 +324,7 @@ class LocalRuntime(Runtime):
                   The RayGroups run concurrently while participants in the
                   group run serially.
                   The default is 1 RayGroup and can be changed by using the
-                  num_actors=1 kwarg. By using more RayGroups more concurency
+                  num_actors=1 kwarg. By using more RayGroups more concurrency
                   is allowed with the trade off being that each RayGroup has
                   extra memory overhead in the form of extra CUDA CONTEXTS.
 
@@ -602,20 +602,19 @@ class LocalRuntime(Runtime):
             f_name (str): The name of the function to be executed.
             clones (Optional[Any], optional): Clones if any. Defaults to None.
         """
+        f = getattr(ctx, f_name)
+        # Join step
         if clones is not None:
-            f = getattr(ctx, f_name)
             f(clones)
-        else:
-            not_at_transition_point = True
-            while not_at_transition_point:
-                f = getattr(ctx, f_name)
-                f()
-
-                f, parent_func = ctx.execute_task_args[:2]
-                if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
-                    not_at_transition_point = False
-
-                f_name = f.__name__
+            checkpoint(ctx, f)
+            return
+        not_at_transition_point = True
+        while not_at_transition_point:
+            f()
+            checkpoint(ctx, f)
+            f, parent_func = ctx.execute_task_args[:2]
+            if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
+                not_at_transition_point = False
 
     def execute_collab_steps(self, ctx: Any, f_name: str):
         """Execute collaborator steps until at transition point.
@@ -624,16 +623,14 @@ class LocalRuntime(Runtime):
             ctx (Any): The context in which the function is executed.
             f_name (str): The name of the function to be executed.
         """
+        f = getattr(ctx, f_name)
         not_at_transition_point = True
         while not_at_transition_point:
-            f = getattr(ctx, f_name)
             f()
-
+            checkpoint(ctx, f)
             f, parent_func = ctx.execute_task_args[:2]
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
-
-            f_name = f.__name__
 
     def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """Defines which function to be executed based on name and kwargs.
@@ -662,9 +659,7 @@ class LocalRuntime(Runtime):
             f, parent_func, instance_snapshot, kwargs = flspec_obj.execute_task_args
         else:
             flspec_obj = self.execute_agg_task(flspec_obj, f)
-            f = flspec_obj.execute_task_args[0]
 
-            checkpoint(flspec_obj, f)
             artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
             return artifacts_iter()
 

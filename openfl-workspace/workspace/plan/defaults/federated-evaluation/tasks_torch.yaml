@@ -1,7 +1,0 @@
-aggregated_model_validation:
-  function : validate_task
-  kwargs   :
-    apply   : global
-    metrics :
-      - acc
-  

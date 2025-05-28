@@ -1,0 +1,56 @@
+# Copyright (C) 2024 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    rounds_to_train : 1 # DO NOT EDIT. This is to indicate OpenFL communication rounds
+    persist_checkpoint : false
+    write_logs : false
+
+connector : 
+  defaults : plan/defaults/connector_flower.yaml
+  template : openfl.component.ConnectorFlower
+  settings :
+    exec_api_port : 9093
+    flwr_app_name : app-pytorch
+    federation_name : local-poc
+    flwr_dir : save/.flwr
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings: 
+    interop_mode : True
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : openfl.federated.data.FlowerDataLoader
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : openfl.federated.task.FlowerTaskRunner
+  settings :
+    flwr_app_name : app-pytorch
+    flwr_dir : save/.flwr
+    sgx_enabled: False
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+  template : openfl.component.RandomGroupedAssigner
+  settings :
+    task_groups :
+      - name  : Connector_Flower
+        percentage : 1.0
+        tasks : 
+          - prepare_for_interop
+
+tasks :
+  defaults : plan/defaults/tasks_flower.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

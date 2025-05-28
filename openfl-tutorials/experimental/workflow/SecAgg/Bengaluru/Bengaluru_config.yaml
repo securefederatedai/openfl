@@ -1,0 +1,6 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
+Bengaluru:
+  private_attributes: private_attributes.bengaluru_attrs

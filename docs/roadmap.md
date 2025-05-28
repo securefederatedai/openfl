@@ -26,15 +26,34 @@ Although OpenFL currently relies on Intel® SGX for trusted execution, the long 
 
 ## Upcoming OpenFL releases
 
-### 1.7 (Q1 2025)
-This release is focused on enabling a great developer experience for OpenFL users:
-1. Introducing the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans) for Workflow API, which allows running FL workflows in a distributed setting (after local simulation with the LocalRuntime).
-2. Adding support for federated XGBoost in OpenFL. See the example [XGBoost workspace](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/xgb_higgs) based on Task Runner API.
-3. Revised Task Runner API workspace dockerization process, with TEE-ready containers (using Gramine and Intel® Software Guard Extensions). The current release contains an initial set of changes that enable OpenFL compatibility with the broader confidential containers ecosystem.
-4. Streamlining the Federated Evaluation experiments with TaskRunner API
-5. Migrating a selection of key OpenFL tutorials from Python Native API to Workflow API. Check out the updated [Tutorials folder](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow)
-6. Deprecating the Python Native API
-7. Deprecating the Interactive API
+The roadmap for the upcoming releases is provided for informational purposes only. It is intended to offer visibility into our current planning and priorities. However, please note that the features and timelines outlined here are not commitments and are subject to change. We are continuously evaluating and adjusting our plans to best meet the needs of our users and the evolving technological landscape.
 
-### 1.8 (TBA)
-Stay tuned for updates!
+### 1.9 (May '25)
+In the upcoming 1.9 release, our focus shifts to improving the resilience and scalability of the core OpenFL framework. Key initiatives include:
+- Improved gRPC connection resilience
+- Preparations for scaling to 10-s/100-s of collaborators
+- First-class support for federated LLM fine-tuning
+- Comprehensive FL plan consistency verifications to prevent incompatible configurations
+- Experimental support for REST API as an alternative to the existing gRPC communication layer
+- Support for data loading from object storage (S3)
+  * This also includes enhanced dataset abstractions, with emphasis on integrity, composition and reuse
+- Support for Federated Analytics via TaskRunner API
+- Additional TaskRunner API utilities for validating the Aggregator/Collaborator infrastructure before executing the FL plan:
+  * A new `fx collaborator ping` command to test collaborator/aggregator connectivity without starting any FL tasks or accessing private data
+  * A [`no-op`](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/no-op) workspace template that can be configured and distributed just for the purposes of establishing and testing connectivity and PKI
+
+As a stretch goal, we are beginning preparations for the production-readiness of Workflow API (FederatedRuntime) via:
+  * Improved controls of the types of data allowed across the network
+  * Plan agreement mechanism for all experiment participants
+  * Branching support in Workflow API (in line with the Metaflow API)
+  * Streamlined TLS setup for distributed deployments (via FederatedRuntime)
+  * Enhanced handling of straggler collaborators
+
+### 1.10 (TBA)
+We expect Workflow API to be the "star" of the 1.10 release, along with several other interoperability and security enhancements:
+- Promote Workflow API as a core OpenFL feature, removing the experimental tag
+- Integrate custom changes to support Flower workloads to core Aggregator and Collaborator components
+- Support for semi-automated remote attestation of OpenFL nodes running in a TEE (starting with TaskRunner API)
+- Design proposal for a SecureFederatedRuntime for Workflow API
+- PoC for running OpenFL federations with CoCo for broader TEE frameworks support, beyond SGX
+- ... (more details to be shared soon)

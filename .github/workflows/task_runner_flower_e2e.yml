@@ -1,0 +1,74 @@
+---
+# Task Runner Flower E2E tests for bare metal approach
+
+name: Task_Runner_Flower_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+      python_version:
+        description: "Python version"
+        required: false
+        default: "3.10"
+        type: choice
+        options:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+# DO NOT use double quotes for the values of the environment variables
+env:
+  NUM_ROUNDS: 1
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
+  MODEL_NAME: "flower-app-pytorch"
+  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  test_flower_app_pytorch:
+    name: With TLS (flower-app-pytorch, 3.10) # DO NOT change this name.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Flower App Pytorch
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_flower_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Flower app pytorch test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "With_TLS_Flower"

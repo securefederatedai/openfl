@@ -1,0 +1,66 @@
+#---------------------------------------------------------------------------
+# Workflow to run 301_MNIST_Watermarking notebook
+#---------------------------------------------------------------------------
+name: Federated Runtime Watermarking E2E
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  test_federated_runtime_301_watermarking_notebook:
+    name: WF Watermarking Without TLS
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      PYTHON_VERSION: '3.10'
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
+
+    - name: Pre test run
+      uses: ./.github/actions/wf_pre_test_run
+      if: ${{ always() }}
+
+    - name: Run Federated Runtime 301 MNIST Watermarking via pytest
+      id: run_tests
+      run: |
+        python -m pytest -s tests/end_to_end/test_suites/wf_federated_runtime_tests.py -k test_federated_runtime_301_watermarking
+        echo "Federated Runtime 301 MNIST Watermarking test run completed"
+
+    - name: Print test summary
+      id: print_test_summary
+      if: ${{ always() }}
+      run: |
+        export PYTHONPATH="$PYTHONPATH:."
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_federated_runtime_score" --nb_name "wf_watermarking"
+        echo "Test summary printed"
+
+    - name: Tar files
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      run: |
+        tar -cvf notebook_301.tar --exclude="__pycache__" $HOME/results --ignore-failed-read
+        echo "TAR file created"
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      with:
+        name: federated_runtime_301_watermarking_${{ github.run_id }}
+        path: notebook_301.tar

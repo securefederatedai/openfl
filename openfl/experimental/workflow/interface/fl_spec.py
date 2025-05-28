@@ -17,7 +17,6 @@ from openfl.experimental.workflow.utilities import (
     MetaflowInterface,
     SerializationError,
     aggregator_to_collaborator,
-    checkpoint,
     collaborator_to_aggregator,
     filter_attributes,
     generate_artifacts,
@@ -171,13 +170,14 @@ class FLSpec:
         """
         self._metaflow_interface = MetaflowInterface(self.__class__, self.runtime.backend)
         self._run_id = self._metaflow_interface.create_run()
-        # Initialize aggregator private attributes
-        self.runtime.initialize_aggregator()
-        self._foreach_methods = []
         FLSpec._reset_clones()
         FLSpec._create_clones(self, self.runtime.collaborators)
-        # Initialize collaborator private attributes
+
+        # Initialize participant private attributes
+        self.runtime.initialize_aggregator()
         self.runtime.initialize_collaborators()
+        self._foreach_methods = []
+
         if self._checkpoint:
             print(f"Created flow {self.__class__.__name__}")
 
@@ -333,10 +333,6 @@ class FLSpec:
         # Get the name and reference to the calling function
         parent = inspect.stack()[1][3]
         parent_func = getattr(self, parent)
-
-        if str(self._runtime) == "LocalRuntime":
-            # Checkpoint current attributes (if checkpoint==True)
-            checkpoint(self, parent_func)
 
         # Take back-up of current state of self
         agg_to_collab_ss = None

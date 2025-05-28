@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module consists of custom exceptions for end to end testing"""
@@ -17,6 +17,9 @@ class PlanModificationException(Exception):
     """Exception for plan modification"""
     pass
 
+class PlanReadException(Exception):
+    """Exception for plan read"""
+    pass
 
 class WorkspaceCertificationException(Exception):
     """Exception for workspace certification"""
@@ -85,4 +88,74 @@ class EnvoyStartException(Exception):
 
 class DirectorStartException(Exception):
     """Exception for director start"""
+    pass
+
+
+class DataSetupException(Exception):
+    """Exception for data setup for given model"""
+    pass
+
+
+class ParticipantStartException(Exception):
+    """Exception for participant start"""
+    pass
+
+
+class ParticipantStopException(Exception):
+    """Exception for participant stop"""
+    pass
+
+
+class ParticipantRestartException(Exception):
+    """Exception for participant restart"""
+    pass
+
+
+class TensorDBException(Exception):
+    """Exception for tensor database"""
+    pass
+
+
+class GaNDLFConfigSegException(Exception):
+    """Exception for GaNDLF config segmentation file"""
+    pass
+
+
+class FlowerAppException(Exception):
+    """Exception for Flower app"""
+    pass
+
+
+class ProcessKillException(Exception):
+    """Exception for process kill"""
+    pass
+
+
+class HashCalculationException(Exception):
+    """Exception for hash calculation of collaborator's data path"""
+    pass
+
+
+class MinioServerStartException(Exception):
+    """Exception for minio server start"""
+    pass
+
+
+class S3BucketCreationException(Exception):
+    """Exception for S3 bucket creation"""
+    pass
+
+
+class DataDownloadException(Exception):
+    """Exception for data download"""
+    pass
+
+
+class DataUploadToS3Exception(Exception):
+    """Exception for data upload to S3"""
+    pass
+
+
+class AzureBlobContainerCreationException(Exception):
+    """Exception for Azure Blob container creation"""
     pass

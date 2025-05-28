@@ -1,10 +1,9 @@
-# Copyright 2020-2024 Intel Corporation
+# Copyright 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
 """AggregatorGRPCServer module."""
 
-import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -15,7 +14,7 @@ from grpc import StatusCode, server, ssl_server_credentials
 
 from openfl.experimental.workflow.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.experimental.workflow.transport.grpc.grpc_channel_options import channel_options
-from openfl.utilities import check_equal, check_is_in
+from openfl.protocols.utils import datastream_to_proto, proto_to_datastream
 
 logger = logging.getLogger(__name__)
 
@@ -106,39 +105,44 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request : protobuf
                 Request sent from a collaborator that requires validation
         """
-        # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
-
-        # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
-
-        # check that the message is for my federation
-        check_equal(
-            request.header.federation_uuid,
-            self.aggregator.federation_uuid,
-            self.logger,
+        assert request.header.sender in self.aggregator.authorized_cols, (
+            f"Sender in request header is not authorized. "
+            f"Expected: one of {self.aggregator.authorized_cols}, Actual: {request.header.sender}"
         )
 
-        # check that we agree on the single cert common name
-        check_equal(
-            request.header.single_col_cert_common_name,
-            self.aggregator.single_col_cert_common_name,
-            self.logger,
+        assert request.header.receiver == self.aggregator.uuid, (
+            f"Receiver in request header does not match aggregator UUID. "
+            f"Expected: {self.aggregator.uuid}, Actual: {request.header.receiver}"
+        )
+
+        assert request.header.federation_uuid == self.aggregator.federation_uuid, (
+            f"Federation UUID in request header does not match. "
+            f"Expected: {self.aggregator.federation_uuid}, Actual: {request.header.federation_uuid}"
+        )
+
+        assert (
+            request.header.single_col_cert_common_name
+            == self.aggregator.single_col_cert_common_name
+        ), (
+            f"Single collaborator certificate common name in request header does not match. "
+            f"Expected: {self.aggregator.single_col_cert_common_name}, Actual: {request.header.single_col_cert_common_name}"  # noqa: E501
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802
-        """<FIND OUT WHAT COMMENT TO PUT HERE>.
+        """Processes a request from a collaborator to retrieve the results of a locally
+        executed task.
 
         Args:
             request: The gRPC message request
             context: The gRPC context
         """
-        self.validate_collaborator(request, context)
-        self.check_request(request)
-        collaborator_name = request.header.sender
-        round_number = (request.round_number,)
-        next_step = (request.next_step,)
-        execution_environment = request.execution_environment
+        proto = datastream_to_proto(aggregator_pb2.TaskResultsRequest(), request)
+        self.validate_collaborator(proto, context)
+        self.check_request(proto)
+        collaborator_name = proto.header.sender
+        round_number = (proto.round_number,)
+        next_step = (proto.next_step,)
+        execution_environment = proto.execution_environment
 
         _ = self.aggregator.send_task_results(
             collaborator_name, round_number[0], next_step, execution_environment
@@ -159,7 +163,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         rn, f, ee, st, q = self.aggregator.get_tasks(request.header.sender)
 
-        return aggregator_pb2.GetTasksResponse(
+        response = aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
             round_number=rn,
             function_name=f,
@@ -167,6 +171,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sleep_time=st,
             quit=q,
         )
+        return proto_to_datastream(response)
 
     def CallCheckpoint(self, request, context):  # NOQA:N802
         """Request aggregator to perform a checkpoint for a given function.
@@ -175,12 +180,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             request: The gRPC message request
             context: The gRPC context
         """
-        self.validate_collaborator(request, context)
-        self.check_request(request)
-        collaborator_name = request.header.sender
-        execution_environment = request.execution_environment
-        function = request.function
-        stream_buffer = request.stream_buffer
+        proto = datastream_to_proto(aggregator_pb2.CheckpointRequest(), request)
+        self.validate_collaborator(proto, context)
+        self.check_request(proto)
+        collaborator_name = proto.header.sender
+        execution_environment = proto.execution_environment
+        function = proto.function
+        stream_buffer = proto.stream_buffer
 
         self.aggregator.call_checkpoint(
             collaborator_name, execution_environment, function, stream_buffer
@@ -219,28 +225,3 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             self.server.add_secure_port(self.uri, self.server_credentials)
 
         return self.server
-
-    async def serve(self):
-        """Start an aggregator gRPC service."""
-        self.get_server()
-
-        self.logger.info("Starting Aggregator gRPC Server")
-        self.server.start()
-        self.is_server_started = True
-        try:
-            while not self.aggregator.all_quit_jobs_sent():
-                await asyncio.sleep(5)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            self.logger.info("All Jobs Sent Successfully, Exiting...")
-            self.stop_server()
-
-    def run_server(self):
-        """Launch the aggregator gRPC server and aggregator flow concurrently"""
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.aggregator.run_flow())
-        loop.run_until_complete(self.serve())
-
-    def stop_server(self):
-        self.server.stop(0)

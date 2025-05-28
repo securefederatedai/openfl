@@ -6,7 +6,7 @@ import logging
 import os
 
 from tests.end_to_end.utils.tr_common_fixtures import fx_federation_tr, fx_federation_tr_dws
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 from tests.end_to_end.utils import federation_helper as fed_helper, ssh_helper as ssh
 from tests.end_to_end.utils.generate_report import generate_memory_report, convert_to_json
 
@@ -54,24 +54,19 @@ def _log_memory_usage(request, fed_obj):
     """
     # Start the federation
     if request.config.test_env == "task_runner_basic":
-        results = fed_helper.run_federation(fed_obj)
+        assert fed_helper.run_federation(fed_obj)
     else:
-        results = fed_helper.run_federation_for_dws(
+        assert fed_helper.run_federation_for_dws(
             fed_obj, use_tls=request.config.use_tls
         )
 
     # Verify the completion of the federation run
     assert fed_helper.verify_federation_run_completion(
-        fed_obj, results, test_env=request.config.test_env, num_rounds=request.config.num_rounds
+        fed_obj, test_env=request.config.test_env, num_rounds=request.config.num_rounds
     ), "Federation completion failed"
 
     # Verify the aggregator memory logs
-    aggregator_memory_usage_file = constants.AGG_MEM_USAGE_JSON.format(fed_obj.workspace_path)
-
-    if request.config.test_env == "task_runner_dockerized_ws":
-        ssh.copy_file_from_docker(
-            "aggregator", f"/workspace/logs/aggregator_memory_usage.json", aggregator_memory_usage_file
-        )
+    aggregator_memory_usage_file = defaults.AGG_MEM_USAGE_LOGFILE.format(fed_obj.workspace_path)
 
     assert os.path.exists(
         aggregator_memory_usage_file
@@ -89,13 +84,9 @@ def _log_memory_usage(request, fed_obj):
 
     # check memory usage entries for each collaborator
     for collaborator in fed_obj.collaborators:
-        collaborator_memory_usage_file = constants.COL_MEM_USAGE_JSON.format(
+        collaborator_memory_usage_file = defaults.COL_MEM_USAGE_LOGFILE.format(
             fed_obj.workspace_path, collaborator.name
         )
-        if request.config.test_env == "task_runner_dockerized_ws":
-            ssh.copy_file_from_docker(
-                collaborator.name, f"/workspace/logs/{collaborator.name}_memory_usage.json", collaborator_memory_usage_file
-            )
         assert os.path.exists(
             collaborator_memory_usage_file
         ), f"Memory usage file for collaborator {collaborator.collaborator_name} is not available"

@@ -105,7 +105,7 @@ class Director:
                             private_key=self.private_key,
                             tls=self.tls,
                             director_config=self.director_config,
-                            install_requirements=False,
+                            install_requirements=self.install_requirements,
                         )
                     )
                     # Adding the experiment to collaborators queues
@@ -231,7 +231,7 @@ class Director:
                 # Stop Iteration if all jobs have quit and the queue is empty
                 break
             else:
-                # Yeild none if the queue is empty but the experiment is still running.
+                # Yield none if the queue is empty but the experiment is still running.
                 yield None
 
     def get_experiment_data(self, experiment_name: str) -> Path:
