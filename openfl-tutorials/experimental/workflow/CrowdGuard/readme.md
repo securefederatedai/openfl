@@ -46,3 +46,45 @@ Note that the number of training rounds can be adjusted via the `--comm_round` p
 cd CrowdGuard
 python cifar10_crowdguard.py --comm_round 5
 ```
+
+## Running the demo script in a true federated runtime
+
+You will need five terminals. One for the director and four for the envoys.
+
+1st Terminal
+
+```sh
+fx experimental activate
+cd director
+./start_director.sh
+```
+
+2nd Terminal
+
+```sh
+cd Amsterdam
+./start_envoy.sh Amsterdam Amsterdam_config.yaml
+```
+
+3rd Terminal
+
+```sh
+cd Bangalore
+./start_envoy.sh Bangalore Bangalore_config.yaml
+```
+
+4th Terminal
+
+```sh
+cd Chandler
+./start_envoy.sh Chandler Chandler_config.yaml
+```
+
+5th Terminal
+
+```sh
+cd Detroit
+./start_envoy.sh Detroit Detroit_config.yaml
+```
+
+Now that your director and envoy terminals are set up, run the Jupyter Notebook `FederatedCrowdGuard.ipynb`. For this I am using the Jupyter Extension for VS Code.
