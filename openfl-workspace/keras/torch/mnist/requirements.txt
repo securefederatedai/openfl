@@ -1,4 +1,4 @@
-keras==3.9.0
+keras==3.10.0
 torch==2.7.0
 torch-xla==2.6.0
 torchvision==0.22.0
