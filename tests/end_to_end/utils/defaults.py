@@ -14,20 +14,24 @@ class ModelName(Enum):
     KERAS_MNIST = "keras/mnist"
     KERAS_TORCH_MNIST = "keras/torch/mnist"
     TORCH_HISTOLOGY = "torch/histology"
+    TORCH_HISTOLOGY_S3 = "torch/histology_s3"
     TORCH_MNIST = "torch/mnist"
     TORCH_MNIST_EDEN_COMPRESSION = "torch/mnist_eden_compression"
     TORCH_MNIST_STRAGGLER_CHECK = "torch/mnist_straggler_check"
+    KERAS_TENSORFLOW_MNIST = "keras/tensorflow/mnist"
     XGB_HIGGS = "xgb_higgs"
     GANDLF_SEG_TEST = "gandlf_seg_test"
     FLOWER_APP_PYTORCH = "flower-app-pytorch"
     NO_OP = "no-op"
+    FEDERATED_ANALYTICS_HISTOGRAM = "federated_analytics/histogram"
+    FEDERATED_ANALYTICS_SMOKERS_HEALTH = "federated_analytics/smokers_health"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
 WORKSPACE_NAME = "my_federation"
 SUCCESS_MARKER = "✔️ OK"
 
-# Docker specific constants
+# Docker specific defaults
 CREATE_OPENFL_NW = "docker network create"
 REMOVE_OPENFL_NW = "docker network rm"
 DOCKER_NETWORK_NAME = "openfl"
@@ -60,3 +64,34 @@ COL_CERTIFY_CMD = "fx collaborator certify --import 'agg_to_col_{}_signed_cert.z
 EXCEPTION = "Exception"
 AGG_METRIC_MODEL_ACCURACY_KEY = "aggregator/aggregated_model_validation/accuracy"
 COL_TLS_END_MSG = "TLS connection established."
+
+
+class TransportProtocol(Enum):
+    """
+    Enum class to define the transport protocol.
+    """
+    GRPC = "grpc"
+    REST = "rest"
+
+AGGREGATOR_REST_CLIENT = "Starting Aggregator REST Server"
+AGGREGATOR_gRPC_CLIENT = "Starting Aggregator gRPC Server"
+
+# For S3 and MinIO
+MINIO_ROOT_USER = "minioadmin"
+MINIO_ROOT_PASSWORD = "minioadmin"
+MINIO_HOST = "localhost"
+MINIO_PORT = 9000
+MINIO_CONSOLE_PORT = 9001
+MINIO_URL = f"http://{MINIO_HOST}:{MINIO_PORT}"
+MINIO_CONSOLE_URL = f"http://{MINIO_HOST}:{MINIO_CONSOLE_PORT}"
+MINIO_DATA_FOLDER = "minio_data"
+
+# For Azure Blob Storage
+AZURE_STORAGE_HOST = "localhost"
+AZURE_STORAGE_PORT = 10000
+AZURE_STORAGE_ENDPOINTS_PROTOCOL = "http"
+AZURE_STORAGE_ACCOUNT_NAME = "devstoreaccount1"
+# IMP: The account key is provided by Azure for local development storage
+# and is not a real key. It is used for testing purposes only.
+AZURE_STORAGE_ACCOUNT_KEY = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+AZURE_BLOB_ENDPOINT = f"{AZURE_STORAGE_ENDPOINTS_PROTOCOL}://{AZURE_STORAGE_HOST}:{AZURE_STORAGE_PORT}/{AZURE_STORAGE_ACCOUNT_NAME}"

@@ -224,12 +224,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator_pb2.GetAggregatedTensorsResponse: The response to the
                 request, containing the aggregated tensors as list of `NamedTensor`s.
         """
-        if self.interop_mode:
-            context.abort(
-                grpc.StatusCode.UNIMPLEMENTED,
-                "This method is not available in framework interoperability mode.",
-            )
-
         self.validate_collaborator(request, context)
         self.check_request(request)
 

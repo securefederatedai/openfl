@@ -4,8 +4,8 @@ import shutil
 from subprocess import check_call
 import os
 from pathlib import Path
-import re
 import tarfile
+import yaml
 
 
 def create_collaborator(col, workspace_root, data_path, archive_name, fed_workspace):
@@ -46,7 +46,7 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
     )
 
 
-def create_certified_workspace(path, template, fqdn, rounds_to_train):
+def create_certified_workspace(path, template, fqdn, rounds_to_train, transport_protocol='grpc'):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
@@ -55,17 +55,26 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
+
+    # Read the plan.yaml file
+    with open(plan_path, 'r', encoding='utf-8') as file:
+        plan_config = yaml.safe_load(file)
+
+    # Update rounds_to_train and transport_protocol values
     try:
-        rounds_to_train = int(rounds_to_train)
-        with open(plan_path, "r", encoding='utf-8') as sources:
-            lines = sources.readlines()
-        with open(plan_path, "w", encoding='utf-8') as sources:
-            for line in lines:
-                sources.write(
-                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
-                )
-    except (ValueError, TypeError):
-        pass
+        # Update rounds_to_train if provided
+        if rounds_to_train is not None:
+            plan_config['aggregator']['settings']['rounds_to_train'] = int(rounds_to_train)
+
+        # Update transport_protocol
+        plan_config['network']['settings']['transport_protocol'] = transport_protocol
+
+        # Write the updated config back to the file
+        with open(plan_path, 'w', encoding='utf-8') as file:
+            yaml.safe_dump(plan_config, file, default_flow_style=False)
+    except (ValueError, TypeError, KeyError) as e:
+        print(f"Warning: Could not update plan.yaml: {e}")
+
     # Create certificate authority for workspace
     check_call(['fx', 'workspace', 'certify'])
 

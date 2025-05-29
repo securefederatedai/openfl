@@ -6,17 +6,14 @@ import concurrent.futures
 import logging
 import yaml
 import os
-import json
-import re
 import subprocess   # nosec B404
 from pathlib import Path
-import shutil
-from glob import glob
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.db_helper as db_helper
 import tests.end_to_end.utils.docker_helper as dh
 import tests.end_to_end.utils.exceptions as ex
+import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.interruption_helper as intr_helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import collaborator as col_model
@@ -38,7 +35,7 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
         bool: True if successful, else False
     """
     # PKI setup for aggregator is done at fixture level
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    local_agg_ws_path = defaults.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -66,7 +63,7 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
         results = [
             executor.submit(
                 copy_file_between_participants,
-                local_src_path=constants.COL_WORKSPACE_PATH.format(
+                local_src_path=defaults.COL_WORKSPACE_PATH.format(
                     local_bind_path, collaborator.name
                 ),
                 local_dest_path=local_agg_ws_path,
@@ -99,7 +96,7 @@ def setup_pki_for_collaborators(collaborators, model_owner, local_bind_path):
             executor.submit(
                 copy_file_between_participants,
                 local_src_path=local_agg_ws_path,
-                local_dest_path=constants.COL_WORKSPACE_PATH.format(
+                local_dest_path=defaults.COL_WORKSPACE_PATH.format(
                     local_bind_path, collaborator.name
                 ),
                 file_name=f"agg_to_col_{collaborator.name}_signed_cert.zip",
@@ -134,7 +131,7 @@ def create_tarball_for_collaborators(collaborators, local_bind_path, use_tls, ad
             If TLS is enabled - include client certificates and signed certificates in the tarball
             If data needs to be added - include the data file in the tarball
             """
-            local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+            local_col_ws_path = defaults.COL_WORKSPACE_PATH.format(
                 local_bind_path, collaborator_name
             )
             client_cert_entries = ""
@@ -220,6 +217,37 @@ def copy_file_between_participants(
     return True
 
 
+def _check_aggregator_protocol_log(aggregator):
+    """
+    Check if the aggregator started with the correct protocol by inspecting its log file.
+    Args:
+        aggregator (object): Aggregator object with res_file and transport_protocol attributes.
+    Raises:
+        Exception: If the expected protocol start message is not found in the logs.
+    """
+    start_time = time.time()
+    found = False
+    while time.time() - start_time < 30:
+        with open(aggregator.res_file, "r") as file:
+            lines = [line.strip() for line in file.readlines()]
+        last_lines = lines[-5:]
+        if aggregator.transport_protocol == defaults.TransportProtocol.REST.value:
+            expected_msg = defaults.AGGREGATOR_REST_CLIENT
+        else:
+            expected_msg = defaults.AGGREGATOR_gRPC_CLIENT
+
+        msg_received = [line for line in last_lines if expected_msg.lower() in line.lower()]
+        if msg_received:
+            found = True
+            break
+        time.sleep(10)
+    if not found:
+        raise Exception(
+            f"Aggregator did not start with {aggregator.transport_protocol} protocol. Check the logs for more details"
+        )
+    log.info(f"Aggregator started with {aggregator.transport_protocol} protocol")
+
+
 def run_federation(fed_obj):
     """
     Start the federation
@@ -233,14 +261,15 @@ def run_federation(fed_obj):
     if "keras" in fed_obj.model_name:
         _ = set_keras_backend(fed_obj.model_name)
 
-    for participant in [fed_obj.aggregator] + fed_obj.collaborators:
+    # Start the aggregator
+    start_aggregator(fed_obj)
+
+    for participant in fed_obj.collaborators:
         try:
-            # Start the participant
             participant.start()
         except Exception as e:
             log.error(f"Failed to start {participant.name}: {e}")
             raise e
-
     return True
 
 
@@ -257,7 +286,7 @@ def run_federation_for_dws(fed_obj, use_tls):
         try:
             container = dh.start_docker_container_with_federation_run(
                 participant=participant,
-                image=constants.DFLT_WORKSPACE_NAME,
+                image=defaults.DFLT_WORKSPACE_NAME,
                 use_tls=use_tls,
                 env_keyval_list=set_keras_backend(fed_obj.model_name) if "keras" in fed_obj.model_name else None,
             )
@@ -271,13 +300,14 @@ def run_federation_for_dws(fed_obj, use_tls):
     return True
 
 
-def verify_federation_run_completion(fed_obj, test_env, num_rounds):
+def verify_federation_run_completion(fed_obj, test_env, num_rounds, time_for_each_round=100):
     """
     Verify the completion of the process for all the participants
     Args:
         fed_obj (object): Federation fixture object
         test_env (str): Test environment
         num_rounds (int): Number of rounds
+        time_for_each_round (int): Time for each round (in seconds)
     Returns:
         list: List of response (True or False) for all the participants
     """
@@ -291,6 +321,7 @@ def verify_federation_run_completion(fed_obj, test_env, num_rounds):
             participant,
             num_rounds,
             num_collaborators=len(fed_obj.collaborators),
+            time_for_each_round=time_for_each_round,
         )
         for participant in fed_obj.collaborators + [fed_obj.aggregator]
     ]
@@ -353,13 +384,13 @@ def _verify_completion_for_participant(
         log.info(f"Last line in {participant.name} log: {lines[-1:]}")
 
         # If in logs Exception is encountered, throw Exception and stop the process
-        if constants.EXCEPTION in content:
+        if defaults.EXCEPTION in content:
             log.error(
                 f"Process {participant.name} is throwing Exception. Check the logs for more details"
             )
             raise Exception(f"Process failed for {participant.name}")
 
-        msg_received = [line for line in content if constants.AGG_END_MSG in line or constants.COL_END_MSG in line]
+        msg_received = [line for line in content if defaults.AGG_END_MSG in line or defaults.COL_END_MSG in line]
         if msg_received:
             log.info(f"Process completed for {participant.name}")
             break
@@ -403,7 +434,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
     test_env = request.config.test_env
 
     # Validate the model name and create the workspace name
-    if not request.config.model_name.replace("/", "_").replace("-", "_").upper() in constants.ModelName._member_names_:
+    if not request.config.model_name.replace("/", "_").replace("-", "_").upper() in defaults.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
     # Set the workspace path specific to the model and the test case
@@ -431,6 +462,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         dh.remove_docker_network()
         dh.create_docker_network()
 
+    request.config.transport_protocol = defaults.TransportProtocol.REST.value if request.config.tr_rest_protocol else defaults.TransportProtocol.GRPC.value
     log.info(
         f"Running federation setup using {test_env} API on single machine with below configurations:\n"
         f"Number of collaborators: {request.config.num_collaborators}\n"
@@ -439,6 +471,7 @@ def federation_env_setup_and_validate(request, eval_scope=False):
         f"Client authentication: {request.config.require_client_auth}\n"
         f"TLS: {request.config.use_tls}\n"
         f"Secure Aggregation: {request.config.secure_agg}\n"
+        f"Transport protocol: {request.config.transport_protocol}\n"
         f"Memory Logs: {request.config.log_memory_usage}\n"
         f"Results directory: {request.config.results_dir}\n"
         f"Workspace path: {workspace_path}"
@@ -461,7 +494,7 @@ def create_persistent_store(participant_name, local_bind_path):
             f"mkdir -p $WORKING_DIRECTORY/{participant_name}/workspace"
         )
         log.debug(f"Creating persistent store")
-        return_code, output, error = run_command(
+        return_code, output, error = helper.run_command(
             cmd_persistent_store,
             workspace_path=Path().home(),
         )
@@ -474,102 +507,7 @@ def create_persistent_store(participant_name, local_bind_path):
         raise ex.PersistentStoreCreationException(f"{error_msg}: {e}")
 
 
-def run_command(
-    command,
-    workspace_path,
-    error_msg=None,
-    container_id=None,
-    run_in_background=False,
-    bg_file=None,
-    print_output=False,
-    with_docker=False,
-    return_error=False,
-):
-    """
-    Run the command
-    Args:
-        command (str): Command to run
-        workspace_path (str): Workspace path
-        container_id (str): Container ID
-        run_in_background (bool): Run the command in background
-        bg_file (str): Background file (with path)
-        print_output (bool): Print the output
-        with_docker (bool): Flag specific to dockerized workspace scenario. Default is False.
-        return_error (bool): Return error message
-    Returns:
-        tuple: Return code, output and error
-    """
-    return_code, output, error = 0, None, None
-    error_msg = error_msg or "Failed to run the command"
-
-    if with_docker and container_id:
-        log.debug("Running command in docker container")
-        if len(workspace_path):
-            docker_command = f"docker exec -w {workspace_path} {container_id} sh -c "
-        else:
-            # This scenario is mainly for workspace creation where workspace path is not available
-            docker_command = f"docker exec -i {container_id} sh -c "
-
-        if run_in_background and bg_file:
-            docker_command += f"'{command} > {bg_file}' &"
-        else:
-            docker_command += f"'{command}'"
-
-        command = docker_command
-    else:
-        if not run_in_background:
-            # When the command is run in background, we anyways pass the workspace path
-            command = f"cd {workspace_path}; {command}"
-
-    if print_output:
-        log.info(f"Running command: {command}")
-
-    if run_in_background and not with_docker:
-        if bg_file:
-            bg_file = open(bg_file, "a", buffering=1) # open file in append mode, so that restarting scenarios can be handled
-        ssh.run_command_background(
-            command,
-            work_dir=workspace_path,
-            redirect_to_file=bg_file,
-            check_sleep=60,
-        )
-    else:
-        return_code, output, error = ssh.run_command(command)
-        if return_code != 0 and not return_error:
-            log.error(f"{error_msg}: {error}")
-            raise Exception(f"{error_msg}: {error}")
-
-    if print_output:
-        log.info(f"Output: {output}")
-        log.info(f"Error: {error}")
-    return return_code, output, error
-
-
-# This functionality is common across multiple participants, thus moved to a common function
-def verify_cmd_output(
-    output, return_code, error, error_msg, success_msg, raise_exception=True
-):
-    """
-    Verify the output of fx command run
-    Assumption - it will have '✔️ OK' in the output if the command is successful
-    Args:
-        output (list): Output of the command using run_command()
-        return_code (int): Return code of the command
-        error (list): Error message
-        error_msg (str): Error message
-        success_msg (str): Success message
-    """
-    msg_received = [line for line in output if constants.SUCCESS_MARKER in line]
-    log.info(f"Message received: {msg_received}")
-    if return_code == 0 and len(msg_received):
-        log.info(success_msg)
-    else:
-        log.error(f"{error_msg}: {error}")
-        if raise_exception:
-            raise Exception(f"{error_msg}: {error}")
-
-
-def setup_collaborator(index, workspace_path, local_bind_path):
+def setup_collaborator(index, workspace_path, local_bind_path, data_path=None, calc_hash=False, colab_bucket_mapping=None, transport_protocol="grpc"):
     """
     Setup the collaborator
     Includes - creation of collaborator objects, starting docker container, importing workspace, creating collaborator
@@ -577,13 +515,25 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         index (int): Index of the collaborator. Starts with 1.
         workspace_path (str): Workspace path
         local_bind_path (str): Local bind path
+        data_path (str): Data path
+        calc_hash (bool): Flag to indicate if hash calculation is required
+        colab_bucket_mapping (dict): Mapping of collaborator and its datasources
+        transport_protocol (str): Transport protocol (default: "gRPC")
     """
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    local_agg_ws_path = defaults.AGG_WORKSPACE_PATH.format(local_bind_path)
+
+    # If datasource path exists, it indicates that the collaborator is using a custom data source
+    # After importing workspace, copy the datasources.json file to the collaborator workspace/data directory
+    # and set the data_directory_path to "data"
+    datasource_path = os.path.join(str(Path(local_bind_path).parents[1]), "datasources", f"collaborator{index}")
+    if not os.path.exists(datasource_path):
+        datasource_path = None
 
     try:
         collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{index}",
-            data_directory_path=index,
+            transport_protocol=transport_protocol,
+            data_directory_path=index if datasource_path is None else "data",
             workspace_path=f"{workspace_path}/collaborator{index}/workspace",
         )
         create_persistent_store(collaborator.name, local_bind_path)
@@ -594,11 +544,11 @@ def setup_collaborator(index, workspace_path, local_bind_path):
         )
 
     try:
-        local_col_ws_path = constants.COL_WORKSPACE_PATH.format(
+        local_col_ws_path = defaults.COL_WORKSPACE_PATH.format(
             local_bind_path, collaborator.name
         )
         copy_file_between_participants(
-            local_agg_ws_path, local_col_ws_path, f"{constants.DFLT_WORKSPACE_NAME}.zip"
+            local_agg_ws_path, local_col_ws_path, f"{defaults.DFLT_WORKSPACE_NAME}.zip"
         )
         collaborator.import_workspace()
     except Exception as e:
@@ -606,224 +556,36 @@ def setup_collaborator(index, workspace_path, local_bind_path):
             f"Failed to import workspace for {collaborator.name}: {e}"
         )
 
+    # If datasources path exist, copy the data files to the collaborator workspace
+    if datasource_path:
+        try:
+            copy_file_between_participants(
+                local_src_path=datasource_path,
+                local_dest_path=os.path.join(collaborator.workspace_path, "data"),
+                file_name="datasources.json",
+                run_with_sudo=True,
+            )
+        except Exception as e:
+            raise ex.DataCopyException(
+                f"Failed to copy datasources.json for {collaborator.name}: {e}"
+            )
+
     try:
         collaborator.create_collaborator()
     except Exception as e:
         raise ex.CollaboratorCreationException(f"Failed to create collaborator: {e}")
 
+    # Calculate the hash of collaborator datasource (specific to torch/histology_s3 model).
+    if datasource_path:
+        try:
+            # Calculate hash for the collaborator
+            collaborator.calculate_hash()
+        except Exception as e:
+            raise ex.HashCalculationException(
+                f"Failed to calculate hash for {collaborator.name}: {e}"
+            )
+
     return collaborator
-
-
-def setup_collaborator_data(collaborators, model_name, local_bind_path):
-    """
-    Function to setup the data for collaborators.
-    IMP: This function is specific to the model and should be updated as per the model requirements.
-    Args:
-        collaborators (list): List of collaborator objects
-        model_name (str): Model name
-        local_bind_path (str): Local bind path
-    """
-    # Check if data already exists, if yes, skip the download part
-    # This is mainly helpful in case of re-runs
-    if all(os.path.exists(os.path.join(collaborator.workspace_path, "data", str(index))) for index, collaborator in enumerate(collaborators, start=1)):
-        log.info("Data already exists for all the collaborators. Skipping the download part..")
-        return
-    else:
-        log.info("Data does not exist for all the collaborators. Proceeding with the download..")
-        # Below step will also modify the data.yaml file for all the collaborators
-        if model_name == constants.ModelName.XGB_HIGGS.value:
-            download_higgs_data(collaborators, local_bind_path)
-        elif model_name == constants.ModelName.FLOWER_APP_PYTORCH.value:
-            download_flower_data(collaborators, local_bind_path)
-
-    log.info("Data setup is complete for all the collaborators")
-
-
-def download_gandlf_data(aggregator, local_bind_path, num_collaborators, results_path):
-    """
-    Function to download the data for GanDLF segmentation test model and copy to the respective collaborator workspaces
-    For GanDLF, data download happens at aggregator level, thus we can not call this function from setup_collaborator_data
-    where download is at collaborator level
-    Args:
-        aggregator: Aggregator object
-        collaborators: List of collaborator objects
-        local_bind_path: Local bind path
-        results_path: Result directory (mostly $HOME/results) where GaNDLF csv and config yaml files are present
-    """
-    try:
-        # Get list of all CSV files in openfl_path
-        csv_files = glob(os.path.join(results_path, '*.csv'))
-
-        # Get data.yaml file and remove any entry, if present
-        data_file = os.path.join(aggregator.workspace_path, "plan", "data.yaml")
-        with open(data_file, "w") as df:
-            df.write("")
-
-        # Copy the data to the respective workspaces based on the index
-        for col_index in range(1, num_collaborators+1):
-            dst_folder = os.path.join(aggregator.workspace_path, "data", str(col_index))
-            os.makedirs(dst_folder, exist_ok=True)
-            for csv_file in csv_files:
-                shutil.copy(csv_file, dst_folder)
-                log.info(f"Copied data from {csv_file} to {dst_folder}")
-
-            aggregator.modify_data_file(
-                constants.COL_DATA_FILE.format(local_bind_path, "aggregator"),
-                f"collaborator{col_index}",
-                col_index,
-            )
-    except Exception as e:
-        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-
-    return True
-
-
-def copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path):
-    """
-    Function to copy the GaNDLF data from aggregator to respective collaborators
-    """
-    try:
-        # Copy the data to the respective workspaces based on the index
-        for index, collaborator in enumerate(collaborators, start=1):
-            src_folder = os.path.join(aggregator.workspace_path, "data", str(index))
-            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
-            if os.path.exists(src_folder):
-                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
-                log.info(f"Copied data from {src_folder} to {dst_folder}")
-            else:
-                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
-
-            # Modify the data.yaml file for all the collaborators
-            collaborator.modify_data_file(
-                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
-                index,
-            )
-    except Exception as e:
-        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-
-
-def download_flower_data(collaborators, local_bind_path):
-    """
-    Download the data for the model and copy to the respective collaborator workspaces
-    Also modify the data.yaml file for all the collaborators
-    Args:
-        collaborators (list): List of collaborator objects
-        local_bind_path (str): Local bind path
-    Returns:
-        bool: True if successful, else False
-    """
-    common_download_for_higgs_and_flower(collaborators, local_bind_path)
-
-
-def download_higgs_data(collaborators, local_bind_path):
-    """
-    Download the data for the model and copy to the respective collaborator workspaces
-    Also modify the data.yaml file for all the collaborators
-    Args:
-        collaborators (list): List of collaborator objects
-        local_bind_path (str): Local bind path
-    Returns:
-        bool: True if successful, else False
-    """
-    common_download_for_higgs_and_flower(collaborators, local_bind_path)
-
-
-def common_download_for_higgs_and_flower(collaborators, local_bind_path):
-    """
-    Common function to download the data for both Higgs and Flower models.
-    In future, if the data setup for other models is similar, we can use this function.
-    Also, if the setup changes for any of the models, we can modify this function to accommodate the changes.
-    """
-    log.info(f"Copying {constants.DATA_SETUP_FILE} from one of the collaborator workspaces to the local bind path..")
-    try:
-        shutil.copyfile(
-            src=os.path.join(collaborators[0].workspace_path, "src", constants.DATA_SETUP_FILE),
-            dst=os.path.join(local_bind_path, constants.DATA_SETUP_FILE)
-        )
-    except Exception as e:
-        raise ex.DataSetupException(f"Failed to copy data setup file: {e}")
-
-    log.info("Downloading the data for the model. This will take some time to complete based on the data size ..")
-    try:
-        command = ["python", constants.DATA_SETUP_FILE, str(len(collaborators))]
-        subprocess.run(command, cwd=local_bind_path, check=True)  # nosec B603
-    except Exception:
-        raise ex.DataSetupException(f"Failed to download data for given model")
-
-    try:
-        # Copy the data to the respective workspaces based on the index
-        for index, collaborator in enumerate(collaborators, start=1):
-            src_folder = os.path.join(local_bind_path, "data", str(index))
-            dst_folder = os.path.join(collaborator.workspace_path, "data", str(index))
-            if os.path.exists(src_folder):
-                shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
-                log.info(f"Copied data from {src_folder} to {dst_folder}")
-            else:
-                raise ex.DataSetupException(f"Source folder {src_folder} does not exist for {collaborator.name}")
-
-            # Modify the data.yaml file for all the collaborators
-            collaborator.modify_data_file(
-                constants.COL_DATA_FILE.format(local_bind_path, collaborator.name),
-                index,
-            )
-    except Exception as e:
-        raise ex.DataSetupException(f"Failed to modify the data file: {e}")
-
-    # XGBoost model uses folder name higgs_data and Flower model uses data to create data folders.
-    shutil.rmtree(os.path.join(local_bind_path, "higgs_data"), ignore_errors=True)
-    shutil.rmtree(os.path.join(local_bind_path, "data"), ignore_errors=True)
-    return True
-
-
-def extract_memory_usage(log_file):
-    """
-    Extracts memory usage data from a log file.
-    This function reads the content of the specified log file, searches for memory usage data
-    using a regular expression pattern, and returns the extracted data as a dictionary.
-    Args:
-        log_file (str): The path to the log file from which to extract memory usage data.
-    Returns:
-        dict: A dictionary containing the memory usage data.
-    Raises:
-        json.JSONDecodeError: If there is an error decoding the JSON data.
-        Exception: If memory usage data is not found in the log file.
-    """
-    try:
-        with open(log_file, "r") as file:
-            content = file.read()
-
-        pattern = r"Publish memory usage: (\[.*?\])"
-        match = re.search(pattern, content, re.DOTALL)
-
-        if match:
-            memory_usage_data = match.group(1)
-            memory_usage_data = re.sub(r"\S+\.py:\d+", "", memory_usage_data)
-            memory_usage_data = memory_usage_data.replace("\n", "").replace(" ", "")
-            memory_usage_data = memory_usage_data.replace("'", '"')
-            memory_usage_dict = json.loads(memory_usage_data)
-            return memory_usage_dict
-        else:
-            log.error("Memory usage data not found in the log file")
-            raise Exception("Memory usage data not found in the log file")
-    except Exception as e:
-        log.error(f"An error occurred while extracting memory usage: {e}")
-        raise e
-
-
-def write_memory_usage_to_file(memory_usage_dict, output_file):
-    """
-    Writes memory usage data to a file.
-    This function writes the specified memory usage data to the specified output file.
-    Args:
-        memory_usage_dict (dict): A dictionary containing the memory usage data.
-        output_file (str): The path to the output file to which to write the memory usage data.
-    """
-    try:
-        with open(output_file, "w") as file:
-            json.dump(memory_usage_dict, file, indent=4)
-    except Exception as e:
-        log.error(f"An error occurred while writing memory usage data to file: {e}")
-        raise e
 
 
 def start_director(workspace_path, dir_res_file):
@@ -837,7 +599,7 @@ def start_director(workspace_path, dir_res_file):
     """
     try:
         error_msg = "Failed to start the director"
-        return_code, output, error = run_command(
+        return_code, output, error = helper.run_command(
             "./start_director.sh",
             error_msg=error_msg,
             workspace_path=os.path.join(workspace_path, "director"),
@@ -867,7 +629,7 @@ def start_envoy(envoy_name, workspace_path, res_file):
     """
     try:
         error_msg = f"Failed to start {envoy_name} envoy"
-        return_code, output, error = run_command(
+        return_code, output, error = helper.run_command(
             f"./start_envoy.sh {envoy_name} {envoy_name}_config.yaml",
             error_msg=error_msg,
             workspace_path=os.path.join(workspace_path, envoy_name),
@@ -950,35 +712,6 @@ def check_envoys_director_conn_federated_runtime(
     return False
 
 
-def run_notebook(notebook_path, output_notebook_path):
-    """
-    Function to run the notebook.
-    Args:
-        notebook_path (str): Path to the notebook
-        participant_res_files (dict): Dictionary containing participant names and their result log files
-    Returns:
-        bool: True if successful, else False
-    """
-    import papermill as pm
-    try:
-        log.info(f"Running the notebook: {notebook_path} with output notebook path: {output_notebook_path}")
-        output = pm.execute_notebook(
-            input_path=notebook_path,
-            output_path=output_notebook_path,
-            request_save_on_cell_execute=True,
-            autosave_cell_every=5, # autosave every 5 seconds
-            log_output=True,
-        )
-    except pm.exceptions.PapermillExecutionError as e:
-        log.error(f"PapermillExecutionError: {e}")
-        raise e
-
-    except ex.NotebookRunException as e:
-        log.error(f"Failed to run the notebook: {e}")
-        raise e
-    return True
-
-
 def verify_federated_runtime_experiment_completion(participant_res_files):
     """
     Verify the completion of the experiment using the participant logs.
@@ -1039,7 +772,7 @@ def get_best_agg_score(database_file=None, agg_metric_file=None, max_retries=10,
         return db_helper.get_key_value_from_db("best_score", database_file, max_retries=max_retries, sleep_interval=sleep_interval)
     else:
         json_file = convert_to_json(agg_metric_file)
-        best_score = json_file[-1].get(constants.AGG_METRIC_MODEL_ACCURACY_KEY)
+        best_score = json_file[-1].get(defaults.AGG_METRIC_MODEL_ACCURACY_KEY)
         if best_score:
             return float(best_score)
         else:
@@ -1104,30 +837,6 @@ def set_keras_backend(model_name):
     return [f"KERAS_BACKEND={backend}"]
 
 
-def remove_stale_processes(aggregator=None, collaborators=[], director=None, envoys=[]):
-    """
-    Remove stale processes
-    Args:
-        aggregator (object): Aggregator object
-        collaborators (list): List of collaborator objects
-        director (object): Director object
-        envoys (list): List of envoy objects
-    """
-    if aggregator:
-        intr_helper.kill_processes(aggregator.name)
-
-    for collaborators in collaborators:
-        intr_helper.kill_processes(collaborators.name)
-
-    if director:
-        intr_helper.kill_processes("director")
-
-    for envoy in envoys:
-        intr_helper.kill_processes(envoy)
-
-    log.info("Stale processes (if any) removed successfully")
-
-
 def remove_workspace(path):
     """
     Recursively delete given workspace and its contents, including symbolic links.
@@ -1173,7 +882,7 @@ def start_aggregator(fed_obj):
     except Exception as e:
         log.error(f"Failed to start aggregator: {e}")
         raise e
-
+    _check_aggregator_protocol_log(fed_obj.aggregator)
     return True
 
 
@@ -1195,7 +904,7 @@ def ping_from_collaborator(collaborator):
             lines = [line.strip() for line in file.readlines()]
         # print last line
         log.info(f"Last line: {lines[-1]}")
-        if any(constants.COL_TLS_END_MSG in line for line in lines[-7:]):
+        if any(defaults.COL_TLS_END_MSG in line for line in lines[-7:]):
             log.info(f"Aggregator is reachable from {collaborator.name}")
             return True
         else:
