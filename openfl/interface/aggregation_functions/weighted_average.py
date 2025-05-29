@@ -9,6 +9,11 @@ import numpy as np
 from openfl.interface.aggregation_functions.core import AggregationFunction
 
 
+def weighted_average(tensors, weights):
+    """Compute average."""
+    return np.average(tensors, weights=weights, axis=0)
+
+
 class WeightedAverage(AggregationFunction):
     def call(self, local_tensors, *_) -> np.ndarray:
         """Aggregate tensors.
