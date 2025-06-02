@@ -1,4 +1,25 @@
 # Releases
+## 1.9
+[Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.9)
+
+### New Features
+- **Scaling to 100s of collaborators**: This release comes with several memory and performance improvements when scaling federations horizontally, including extensive testing and benchmarking in distributed environments.
+- **Verifiable Datasets & S3 support**: Introducing a new [framework of utilities](https://openfl.readthedocs.io/en/latest/developer_guide/utilities/verifiable_datasets.html) for flexible loading of datasets, including optional integrity check verifications. Building on this framework, OpenFL now supports data loading from object storage (S3), illustrated by the [histology_s3](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch/histology_s3) workspace template.
+- **Aggregator REST API**: OpenFL now supports REST as an alternative to gRPC for the communication between the collaborators and the aggregator. The protocol can now be selected in the network settings section of the FL plan.
+- **Federated Analytics**: experimental support introduced via [example workspace templates](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/federated_analytics), with core framework support scheduled for subsequent OpenFL releases.
+- **Workflow API Enhancements**: Numerous bug fixes to `LocalRuntime`, and continued progress towards production-readiness of the `FederatedRuntime`:
+  * Fixed an [issue](https://github.com/securefederatedai/openfl/issues/1428) that would prevent enabling TLS in distributed environments.
+  * Optimized memory usage and introduced gRPC streaming for the `FederatedRuntime`, enabling experimental federations with models of up to 2GB in size.
+  * Removed the legacy Aggregator-Based Workflow, superseded by the `FederatedRuntime`.
+
+### Enhanced Developer Experience
+- **TaskRunner API Bootstrapping Utilities**: Introducing FL administrator utilities for TaskRunner API:
+  * A new `fx collaborator ping` command to test collaborator/aggregator connectivity without starting any FL tasks or accessing private data
+  * A [`no-op`](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/no-op) workspace template that can be configured and distributed just for the purposes of establishing and testing connectivity and PKI, in conjunction with the a **no-op** workspace
+- **Saving a native model**: In previous versions of OpenFL, the trained models would be saved as a `.pbuf` file by default. OpenFL 1.9 provides the option to save the model in native format directly (such as `.pth`), if enabled via the `save_native_model` flag in the aggregator section of the FL plan.
+- **Flower Interoperability**: Most of the OpenFL/Flower interop components have been moved from the experimental [flower-app-pytorch](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/flower-app-pytorch) workspace to the core OpenFL framework, enabling FL developers to run a wide variety of existing Flower experiments on the OpenFL infrastructure.
+- **OpenFL Nightly Builds**: A comprehensive [Product Quality Pipeline](https://github.com/securefederatedai/openfl/actions/workflows/pq_pipeline.yml) now runs on a nightly basis and, upon success, produces an [openfl-nightly](https://pypi.org/project/openfl-nightly/) build.
+
 ## 1.8
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.8)
 
