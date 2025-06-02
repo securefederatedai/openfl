@@ -47,6 +47,7 @@ class Aggregator:
         db_store_rounds* (int): Rounds to store in TensorDB.
         logger: Object for logging.
         write_logs (bool): Flag to enable metric writer callback.
+        save_native_model (bool): Flag to save model in native format.
         best_model_score (optional): Score of the best model. Defaults to
             None.
         metric_queue (queue.Queue): Queue for metrics.
@@ -87,6 +88,7 @@ class Aggregator:
         initial_tensor_dict=None,
         log_memory_usage=False,
         write_logs=False,
+        save_native_model=False,
         callbacks: Optional[List] = [],
         persist_checkpoint=True,
         persistent_db_path=None,
@@ -196,6 +198,14 @@ class Aggregator:
                 on_round_end=lambda round_num, logs=None: self.save_analytics_result()
             )
         )
+
+        if save_native_model and not self.assigner.is_task_group_evaluation():
+            ckpt_callback = callbacks_module.ModelCheckpoint(
+                self.last_state_path,
+                self.best_state_path,
+            )
+            callbacks.append(ckpt_callback)
+
         # Callbacks
         self.callbacks = callbacks_module.CallbackList(
             callbacks,

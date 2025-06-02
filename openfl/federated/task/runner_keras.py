@@ -9,6 +9,7 @@ You may copy this file as the starting point of your own keras model.
 """
 
 import copy
+import os
 from warnings import catch_warnings, simplefilter
 
 import numpy as np
@@ -272,8 +273,13 @@ class KerasTaskRunner(TaskRunner):
 
         Args:
             filepath (str): The file path to save the model.
+                By default, model will be saved as `*.keras`
         """
+        if "." not in str(filepath).split(os.sep)[-1]:
+            filepath = str(filepath) + ".keras"
+
         self.model.export(filepath)
+        return filepath
 
     def load_native(self, filepath):
         """Load model.
