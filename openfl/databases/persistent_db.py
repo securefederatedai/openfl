@@ -111,13 +111,16 @@ class PersistentTensorDB:
         """
         new_id = 0
         with self.lock:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                insert_query,
-                (collaborator_name, round_number, task_name, data_size, serialized_blob),
-            )
-            new_id = cursor.lastrowid
-            self.conn.commit()
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute(
+                    insert_query,
+                    (collaborator_name, round_number, task_name, data_size, serialized_blob),
+                )
+                new_id = cursor.lastrowid
+                self.conn.commit()
+            finally:
+                cursor.close()
         return new_id
 
     def get_task_result_by_id(self, task_result_id: int):

@@ -6,6 +6,7 @@
 
 import json
 import logging
+import os
 
 import numpy as np
 import xgboost as xgb
@@ -364,12 +365,17 @@ class XGBoostTaskRunner(TaskRunner):
 
         Args:
             filepath (str): Path to pickle file to be created by booster.save_model().
+                By default, model will be saved as `*.json`
             **kwargs: Additional parameters.
 
         Returns:
             None
         """
+        if "." not in str(filepath).split(os.sep)[-1]:
+            filepath = str(filepath) + ".json"
+
         self.bst.save_model(filepath)
+        return filepath
 
     def train_(self, data) -> Metric:
         """

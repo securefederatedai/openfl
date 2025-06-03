@@ -13,7 +13,10 @@ from pathlib import Path
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
+from openfl.interface.aggregation_functions import (
+    AggregationFunction,
+    WeightedAverage,
+)
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import (
     AggregatorGRPCClient,

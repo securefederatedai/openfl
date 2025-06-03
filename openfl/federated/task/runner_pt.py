@@ -5,6 +5,7 @@
 """PyTorchTaskRunner module."""
 
 import logging
+import os
 from copy import deepcopy
 from typing import Iterator, Tuple
 
@@ -443,10 +444,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
     ):
         """Save model and optimizer states in a picked file specified by the
         filepath. model_/optimizer_state_dicts are stored in the keys provided.
-        Uses pt.save().
+        Uses torch.save().
 
         Args:
-            filepath (str): Path to pickle file to be created by pt.save().
+            filepath (str): Path to pickle file to be created by torch.save().
+                By default, model will be saved as `*.pt`
             model_state_dict_key (str): key for model state dict in pickled
                 file.
             optimizer_state_dict_key (str): key for optimizer state dict in
@@ -460,7 +462,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
+        if "." not in str(filepath).split(os.sep)[-1]:
+            filepath = str(filepath) + ".pt"
+
         torch.save(pickle_dict, filepath)
+        return filepath
 
     def reset_opt_vars(self):
         """Reset optimizer variables.

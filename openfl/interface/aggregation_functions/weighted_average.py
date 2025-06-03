@@ -15,8 +15,6 @@ def weighted_average(tensors, weights):
 
 
 class WeightedAverage(AggregationFunction):
-    """Weighted average aggregation."""
-
     def call(self, local_tensors, *_) -> np.ndarray:
         """Aggregate tensors.
 
@@ -50,6 +48,6 @@ class WeightedAverage(AggregationFunction):
         Returns:
             np.ndarray: aggregated tensor
         """
-        tensors = np.asarray([x.tensor for x in local_tensors], dtype=np.float32)
-        weights = np.asarray([x.weight for x in local_tensors], dtype=np.float32)
-        return weighted_average(tensors, weights)
+        total_weight = sum(lt.weight for lt in local_tensors)  
+        weighted_sum = sum((lt.tensor * lt.weight for lt in local_tensors))  
+        return weighted_sum / total_weight
