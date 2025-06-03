@@ -377,7 +377,7 @@ class Aggregator:
         """
         # Extract the model from TensorDB and set it to the new model
         og_tensor_dict, _ = utils.deconstruct_model_proto(
-            self.model, compression_pipeline=self.compression_pipeline, just_keys=True
+            self.model, compression_pipeline=self.compression_pipeline
         )
         tensor_keys = [
             TensorKey(k, self.uuid, round_number, False, ("model",))
