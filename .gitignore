@@ -20,3 +20,6 @@ results/*
 **MNIST/
 **cert/
 .history/
+openfl-workspace/experimental/workflow/VisionFlow/data
+openfl-workspace/experimental/workflow/VisionFlow/output
+openfl-workspace/experimental/workflow/VisionFlow/src/dataset/data

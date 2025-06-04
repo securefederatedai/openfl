@@ -28,26 +28,22 @@ class LinearClassifier(torch.nn.Module):
             to produce the output logits.
 
             Args:
-                embeddings (torch.Tensor): A tensor of shape (batch_size, height * width *
-                  in_channels) representing the token embeddings.
+                embeddings (torch.Tensor): A tensor of shape (batch_size, height * width * in_channels)
+                    representing the token embeddings.
 
             Returns:
                 torch.Tensor: A tensor of shape (batch_size, num_labels, height, width) representing
                     the classification logits.
     """
-
     def __init__(
-        self, in_channels: int, tokenW: int = 16, tokenH: int = 16, num_labels: int = 1
+        self,
+        in_channels: int,
+        num_labels: int = 1
     ) -> None:
         super(LinearClassifier, self).__init__()
 
         self.in_channels: int = in_channels
-        self.width: int = tokenW
-        self.height: int = tokenH
         self.classifier: torch.nn.Conv2d = torch.nn.Conv2d(in_channels, num_labels, (1, 1))
 
     def forward(self, embeddings: torch.Tensor) -> torch.Tensor:
-        embeddings = embeddings.reshape(-1, self.height, self.width, self.in_channels)
-        embeddings = embeddings.permute(0, 3, 1, 2)
-
         return self.classifier(embeddings)

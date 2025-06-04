@@ -1,0 +1,35 @@
+unet vs dinov2 vs vit
+federate both
+allow peft for dinov2
+normal federated
+few shot
+pretraining
+
+
+openfl datasets
+    consumes huggingface datasets
+        
+        partitioners: make dataset splits, iid and non iid
+        set transforms
+
+        split dataset util
+
+        metrics and visualalizations?
+        more partitioners, make partitioner class
+
+
+vision_flow
+    classification
+    segmentation
+    pretraining
+    persitante lr_scheduler
+    peft
+    quantization
+
+    pretraining + classification/segmentation
+    persitante optimizer
+
+
+VisionModel:
+    more heads
+    works with full models and combs of feature extractor and head

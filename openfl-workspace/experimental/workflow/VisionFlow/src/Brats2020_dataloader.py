@@ -8,14 +8,14 @@ import numpy as np
 import torch
 from datasets import Dataset, DatasetDict, Image
 
-SEGMENT_CLASSES = {
+ORIGNINAL_SEGMENT_CLASSES = {
     0: "NOT tumor",
     1: "NECROTIC/CORE",  # label for non enhancing tumor
     2: "EDEMA",
     3: "ENHANCING",
 }
 
-_SEGMENT_CLASSES = {
+SEGMENT_CLASSES = {
     0: "NOT tumor",
     1: "tumor",
 }
@@ -65,14 +65,12 @@ def process_patient(
     return samples_per_patient
 
 
-def get_samples(
+def get_images_per_patient(
     dataset_path="Processed_TrainingData/",
     image_types=IMAGE_TYPES,
-    # x_slice_range=(60, 180),
-    # y_slice_range=(40, 200),
-    x_slice_range=(0, 0),
+    x_slice_range=(0, 200),
     y_slice_range=(0, 0),
-    z_slice_range=(37, 117),
+    z_slice_range=(0, 0),
 ):
     patient_list = get_all_patients(dataset_path)
     samples = []
@@ -98,64 +96,72 @@ def get_samples(
     return samples
 
 
-def create_dataset_dict(dataset_path, test_ratio=0.1, seed=42, patient_percentage=None, collaborator_count=1):
-    samples = get_samples(dataset_path=dataset_path, image_types=IMAGE_TYPES)
+def create_dataset_dict(
+    dataset_path,
+    test_ratio=0.1,
+    seed=42,
+    number_of_patients_per_collaborator=None,
+    collaborator_count=1,
+):
+    images_per_patient = get_images_per_patient(dataset_path=dataset_path, image_types=IMAGE_TYPES)
     random.seed(seed)
-    random.shuffle(samples)
-    test_size = int(len(samples) * test_ratio)
+    random.shuffle(images_per_patient)
+    test_size = int(len(images_per_patient) * test_ratio)
 
-    def flatten_samples(samples):
-        return [i for patients in samples for i in patients]
+    global_test_patients = images_per_patient[:test_size]
 
-    g_test_samples = samples[:test_size]
-    test_samples = samples[test_size: test_size + test_size]
-    train_samples = samples[test_size + test_size:]
+    test_patients = images_per_patient[test_size : test_size + test_size]
 
-    if patient_percentage is not None:
-        if isinstance(patient_percentage, float):
-            train_samples = random.sample(
-                train_samples, int(len(train_samples) * patient_percentage)
-            )
-        else:
-            train_samples = random.choices(
-                train_samples, k=int(patient_percentage) * collaborator_count
-            )
-    split_train_samples = [
-        flatten_samples(train_samples[i::collaborator_count]) for i in range(collaborator_count)
+    train_patients = images_per_patient[test_size + test_size :]
+    train_patients = random.choices(
+        train_patients, k=int(number_of_patients_per_collaborator) * collaborator_count
+    )
+
+    collaborator_train_split = [
+        flatten_samples(train_patients[i::collaborator_count]) for i in range(collaborator_count)
+    ]
+    collaborator_test_split = [
+        flatten_samples(test_patients[i::collaborator_count]) for i in range(collaborator_count)
     ]
 
-    split_test_samples = [
-        flatten_samples(test_samples[i::collaborator_count]) for i in range(collaborator_count)
-    ]
-
-    def create_dataset(samples):
-        return Dataset.from_dict(
-            {key: [sample[n] for sample in samples] for n, key in enumerate(IMAGE_TYPES)}
+    data_dict = []
+    for train_samples, test_samples in zip(collaborator_train_split, collaborator_test_split):
+        data_dict.append(
+            DatasetDict(
+                {
+                    "train": create_dataset(train_samples),
+                    "test": create_dataset(test_samples),
+                }
+            )
         )
 
-    data_dict = [
-        DatasetDict(
-            {
-                "train": create_dataset(tr_samples),
-                "test": create_dataset(te_samples),
-            }
-        )
-        for tr_samples, te_samples in zip(split_train_samples, split_test_samples)
-    ]
+    apply_transforms(data_dict)
 
+    global_test_patients = create_dataset(flatten_samples(global_test_patients))
+    for key in IMAGE_TYPES:
+        global_test_patients = global_test_patients.cast_column(key, Image())
+    global_test_patients.set_transform(transforms)
+
+    return data_dict, global_test_patients
+
+
+def apply_transforms(data_dict, image_types=IMAGE_TYPES):
     for col_dataset in data_dict:
-        for split in ["train", "test"]:
-            for key in IMAGE_TYPES:
+        for split in col_dataset.keys():
+            for key in image_types:
                 col_dataset[split] = col_dataset[split].cast_column(key, Image())
             col_dataset[split].set_transform(transforms)
             col_dataset[split] = col_dataset[split].shuffle()
 
-    g_test_samples = create_dataset(flatten_samples(g_test_samples))
-    for key in IMAGE_TYPES:
-        g_test_samples = g_test_samples.cast_column(key, Image())
-    g_test_samples.set_transform(transforms)
 
-    return data_dict, g_test_samples
+def flatten_samples(samples):
+    return [i for patients in samples for i in patients]
+
+
+def create_dataset(samples):
+    return Dataset.from_dict(
+        {key: [sample[n] for sample in samples] for n, key in enumerate(IMAGE_TYPES)}
+    )
 
 
 ADE_MEAN = np.array([128, 128, 128]) / 255
@@ -207,10 +213,5 @@ def transforms(examples):
     return examples
 
 
-def collate_fn(inputs):
-    pixel_values = torch.stack([i["pixel_values"] for i in inputs], dim=0)
-    labels = torch.stack(
-        [i["labels"] for i in inputs],
-        dim=0,
-    )
-    return {"pixel_values": pixel_values, "labels": labels}
+
+

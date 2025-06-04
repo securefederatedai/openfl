@@ -76,9 +76,9 @@ def save_middle_slices(
 def main():
     parser = argparse.ArgumentParser(description="Process MRI slices.")
     parser.add_argument("--dataset_path", type=str, required=True, help="Path to the dataset")
-    parser.add_argument("--slice_range_x", type=int, default=240, help="Slice range for x-axis")
-    parser.add_argument("--slice_range_y", type=int, default=240, help="Slice range for y-axis")
-    parser.add_argument("--slice_range_z", type=int, default=155, help="Slice range for z-axis")
+    parser.add_argument("--slice_range_x", type=int, default=200, help="Slice range for x-axis")
+    parser.add_argument("--slice_range_y", type=int, default=1, help="Slice range for y-axis")
+    parser.add_argument("--slice_range_z", type=int, default=1, help="Slice range for z-axis")
     args = parser.parse_args()
 
     TRAIN_DATASET_PATH = os.path.join(

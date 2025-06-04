@@ -42,13 +42,13 @@ experiment = args.experiment
 if patient_count > 0:
     dataset_dicts, val_set = create_dataset_dict(
         dataset_path="/home/omar/Documents/mine/INTEL/datasets/Processed_TrainingData/",
-        patient_percentage=patient_count,
+        number_of_patients_per_collaborator=patient_count,
         collaborator_count=4,
     )
 else:
     dataset_dicts, val_set = create_dataset_dict(
         dataset_path="/home/omar/Documents/mine/INTEL/datasets/Processed_TrainingData/",
-        patient_percentage=patient_percentage,
+        number_of_patients_per_collaborator=patient_percentage,
         collaborator_count=4,
     )
 
@@ -91,7 +91,6 @@ training_args = TrainingArguments(
 
 
 writer = SummaryWriter(log_dir=f"{output_dir}/metrics")
-set_writer(writer)
 
 # %%
 # Setup participants
@@ -129,9 +128,9 @@ flflow = VisionFlow(
         val_set if not use_fast else val_set.select(range(len(eval_dataset) // 20))
     ),
     training_args=training_args,
-    use_lora=use_lora,
+    use_peft=use_lora,
     move_to_cpu_end_of_training=True,
-    model_config_kwargs = {'output_hidden_states':True}
+    model_config_kwargs={"output_hidden_states": True},
 )
 flflow.runtime = local_runtime
 flflow.run()

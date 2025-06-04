@@ -1,29 +1,31 @@
 import torch
 from monai.losses import DiceLoss
-from transformers import (
-    PretrainedConfig,
-    AutoBackbone,
-    PreTrainedModel,
-    Dinov2Backbone
-)
+from transformers import PretrainedConfig, AutoBackbone, PreTrainedModel, Dinov2Backbone
 from transformers.modeling_outputs import SemanticSegmenterOutput, BackboneOutput
 from typing import Optional, Union
-from src.heads import LinearClassifier
-from torch import Tensor
+from src.modeling.LinearClassifier import LinearClassifier
+from torch import Tensor, nn
+from src.modeling.utils import HEAD_DICT
 
 
 class SemanticSegmentationModel(PreTrainedModel):
-    def __init__(self, config: PretrainedConfig) -> None:
+    def __init__(self, config: PretrainedConfig, **kwargs) -> None:
         super().__init__(config)
 
         self.feature_extractor: AutoBackbone = AutoBackbone.from_pretrained(config.name_or_path)
 
-        self.head: LinearClassifier = LinearClassifier(
-            in_channels=config.hidden_size,
-            tokenW=config.image_size // config.patch_size,
-            tokenH=config.image_size // config.patch_size,
-            num_labels=config.num_labels,
-        )
+        head = kwargs.get("head", "LinearClassifier")
+        head_kwargs = kwargs.get("head_kwargs", {})
+        if head not in HEAD_DICT:
+            if isinstance(head, nn.Module):
+                self.head: nn.Module = head
+            else:
+                raise ValueError(f"Head {head} not found in HEAD_DICT")
+        else:
+            self.head = HEAD_DICT[head](
+                in_channels=config.hidden_size, num_labels=config.num_labels, **head_kwargs
+            )
+        self.num_labels = config.num_labels
 
     def forward(
         self,
@@ -34,7 +36,11 @@ class SemanticSegmentationModel(PreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[tuple, SemanticSegmenterOutput]:
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
         return_dict: bool = return_dict if return_dict is not None else self.config.use_return_dict
 
         outputs: BackboneOutput = self.feature_extractor(
@@ -45,6 +51,14 @@ class SemanticSegmentationModel(PreTrainedModel):
         )
         # get the patch embeddings - so we exclude the CLS token
         patch_embeddings = outputs.hidden_states[-1][:, 1:, :]
+
+        patch_embeddings = patch_embeddings.reshape(
+            -1,
+            self.config.image_size // self.config.patch_size,
+            self.config.image_size // self.config.patch_size,
+            self.config.hidden_size,
+        )
+        patch_embeddings = patch_embeddings.permute(0, 3, 1, 2)
 
         logits = self.head(patch_embeddings)
         logits = torch.nn.functional.interpolate(
