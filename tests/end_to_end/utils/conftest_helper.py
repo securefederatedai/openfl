@@ -31,7 +31,7 @@ def parse_arguments():
         parser.add_argument("--num_rounds", type=int, default=5, help="Number of rounds to train. Default is 5")
         parser.add_argument("--model_name", type=str, help="Model name. Not required for Workflow APIs")
         parser.add_argument("--workflow_backend", type=str, help="Workflow backend, e.g - ray")
-        parser.add_argument("--tr_rest_api", action="store_true", help="Enable rest api protocol in task runner. If not set, grpc is used")
+        parser.add_argument("--tr_rest_protocol", action="store_true", help="Enable rest protocol in task runner. If not set, gRPC is used")
         parser.add_argument("--disable_client_auth", action="store_true", help="Disable client authentication. Default is False")
         parser.add_argument("--disable_tls", action="store_true", help="Disable TLS for communication. Default is False")
         parser.add_argument("--log_memory_usage", action="store_true", help="Enable Memory leak logs. Default is False")

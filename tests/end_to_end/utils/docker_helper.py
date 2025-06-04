@@ -6,13 +6,13 @@ import docker
 import subprocess
 from functools import lru_cache
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.exceptions as ex
 
 log = logging.getLogger(__name__)
 
 
-def remove_docker_network(list_of_networks=[constants.DOCKER_NETWORK_NAME]):
+def remove_docker_network(list_of_networks=[defaults.DOCKER_NETWORK_NAME]):
     """
     Remove docker network.
     Args:
@@ -30,7 +30,7 @@ def remove_docker_network(list_of_networks=[constants.DOCKER_NETWORK_NAME]):
     log.debug(f"Docker network(s) {list_of_networks} removed successfully")
 
 
-def create_docker_network(list_of_networks=[constants.DOCKER_NETWORK_NAME]):
+def create_docker_network(list_of_networks=[defaults.DOCKER_NETWORK_NAME]):
     """
     Create docker network.
     Args:
@@ -53,18 +53,18 @@ def check_docker_image():
     Check if the docker image exists.
     """
     client = get_docker_client()
-    images = client.images.list(name=constants.DEFAULT_OPENFL_IMAGE)
+    images = client.images.list(name=defaults.DEFAULT_OPENFL_IMAGE)
     if not images:
-        log.error(f"Image {constants.DEFAULT_OPENFL_IMAGE} does not exist")
-        raise Exception(f"Image {constants.DEFAULT_OPENFL_IMAGE} does not exist")
-    log.debug(f"Image {constants.DEFAULT_OPENFL_IMAGE} exists")
+        log.error(f"Image {defaults.DEFAULT_OPENFL_IMAGE} does not exist")
+        raise Exception(f"Image {defaults.DEFAULT_OPENFL_IMAGE} does not exist")
+    log.debug(f"Image {defaults.DEFAULT_OPENFL_IMAGE} exists")
 
 
 def start_docker_container_with_federation_run(
     participant,
     use_tls=True,
-    image=constants.DEFAULT_OPENFL_IMAGE,
-    network=constants.DOCKER_NETWORK_NAME,
+    image=defaults.DEFAULT_OPENFL_IMAGE,
+    network=defaults.DOCKER_NETWORK_NAME,
     env_keyval_list=None,
     security_opt=None,
     mount_mapping=None,
@@ -94,7 +94,7 @@ def start_docker_container_with_federation_run(
         else:
             local_participant_path = participant.workspace_path
 
-            docker_participant_path = f"/{constants.DFLT_WORKSPACE_NAME}"
+            docker_participant_path = f"/{defaults.DFLT_WORKSPACE_NAME}"
 
         volumes = {
             local_participant_path: {"bind": docker_participant_path, "mode": "rw"},
@@ -117,15 +117,15 @@ def start_docker_container_with_federation_run(
         log_file = f"{docker_participant_path}/logs/{participant.name}.log"
 
         if participant.name == "aggregator":
-            start_agg = constants.AGG_START_CMD
+            start_agg = defaults.AGG_START_CMD
             # Handle Fed Eval case
             if participant.eval_scope:
                 start_agg += " --task_group evaluation"
             command = ["bash", "-c", f"touch {log_file} && {start_agg} > {log_file} 2>&1"]
         else:
-            start_collaborator = f"touch {log_file} && {constants.COL_START_CMD.format(participant.name)} > {log_file} 2>&1"
+            start_collaborator = f"touch {log_file} && {defaults.COL_START_CMD.format(participant.name)} > {log_file} 2>&1"
             if use_tls:
-                command = ["bash", "-c", f"{constants.COL_CERTIFY_CMD.format(participant.name)} && {start_collaborator}"]
+                command = ["bash", "-c", f"{defaults.COL_CERTIFY_CMD.format(participant.name)} && {start_collaborator}"]
             else:
                 command = ["bash", "-c", start_collaborator]
 

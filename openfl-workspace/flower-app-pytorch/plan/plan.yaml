@@ -10,18 +10,13 @@ aggregator :
     write_logs : false
 
 connector : 
-  defaults : plan/defaults/connector.yaml
-  template : src.connector_flower.ConnectorFlower
+  defaults : plan/defaults/connector_flower.yaml
+  template : openfl.component.ConnectorFlower
   settings :
-    automatic_shutdown : True
-    superlink_params :
-      insecure : True
-      serverappio-api-address : 127.0.0.1:9091
-      fleet-api-address :  127.0.0.1:9092 
-      exec-api-address : 127.0.0.1:9093
-    flwr_run_params :
-      flwr_app_name : "app-pytorch"
-      federation_name : "local-poc"
+    exec_api_port : 9093
+    flwr_app_name : app-pytorch
+    federation_name : local-poc
+    flwr_dir : save/.flwr
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
@@ -31,15 +26,14 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.loader.FlowerDataLoader
-  settings :
-    collaborator_count : 2
+  template : openfl.federated.data.FlowerDataLoader
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.runner.FlowerTaskRunner
+  template : openfl.federated.task.FlowerTaskRunner
   settings :
-    flwr_app_name: app-pytorch
+    flwr_app_name : app-pytorch
+    flwr_dir : save/.flwr
     sgx_enabled: False
 
 network :
@@ -56,9 +50,7 @@ assigner :
           - prepare_for_interop
 
 tasks :
-  defaults : plan/defaults/tasks_connector.yaml
-  settings :
-    interop_server: src.grpc.connector.flower.interop_server
+  defaults : plan/defaults/tasks_flower.yaml
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml

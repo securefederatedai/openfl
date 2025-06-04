@@ -11,7 +11,7 @@ from tests.end_to_end.utils.tr_common_fixtures import (
     fx_federation_tr,
 )
 from tests.end_to_end.utils import federation_helper as fed_helper
-from tests.end_to_end.utils import constants
+from tests.end_to_end.utils import defaults
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def test_federation_via_native(request, fx_federation_tr):
     assert fed_helper.run_federation(fx_federation_tr)
 
     # Get aggregator address and port from plan.yaml
-    plan_dir = constants.AGG_PLAN_PATH.format(fx_federation_tr.local_bind_path)
+    plan_dir = defaults.AGG_PLAN_PATH.format(fx_federation_tr.local_bind_path)
     plan_file = os.path.join(plan_dir, "plan.yaml")
     aggreagtor_addr, aggregator_port = fed_helper.get_agg_addr_port(plan_file)
 

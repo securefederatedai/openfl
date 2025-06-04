@@ -1,0 +1,108 @@
+---
+# Task Runner Federated Analytics E2E tests for bare metal approach
+
+name: Task_Runner_Fed_Analytics_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+      python_version:
+        description: "Python version"
+        required: false
+        default: "3.10"
+        type: choice
+        options:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+# DO NOT use double quotes for the values of the environment variables
+env:
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || 2 }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  test_fed_analytics_histogram:
+    name: With REST (federated_analytics/histogram, 3.11) 
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    env:
+      MODEL_NAME: 'federated_analytics/histogram'
+      PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Federated Analytics Histogram
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_fed_analytics_tests.py --tr_rest_protocol \
+          -m task_runner_fed_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Federated analytics histogram test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Sepal_Histogram_Analytics"
+
+  test_fed_analytics_smokers_health:
+    name: With gRPC (federated_analytics/smokers_health, 3.12)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    env:
+      MODEL_NAME: 'federated_analytics/smokers_health'
+      PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Federated Analytics Smokers Health
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_fed_analytics_tests.py \
+          -m task_runner_fed_analytics --model_name ${{ env.MODEL_NAME }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Federated analytics smokers health test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "Smokers_Health_Analytics"

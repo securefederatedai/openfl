@@ -7,9 +7,11 @@ import logging
 import os
 from pathlib import Path
 
-import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.utils.data_helper as data_helper
+import tests.end_to_end.utils.defaults as defaults
 import tests.end_to_end.utils.exceptions as ex
 import tests.end_to_end.utils.federation_helper as fh
+import tests.end_to_end.utils.helper as helper
 import tests.end_to_end.utils.ssh_helper as ssh
 from tests.end_to_end.models import aggregator as agg_model, model_owner as mo_model
 import tests.end_to_end.utils.docker_helper as dh
@@ -42,10 +44,10 @@ def common_workspace_creation(request, eval_scope=False):
         fh.federation_env_setup_and_validate(request, eval_scope)
     )
 
-    agg_workspace_path = constants.AGG_WORKSPACE_PATH.format(workspace_path)
+    agg_workspace_path = defaults.AGG_WORKSPACE_PATH.format(workspace_path)
 
     # For Flower App Pytorch, num of rounds must be 1
-    if request.config.model_name.lower() == constants.ModelName.FLOWER_APP_PYTORCH.value:
+    if request.config.model_name.lower() == defaults.ModelName.FLOWER_APP_PYTORCH.value:
         if request.config.num_rounds != 1:
             raise ex.FlowerAppException(
                 "Flower app with PyTorch only supports 1 round of training."
@@ -63,7 +65,7 @@ def common_workspace_creation(request, eval_scope=False):
     model_owner.create_workspace()
 
     # Modify the plan
-    plan_path = constants.AGG_PLAN_PATH.format(local_bind_path)
+    plan_path = defaults.AGG_PLAN_PATH.format(local_bind_path)
     param_config = request.config
 
     initial_model_path = None
@@ -97,6 +99,9 @@ def create_tr_workspace(request, eval_scope=False):
         tuple : A named tuple containing the objects for model owner, aggregator,
         and collaborators.
     """
+    if not request.config.model_name:
+        raise ex.ModelNameException("Model name is not set in the request")
+
     # get details of model owner, collaborators, and aggregator from common
     # workspace creation function
     workspace_path, local_bind_path, agg_domain_name, model_owner, plan_path, agg_workspace_path, initial_model_path = common_workspace_creation(request, eval_scope)
@@ -119,6 +124,7 @@ def create_tr_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -135,27 +141,32 @@ def create_tr_workspace(request, eval_scope=False):
     collaborators = []
     executor = concurrent.futures.ThreadPoolExecutor()
 
+
+    # In case of torch/histology_s3, we need to pass the data path, flag to calculate hash
+    # and bucket mapping to the setup_collaborator function
     futures = [
         executor.submit(
             fh.setup_collaborator,
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
+
     collaborators = [f.result() for f in futures]
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
-        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
+    if request.config.model_name.lower() in [defaults.ModelName.XGB_HIGGS.value, defaults.ModelName.FLOWER_APP_PYTORCH.value]:
+        data_helper.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
         fh.import_pki_for_collaborators(collaborators)
 
-    fh.remove_stale_processes(aggregator, collaborators)
+    helper.remove_stale_processes(aggregator, collaborators)
 
     # Return the federation fixture
     return federation_details(
@@ -211,6 +222,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -218,7 +230,7 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
     # Currently plan initialization internally checks data path in data.yaml
     # So we need to have data and modified data.yaml file in place before initializing the plan
     # Issue - https://github.com/securefederatedai/openfl/issues/73
-    fh.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators, results_path)
+    data_helper.download_gandlf_data(aggregator, local_bind_path, request.config.num_collaborators, results_path)
 
     # Initialize the plan
     extra_args = f"--gandlf_config {gandlf_seg_file}"
@@ -249,13 +261,14 @@ def create_tr_workspace_gandlf(request, eval_scope=False):
             fh.setup_collaborator,
             index,
             workspace_path=workspace_path,
-            local_bind_path=local_bind_path
+            local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators+1)
     ]
     collaborators = [f.result() for f in futures]
 
-    fh.copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path)
+    data_helper.copy_gandlf_data_to_collaborators(aggregator, collaborators, local_bind_path)
 
     if request.config.use_tls:
         fh.setup_pki_for_collaborators(collaborators, model_owner, local_bind_path)
@@ -295,11 +308,11 @@ def create_tr_dws_workspace(request, eval_scope=False):
     )
 
     # Create openfl image
-    dh.build_docker_image(constants.DEFAULT_OPENFL_IMAGE, constants.DEFAULT_OPENFL_DOCKERFILE)
+    dh.build_docker_image(defaults.DEFAULT_OPENFL_IMAGE, defaults.DEFAULT_OPENFL_DOCKERFILE)
 
     # Command 'fx workspace dockerize --save ..' will use the workspace name for
     # image name which is 'workspace' in this case.
-    model_owner.dockerize_workspace(constants.DEFAULT_OPENFL_IMAGE)
+    model_owner.dockerize_workspace(defaults.DEFAULT_OPENFL_IMAGE)
 
     # Certify the workspace in case of TLS
     if request.config.use_tls:
@@ -314,6 +327,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
     aggregator = agg_model.Aggregator(
         agg_domain_name=agg_domain_name,
         workspace_path=agg_workspace_path,
+        transport_protocol=request.config.transport_protocol,
         eval_scope=eval_scope,
         container_id=model_owner.container_id,  # None in case of native environment
     )
@@ -326,6 +340,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
             index,
             workspace_path=workspace_path,
             local_bind_path=local_bind_path,
+            transport_protocol=request.config.transport_protocol,
         )
         for index in range(1, request.config.num_collaborators + 1)
     ]
@@ -336,14 +351,14 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Data setup requires total no of collaborators, thus keeping the function call
     # outside of the loop
-    if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value]:
-        fh.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
+    if request.config.model_name.lower() in [defaults.ModelName.XGB_HIGGS.value, defaults.ModelName.FLOWER_APP_PYTORCH.value]:
+        data_helper.setup_collaborator_data(collaborators, request.config.model_name, local_bind_path)
 
     # Note: In case of multiple machines setup, scp the created tar for collaborators
     # to the other machine(s)
     fh.create_tarball_for_collaborators(
         collaborators, local_bind_path, use_tls=request.config.use_tls,
-        add_data=True if request.config.model_name.lower() in [constants.ModelName.XGB_HIGGS.value, constants.ModelName.FLOWER_APP_PYTORCH.value] else False
+        add_data=True if request.config.model_name.lower() in [defaults.ModelName.XGB_HIGGS.value, defaults.ModelName.FLOWER_APP_PYTORCH.value] else False
     )
 
     # Generate the sign request and certify the aggregator in case of TLS
@@ -351,7 +366,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
         aggregator.generate_sign_request()
         model_owner.certify_aggregator(agg_domain_name)
 
-    local_agg_ws_path = constants.AGG_WORKSPACE_PATH.format(local_bind_path)
+    local_agg_ws_path = defaults.AGG_WORKSPACE_PATH.format(local_bind_path)
 
     # Note: In case of multiple machines setup, scp this tar to the other machine(s)
     return_code, output, error = ssh.run_command(
@@ -362,7 +377,7 @@ def create_tr_dws_workspace(request, eval_scope=False):
 
     # Note: In case of multiple machines setup, scp this workspace tar
     # to the other machine(s) so that docker load can load the image.
-    model_owner.load_workspace(workspace_tar_name=f"{constants.DFLT_WORKSPACE_NAME}.tar")
+    model_owner.load_workspace(workspace_tar_name=f"{defaults.DFLT_WORKSPACE_NAME}.tar")
 
     # Return the federation fixture
     return federation_details(

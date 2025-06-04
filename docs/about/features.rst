@@ -109,4 +109,17 @@ In Federated Learning (FL), Secure Aggregation (SecAgg) is a technique that allo
     :hidden:
 
     features_index/secure_aggregation
-    
+
+.. _federated_analytics:
+
+---------------------
+Federated Analytics
+---------------------
+
+Federated Analytics enables the collection and analysis of data insights across decentralized nodes without compromising data privacy. This feature allows organizations to perform analytics on distributed data while ensuring compliance with privacy regulations. For more info see :doc:`features_index/fed_analytics`
+
+.. toctree::
+    :hidden:
+
+    features_index/fed_analytics
+
