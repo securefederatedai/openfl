@@ -193,4 +193,4 @@ def FedAvg(
             )
             if grads:
                 param.grad = (param.data - state_dict[name]) / lr
-    return state_dict
+

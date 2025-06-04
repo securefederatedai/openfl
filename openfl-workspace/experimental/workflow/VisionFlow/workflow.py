@@ -1,5 +1,4 @@
 # %%
-# %%
 import os
 
 os.chdir(os.path.dirname(__file__))
@@ -24,12 +23,14 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--non_iid', action='store_true', help='Use non-IID data distribution')
-parser.add_argument('--debug_size', action='store_true', help='Use debug size for dataset')
-parser.add_argument('--name_or_path', type=str, default="facebook/dinov2-base", help='Model name or path')
-parser.add_argument('--head', type=str, default='LinearClassifier', help='Head type for the model')
-parser.add_argument('--use_peft', action='store_true', help='Use PEFT')
-parser.add_argument('--task', type=str, default="classification", help='Task type')
+parser.add_argument("--non_iid", action="store_true", help="Use non-IID data distribution")
+parser.add_argument("--debug_size", action="store_true", help="Use debug size for dataset")
+parser.add_argument(
+    "--name_or_path", type=str, default="facebook/dinov2-base", help="Model name or path"
+)
+parser.add_argument("--head", type=str, default="LinearClassifier", help="Head type for the model")
+parser.add_argument("--use_peft", action="store_true", help="Use PEFT")
+parser.add_argument("--task", type=str, default="classification", help="Task type")
 
 args = parser.parse_args()
 
@@ -41,7 +42,7 @@ writer = SummaryWriter(log_dir=output_tensorboard_path)
 if args.debug_size:
     collaborator_names = ["Portland", "Seattle"]
 else:
-    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
+    collaborator_names = ["Portland", "Seattle", "Chandler"]
 
 
 task = args.task
@@ -75,16 +76,17 @@ elif task == "segmentation":
 
 # %%
 training_args = {
-    #"bf16": True,
+    # "bf16": True,
     "fp16": True,
     "output_dir": output_path,
     "per_device_train_batch_size": 32,
     "per_device_eval_batch_size": 32,
+    "learning_rate": 1e-4,
     "num_train_epochs": 1,
     "weight_decay": 0.01,
     "logging_steps": 0.1,
     "logging_strategy": "steps",
-    "dataloader_num_workers": 1,
+    "dataloader_num_workers": 4,
     "batch_eval_metrics": True,
     "remove_unused_columns": False,
 }
@@ -119,7 +121,9 @@ if True:
     if args.head == "LinearClassifier":
         model_config_kwargs.update({"head": "LinearClassifier"})
     elif args.head == "MLPHead":
-        model_config_kwargs.update({"head": "MLPHead", "head_kwargs": {"hidden_layers": [512, 256]}})
+        model_config_kwargs.update(
+            {"head": "MLPHead", "head_kwargs": {"hidden_layers": [512, 256]}}
+        )
     pass
 # %%
 flflow = VisionFlow(
