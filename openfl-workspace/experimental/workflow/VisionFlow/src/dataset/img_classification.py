@@ -43,6 +43,7 @@ def prepare_data_for_image_classification(
     number_of_labels=None,
     image_size: int = 448,
     debug_size=False,
+    percentage: float = 1.0,
 ):
     if isinstance(data, Dataset):
         data = DatasetDict({"train": data})
