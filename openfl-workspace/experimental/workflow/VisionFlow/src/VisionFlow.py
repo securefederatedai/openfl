@@ -166,10 +166,9 @@ class VisionFlow(FLSpec):
         self.lr_scheduler = inputs[0].lr_scheduler
         if self.lr_scheduler.get_last_lr()[0]:
             self.last_lr = self.lr_scheduler.get_last_lr()[0] 
-        weights = FedAvg(
+        FedAvg(
             self.model.model, [input.weights for input in inputs], grads=True, lr=self.last_lr
         )
-        self.model.set_weights(weights)
 
         self.aggregate_evaluation_metrics = {}
         if self.global_validation_dataset is not None:
