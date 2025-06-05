@@ -1,7 +1,6 @@
 #!/bin/bash
 # Downloads thirdparty licenses.
-# Save the list of installed packages to base_packages.txt
-dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt
+cd thirdparty
 
 # If INSTALL_SOURCES is set to "yes", perform additional operations
 if [ "$INSTALL_SOURCES" = "yes" ]; then
@@ -26,15 +25,12 @@ if [ "$INSTALL_SOURCES" = "yes" ]; then
     done
     
     # Clean up
-    rm -rf ./*packages.txt
     echo "Download source for $(find . | wc -l) third-party packages: $(du -sh)"
     
     # Clean up APT lists again
     rm -rf /var/lib/apt/lists/*
 fi
 
-mkdir -p thirdparty
-cd thirdparty
 
 # If INSTALL_SOURCES is set to "yes", perform additional operations
 if [ "$INSTALL_SOURCES" = "yes" ]; then
