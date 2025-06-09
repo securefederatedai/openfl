@@ -1,7 +1,7 @@
 from datasets import Dataset, DatasetDict, concatenate_datasets
 from typing import Dict, List
 import numpy as np
-
+np.random.seed(1000)
 
 def split_dataset_dict(
     datasetdict: DatasetDict | Dict,
