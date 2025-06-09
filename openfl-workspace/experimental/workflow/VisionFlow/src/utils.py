@@ -118,20 +118,10 @@ class PeftModelForVit(PeftModel):
 
     def forward(
         self,
-        pixel_values: Optional[Tensor] = None,
-        head_mask: Optional[Tensor] = None,
-        labels: Optional[Tensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        **kwargs: Any,
     ):
         return self.base_model(
-            pixel_values=pixel_values,
-            head_mask=head_mask,
-            labels=labels,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
+            **kwargs,
         )
 
 

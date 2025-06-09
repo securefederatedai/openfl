@@ -67,13 +67,15 @@ def prepare_data_for_image_classification(
             # Limit dataset size for debugging purposes
             for key in dataset_dict.keys():
                 dataset_dict[key] = dataset_dict[key].select(range(10))
-                
+
     if percentage < 1.0:
         # Limit dataset size based on the percentage
         for dataset_dict in dataset_dict_list:
             for key in dataset_dict.keys():
-                dataset_dict[key] = dataset_dict[key].shuffle().select(
-                    range(int(len(dataset_dict[key]) * percentage))
+                dataset_dict[key] = (
+                    dataset_dict[key]
+                    .shuffle()
+                    .select(range(max(int(len(dataset_dict[key]) * percentage), 1)))
                 )
 
     apply_classification_transforms(

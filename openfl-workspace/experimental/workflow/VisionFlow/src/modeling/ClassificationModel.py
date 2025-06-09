@@ -109,6 +109,7 @@ class ClassificationModel(PreTrainedModel):
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
+        **kwargs: Optional[Tensor],
     ) -> Union[tuple, SequenceClassifierOutput]:
         output_hidden_states = (
             output_hidden_states

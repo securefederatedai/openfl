@@ -20,6 +20,15 @@ from src.Brats2020_dataloader import IMAGE_TYPES
 from torch.utils.tensorboard import SummaryWriter
 
 import argparse
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 
@@ -43,11 +52,11 @@ writer = SummaryWriter(log_dir=output_tensorboard_path)
 if args.debug_size:
     collaborator_names = ["Portland", "Seattle"]
 else:
-    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson", "Flagstaff"]
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson"]
 
 
 task = args.task
-if task in ['classification', 'pretraining']:
+if task in ["classification", "pretraining"]:
     from src.dataset.img_classification import prepare_data_for_image_classification
 
     dataset_name = "Falah/Alzheimer_MRI"
@@ -67,6 +76,15 @@ if task in ['classification', 'pretraining']:
         debug_size=args.debug_size,
         percentage=args.percentage,
     )
+    logger.info(
+        f"{'Collaborator':<15} | {'Train Samples':<15} | {'Test Samples':<15}\n"
+        f"{'-'*15}-+-{'-'*15}-+-{'-'*15}"
+    )
+    for idx, dataset_dict in enumerate(dataset_dicts):
+        logger.info(
+            f"{collaborator_names[idx]:<15} | {len(dataset_dict['train']):<15} | {len(dataset_dict['test']):<15}"
+        )
+
 elif task == "segmentation":
     patient_count = 10
     dataset_dicts, val_set = create_dataset_dict(

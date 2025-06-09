@@ -35,6 +35,7 @@ class SemanticSegmentationModel(PreTrainedModel):
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
+        **kwargs: Optional[dict]
     ) -> Union[tuple, SemanticSegmenterOutput]:
         output_hidden_states = (
             output_hidden_states
