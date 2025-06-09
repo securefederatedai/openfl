@@ -45,7 +45,7 @@ parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of
 args = parser.parse_args()
 
 output_suffix = (
-    f"{args.name_or_path.replace('/', '_')}_{args.head}_{args.task}_"
+    f"{args.name_or_path.replace('/', '_')}:{args.head}_{args.task}_"
     f"{'non_iid' if args.non_iid else 'iid'}_"
     f"{'peft' if args.use_peft else 'no_peft'}_{str(args.percentage).replace('.', ':')}"
 )

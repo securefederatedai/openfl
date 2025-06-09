@@ -22,12 +22,11 @@ def split_dataset_dict(
     Returns:
         list: A list of dataset dictionaries, one for each collaborator.
     """
-    keys = datasetdict.keys()
     if collaborator_count <= 0:
         raise ValueError("collaborator_count must be a positive integer.")
 
     data_dict = {}
-    for key in keys:
+    for key in datasetdict.keys():
         data = datasetdict[key]
         if non_iid:
             # Non-IID splitting using Dirichlet partitioning
@@ -38,7 +37,7 @@ def split_dataset_dict(
         data_dict[key] = splits
 
     # Create a dataset dictionary for each collaborator
-    collaborator_datasets = build_collaborator_dataset_dicts(collaborator_count, keys, data_dict)
+    collaborator_datasets = build_collaborator_dataset_dicts(collaborator_count, data_dict)
 
     return collaborator_datasets
 
@@ -65,10 +64,12 @@ def partition_dataset_iid(collaborator_count, data):
     return splits
 
 
-def build_collaborator_dataset_dicts(collaborator_count, keys, data_dict):
+def build_collaborator_dataset_dicts(collaborator_count, data_dict):
     collaborator_datasets = []
     for i in range(collaborator_count):
-        collaborator_datasets.append(DatasetDict({key: data_dict[key][i] for key in keys}))
+        collaborator_datasets.append(
+            DatasetDict({key: data_dict[key][i] for key in data_dict.keys()})
+        )
 
     return collaborator_datasets
 

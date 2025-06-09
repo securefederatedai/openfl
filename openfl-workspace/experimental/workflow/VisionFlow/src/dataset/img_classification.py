@@ -44,7 +44,6 @@ def prepare_data_for_image_classification(
     image_size: int = 448,
     debug_size=False,
     percentage: float = 1.0,
-    global_validation_dataset=None,
 ):
     if isinstance(data, Dataset):
         data = DatasetDict({"train": data})
