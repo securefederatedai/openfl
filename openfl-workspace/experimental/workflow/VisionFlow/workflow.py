@@ -44,15 +44,20 @@ parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of
 
 args = parser.parse_args()
 
-output_path = f"./output/{args.name_or_path.replace('/', '_')}_{args.head}_{args.task}_{'non_iid' if args.non_iid else 'iid'}_{'peft' if args.use_peft else 'no_peft'}"
-output_tensorboard_path = f"./output/tensorboard/{args.name_or_path.replace('/', '_')}_{args.head}_{args.task}_{'non_iid' if args.non_iid else 'iid'}_{'peft' if args.use_peft else 'no_peft'}"
+output_suffix = (
+    f"{args.name_or_path.replace('/', '_')}_{args.head}_{args.task}_"
+    f"{'non_iid' if args.non_iid else 'iid'}_"
+    f"{'peft' if args.use_peft else 'no_peft'}_{str(args.percentage).replace('.', ':')}"
+)
+output_path = f"./output/{output_suffix}"
+output_tensorboard_path = f"./output/federated_tensorboard/{output_suffix}"
 
 writer = SummaryWriter(log_dir=output_tensorboard_path)
 
 if args.debug_size:
     collaborator_names = ["Portland", "Seattle"]
 else:
-    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson"]
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix"]
 
 
 task = args.task
@@ -61,6 +66,8 @@ if task in ["classification", "pretraining"]:
 
     dataset_name = "Falah/Alzheimer_MRI"
     dataset = load_dataset(dataset_name)
+    global_validation_dataset = dataset["test"]
+    dataset = dataset["train"].train_test_split(test_size=0.2, seed=42)
 
     label_feature = "label"
     image_feature = "image"
@@ -75,6 +82,14 @@ if task in ["classification", "pretraining"]:
         image_size=image_size,
         debug_size=args.debug_size,
         percentage=args.percentage,
+    )
+    global_validation_dataset, _ = prepare_data_for_image_classification(
+        global_validation_dataset,
+        collaborator_count=None,
+        image_feature=image_feature,
+        label_feature=label_feature,
+        image_size=image_size,
+        debug_size=args.debug_size,
     )
     logger.info(
         f"{'Collaborator':<15} | {'Train Samples':<15} | {'Test Samples':<15}\n"
@@ -148,7 +163,7 @@ if False:
 flflow = VisionFlow(
     rounds=10,
     task_type=task,
-    global_validation_dataset=None,
+    global_validation_dataset=global_validation_dataset,
     training_args=training_args,
     use_peft=use_peft,
     model_config_kwargs=model_config_kwargs,

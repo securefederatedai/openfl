@@ -9,7 +9,7 @@ from transformers import (
     AutoModelForImageClassification,
     MODEL_FOR_BACKBONE_MAPPING,
 )
-from transformers.modeling_outputs import SemanticSegmenterOutput
+from transformers.modeling_outputs import SemanticSegmenterOutput, ImageClassifierOutput
 from peft import LoraConfig, TaskType, PeftType
 
 from src.utils import PeftModelForVit, get_param_counts_log
@@ -94,7 +94,7 @@ class VisionModel(nn.Module):
         else:
             self.model.load_state_dict(weights, strict=False)
 
-    def forward(self, **kwargs: Union[Tensor, dict, str]) -> Union[tuple, SemanticSegmenterOutput]:
+    def forward(self, **kwargs: Union[Tensor, dict, str]) -> Union[tuple, SemanticSegmenterOutput, ImageClassifierOutput]:
         if self.task_type == "classification":
             return self.model(**kwargs)
         elif self.task_type == "segmentation":

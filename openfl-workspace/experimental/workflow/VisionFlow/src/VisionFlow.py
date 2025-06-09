@@ -9,7 +9,7 @@ from datasets import Dataset
 
 from src.utils import FedAvg, FederatedTrainer, Metric_Computer
 from src.modeling.VisionModel import VisionModel, TASK_DICT
-from src.dataset.img_classification import image_classification_collate_fn
+from src.dataset.img_classification import image_classification_collate_fn, DEFAULT_LABEL_FEATURE
 from src.dataset.img_pretraining import image_pretraining_collate_fn
 
 
@@ -62,6 +62,9 @@ class VisionFlow(FLSpec):
         self.global_validation_dataset = global_validation_dataset
 
         training_args = self.set_training_args(training_args)
+        if training_args.label_names is None:
+            if task_type in ["classification", "segmentation"]:
+                training_args.label_names = [DEFAULT_LABEL_FEATURE]
         self.training_args = training_args
         self.move_to_cpu_at_end_of_training = move_to_cpu_end_of_training
         self.task_type = task_type
@@ -108,8 +111,7 @@ class VisionFlow(FLSpec):
         if torch.cuda.is_available():
             self.model.to("cuda")
 
-        if self.task_type not in ["classification", "segmentation"]:
-
+        if self.task_type in ["classification", "segmentation"]:
             metric_computer = self.get_metric_computer()
         else:
             metric_computer = None
@@ -189,6 +191,22 @@ class VisionFlow(FLSpec):
 
         self.aggregate_training_and_validation_metrics(inputs)
 
+        self.write_to_tensorboard()
+
+        model_path = f"./output/round_{self.current_round}"
+        torch.save(self.model.state_dict(), model_path)
+
+        self.current_round += 1
+        logger.info("Collaborator inputs joined. Metrics logged.")
+        if self.current_round < self.rounds:
+            self.next(
+                self.aggregated_model_validation,
+                foreach="collaborators",
+            )
+        else:
+            self.next(self.end)
+
+    def write_to_tensorboard(self):
         if WRITER is not None:
             for key, value in self.aggregate_training_results.items():
                 tag = "losses/" + key
@@ -204,19 +222,6 @@ class VisionFlow(FLSpec):
                     WRITER.add_histogram(
                         f"gradients/{name}", param.grad.cpu().data.numpy(), self.current_round
                     )
-
-        model_path = f"./output/round_{self.current_round}"
-        torch.save(self.model.state_dict(), model_path)
-
-        self.current_round += 1
-        logger.info("Collaborator inputs joined. Metrics logged.")
-        if self.current_round < self.rounds:
-            self.next(
-                self.aggregated_model_validation,
-                foreach="collaborators",
-            )
-        else:
-            self.next(self.end)
 
     def aggregate_training_and_validation_metrics(self, inputs):
         self.aggregate_training_results = {}
@@ -243,6 +248,20 @@ class VisionFlow(FLSpec):
                     self.aggregated_eval_metrics[val_step_key][key] = sum(
                         input.validation_dicts[val_step_key][key] for input in inputs
                     ) / len(inputs)
+
+        for val_step_key in self.validation_dicts.keys():
+            self.aggregated_eval_metrics[val_step_key] = {}
+            for key in self.validation_dicts[val_step_key].keys():
+                if isinstance(self.validation_dicts[val_step_key][key], list):
+                    label_names = (
+                        self.model.config.id2label
+                        if hasattr(self.model.config, "id2label")
+                        else [str(i) for i in range(self.model.num_labels)]
+                    )
+                    for val, s_class in enumerate(label_names):
+                        self.aggregated_eval_metrics[val_step_key][key + "_" + s_class] = self.validation_dicts[val_step_key][key][val]
+                else:
+                    self.aggregated_eval_metrics[val_step_key][key] = self.validation_dicts[val_step_key][key]
 
     def perform_global_evaluation(self):
         if torch.cuda.is_available():

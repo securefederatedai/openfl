@@ -13,7 +13,7 @@ from transformers import (
     ViTMAEForPreTraining,
     ViTForImageClassification,
 )
-from transformers.modeling_outputs import SequenceClassifierOutput, BackboneOutput
+from transformers.modeling_outputs import ImageClassifierOutput, BackboneOutput
 from typing import Optional, Union
 from src.modeling.LinearClassifier import LinearClassifier
 from torch import Tensor, nn
@@ -110,7 +110,7 @@ class ClassificationModel(PreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
         **kwargs: Optional[Tensor],
-    ) -> Union[tuple, SequenceClassifierOutput]:
+    ) -> Union[tuple, ImageClassifierOutput]:
         output_hidden_states = (
             output_hidden_states
             if output_hidden_states is not None
@@ -140,7 +140,7 @@ class ClassificationModel(PreTrainedModel):
             output = (logits,) + outputs[2:]
             return ((loss,) + output) if loss is not None else output
 
-        return SequenceClassifierOutput(
+        return ImageClassifierOutput(
             loss=loss,
             logits=logits,
             hidden_states=None,
