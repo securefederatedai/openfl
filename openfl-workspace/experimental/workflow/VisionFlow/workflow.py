@@ -31,6 +31,7 @@ parser.add_argument(
 parser.add_argument("--head", type=str, default="LinearClassifier", help="Head type for the model")
 parser.add_argument("--use_peft", action="store_true", help="Use PEFT")
 parser.add_argument("--task", type=str, default="classification", help="Task type")
+parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of data to use")
 
 args = parser.parse_args()
 
@@ -42,11 +43,11 @@ writer = SummaryWriter(log_dir=output_tensorboard_path)
 if args.debug_size:
     collaborator_names = ["Portland", "Seattle"]
 else:
-    collaborator_names = ["Portland", "Seattle", "Chandler"]
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson", "Flagstaff"]
 
 
 task = args.task
-if task == "classification":
+if task in ['classification', 'pretraining']:
     from src.dataset.img_classification import prepare_data_for_image_classification
 
     dataset_name = "Falah/Alzheimer_MRI"
@@ -54,8 +55,7 @@ if task == "classification":
 
     label_feature = "label"
     image_feature = "image"
-    # image_size = 224
-    image_size = 259
+    image_size = 224
 
     dataset_dicts, number_of_labels = prepare_data_for_image_classification(
         dataset,
@@ -65,8 +65,8 @@ if task == "classification":
         label_feature=label_feature,
         image_size=image_size,
         debug_size=args.debug_size,
+        percentage=args.percentage,
     )
-    dataset_dicts[0]["train"][0]["image"]
 elif task == "segmentation":
     patient_count = 10
     dataset_dicts, val_set = create_dataset_dict(
@@ -80,8 +80,8 @@ training_args = {
     # "bf16": True,
     "fp16": True,
     "output_dir": output_path,
-    "per_device_train_batch_size": 1,
-    "per_device_eval_batch_size": 1,
+    "per_device_train_batch_size": 32,
+    "per_device_eval_batch_size": 32,
     "learning_rate": 1e-4,
     "num_train_epochs": 1,
     "weight_decay": 0.01,
@@ -112,7 +112,7 @@ local_runtime = LocalRuntime(
 )
 model_config_kwargs = {"num_labels": number_of_labels, "image_size": image_size}
 use_peft = args.use_peft
-if True:
+if False:
     # model_config_kwargs.update({"name_or_path": "google/vit-base-patch16-224"})
     # model_config_kwargs.update({"name_or_path": "facebook/convnext-base-224-22k-1k"})
     # model_config_kwargs.update({"name_or_path": "microsoft/swin-base-patch4-window7-224-in22k"})
@@ -129,7 +129,7 @@ if True:
 # %%
 flflow = VisionFlow(
     rounds=10,
-    task_type="pretraining",
+    task_type=task,
     global_validation_dataset=None,
     training_args=training_args,
     use_peft=use_peft,
