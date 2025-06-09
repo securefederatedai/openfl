@@ -95,6 +95,11 @@ class VisionModel(nn.Module):
             self.model.load_state_dict(weights, strict=False)
 
     def forward(self, **kwargs: Union[Tensor, dict, str]) -> Union[tuple, SemanticSegmenterOutput]:
-        return self.model(
-            interpolate_pos_encoding=self.model.config.interpolate_pos_encoding, **kwargs
-        )
+        if self.task_type == "classification":
+            return self.model(**kwargs)
+        elif self.task_type == "segmentation":
+            return self.model(**kwargs)
+        elif self.task_type == "pretraining":
+            return self.model(
+                interpolate_pos_encoding=self.model.config.interpolate_pos_encoding, **kwargs
+            )
