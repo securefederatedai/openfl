@@ -797,9 +797,8 @@ class Aggregator:
 
         if self.persistent_db:
             # Save task and its metadata for recovery
-            serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
-            self.persistent_db.save_task_results(
-                collaborator_name, round_number, task_name, data_size, serialized_tensors
+            self.save_persistent_db(
+                collaborator_name, round_number, task_name, data_size, named_tensors
             )
             logger.debug(
                 f"Persisting task results {task_name} from {collaborator_name} round {round_number}"
@@ -811,6 +810,15 @@ class Aggregator:
 
         self.process_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors
+        )
+
+    def save_persistent_db(
+        self, collaborator_name, round_number, task_name, data_size, named_tensors
+    ):
+        serialized_tensors = [tensor.SerializeToString() for tensor in named_tensors]
+
+        self.persistent_db.save_task_results(
+            collaborator_name, round_number, task_name, data_size, serialized_tensors
         )
 
     def process_task_results(

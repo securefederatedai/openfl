@@ -8,7 +8,7 @@ pytest-cov>=2.10.0
 pytest-mock==3.14.0
 defusedxml==0.7.1
 matplotlib==3.10.1
-fpdf2==2.8.2
+fpdf2==2.8.3
 papermill==2.6.0
 pyfakefs==5.8.0
 torch==2.7.0
