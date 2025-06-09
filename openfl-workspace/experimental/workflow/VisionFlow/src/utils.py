@@ -194,3 +194,16 @@ def FedAvg(
             if grads:
                 param.grad = (param.data - state_dict[name]) / lr
 
+
+def get_param_counts_log(model):
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    frozen = total - trainable
+
+    log_str = (
+        f"Parameter Counts:\n"
+        f"  Total:     {total:,}\n"
+        f"  Trainable: {trainable:,}\n"
+        f"  Frozen:    {frozen:,}"
+    )
+    return log_str

@@ -8,8 +8,9 @@ from transformers import TrainingArguments
 from datasets import Dataset
 
 from src.utils import FedAvg, FederatedTrainer, Metric_Computer
-from src.modeling.VisionModel import VisionModel
+from src.modeling.VisionModel import VisionModel, TASK_DICT
 from src.dataset.img_classification import image_classification_collate_fn
+from src.dataset.img_pretraining import image_pretraining_collate_fn
 
 
 WRITER = None
@@ -17,7 +18,10 @@ WRITER = None
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-COLLATE_FN = {"classification": image_classification_collate_fn}
+COLLATE_FN = {
+    "classification": image_classification_collate_fn,
+    "pretraining": image_pretraining_collate_fn,
+}
 
 
 class VisionFlow(FLSpec):
@@ -35,7 +39,7 @@ class VisionFlow(FLSpec):
     ):
         logger.info("Initializing VisionFlow...")
 
-        if task_type not in ["classification", "segmentation"]:
+        if task_type not in TASK_DICT:
             raise ValueError(
                 f"Unsupported task type: {task_type}. Supported types are 'classification' and 'segmentation'."
             )
@@ -104,7 +108,11 @@ class VisionFlow(FLSpec):
         if torch.cuda.is_available():
             self.model.to("cuda")
 
-        metric_computer = self.get_metric_computer()
+        if self.task_type not in ["classification", "segmentation"]:
+
+            metric_computer = self.get_metric_computer()
+        else:
+            metric_computer = None
 
         self.train_dataset = self.train_dataset.shuffle()
 
@@ -114,7 +122,7 @@ class VisionFlow(FLSpec):
             train_dataset=self.train_dataset,
             eval_dataset=self.eval_dataset,
             data_collator=self.collate_fn,
-            compute_metrics=metric_computer.compute,
+            compute_metrics=metric_computer.compute if metric_computer else None,
             optimizers=(None, self.lr_scheduler),
             total_rounds=self.rounds,
         )
@@ -125,14 +133,21 @@ class VisionFlow(FLSpec):
         self.next(self.train)
 
     def get_metric_computer(self):
+        metric_accumulator = None
         if self.task_type in ["classification", "segmentation"]:
             metric_accumulator = Metric_Computer(
                 self.model.num_labels,
                 task_type=self.task_type,
                 batched_compute=self.training_args.batch_eval_metrics,
             )
+            return metric_accumulator
+        else:
 
-        return metric_accumulator
+            class dummy_metric:
+                def compute(self, eval_preds):
+                    return {"dummy_metric": 0.0}
+
+            return dummy_metric()
 
     @collaborator
     def train(self):
@@ -165,10 +180,8 @@ class VisionFlow(FLSpec):
         # Log global metrics using PyTorch
         self.lr_scheduler = inputs[0].lr_scheduler
         if self.lr_scheduler.get_last_lr()[0]:
-            self.last_lr = self.lr_scheduler.get_last_lr()[0] 
-        FedAvg(
-            self.model.model, [input.weights for input in inputs], grads=True, lr=self.last_lr
-        )
+            self.last_lr = self.lr_scheduler.get_last_lr()[0]
+        FedAvg(self.model.model, [input.weights for input in inputs], grads=True, lr=self.last_lr)
 
         self.aggregate_evaluation_metrics = {}
         if self.global_validation_dataset is not None:
