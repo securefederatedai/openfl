@@ -54,7 +54,8 @@ if task == "classification":
 
     label_feature = "label"
     image_feature = "image"
-    image_size = 224
+    # image_size = 224
+    image_size = 259
 
     dataset_dicts, number_of_labels = prepare_data_for_image_classification(
         dataset,
@@ -79,15 +80,15 @@ training_args = {
     # "bf16": True,
     "fp16": True,
     "output_dir": output_path,
-    "per_device_train_batch_size": 32,
-    "per_device_eval_batch_size": 32,
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
     "learning_rate": 1e-4,
     "num_train_epochs": 1,
     "weight_decay": 0.01,
     "logging_steps": 0.1,
     "logging_strategy": "steps",
     "dataloader_num_workers": 4,
-    "batch_eval_metrics": True,
+    "batch_eval_metrics": False,
     "remove_unused_columns": False,
 }
 
@@ -128,7 +129,7 @@ if True:
 # %%
 flflow = VisionFlow(
     rounds=10,
-    task_type="classification",
+    task_type="pretraining",
     global_validation_dataset=None,
     training_args=training_args,
     use_peft=use_peft,

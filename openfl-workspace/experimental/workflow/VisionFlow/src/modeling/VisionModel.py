@@ -12,14 +12,19 @@ from transformers import (
 from transformers.modeling_outputs import SemanticSegmenterOutput
 from peft import LoraConfig, TaskType, PeftType
 
-from src.utils import PeftModelForVit
+from src.utils import PeftModelForVit, get_param_counts_log
 from src.modeling.SegmentationModel import SemanticSegmentationModel
 from src.modeling.ClassificationModel import ClassificationModel
+from src.modeling.PretrainingModel import PretrainingModel
+import logging
 
 TASK_DICT = {
     "classification": ClassificationModel,
     "segmentation": SemanticSegmentationModel,
+    "pretraining": PretrainingModel,
 }
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class VisionModel(nn.Module):
@@ -38,14 +43,14 @@ class VisionModel(nn.Module):
             name_or_path = "facebook/dinov2-base"
         config: PretrainedConfig = AutoConfig.from_pretrained(name_or_path)
 
-        model_config_kwargs.update({"output_hidden_states": True})
+        model_config_kwargs.update({"output_hidden_states": True, "interpolate_pos_encoding": True})
         default_model_config = {}
         default_model_config.update(model_config_kwargs)
         config.update(model_config_kwargs)
         # Determine if config is a backbone
-        self.model: Union[SemanticSegmentationModel, ClassificationModel, PeftModel] = TASK_DICT[
-            task_type.lower()
-        ](config=config, **model_config_kwargs)
+        self.model: Union[
+            SemanticSegmentationModel, ClassificationModel, PeftModel, PretrainingModel
+        ] = TASK_DICT[task_type.lower()](config=config, **model_config_kwargs)
 
         if hasattr(self.model, "num_labels"):
             self.num_labels = self.model.num_labels
@@ -71,6 +76,8 @@ class VisionModel(nn.Module):
             self.model = PeftModelForVit(self.model, LoraConfig(**default_lora_config))
             self.model.print_trainable_parameters()
         self.using_peft = use_peft
+        
+        logger.info(get_param_counts_log(self.model))
 
     def get_weights(self):
         """Return a single dict containing all trainable weights."""
@@ -87,20 +94,7 @@ class VisionModel(nn.Module):
         else:
             self.model.load_state_dict(weights, strict=False)
 
-    def forward(
-        self,
-        pixel_values: Optional[Tensor] = None,
-        head_mask: Optional[Tensor] = None,
-        labels: Optional[Tensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[tuple, SemanticSegmenterOutput]:
+    def forward(self, **kwargs: Union[Tensor, dict, str]) -> Union[tuple, SemanticSegmenterOutput]:
         return self.model(
-            pixel_values=pixel_values,
-            head_mask=head_mask,
-            labels=labels,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
+            interpolate_pos_encoding=self.model.config.interpolate_pos_encoding, **kwargs
         )
