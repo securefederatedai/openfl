@@ -11,7 +11,7 @@ from src.Brats2020_dataloader import create_dataset_dict
 from src.VisionFlow import VisionFlow
 from datasets import load_dataset
 from datasets import Dataset, DatasetDict, Image
-
+import glob
 
 # Load CIFAR-10 dataset
 
@@ -39,6 +39,7 @@ parser.add_argument(
 )
 parser.add_argument("--head", type=str, default="LinearClassifier", help="Head type for the model")
 parser.add_argument("--use_peft", action="store_true", help="Use PEFT")
+parser.add_argument("--with_pretrained", action="store_true", help="Use PEFT")
 parser.add_argument("--task", type=str, default="classification", help="Task type")
 parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of data to use")
 
@@ -47,10 +48,24 @@ args = parser.parse_args()
 output_suffix = (
     f"{args.name_or_path.replace('/', '_')}:{args.head}_{args.task}_"
     f"{'non_iid' if args.non_iid else 'iid'}_"
-    f"{'peft' if args.use_peft else 'no_peft'}_{str(args.percentage).replace('.', ':')}"
+    f"{'peft' if args.use_peft else 'no_peft'}_{str(args.percentage).replace('.', '_')}_"
+    f"{'with_pretrained' if args.with_pretrained else 'no_pretrained'}"
 )
 output_path = f"./output/{output_suffix}"
 output_tensorboard_path = f"./output/federated_tensorboard/{output_suffix}"
+
+if args.with_pretrained:
+    pretrained_dir = (
+        f"./output/"
+        f"{args.name_or_path.replace('/', '_')}:{args.head}_pretraining_"
+        f"{'non_iid' if args.non_iid else 'iid'}_"
+        f"{'peft' if args.use_peft else 'no_peft'}_{str(args.percentage).replace('.', '_')}"
+    )
+    round_files = sorted(
+        glob.glob(os.path.join(pretrained_dir, "round_*.pt")),
+        key=lambda x: int(os.path.splitext(os.path.basename(x))[0].split("_")[1]),
+    )
+    pretrained_model_path = round_files[-1] if round_files else None
 
 writer = SummaryWriter(log_dir=output_tensorboard_path)
 
@@ -121,7 +136,7 @@ training_args = {
     "logging_steps": 0.1,
     "logging_strategy": "steps",
     "dataloader_num_workers": 4,
-    "batch_eval_metrics": False,
+    "batch_eval_metrics": True if task == "pretraining" else False,
     "remove_unused_columns": False,
 }
 
@@ -169,6 +184,7 @@ flflow = VisionFlow(
     model_config_kwargs=model_config_kwargs,
     move_to_cpu_end_of_training=True,
     writer=writer,
+    pretrained_model_path=pretrained_model_path if args.with_pretrained else None,
 )
 flflow.runtime = local_runtime
 flflow.run()

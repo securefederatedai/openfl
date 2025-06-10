@@ -35,6 +35,7 @@ class VisionFlow(FLSpec):
         training_args: TrainingArguments | dict = None,
         move_to_cpu_end_of_training=False,
         writer=None,
+        pretrained_model_path=None,
         **kwargs,
     ):
         logger.info("Initializing VisionFlow...")
@@ -54,6 +55,7 @@ class VisionFlow(FLSpec):
                 task_type=task_type,
                 use_peft=use_peft,
                 peft_config=peft_config,
+                pretrained_model_path=pretrained_model_path,
                 **model_config_kwargs,
             )
 
@@ -128,6 +130,7 @@ class VisionFlow(FLSpec):
             optimizers=(None, self.lr_scheduler),
             total_rounds=self.rounds,
         )
+        self.data_count = len(self.train_dataset)
 
         eval_dict = self.trainer.evaluate()
         self.validation_dicts["agg_validation_dict"] = eval_dict
@@ -183,7 +186,15 @@ class VisionFlow(FLSpec):
         self.lr_scheduler = inputs[0].lr_scheduler
         if self.lr_scheduler.get_last_lr()[0]:
             self.last_lr = self.lr_scheduler.get_last_lr()[0]
-        FedAvg(self.model.model, [input.weights for input in inputs], grads=True, lr=self.last_lr)
+        total_data_count = sum(input.data_count for input in inputs)
+        data_weights = [input.data_count / total_data_count for input in inputs]
+        FedAvg(
+            self.model.model,
+            [input.weights for input in inputs],
+            data_weights,
+            grads=True,
+            lr=self.last_lr,
+        )
 
         self.aggregate_evaluation_metrics = {}
         if self.global_validation_dataset is not None:
@@ -193,7 +204,7 @@ class VisionFlow(FLSpec):
 
         self.write_to_tensorboard()
 
-        model_path = f"./output/round_{self.current_round}"
+        model_path = f"{self.training_args.output_dir}/round_{self.current_round}.pt"
         torch.save(self.model.state_dict(), model_path)
 
         self.current_round += 1
@@ -259,20 +270,27 @@ class VisionFlow(FLSpec):
                         else [str(i) for i in range(self.model.num_labels)]
                     )
                     for val, s_class in enumerate(label_names):
-                        self.aggregated_eval_metrics[val_step_key][key + "_" + s_class] = self.validation_dicts[val_step_key][key][val]
+                        self.aggregated_eval_metrics[val_step_key][key + "_" + s_class] = (
+                            self.validation_dicts[val_step_key][key][val]
+                        )
                 else:
-                    self.aggregated_eval_metrics[val_step_key][key] = self.validation_dicts[val_step_key][key]
+                    self.aggregated_eval_metrics[val_step_key][key] = self.validation_dicts[
+                        val_step_key
+                    ][key]
 
     def perform_global_evaluation(self):
         if torch.cuda.is_available():
             self.model.to("cuda")
-        metric_computer = self.get_metric_computer()
+        if self.task_type in ["classification", "segmentation"]:
+            metric_computer = self.get_metric_computer()
+        else:
+            metric_computer = None
         trainer = FederatedTrainer(
             model=self.model,
             args=self.training_args,
             eval_dataset=self.global_validation_dataset,
             data_collator=self.collate_fn,
-            compute_metrics=metric_computer.compute,
+            compute_metrics=metric_computer.compute if metric_computer else None,
         )
         eval_results = trainer.evaluate()
         self.validation_dicts["global_eval_metrics"] = eval_results

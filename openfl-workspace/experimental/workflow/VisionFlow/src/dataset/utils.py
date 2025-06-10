@@ -57,6 +57,25 @@ def partition_data_dirichlet(collaborator_count, label_column, data):
     return splits
 
 
+def dirichlet_partition(label_counts, collaborator_count, alpha=0.5):
+    """
+    Generates Dirichlet proportions for non-IID partitioning.
+
+    Args:
+        label_counts (list): List of counts for each label group.
+        collaborator_count (int): Number of collaborators.
+        alpha (float): Dirichlet concentration parameter.
+
+    Returns:
+        list: A list of proportions for each collaborator.
+    """
+    proportions = []
+    for count in label_counts:
+        dirichlet_sample = np.random.dirichlet([alpha] * collaborator_count)
+        proportions.append(dirichlet_sample)
+    return proportions
+
+
 def partition_dataset_iid(collaborator_count, data):
     splits = []
     for i in range(collaborator_count):
@@ -87,25 +106,6 @@ def group_by_label(data: Dataset, label_column):
     data = data.to_pandas()  # Convert to pandas DataFrame for easier manipulation
     grouped = data.groupby(label_column)
     return [Dataset.from_pandas(group) for _, group in grouped]
-
-
-def dirichlet_partition(label_counts, collaborator_count, alpha=0.5):
-    """
-    Generates Dirichlet proportions for non-IID partitioning.
-
-    Args:
-        label_counts (list): List of counts for each label group.
-        collaborator_count (int): Number of collaborators.
-        alpha (float): Dirichlet concentration parameter.
-
-    Returns:
-        list: A list of proportions for each collaborator.
-    """
-    proportions = []
-    for count in label_counts:
-        dirichlet_sample = np.random.dirichlet([alpha] * collaborator_count)
-        proportions.append(dirichlet_sample)
-    return proportions
 
 
 def apply_transforms(

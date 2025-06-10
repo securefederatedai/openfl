@@ -167,20 +167,16 @@ def FedAvg(
     state_dict = base_model.state_dict()
     for name, param in base_model.named_parameters():
         if param.requires_grad:
+            key = name.replace(peft_prefix, "").replace(modules_to_save_prefix, "")
             param.data = torch.from_numpy(
                 np.asarray(
                     np.average(
-                        [
-                            state[
-                                name.replace(peft_prefix, "").replace(modules_to_save_prefix, "")
-                            ].numpy()
-                            for state in state_dicts
-                        ],
+                        [state[key].numpy() for state in state_dicts],
                         axis=0,
                         weights=weights,
                     )
                 )
-            )
+            ).to(dtype=param.dtype)
             if grads:
                 param.grad = (param.data - state_dict[name]) / lr
 
