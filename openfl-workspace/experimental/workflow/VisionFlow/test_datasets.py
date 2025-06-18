@@ -56,3 +56,12 @@ dataset_dicts, number_of_labels = prepare_data_for_image_classification(
 )
 dataset_dicts[0]["train"][0]["image"]
 # %%
+dataset_name = "Simezu/brain-tumour-MRI-scan"
+dataset = load_dataset(dataset_name)
+# %%
+import numpy as np
+np.unique(dataset['test']['label'], return_counts=True)
+# %%
+dataset = dataset["train"].train_test_split(test_size=0.2, seed=42)
+np.unique(dataset['train']['label'], return_counts=True)
+# %%

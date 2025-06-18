@@ -42,6 +42,7 @@ parser.add_argument("--use_peft", action="store_true", help="Use PEFT")
 parser.add_argument("--with_pretrained", action="store_true", help="Use PEFT")
 parser.add_argument("--task", type=str, default="classification", help="Task type")
 parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of data to use")
+parser.add_argument("--just_train", action="store_true", help="Run only training without evaluation")
 
 args = parser.parse_args()
 
@@ -72,14 +73,15 @@ writer = SummaryWriter(log_dir=output_tensorboard_path)
 if args.debug_size:
     collaborator_names = ["Portland", "Seattle"]
 else:
-    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix"]
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson", "Flagstaff"]
 
 
 task = args.task
 if task in ["classification", "pretraining"]:
     from src.dataset.img_classification import prepare_data_for_image_classification
 
-    dataset_name = "Falah/Alzheimer_MRI"
+    # dataset_name = "Falah/Alzheimer_MRI"
+    dataset_name = "Simezu/brain-tumour-MRI-scan"
     dataset = load_dataset(dataset_name)
     global_validation_dataset = dataset["test"]
     dataset = dataset["train"].train_test_split(test_size=0.2, seed=42)
@@ -159,6 +161,10 @@ local_runtime = LocalRuntime(
     aggregator=my_aggregator, collaborators=collaborators, backend="single_process"
 )
 model_config_kwargs = {"num_labels": number_of_labels, "image_size": image_size}
+if args.head == "MLPHead":
+    model_config_kwargs.update(
+        {"head": "MLPHead", "head_kwargs": {"hidden_layers": [64]}}
+    )
 use_peft = args.use_peft
 if False:
     # model_config_kwargs.update({"name_or_path": "google/vit-base-patch16-224"})
@@ -176,15 +182,15 @@ if False:
     pass
 # %%
 flflow = VisionFlow(
-    rounds=10,
+    rounds=20,
     task_type=task,
     global_validation_dataset=global_validation_dataset,
     training_args=training_args,
     use_peft=use_peft,
     model_config_kwargs=model_config_kwargs,
-    move_to_cpu_end_of_training=True,
     writer=writer,
     pretrained_model_path=pretrained_model_path if args.with_pretrained else None,
+    just_train=args.just_train,
 )
 flflow.runtime = local_runtime
 flflow.run()

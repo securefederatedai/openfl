@@ -68,8 +68,8 @@ class VisionModel(nn.Module):
                 )
             default_lora_config = {
                 "task_type": TaskType.FEATURE_EXTRACTION,
-                "r": 8,
-                "lora_alpha": 16,
+                "r": 4,
+                "lora_alpha": 8,
                 "lora_dropout": 0.1,
                 "target_modules": "all-linear",
                 "modules_to_save": ["head"],

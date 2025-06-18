@@ -137,6 +137,8 @@ def default_classification_transforms(examples, number_of_labels=2, image_size=4
 
     for image, label in zip(examples[DEFAULT_IMAGE_FEATURE], examples[DEFAULT_LABEL_FEATURE]):
         image = np.array(image)
+        if image.shape[-1] == 4:
+            image = image[:, :, :3]  # Ensure image is in HWC format and RGB
         transformed = transform(image=image)
         transformed_images.append(transformed[DEFAULT_IMAGE_FEATURE])
         transformed_labels.append(

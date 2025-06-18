@@ -1,6 +1,5 @@
 import logging
 
-import evaluate
 import torch
 from openfl.experimental.workflow.interface import FLSpec
 from openfl.experimental.workflow.placement import aggregator, collaborator
@@ -33,7 +32,6 @@ class VisionFlow(FLSpec):
         task_type="classification",  # task type
         global_validation_dataset: Dataset = None,  #
         training_args: TrainingArguments | dict = None,
-        move_to_cpu_end_of_training=False,
         writer=None,
         pretrained_model_path=None,
         **kwargs,
@@ -47,6 +45,7 @@ class VisionFlow(FLSpec):
         model_config_kwargs = kwargs.pop("model_config_kwargs", {})
         peft_config = kwargs.pop("peft_config", None)
         use_peft = kwargs.pop("use_peft", False)
+        self.just_train = kwargs.pop("just_train", False)
         super().__init__(**kwargs)
         if model is not None:
             self.model = model
@@ -68,24 +67,21 @@ class VisionFlow(FLSpec):
             if task_type in ["classification", "segmentation"]:
                 training_args.label_names = [DEFAULT_LABEL_FEATURE]
         self.training_args = training_args
-        self.move_to_cpu_at_end_of_training = move_to_cpu_end_of_training
         self.task_type = task_type
 
-        self.training_dicts = {}
+        self.lr_scheduler = None
         self.validation_dicts = {}
 
-        self.lr_scheduler = None
-
-        if self.move_to_cpu_at_end_of_training:
-            self.model.to("cpu")
-            torch.cuda.empty_cache()
+        self.model.to("cpu")
+        torch.cuda.empty_cache()
         logger.info("VisionFlow initialized with %d rounds.", self.rounds)
 
         if writer is not None:
             global WRITER
             WRITER = writer
 
-    def set_training_args(self, training_args):
+    @staticmethod
+    def set_training_args(training_args):
         default_training_args_dict = {
             "output_dir": "./output",
             "num_train_epochs": 1,
@@ -105,11 +101,10 @@ class VisionFlow(FLSpec):
         self.collaborators = self.runtime.collaborators
         self.current_round = 0
         logger.info("Workflow started.")
-        self.next(self.aggregated_model_validation, foreach="collaborators")
+        self.next(self.setup, foreach="collaborators")
 
     @collaborator
-    def aggregated_model_validation(self):
-        logger.info("Performing aggregated model validation on collaborator: %s", self.input)
+    def setup(self):
         if torch.cuda.is_available():
             self.model.to("cuda")
 
@@ -131,11 +126,15 @@ class VisionFlow(FLSpec):
             total_rounds=self.rounds,
         )
         self.data_count = len(self.train_dataset)
-
-        eval_dict = self.trainer.evaluate()
-        self.validation_dicts["agg_validation_dict"] = eval_dict
-        logger.info("Aggregated model validation completed on collaborator: %s", self.input)
-        self.next(self.train)
+        self.training_completed = False
+        self.training_dicts = {}
+        self.validation_dicts = {}
+        if self.just_train:
+            logger.info("Just training mode enabled. Skipping aggregated model validation.")
+            self.next(self.train)
+        else:
+            logger.info("Starting aggregated model validation on collaborator: %s", self.input)
+            self.next(self.aggregated_model_validation)
 
     def get_metric_computer(self):
         metric_accumulator = None
@@ -155,28 +154,40 @@ class VisionFlow(FLSpec):
             return dummy_metric()
 
     @collaborator
+    def aggregated_model_validation(self):
+        logger.info("Performing aggregated model validation on collaborator: %s", self.input)
+
+        eval_dict = self.trainer.evaluate()
+        self.validation_dicts["agg_validation_dict"] = eval_dict
+        logger.info("Aggregated model validation completed on collaborator: %s", self.input)
+        self.next(self.train)
+
+    @collaborator
     def train(self):
         logger.info("Starting training on collaborator: %s", self.input)
         training_dict = self.trainer.train()
         self.training_completed = True
         self.training_dicts["train_dict"] = training_dict
         logger.info("Training completed on collaborator: %s", self.input)
-        self.next(self.local_model_validation)
+        if self.just_train:
+            self.next(self.prepare_aggregation)
+        else:
+            self.next(self.local_model_validation)
 
     @collaborator
     def local_model_validation(self):
         logger.info("Performing local model validation on collaborator: %s", self.input)
-        self.trainer.evaluate()
         eval_dict = self.trainer.evaluate()
         self.validation_dicts["local_validation_dict"] = eval_dict
-
-        if self.move_to_cpu_at_end_of_training:
-            self.model.to("cpu")
-            torch.cuda.empty_cache()
-
-        self.lr_scheduler = self.trainer.lr_scheduler
-        self.weights = self.model.get_weights()
         logger.info("Local model validation completed on collaborator: %s", self.input)
+        self.next(self.prepare_aggregation)
+
+    @collaborator
+    def prepare_aggregation(self):
+        self.lr_scheduler = self.trainer.lr_scheduler
+        self.model.to("cpu")
+        torch.cuda.empty_cache()
+        self.weights = self.model.get_weights()
         self.next(self.join, exclude=["training_completed", "trainer"])
 
     @aggregator
@@ -210,10 +221,7 @@ class VisionFlow(FLSpec):
         self.current_round += 1
         logger.info("Collaborator inputs joined. Metrics logged.")
         if self.current_round < self.rounds:
-            self.next(
-                self.aggregated_model_validation,
-                foreach="collaborators",
-            )
+            self.next(self.setup, foreach="collaborators")
         else:
             self.next(self.end)
 
@@ -295,9 +303,8 @@ class VisionFlow(FLSpec):
         eval_results = trainer.evaluate()
         self.validation_dicts["global_eval_metrics"] = eval_results
 
-        if self.move_to_cpu_at_end_of_training:
-            self.model = self.model.to("cpu")
-            torch.cuda.empty_cache()
+        self.model = self.model.to("cpu")
+        torch.cuda.empty_cache()
 
     @aggregator
     def end(self):
