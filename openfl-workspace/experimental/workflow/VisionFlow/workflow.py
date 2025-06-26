@@ -3,24 +3,18 @@ import os
 
 os.chdir(os.path.dirname(__file__))
 
-from openfl.experimental.workflow.interface import Aggregator, Collaborator
-from openfl.experimental.workflow.runtime import LocalRuntime
-
+import argparse
+import glob
+import logging
 
 from src.Brats2020_dataloader import create_dataset_dict
 from src.VisionFlow import VisionFlow
-from datasets import load_dataset
-from datasets import Dataset, DatasetDict, Image
-import glob
-
-# Load CIFAR-10 dataset
-
-
-from src.Brats2020_dataloader import IMAGE_TYPES
 from torch.utils.tensorboard import SummaryWriter
 
-import argparse
-import logging
+from datasets import load_dataset
+from openfl.experimental.workflow.interface import Aggregator, Collaborator
+from openfl.experimental.workflow.runtime import LocalRuntime
+
 
 # Set up logging
 logging.basicConfig(
@@ -42,7 +36,9 @@ parser.add_argument("--use_peft", action="store_true", help="Use PEFT")
 parser.add_argument("--with_pretrained", action="store_true", help="Use PEFT")
 parser.add_argument("--task", type=str, default="classification", help="Task type")
 parser.add_argument("--percentage", type=float, default=1.0, help="Percentage of data to use")
-parser.add_argument("--just_train", action="store_true", help="Run only training without evaluation")
+parser.add_argument(
+    "--just_train", action="store_true", help="Run only training without evaluation"
+)
 
 args = parser.parse_args()
 
@@ -75,8 +71,9 @@ if args.debug_size:
 else:
     collaborator_names = ["Portland", "Seattle", "Chandler", "Phoenix", "Tucson", "Flagstaff"]
 
-
+use_peft = args.use_peft
 task = args.task
+
 if task in ["classification", "pretraining"]:
     from src.dataset.img_classification import prepare_data_for_image_classification
 
@@ -114,16 +111,28 @@ if task in ["classification", "pretraining"]:
     )
     for idx, dataset_dict in enumerate(dataset_dicts):
         logger.info(
-            f"{collaborator_names[idx]:<15} | {len(dataset_dict['train']):<15} | {len(dataset_dict['test']):<15}"
+            f"{collaborator_names[idx]:<15} | {len(dataset_dict['train']):<15} |"
+            f" {len(dataset_dict['test']):<15}"
         )
 
 elif task == "segmentation":
+    from src.dataset.img_classification import prepare_data_for_image_classification
+    import kagglehub
+
+    # Download latest version
+    path = kagglehub.dataset_download("briscdataset/brisc2025")
+
+    print("Path to dataset files:", path)
     patient_count = 10
     dataset_dicts, val_set = create_dataset_dict(
         dataset_path="/home/omar/Documents/mine/INTEL/datasets/Processed_TrainingData/",
         number_of_patients_per_collaborator=patient_count,
         collaborator_count=4,
     )
+    
+model_config_kwargs = {"num_labels": number_of_labels, "image_size": image_size}
+if args.head == "MLPHead":
+    model_config_kwargs.update({"head": "MLPHead", "head_kwargs": {"hidden_layers": [64]}})
 
 # %%
 training_args = {
@@ -160,26 +169,7 @@ for idx, current_collaborator in enumerate(collaborators):
 local_runtime = LocalRuntime(
     aggregator=my_aggregator, collaborators=collaborators, backend="single_process"
 )
-model_config_kwargs = {"num_labels": number_of_labels, "image_size": image_size}
-if args.head == "MLPHead":
-    model_config_kwargs.update(
-        {"head": "MLPHead", "head_kwargs": {"hidden_layers": [64]}}
-    )
-use_peft = args.use_peft
-if False:
-    # model_config_kwargs.update({"name_or_path": "google/vit-base-patch16-224"})
-    # model_config_kwargs.update({"name_or_path": "facebook/convnext-base-224-22k-1k"})
-    # model_config_kwargs.update({"name_or_path": "microsoft/swin-base-patch4-window7-224-in22k"})
-    # model_config_kwargs.update({"name_or_path": "facebook/vit-mae-base"})
 
-    # model_config_kwargs.update({"name_or_path": "microsoft/resnet-50"})
-    if args.head == "LinearClassifier":
-        model_config_kwargs.update({"head": "LinearClassifier"})
-    elif args.head == "MLPHead":
-        model_config_kwargs.update(
-            {"head": "MLPHead", "head_kwargs": {"hidden_layers": [512, 256]}}
-        )
-    pass
 # %%
 flflow = VisionFlow(
     rounds=20,

@@ -9,3 +9,4 @@ albumentations
 monai
 tensorboard
 evaluate
+kagglehub

@@ -1,9 +1,16 @@
-from typing import List
+from typing import List, Optional
 
 import albumentations
 import numpy as np
 import torch
 from src.dataset.utils import apply_transforms, split_dataset_dict
+from src.dataset.img_utils import (
+    prepare_image_data,
+    DEFAULT_IMAGE_FEATURE,
+    DEFAULT_PROCESSED_IMAGE_FEATURE,
+    ADE_MEAN,
+    ADE_STD,
+)
 
 from datasets import Dataset, DatasetDict, Image
 import logging
@@ -15,12 +22,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load CIFAR-10 dataset
-ADE_MEAN = (0.485, 0.456, 0.406)
-ADE_STD = (0.229, 0.224, 0.225)
-
-DEFAULT_IMAGE_FEATURE = "image"
-DEFAULT_PROCESSED_IMAGE_FEATURE = "pixel_values"
 DEFAULT_LABEL_FEATURE = "labels"
 
 
@@ -44,46 +45,26 @@ def prepare_data_for_image_classification(
     image_size: int = 448,
     debug_size=False,
     percentage: float = 1.0,
+    seed: Optional[int] = None,
 ):
-    if isinstance(data, Dataset):
-        data = DatasetDict({"train": data})
-
     if number_of_labels is None:
         number_of_labels = extract_number_of_labels(data, label_feature)
 
-    if collaborator_count is not None:
-        assert collaborator_count > 0, "collaborator_count must be greater than 0"
-        dataset_dict_list = split_dataset_dict(
-            data, collaborator_count=collaborator_count, non_iid=non_iid
-        )
-        if debug_size:
-            # Limit dataset size for debugging purposes
-            for dataset_dict in dataset_dict_list:
-                for key in dataset_dict.keys():
-                    dataset_dict[key] = dataset_dict[key].select(range(10))
-    else:
-        dataset_dict_list = data
-        if debug_size:
-            # Limit dataset size for debugging purposes
-            for key in dataset_dict.keys():
-                dataset_dict[key] = dataset_dict[key].select(range(10))
-
-    if percentage < 1.0:
-        # Limit dataset size based on the percentage
-        for dataset_dict in dataset_dict_list:
-            for key in dataset_dict.keys():
-                dataset_dict[key] = (
-                    dataset_dict[key]
-                    .shuffle()
-                    .select(range(max(int(len(dataset_dict[key]) * percentage), 1)))
-                )
+    dataset_dict_list = prepare_image_data(
+        data=data,
+        collaborator_count=collaborator_count,
+        non_iid=non_iid,
+        debug_size=debug_size,
+        percentage=percentage,
+        seed=seed,
+    )
 
     apply_classification_transforms(
         dataset_dict_list,
         image_feature=image_feature,
         label_feature=label_feature,
         number_of_labels=number_of_labels,
-        image_size=image_size,  # Assuming full size images are preferred
+        image_size=image_size,
     )
     return dataset_dict_list, number_of_labels
 
@@ -201,6 +182,3 @@ def _apply_classification_transforms(
     if use_shuffle:
         dataset = dataset.shuffle()
     return dataset
-
-
-# %%

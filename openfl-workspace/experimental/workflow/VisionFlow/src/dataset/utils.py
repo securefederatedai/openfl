@@ -1,27 +1,30 @@
 from datasets import Dataset, DatasetDict, concatenate_datasets
-from typing import Dict, List
+from typing import Dict, List, Any, Callable, Union, Optional
 import numpy as np
-
-np.random.seed(1000)
 
 
 def split_dataset_dict(
-    datasetdict: DatasetDict | Dict,
+    datasetdict: DatasetDict,
     collaborator_count: int,
     non_iid: bool = False,
     label_column: str = "label",
-) -> list:
+    seed: Optional[int] = None,
+) -> List[DatasetDict]:
     """
     Splits a dataset dictionary into multiple smaller dictionaries for collaborators.
 
     Args:
-        datasetdict (DatasetDict): A DatasetDict containing 'train' and 'test' datasets.
+        datasetdict (DatasetDict): A DatasetDict to be split.
         collaborator_count (int): Number of collaborators to split the data for.
         non_iid (bool): Whether to split data in a non-IID manner.
+        label_column (str): The column name for labels.
+        seed (Optional[int]): Random seed for reproducibility.
 
     Returns:
-        list: A list of dataset dictionaries, one for each collaborator.
+        List[DatasetDict]: A list of dataset dictionaries, one for each collaborator.
     """
+    if seed is not None:
+        np.random.seed(seed)
     if collaborator_count <= 0:
         raise ValueError("collaborator_count must be a positive integer.")
 
@@ -30,10 +33,10 @@ def split_dataset_dict(
         data = datasetdict[key]
         if non_iid:
             # Non-IID splitting using Dirichlet partitioning
-            splits = partition_data_dirichlet(collaborator_count, label_column, data)
+            splits = partition_data_dirichlet(collaborator_count, label_column, data, seed=seed)
         else:
             # IID splitting
-            splits = partition_dataset_iid(collaborator_count, data)
+            splits = partition_dataset_iid(collaborator_count, data, seed=seed)
         data_dict[key] = splits
 
     # Create a dataset dictionary for each collaborator
@@ -42,10 +45,29 @@ def split_dataset_dict(
     return collaborator_datasets
 
 
-def partition_data_dirichlet(collaborator_count, label_column, data):
+def partition_data_dirichlet(
+    collaborator_count: int,
+    label_column: str,
+    data: Dataset,
+    seed: Optional[int] = 1000,
+) -> List[Dataset]:
+    """
+    Partition dataset in a non-IID fashion using Dirichlet distribution.
+
+    Args:
+        collaborator_count (int): Number of collaborators.
+        label_column (str): The column name for labels.
+        data (Dataset): The dataset to partition.
+        seed (Optional[int]): Random seed for reproducibility.
+
+    Returns:
+        List[Dataset]: List of datasets, one per collaborator.
+    """
+    if seed is not None:
+        np.random.seed(seed)
     label_groups = group_by_label(data, label_column)  # Group data by labels
     label_counts = [len(group) for group in label_groups]
-    proportions = dirichlet_partition(label_counts, collaborator_count)
+    proportions = dirichlet_partition(label_counts, collaborator_count, seed=seed)
     splits = [[] for _ in range(collaborator_count)]
     for label_group, proportion in zip(label_groups, proportions):
         for i, fraction in enumerate(proportion):
@@ -57,18 +79,26 @@ def partition_data_dirichlet(collaborator_count, label_column, data):
     return splits
 
 
-def dirichlet_partition(label_counts, collaborator_count, alpha=0.5):
+def dirichlet_partition(
+    label_counts: List[int],
+    collaborator_count: int,
+    alpha: float = 0.5,
+    seed: Optional[int] = 1000,
+) -> List[np.ndarray]:
     """
     Generates Dirichlet proportions for non-IID partitioning.
 
     Args:
-        label_counts (list): List of counts for each label group.
+        label_counts (List[int]): List of counts for each label group.
         collaborator_count (int): Number of collaborators.
         alpha (float): Dirichlet concentration parameter.
+        seed (Optional[int]): Random seed for reproducibility.
 
     Returns:
-        list: A list of proportions for each collaborator.
+        List[np.ndarray]: A list of proportions for each collaborator.
     """
+    if seed is not None:
+        np.random.seed(seed)
     proportions = []
     for count in label_counts:
         dirichlet_sample = np.random.dirichlet([alpha] * collaborator_count)
@@ -76,14 +106,47 @@ def dirichlet_partition(label_counts, collaborator_count, alpha=0.5):
     return proportions
 
 
-def partition_dataset_iid(collaborator_count, data):
+def partition_dataset_iid(
+    collaborator_count: int,
+    data: Dataset,
+    seed: Optional[int] = 1000,
+) -> List[Dataset]:
+    """
+    Partition dataset in an IID fashion among collaborators.
+
+    Args:
+        collaborator_count (int): Number of collaborators.
+        data (Dataset): The dataset to partition.
+        seed (Optional[int]): Random seed for reproducibility.
+
+    Returns:
+        List[Dataset]: List of datasets, one per collaborator.
+    """
+    if seed is not None:
+        np.random.seed(seed)
+    indices = np.arange(len(data))
+    np.random.shuffle(indices)
     splits = []
     for i in range(collaborator_count):
-        splits.append(Dataset.from_dict(data[i : len(data) : collaborator_count]))
+        split_indices = indices[i:len(indices):collaborator_count]
+        splits.append(data.select(split_indices))
     return splits
 
 
-def build_collaborator_dataset_dicts(collaborator_count, data_dict):
+def build_collaborator_dataset_dicts(
+    collaborator_count: int,
+    data_dict: Dict[str, List[Dataset]],
+) -> List[DatasetDict]:
+    """
+    Build a list of DatasetDicts, one for each collaborator, from split data.
+
+    Args:
+        collaborator_count (int): Number of collaborators.
+        data_dict (Dict[str, List[Dataset]]): Dictionary mapping split names to lists of datasets.
+
+    Returns:
+        List[DatasetDict]: List of DatasetDicts, one per collaborator.
+    """
     collaborator_datasets = []
     for i in range(collaborator_count):
         collaborator_datasets.append(
@@ -93,15 +156,19 @@ def build_collaborator_dataset_dicts(collaborator_count, data_dict):
     return collaborator_datasets
 
 
-def group_by_label(data: Dataset, label_column):
+def group_by_label(
+    data: Dataset,
+    label_column: str,
+) -> List[Dataset]:
     """
     Groups data by labels for non-IID splitting using Dataset's API.
 
     Args:
         data (Dataset): The dataset to group.
+        label_column (str): The column name for labels.
 
     Returns:
-        list: A list of grouped data based on labels.
+        List[Dataset]: A list of grouped data based on labels.
     """
     data = data.to_pandas()  # Convert to pandas DataFrame for easier manipulation
     grouped = data.groupby(label_column)
@@ -109,10 +176,21 @@ def group_by_label(data: Dataset, label_column):
 
 
 def apply_transforms(
-    data: List[DatasetDict[str, Dataset]] | DatasetDict[str, Dataset] | Dataset,
-    transform_fn,
+    data: Union[List[DatasetDict[str, Dataset]], DatasetDict[str, Dataset], Dataset],
+    transform_fn: Callable[[Dataset, Any], Dataset],
     **kwargs,
-):
+) -> Union[List[DatasetDict[str, Dataset]], DatasetDict[str, Dataset], Dataset]:
+    """
+    Apply a transformation function to a dataset or collection of datasets.
+
+    Args:
+        data (List[DatasetDict[str, Dataset]] | DatasetDict[str, Dataset] | Dataset): The data to transform.
+        transform_fn (Callable): The transformation function to apply.
+        **kwargs: Additional keyword arguments for the transformation function.
+
+    Returns:
+        Same type as input data, with transformations applied.
+    """
     def process_dataset(dataset):
         return transform_fn(dataset, **kwargs)
 
@@ -124,7 +202,7 @@ def apply_transforms(
         for key, split in data.items():
             data[key] = process_dataset(split)
     elif isinstance(data, Dataset):  # Handle single Dataset
-        return process_dataset(data)
+        process_dataset(data)
     else:
         raise TypeError(
             "Unsupported data type. Expected List[DatasetDict[str, Dataset]], DatasetDict[str, Dataset], or Dataset."
