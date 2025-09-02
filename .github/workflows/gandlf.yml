@@ -27,7 +27,7 @@ jobs:
       NUM_COLLABORATORS: 2
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
@@ -46,7 +46,7 @@ jobs:
         mkdir -p gandlf $HOME/results
 
     - name: Install GaNDLF repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: 'mlcommons/GaNDLF'
         fetch-depth: 2  # needed for detecting changes

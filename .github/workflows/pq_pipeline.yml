@@ -23,7 +23,7 @@ jobs:
       commit_id: ${{ steps.set_commit_id.outputs.commit_id }}
     steps:
     - name: Checkout OpenFL repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set commit ID
       id: set_commit_id
