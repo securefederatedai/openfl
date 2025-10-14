@@ -24,6 +24,8 @@
 
 </div>
 
+**Note: The Open Federated Learning project (formerly known as OpenFL) is no longer under active development and will soon be archived. For existing users looking for ongoing support, we recommend the community transitions to Flower framework using the [migration guide](https://flower.ai/docs/framework/main/en/how-to-migrate-from-openfl.html) created in collaboration between our teams.** 
+
 Open Federated Learning (formerly known as OpenFL) is a Python framework for Federated Learning. It enables organizations to train and validate machine learning models on sensitive data. It increases privacy by allowing collaborative model training or validation across local private datasets without ever sharing that data with a central server. OpenFL is hosted by The Linux Foundation.
 
 *Looking for the Open Flash Library project also referred to as OpenFL? Find it [here](https://github.com/openfl/openfl)!*
