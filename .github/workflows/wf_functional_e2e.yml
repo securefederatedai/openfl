@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -71,7 +71,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload_artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: wf_func_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2 # needed for detecting changes
           submodules: "true"
@@ -122,7 +122,7 @@ jobs:
 
       - name: Upload Artifacts
         id: upload_artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: wf_func_ray_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}

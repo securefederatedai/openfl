@@ -75,7 +75,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ env.COMMIT_ID }}
 
@@ -116,7 +116,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ env.COMMIT_ID }}
 
@@ -157,7 +157,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ env.COMMIT_ID }}
 
@@ -198,7 +198,7 @@ jobs:
     steps:
       - name: Checkout OpenFL repository
         id: checkout_openfl
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ env.COMMIT_ID }}
 
