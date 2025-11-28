@@ -10,6 +10,7 @@ from openfl.component import aggregator
 from openfl.component.assigner import Assigner
 from openfl.protocols import base_pb2
 from openfl.utilities import TaskResultKey
+from openfl.protocols.base_pb2 import NamedTensor
 
 
 @pytest.fixture
@@ -48,15 +49,12 @@ def agg(mocker, model, assigner):
         'some_uuid',
         'federation_uuid',
         ['col1', 'col2'],
-
         'init_state_path',
         'best_state_path',
         'last_state_path',
-
         assigner,
-    )
+        )
     return agg
-
 
 @pytest.mark.parametrize(
     'cert_common_name,collaborator_common_name,authorized_cols,single_cccn,expected_is_valid', [
@@ -138,17 +136,41 @@ def test_get_tasks(agg, col_name, tasks, time_to_quit,
     assert (tasks, sleep_time, time_to_quit) == (exp_tasks, exp_sleep_time, exp_time_to_quit)
 
 
-def test_get_aggregated_tensor(agg):
-    """Test that test_get_tasks is failed without a correspond data."""
-    collaborator_name = 'col1'
-    tensor_name = 'test_tensor_name'
-    require_lossless = False
+def test_get_aggregated_tensor_behavior(agg):
+    """
+    Tests the get_aggregated_tensor method under various conditions involving tag authorization
+    and tensor availability. Covers the following scenarios:
+
+    1. Invalid Tags:
+       - The tags include unauthorized collaborators (not matching 'requested_by').
+       - Expected: The method should return an empty NamedTensor (i.e., data_bytes == b'').
+
+    2. Valid Tags, but no corresponding tensor exists (natural backend):
+       - Tags match 'requested_by' and pass authorization.
+       - The tensor key is not found in the aggregator's real storage.
+       - Expected: Raises ValueError indicating missing tensor data.
+    """
+    tensor_name = 'test_tensor'
     round_number = 0
     report = False
-    tags = ['compressed']
+    require_lossless = False
+
+    # Scenario 1: Invalid tags, should return empty NamedTensor
+    tags_invalid = ('col1', 'trained')
+    requested_by_invalid = 'col2'
+    tensor = agg.get_aggregated_tensor(
+        tensor_name, round_number, report, tags_invalid, require_lossless, requested_by_invalid
+    )
+    assert isinstance(tensor, NamedTensor)
+    assert tensor.data_bytes == b''
+
+    # Scenario 2: Valid tags, real backend, but no tensor — should raise ValueError
+    tags_valid = ('col1', 'compressed')
+    requested_by_valid = 'col1'
     with pytest.raises(ValueError):
         agg.get_aggregated_tensor(
-            collaborator_name, tensor_name, round_number, report, tags, require_lossless)
+            tensor_name, round_number, report, tags_valid, require_lossless, requested_by_valid
+        )
 
 
 def test_collaborator_task_completed_none(agg):
@@ -171,80 +193,3 @@ def test_collaborator_task_completed_true(agg):
         col1, task_name, round_num)
 
     assert is_completed is True
-
-
-def test_is_task_done_no_cols(agg):
-    """Test that is_task_done returns True without corresponded collaborators."""
-    task_name = 'test_task_name'
-    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[])
-    is_task_done = agg._is_task_done(task_name)
-
-    assert is_task_done is True
-
-
-def test_is_task_done_not_done(agg):
-    """Test that is_task_done returns False in the corresponded case."""
-    task_name = 'test_task_name'
-    col1 = 'one'
-    col2 = 'two'
-    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
-    is_task_done = agg._is_task_done(task_name)
-
-    assert is_task_done is False
-
-
-def test_is_task_done_done(agg):
-    """Test that is_task_done returns True in the corresponded case."""
-    round_num = 0
-    task_name = 'test_task_name'
-    col1 = 'one'
-    col2 = 'two'
-    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
-    agg.collaborator_tasks_results = {
-        TaskResultKey(task_name, col1, round_num): 1,
-        TaskResultKey(task_name, col2, round_num): 1
-    }
-    is_task_done = agg._is_task_done(task_name)
-
-    assert is_task_done is True
-
-
-def test_is_round_done_no_tasks(agg):
-    """Test that is_round_done returns True in the corresponded case."""
-    agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[])
-    is_round_done = agg._is_round_done()
-
-    assert is_round_done is True
-
-
-def test_is_round_done_not_done(agg):
-    """Test that is_round_done returns False in the corresponded case."""
-    round_num = 0
-    task_name = 'test_task_name'
-    col1 = 'one'
-    col2 = 'two'
-    agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[task_name])
-    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
-    agg.collaborator_tasks_results = {
-        TaskResultKey(task_name, col1, round_num): 1,
-    }
-    is_round_done = agg._is_round_done()
-
-    assert is_round_done is False
-
-
-def test_is_round_done_done(agg):
-    """Test that is_round_done returns True in the corresponded case."""
-    round_num = 0
-    task_name = 'test_task_name'
-    col1 = 'one'
-    col2 = 'two'
-    agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[task_name])
-    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
-    agg.collaborator_tasks_results = {
-        TaskResultKey(task_name, col1, round_num): 1,
-        TaskResultKey(task_name, col2, round_num): 1
-    }
-    is_round_done = agg._is_round_done()
-
-    assert is_round_done is True

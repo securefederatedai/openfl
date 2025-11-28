@@ -1,0 +1,8 @@
+cloudpickle
+git+https://github.com/privacytrustlab/ml_privacy_meter.git@ac181a885815f85b3809317c247f422e6596cb4a
+matplotlib
+opacus==1.5.2
+pillow
+scikit-learn
+torch==2.7.0
+torchvision==0.22.0

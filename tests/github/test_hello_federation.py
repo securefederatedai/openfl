@@ -3,25 +3,28 @@
 
 import os
 import time
-import socket
 import argparse
 from pathlib import Path
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator, is_path_name_allowed
+from openfl.utilities.utils import getfqdn_env
 
 
-if __name__ == '__main__':
+def main():
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
-    with os.scandir('openfl-workspace') as iterator:
-        for entry in iterator:
-            if entry.name not in ['__init__.py', 'workspace', 'default']:
-                workspace_choice.append(entry.name)
-    parser.add_argument('--template', default='keras_cnn_mnist', choices=workspace_choice)
+    excluded_dirs = ['workspace', 'default', "experimental"]
+    for root, _, files in os.walk('openfl-workspace'):
+        if any(file.endswith(".workspace") for file in files):
+            dir_path = os.path.relpath(root, 'openfl-workspace')
+            dir_path = dir_path.replace(os.sep, '/')
+            if dir_path and not any(dir_path.startswith(prefix) for prefix in excluded_dirs):
+                workspace_choice.append(dir_path)
+    parser.add_argument('--template', default='keras/mnist', choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col1', default='one123dragons')
     parser.add_argument('--col2', default='beta34unicorns')
@@ -29,22 +32,32 @@ if __name__ == '__main__':
     parser.add_argument('--col1-data-path', default='1')
     parser.add_argument('--col2-data-path', default='2')
     parser.add_argument('--save-model')
+    parser.add_argument('--transport-protocol', default='grpc', help='Transport protocol for communication')
 
     origin_dir = Path.cwd().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
+
+    # Check if the path name is allowed before creating the workspace
+    if not is_path_name_allowed(fed_workspace):
+        print(f"The path name {fed_workspace} is not allowed")
+        return
+
     archive_name = f'{fed_workspace}.zip'
-    fqdn = socket.getfqdn()
+    fqdn = getfqdn_env()
     template = args.template
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
     save_model = args.save_model
+    transport_protocol = args.transport_protocol
+    if transport_protocol not in ['grpc', 'rest']:  # Updated to include 'rest' as a valid option
+        raise ValueError(f"Invalid transport protocol: {transport_protocol}. Use 'grpc' or 'rest'.")
 
     # START
     # =====
     # Make sure you are in a Python virtual environment with the FL package installed.
-    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train, transport_protocol)
     certify_aggregator(fqdn)
 
     workspace_root = Path().resolve()  # Get the absolute directory path for the workspace
@@ -62,15 +75,20 @@ if __name__ == '__main__':
 
         dir1 = workspace_root / col1 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col1], cwd=dir1)
-
+        # add sleep for 10s as the collaborator needs time to download the data
+        time.sleep(10)
         dir2 = workspace_root / col2 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col2], cwd=dir2)
 
     # Convert model to native format
     if save_model:
         check_call(
-            ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
+            ['fx', 'model', 'save', '-i', f'./save/last.pbuf', '-o', save_model],
             cwd=workspace_root)
 
     os.chdir(origin_dir)
     rmtree(workspace_root)
+
+
+if __name__ == '__main__':
+    main()

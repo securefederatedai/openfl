@@ -1,0 +1,15 @@
+settings:
+  director_host: localhost
+  director_port: 50050
+  
+Chandler:
+  callable_func:
+    settings:
+      index: 2
+      malicious: false
+      number_of_collaborators: 4
+      train_dataset_ratio: 0.4
+      test_dataset_ratio: 0.4
+      cifar_train: private_attributes.cifar_train
+      cifar_test: private_attributes.cifar_test
+    template: private_attributes.envoy_attrs

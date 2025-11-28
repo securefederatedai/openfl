@@ -1,0 +1,67 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/init.pbuf
+    last_state_path : save/latest.pbuf
+    best_state_path : save/best.pbuf
+    rounds_to_train : 10
+    db_store_rounds : 2
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    use_delta_updates    : true
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.dataloader.KerasBratsInMemory
+  settings :
+    batch_size: 64
+    percent_train: 0.8
+    collaborator_count : 2
+    data_group_name    : brats
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.taskrunner.Keras2DUNet
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  aggregated_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 32
+      apply      : global
+      metrics    :
+        - acc
+
+  locally_tuned_model_validation:
+    function : validate_task
+    kwargs   :
+      batch_size : 32
+      apply      : local
+      metrics    :
+        - acc
+
+  train:
+    function : train_task
+    kwargs   :
+      batch_size  : 32
+      metrics     :
+      - loss
+      epochs      : 1
+
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

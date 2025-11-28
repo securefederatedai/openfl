@@ -20,7 +20,7 @@ def task_groups(authorized_cols):
     """Initialize task groups."""
     task_groups = [
         {
-            'name': 'train_and_validate',
+            'name': 'learning',
             'percentage': 1.0,
             'collaborators': authorized_cols,
             'tasks': [

@@ -1,0 +1,91 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: GaNDLF TaskRunner E2E
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # A workaround for long FQDN names provided by GitHub actions.
+  FQDN: "localhost"
+
+jobs:
+  gandlf_seg_test:
+    name: GaNDLF Segmentation Test (torch/mnist, 3.10)
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      MODEL_NAME: "gandlf_seg_test"
+      NUM_ROUNDS: 3
+      NUM_COLLABORATORS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install paramiko
+        pip install .
+        pip install -r test-requirements.txt
+
+    - name: Create gandlf and results directories
+      run: |
+        mkdir -p gandlf $HOME/results
+
+    - name: Install GaNDLF repository
+      uses: actions/checkout@v4
+      with:
+        repository: 'mlcommons/GaNDLF'
+        fetch-depth: 2  # needed for detecting changes
+        submodules: 'recursive'
+        path: 'gandlf'
+
+    - name: GaNDLF Test Pre-Requisites
+      run: |
+        cd gandlf
+        pwd
+        pip install -e .
+        pip uninstall onnx -y
+        cat ./GANDLF/version.py
+        echo "Download data and Split CSVs into training and validation"
+        pytest -k "prepare_data_for_ci"
+        head -n 1 testing/data/train_2d_rad_segmentation.csv > $HOME/results/valid.csv
+        tail -n +9 testing/data/train_2d_rad_segmentation.csv >> $HOME/results/valid.csv
+        head -n 8 testing/data/train_2d_rad_segmentation.csv > $HOME/results/train.csv
+        cp testing/config_segmentation.yaml $HOME/results/config_segmentation.yaml
+        sed -i 's/# n_channels: 3/num_channels: 3/g' $HOME/results/config_segmentation.yaml
+
+    - name: Run GanDLF Segmentation Test
+      id: run_tests
+      run: |
+        python -m pytest -s tests/end_to_end/test_suites/gandlf_seg_tests.py \
+        -k test_gandlf_segmentation --model_name ${{ env.MODEL_NAME }} \
+        --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+        echo "Task runner end to end test run completed"
+
+    - name: Create Tar (exclude folders - cert/data/__pycache__, files - tensor.db/workspace.tar/*.csv)
+      id: tar_files
+      if: ${{ always() }}
+      run: |
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" --exclude="*.csv" $HOME/results
+
+    - name: Upload Artifacts
+      id: upload_artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: gandlf_artifacts
+        path: result.tar

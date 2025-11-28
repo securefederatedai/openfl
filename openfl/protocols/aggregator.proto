@@ -9,13 +9,11 @@ import "openfl/protocols/base.proto";
 
 
 service Aggregator {
+  rpc Ping(PingRequest) returns (PingResponse) {}
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
   rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
   rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
-  rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
-  rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
-  rpc GetExperimentDescription(GetExperimentDescriptionRequest)
-    returns (GetExperimentDescriptionResponse) {}
+  rpc InteropRelay(InteropMessage) returns (InteropMessage) {}
 }
 
 message MessageHeader {
@@ -23,6 +21,14 @@ message MessageHeader {
   string receiver = 2;
   string federation_uuid = 3;
   string single_col_cert_common_name = 4;
+}
+
+message PingRequest {
+  MessageHeader header = 1;
+}
+
+message PingResponse {
+  MessageHeader header = 1;
 }
 
 message GetTasksRequest {
@@ -74,41 +80,8 @@ message SendLocalTaskResultsResponse {
   MessageHeader header = 1;
 }
 
-// The same with director.proto
-message GetMetricStreamRequest {
-  string experiment_name = 1;
-}
-
-// The same with director.proto
-message GetMetricStreamResponse {
-  string metric_origin = 1;
-  string task_name = 2;
-  string metric_name = 3;
-  float metric_value = 4;
-  uint32 round = 5;
-}
-
-// The same with director.proto
-message GetTrainedModelRequest {
-  enum ModelType {
-    BEST_MODEL = 0;
-    LAST_MODEL = 1;
-  }
-  string experiment_name = 2;
-  ModelType model_type = 3;
-}
-
-// The same with director.proto
-message TrainedModelResponse {
-  ModelProto model_proto = 1;
-}
-
-// The same with director.proto
-message GetExperimentDescriptionRequest {
-  string name = 1;
-}
-
-// The same with director.proto
-message GetExperimentDescriptionResponse {
-  ExperimentDescription experiment = 1;
+message InteropMessage {
+  MessageHeader header = 1;
+  DataStream message = 2;
+  map<string, string> metadata = 3;
 }

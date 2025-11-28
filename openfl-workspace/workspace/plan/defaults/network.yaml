@@ -3,7 +3,9 @@ settings:
     agg_addr                   : auto
     agg_port                   : auto
     hash_salt                  : auto
-    tls                        : True
+    use_tls                    : True
     client_reconnect_interval  : 5
-    disable_client_auth        : False
+    require_client_auth        : True
     cert_folder                : cert
+    enable_atomic_connections  : False
+    transport_protocol         : grpc

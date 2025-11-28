@@ -1,0 +1,52 @@
+#---------------------------------------------------------------------------
+# Workflow to run 101 MNIST Notebook
+#---------------------------------------------------------------------------
+name: Workflow MNIST Local Runtime E2E
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  wf_local_101_mnist:
+    name: WF Local Without TLS
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      PYTHON_VERSION: '3.10'
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
+
+    - name: Pre test run
+      uses: ./.github/actions/wf_pre_test_run
+      if: ${{ always() }}
+
+    - name: Run Notebook
+      run: |
+        cd openfl-tutorials/experimental/workflow
+        papermill 101_MNIST.ipynb 101_MNIST_output.ipynb --request-save-on-cell-execute --log-output --autosave-cell-every 30
+        echo "Notebook run completed"
+
+    - name: Tar files
+      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      with:
+        name: wf_interface_101_mnist_${{ github.run_id }}
+        path: notebook.tar

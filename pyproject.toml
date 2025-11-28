@@ -1,0 +1,41 @@
+[tool.bandit]
+# Exclude specific directories or files from the scan
+# exclude = ["tests/", "docs/"]
+
+# Set the severity and confidence levels
+severity = "HIGH"
+confidence = "HIGH"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "B",  # Bandit security checks (e.g., detecting insecure function use).
+    "C",  # Cyclomatic complexity, used to flag overly complex functions.
+    "E",  # PEP8 errors (e.g., style issues).
+    "F",  # Pyflakes errors, like unused imports or undefined names.
+    "W",  # PEP8 warnings (e.g., deprecations).
+    "B9",  # Bugbear, for additional warnings about potentially error-prone code.
+    "I",  # isort
+]
+ignore = [
+    "E266",  # too many leading '#' for block comments
+    "E741",  # ambiguous variable name
+    "E731",  # do not assign a `lambda` expression, use a `def`
+    "B904",  # ignore exception distinguishing
+    "B006",  # mutable data structures as default args
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["E501", "F401"]  # lines too long; imported but unused
+
+[tool.ruff.lint.isort]
+force-single-line = false
+known-first-party = ["openfl"]
+
+[tool.coverage.run]
+omit = [
+    # omit pytorch-generated files in /tmp
+    "/tmp/*",
+]

@@ -1,0 +1,39 @@
+---
+# Composite Action to run post-test functions for task runner end to end tests
+
+name: 'Post-Test Functions'
+description: 'Run post-test functions'
+inputs:
+  test_type:
+    description: 'Test type'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Print test summary
+      id: print_test_summary
+      if: success() || failure()  # Run only on success or failure (i.e. not for skipped and cancelled jobs)
+      run: |
+        export PYTHONPATH="$PYTHONPATH:."
+        python tests/end_to_end/utils/summary_helper.py --func_name "print_task_runner_score"
+        echo "Test summary printed"
+      shell: bash
+
+    - name: Create Tar (exclude folders - cert/data/__pycache__, files - tensor.db/workspace.tar)
+      id: tar_files
+      if: ${{ always() }}
+      run: |
+        tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" --exclude="tensor.db" --exclude="workspace.tar" --exclude="minio_data" $HOME/results
+        # Model name might contain forward slashes, convert them to underscore. 
+        tmp=${{ env.MODEL_NAME }}
+        echo "MODEL_NAME_MODIFIED=${tmp//\//_}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Upload Artifacts
+      id: upload_artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: ${{ inputs.test_type }}_${{ env.MODEL_NAME_MODIFIED }}_python${{ env.PYTHON_VERSION }}
+        path: result.tar

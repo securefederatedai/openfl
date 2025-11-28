@@ -1,0 +1,52 @@
+name: Bandit Code Scan
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+  workflow_dispatch:
+
+env:
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }}
+
+jobs:
+  bandit_scan:
+    if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    name: Bandit Scan
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Set Filename Suffix Report Date and Time
+        run: |
+          echo "REPORT_DATE=$(date +'%d-%b-%Y_%H-%M-%S')" >> $GITHUB_ENV
+
+      - name: Define HTML Report Path
+        run: echo "HTML_REPORT_PATH=${{ github.workspace }}/results.html" >> $GITHUB_ENV
+
+      - name: Install Bandit and pandas
+        run: pip install bandit pandas
+
+      - name: Perform Bandit Analysis
+        run: bandit -r . -f json -o bandit_results.json
+        continue-on-error: true
+
+      - name: Parse Bandit JSON Report and Generate HTML
+        run: python .github/config/parse_bandit_report.py
+
+      - name: Upload Bandit HTML Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "bandit-report-summary_${{ env.REPORT_DATE }}"
+          path: ${{ env.HTML_REPORT_PATH }}

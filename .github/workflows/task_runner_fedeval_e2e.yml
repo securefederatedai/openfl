@@ -1,0 +1,169 @@
+---
+# Task Runner E2E tests with evaluation with bare metal approach
+
+name: Task_Runner_FedEval_E2E  # Please do not modify the name as it is used in the composite action
+
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        required: false
+        type: string
+      models:
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: "Number of rounds to train"
+        required: false
+        default: "5"
+        type: string
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+env:
+  NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+  COMMIT_ID: ${{ inputs.commit_id || github.sha }} # use commit_id from the calling workflow
+
+jobs:
+  test_with_tls:
+    name: With TLS
+    if: |
+      (github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.draft == false)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Models like XGBoost (xgb_higgs) and torch/histology require runners with higher memory and CPU to run.
+        # Thus these models are excluded from the matrix for now.
+        model_name: ${{ fromJson(inputs.models || '["torch/mnist", "keras/mnist", "keras/jax/mnist", "keras/torch/mnist"]') }}
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests with TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "FedEval_With_TLS"
+
+  test_without_tls_rest:
+    name: Without TLS Using Rest Protocol
+    if: | # Skip for PR pipeline
+      ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Testing this scenario only for torch/mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["torch/mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls --tr_rest_protocol
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "FedEval_Without_TLS_REST"
+
+  test_without_client_auth_rest:
+    name: Without ClientAuth Using Rest Protocol
+    if: | # Skip for PR pipeline
+      ((github.event_name == 'schedule' && github.repository_owner == 'securefederatedai') ||
+      (github.event_name == 'workflow_dispatch')) && (github.workflow != 'OpenFL PR Pipeline')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Testing this scenario for keras/mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["keras/mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ID }}
+
+      - name: Pre test run
+        uses: ./.github/actions/tr_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/tr_with_fedeval_tests.py \
+          -m task_runner_basic --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth --tr_rest_protocol
+          echo "Task runner end to end test run completed"
+
+      - name: Post test run
+        uses: ./.github/actions/tr_post_test_run
+        if: ${{ always() }}
+        with:
+          test_type: "FedEval_Without_Client_Auth_REST"

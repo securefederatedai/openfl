@@ -4,8 +4,8 @@ import shutil
 from subprocess import check_call
 import os
 from pathlib import Path
-import re
 import tarfile
+import yaml
 
 
 def create_collaborator(col, workspace_root, data_path, archive_name, fed_workspace):
@@ -46,25 +46,35 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
     )
 
 
-def create_certified_workspace(path, template, fqdn, rounds_to_train):
+def create_certified_workspace(path, template, fqdn, rounds_to_train, transport_protocol='grpc'):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
+    check_call(['pip', 'install', '-r', 'requirements.txt'])
 
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
+
+    # Read the plan.yaml file
+    with open(plan_path, 'r', encoding='utf-8') as file:
+        plan_config = yaml.safe_load(file)
+
+    # Update rounds_to_train and transport_protocol values
     try:
-        rounds_to_train = int(rounds_to_train)
-        with open(plan_path, "r", encoding='utf-8') as sources:
-            lines = sources.readlines()
-        with open(plan_path, "w", encoding='utf-8') as sources:
-            for line in lines:
-                sources.write(
-                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
-                )
-    except (ValueError, TypeError):
-        pass
+        # Update rounds_to_train if provided
+        if rounds_to_train is not None:
+            plan_config['aggregator']['settings']['rounds_to_train'] = int(rounds_to_train)
+
+        # Update transport_protocol
+        plan_config['network']['settings']['transport_protocol'] = transport_protocol
+
+        # Write the updated config back to the file
+        with open(plan_path, 'w', encoding='utf-8') as file:
+            yaml.safe_dump(plan_config, file, default_flow_style=False)
+    except (ValueError, TypeError, KeyError) as e:
+        print(f"Warning: Could not update plan.yaml: {e}")
+
     # Create certificate authority for workspace
     check_call(['fx', 'workspace', 'certify'])
 
@@ -82,7 +92,7 @@ def certify_aggregator(fqdn):
 
 def create_signed_cert_for_collaborator(col, data_path):
     '''
-    We do certs exchage for all participants in a single workspace to speed up this test run.
+    We do certs exchange for all participants in a single workspace to speed up this test run.
     Do not do this in real experiments in untrusted environments
     '''
     print(f'Certifying collaborator {col} with data path {data_path}...')
@@ -119,24 +129,20 @@ def create_signed_cert_for_collaborator(col, data_path):
     os.remove(f'col_{col}_to_agg_cert_request.zip')
 
 
-def start_aggregator_container(workspace_image_name, aggregator_required_files):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
-        '-e \"CONTAINER_TYPE=aggregator\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+def is_path_name_allowed(path):
+    """
+    Check if given path name is allowed.
+    Allow alphanumeric characters, hyphens and underscores.
+    Also, / in case of a nested directory.
 
+    Args:
+        path (str): The path name to check.
+    Returns:
+        bool: True if the path name is allowed, False otherwise.
+    """
+    special_characters = "!@#$%^&*()+?=,<>"
 
-def start_collaborator_container(workspace_image_name, col_name):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd()}/cert_col_{col_name}.tar:/certs.tar '
-        '-e \"CONTAINER_TYPE=collaborator\" '
-        f'-e \"COL={col_name}\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+    if any(c in special_characters for c in path):
+        return False
+    else:
+        return True

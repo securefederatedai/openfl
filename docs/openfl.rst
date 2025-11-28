@@ -1,27 +1,23 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
+.. currentmodule:: openfl
 
-*************************************************
-|productName| Structure
-*************************************************
+API Reference: ``openfl``
+===========================
 
-Learn about the short-lived and long-lived components that compose Open Federated Learning (|productName|):
-
-- :doc:`source/openfl/components`
-
-Understand the procedure calls to the Director service.
-
-- :doc:`source/openfl/communication`
-
-Learn about the plugin framework that makes |productName| flexible and extensible for your use:
-
-- :doc:`source/openfl/plugins`
-
+Subpackages
+-----------
 
 .. toctree::
-   :maxdepth: 4
-   :hidden:
+    :maxdepth: 1
 
-   source/openfl/components
-   source/openfl/communication
-   source/openfl/plugins
+    reference/openfl.component
+    reference/openfl.callbacks
+    reference/openfl.cryptography
+    reference/openfl.experimental
+    reference/openfl.databases
+    reference/openfl.federated
+    reference/openfl.interface
+    reference/openfl.pipelines
+    reference/openfl.plugins
+    reference/openfl.protocols
+    reference/openfl.transport
+    reference/openfl.utilities

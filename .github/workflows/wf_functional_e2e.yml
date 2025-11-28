@@ -1,0 +1,129 @@
+---
+# Workflow functional E2E tests
+
+name: Workflow_Functional_E2E
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: "Number of rounds to train"
+        required: false
+        default: "2"
+        type: string
+      num_collaborators:
+        description: "Number of collaborators"
+        required: false
+        default: "2"
+        type: string
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+env:
+  NUM_ROUNDS: ${{ github.event.inputs.num_rounds || '2' }}
+  NUM_COLLABORATORS: ${{ github.event.inputs.num_collaborators || '2' }}
+
+jobs:
+  test_wf_functional_local_runtime:
+    if: github.event.pull_request.draft == false
+    name: WF Functional Without TLS
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      PYTHON_VERSION: '3.10'
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/wf_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Work Flow Functional tests
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
+          echo "Work Flow Functional tests run completed"
+
+      - name: Print test summary
+        id: print_test_summary
+        if: ${{ always() }}
+        run: |
+          export PYTHONPATH="$PYTHONPATH:."
+          python tests/end_to_end/utils/summary_helper.py --func_name "print_local_runtime_score"
+          echo "Test summary printed"
+
+      - name: Create Tar (exclude cert and data folders)
+        id: tar_files
+        if: ${{ always() }}
+        run: |
+          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
+
+      - name: Upload Artifacts
+        id: upload_artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: wf_func_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          path: result.tar
+
+  test_wf_ray_backend_func_tests:
+    if: github.event.pull_request.draft == false
+    name: WF Functional Ray Backend
+    runs-on: ubuntu-22.04
+    needs: test_wf_functional_local_runtime
+    timeout-minutes: 15
+    env:
+      PYTHON_VERSION: '3.11'
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre test run
+        uses: ./.github/actions/wf_pre_test_run
+        if: ${{ always() }}
+
+      - name: Run Work Flow Functional tests (Ray Backend)
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/wf_local_func_tests.py \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --workflow_backend ray
+          echo "Work Flow Functional tests run completed"
+
+      - name: Print test summary
+        id: print_test_summary
+        if: ${{ always() }}
+        run: |
+          export PYTHONPATH="$PYTHONPATH:."
+          python tests/end_to_end/utils/summary_helper.py --func_name "print_local_runtime_score"
+          echo "Test summary printed"
+
+      - name: Create Tar (exclude cert and data folders)
+        id: tar_files
+        if: ${{ always() }}
+        run: |
+          tar -cvf result.tar --exclude="cert" --exclude="data" --exclude="__pycache__" $HOME/results
+
+      - name: Upload Artifacts
+        id: upload_artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: wf_func_ray_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          path: result.tar

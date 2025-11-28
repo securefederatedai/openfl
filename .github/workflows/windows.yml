@@ -1,65 +1,109 @@
 name: Windows (latest)
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_call:
 
 permissions:
   contents: read
 
+env:
+  # A workaround for long FQDN names provided by GitHub actions.
+  FQDN: "localhost"
+
 jobs:
   pytest-coverage: # from pytest_coverage.yml
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     runs-on: windows-latest
+    timeout-minutes: 15
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python 3
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.8"
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pytest coverage
-        pip install -r requirements-test.txt
+        pip install -r test-requirements.txt
         pip install .
     - name: Test with pytest and report code coverage
       run: |
         coverage run -m pytest -rA
         coverage report
   
-  interactive-kvasir: # from interactive-kvasir.yml
-    needs: [pytest-coverage]
+  keras_mnist: # from taskrunner.yml -  keras/mnist
+    if: github.event.pull_request.draft == false
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.8"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install .
-    - name: Interactive API - pytorch_kvasir_unet
-      run: |
-        python setup.py build_grpc
-        pip install torch==1.13.1
-        pip install torchvision==0.14.1
-        python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
-  
-  cli: # from taskrunner.yml
-    needs: [pytest-coverage, interactive-kvasir]
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install .
       - name: Test TaskRunner API
         run: |
-          python -m tests.github.test_hello_federation --template keras_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+          python -m tests.github.test_hello_federation --template keras/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
+
+  torch_mnist_rest: # from taskrunner.yml - torch/mnist
+    if: github.event.pull_request.draft == false
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Test TaskRunner API
+        run: |
+          python -m tests.github.test_hello_federation --template torch/mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --transport-protocol rest --save-model output_model
+
+  torch_mnist_eden_compression: # from taskrunner_eden_pipeline.yml - torch/mnist_eden_compression
+    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression')
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Test TaskRunner API with Eden Compression
+        run: |
+          python -m tests.github.test_hello_federation --template torch/mnist_eden_compression --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3
+
+  torch_mnist_straggler_check: # from straggler-handling.yml - torch/mnist_straggler_check
+    if: github.event.pull_request.draft == false
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Test Straggler Handling Interface
+        run: |
+          python -m tests.github.test_hello_federation --template torch/mnist_straggler_check --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3

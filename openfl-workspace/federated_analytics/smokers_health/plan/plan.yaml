@@ -1,0 +1,45 @@
+aggregator:
+  defaults: plan/defaults/aggregator.yaml
+  template: openfl.component.Aggregator
+  settings:
+    last_state_path: save/result.json
+    rounds_to_train: 1
+
+collaborator:
+  defaults: plan/defaults/collaborator.yaml
+  template: openfl.component.Collaborator
+  settings:
+    use_delta_updates: false
+    opt_treatment: RESET
+
+data_loader:
+  defaults: plan/defaults/data_loader.yaml
+  template: src.dataloader.SmokersHealthDataLoader
+  settings:
+    collaborator_count: 2
+    data_group_name: smokers_health
+    batch_size: 150
+
+task_runner:
+  defaults: plan/defaults/task_runner.yaml
+  template: src.taskrunner.SmokersHealthAnalytics
+
+network:
+  defaults: plan/defaults/network.yaml
+
+assigner:
+  template: openfl.component.RandomGroupedAssigner
+  settings:
+    task_groups:
+      - name: analytics
+        percentage: 1.0
+        tasks:
+          - analytics
+
+tasks:
+  analytics:
+    function: analytics
+    aggregation_type:
+      template: src.aggregate_health.AggregateHealthMetrics
+    kwargs:
+      columns: ['age', 'sex', 'current_smoker', 'heart_rate', 'blood_pressure', 'cigs_per_day', 'chol']
