@@ -92,7 +92,7 @@ setup(
         'scikit-learn',
         'flatten_json',
         'tensorboardX',
-        'protobuf>=4.21,<6.0.0',
+        'protobuf>=4.21,<7.0.0',
         'grpcio>=1.56.2,<1.66.0',
         'Flask==3.1.1',
     ],
