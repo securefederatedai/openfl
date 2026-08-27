@@ -3,3 +3,4 @@ settings :
     opt_treatment     : 'CONTINUE_LOCAL'
     use_delta_updates     : True
     db_store_rounds   : 1
+    enable_remote_attestation  : False

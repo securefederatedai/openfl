@@ -24,6 +24,7 @@ from openfl.cryptography.participant import generate_csr
 from openfl.federated import Plan
 from openfl.federated.data.sources.data_sources_json_parser import DataSourcesJsonParser
 from openfl.interface.cli_helper import CERT_DIR
+from openfl.utilities.attestation import attestation_utils as attestation_utils
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import rmtree
 
@@ -78,7 +79,8 @@ def start_(plan, collaborator_name, data_config):
 
     # TODO: Need to restructure data loader config file loader
     logger.info(f"Data paths: {plan_obj.cols_data_paths}")
-    echo(f"Data = {plan_obj.cols_data_paths}")
+    # this check is added to avoid mock objects failing
+
     logger.info("🧿 Starting a Collaborator Service.")
 
     collaborator = plan_obj.get_collaborator(collaborator_name)

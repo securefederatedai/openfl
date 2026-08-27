@@ -6,3 +6,4 @@ settings :
     last_state_path : save/last.pbuf
     persist_checkpoint: True
     persistent_db_path: local_state/tensor.db
+    enable_remote_attestation  : False

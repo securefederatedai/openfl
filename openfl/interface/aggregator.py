@@ -32,6 +32,7 @@ from openfl.cryptography.participant import generate_csr
 from openfl.federated import Plan
 from openfl.interface.cli_helper import CERT_DIR
 from openfl.utilities import click_types
+from openfl.utilities.attestation import attestation_utils as attestation_utils
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import getfqdn_env
 
@@ -91,8 +92,16 @@ def start_(plan, authorized_cols, task_group):
         parsed_plan.config["assigner"]["settings"]["selected_task_group"] = task_group
         logger.info(f"Setting aggregator to assign: {task_group} task_group")
 
+    # check if remote attestation is enabled
+    attested_identity = None
+    if parsed_plan.config["aggregator"]["settings"].get("enable_remote_attestation", False):
+        # check if the aggregator is running in a remote attestation environment
+        attested_identity = attestation_utils.get_remote_attestation("aggregator")
+    else:
+        logger.info("Remote attestation is not enabled.")
+
     logger.info("🧿 Starting the Aggregator Service.")
-    server = parsed_plan.get_server()
+    server = parsed_plan.get_server(attested_identity=attested_identity)
     server.serve()
 
 

@@ -16,7 +16,24 @@ def test_collaborator_start(mock_parse):
     plan_config = plan_path.joinpath('plan.yaml')
     data_config = plan_path.joinpath('data.yaml')
 
-    mock_parse.return_value = mock.Mock()
+
+
+    mock_plan = mock.MagicMock()
+    mock_plan.__getitem__.side_effect = {'task_group': 'learning'}.get
+    mock_plan.get = {'task_group': 'learning'}.get
+    mock_plan.config = {
+        'assigner': {
+            'settings': {
+                'selected_task_group': 'learning'
+            }
+        },
+        'collaborator': {
+            'settings': {
+                'enable_remote_attestation': False
+            }
+        }
+    }
+    mock_parse.return_value = mock_plan
 
     ret = start_(['-p', plan_config,
                   '-d', data_config,
