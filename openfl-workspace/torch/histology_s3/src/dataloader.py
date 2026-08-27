@@ -2,22 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
-
-from collections.abc import Iterable
-from logging import getLogger
 import os
 import sys
+from collections.abc import Iterable
+from logging import getLogger
 
-
-from openfl.federated import PyTorchDataLoader
 import numpy as np
-from openfl.federated.data.sources.torch.verifiable_map_style_image_folder import VerifiableImageFolder
-from openfl.federated.data.sources.data_sources_json_parser import DataSourcesJsonParser
-from openfl.utilities.path_check import is_directory_traversal
 import torch
 from torch.utils.data import random_split
 from torchvision.transforms import ToTensor
 
+from openfl.federated import PyTorchDataLoader
+from openfl.federated.data.sources.data_sources_json_parser import DataSourcesJsonParser
+from openfl.federated.data.sources.torch.verifiable_map_style_image_folder import VerifiableImageFolder
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = getLogger(__name__)
 
@@ -25,11 +23,11 @@ logger = getLogger(__name__)
 class PyTorchHistologyVerifiableDataLoader(PyTorchDataLoader):
     """PyTorch data loader for Histology dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path=None, batch_size=32, **kwargs):
         """Instantiate the data object.
 
         Args:
-            data_path: The file path to the data
+            data_path: The file path to the data. If None, initialize for model creation only.
             batch_size: The batch size of the data loader
             **kwargs: Additional arguments, passed to super init
              and load_mnist_shard
@@ -61,16 +59,18 @@ class PyTorchHistologyVerifiableDataLoader(PyTorchDataLoader):
             else:
                 logger.info("The dataset is valid.")
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
-            verifible_dataset_info=verifible_dataset_info, verify_dataset_items=verify_dataset_items, **kwargs)
+        X_train, y_train, X_valid, y_valid = load_histology_shard(
+            verifible_dataset_info=verifible_dataset_info,
+            verify_dataset_items=verify_dataset_items,
+            feature_shape=self.feature_shape,
+            num_classes=self.num_classes,
+            **kwargs
+        )
 
         self.X_train = X_train
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
-
-        self.num_classes = num_classes
-
 
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
@@ -101,7 +101,6 @@ class PyTorchHistologyVerifiableDataLoader(PyTorchDataLoader):
         Raises:
             SystemExit: If `data_path` is invalid or missing `datasources.json`.
         """
-        """Return the verifiable dataset info object for the given data sources."""
         if data_path and is_directory_traversal(data_path):
             logger.error("Data path is out of the openfl workspace scope.")
         if not os.path.isdir(data_path):
@@ -152,7 +151,8 @@ def _load_raw_data(verifiable_dataset_info, verify_dataset_items=False, train_sp
     n_train = int(train_split_ratio * len(dataset))
     n_valid = len(dataset) - n_train
     ds_train, ds_val = random_split(
-        dataset, lengths=[n_train, n_valid], generator=torch.manual_seed(0))
+        dataset, lengths=[n_train, n_valid], generator=torch.manual_seed(0)
+    )
 
     # create the shards
     X_train, y_train = list(zip(*ds_train))
@@ -164,14 +164,16 @@ def _load_raw_data(verifiable_dataset_info, verify_dataset_items=False, train_sp
     return (X_train, y_train), (X_valid, y_valid)
 
 
-
-def load_histology_shard(verifible_dataset_info, verify_dataset_items,
+def load_histology_shard(verifible_dataset_info, verify_dataset_items, feature_shape=None, num_classes=None,
                          categorical=False, channels_last=False, **kwargs):
     """
     Load the Histology dataset.
 
     Args:
-        data_path (str): path to data directory
+        verifible_dataset_info (VerifiableDatasetInfo): The verifiable dataset info object.
+        verify_dataset_items (bool): True = verify the dataset items while loading data
+        feature_shape (list, optional): The shape of input features.
+        num_classes (int, optional): Number of classes.
         categorical (bool): True = convert the labels to one-hot encoded
          vectors (Default = True)
         channels_last (bool): True = The input images have the channels
@@ -179,26 +181,23 @@ def load_histology_shard(verifible_dataset_info, verify_dataset_items,
         **kwargs: Additional parameters to pass to the function
 
     Returns:
-        list: The input shape
-        int: The number of classes
         numpy.ndarray: The training data
         numpy.ndarray: The training labels
         numpy.ndarray: The validation data
         numpy.ndarray: The validation labels
     """
-    img_rows, img_cols = 150, 150
-    num_classes = 8
+    img_rows, img_cols = feature_shape[1], feature_shape[2]
 
-    (X_train, y_train), (X_valid, y_valid) = _load_raw_data(verifible_dataset_info, verify_dataset_items, **kwargs)
+    (X_train, y_train), (X_valid, y_valid) = _load_raw_data(
+        verifible_dataset_info, verify_dataset_items, **kwargs
+    )
 
     if channels_last:
         X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 3)
         X_valid = X_valid.reshape(X_valid.shape[0], img_rows, img_cols, 3)
-        input_shape = (img_rows, img_cols, 3)
     else:
         X_train = X_train.reshape(X_train.shape[0], 3, img_rows, img_cols)
         X_valid = X_valid.reshape(X_valid.shape[0], 3, img_rows, img_cols)
-        input_shape = (3, img_rows, img_cols)
 
     logger.info(f'Histology > X_train Shape : {X_train.shape}')
     logger.info(f'Histology > y_train Shape : {y_train.shape}')
@@ -210,4 +209,4 @@ def load_histology_shard(verifible_dataset_info, verify_dataset_items,
         y_train = np.eye(num_classes)[y_train]
         y_valid = np.eye(num_classes)[y_valid]
 
-    return input_shape, num_classes, X_train, y_train, X_valid, y_valid
+    return X_train, y_train, X_valid, y_valid
