@@ -27,7 +27,7 @@ jobs:
       PYTHON_VERSION: '3.10'
     steps:
     - name: Checkout OpenFL repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.COMMIT_ID }}  # use commit_id from the calling workflow
 
@@ -45,7 +45,7 @@ jobs:
       run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST_output.ipynb
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: ${{ always() }}   # collect artifacts regardless of failures
       with:
         name: wf_interface_101_mnist_${{ github.run_id }}

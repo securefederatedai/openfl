@@ -30,7 +30,7 @@ jobs:
       PYTHON_VERSION: '3.11'
     steps:
     - name: Checkout OpenFL repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.COMMIT_ID }}
 
@@ -59,7 +59,7 @@ jobs:
         echo "TAR file created"
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: ${{ always() }}   # collect artifacts regardless of failures
       with:
         name: secure_agg_${{ github.run_id }}

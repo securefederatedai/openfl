@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_ID }}
 
@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload Bandit HTML Report as Artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: "bandit-report-summary_${{ env.REPORT_DATE }}"
           path: ${{ env.HTML_REPORT_PATH }}
