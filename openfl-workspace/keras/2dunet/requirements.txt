@@ -1,4 +1,4 @@
-keras==3.10.0
+keras==3.13.2
 nibabel
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 tensorflow==2.18.0
