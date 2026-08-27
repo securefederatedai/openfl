@@ -27,6 +27,7 @@ def model():
     metadata.int_to_float[1] = 1.
     metadata.int_list.extend([1, 8])
     metadata.bool_list.append(True)
+    metadata.dtype = "float32"
     tensor.data_bytes = 32 * b'1'
 
     return model

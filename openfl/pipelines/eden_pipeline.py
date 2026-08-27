@@ -43,7 +43,7 @@ import copy as co
 import numpy as np
 import torch
 
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPipeline, Transformer
+from openfl.pipelines.pipeline import NumpyArrayToBytes, TransformationPipeline, Transformer
 
 
 class Eden:
@@ -731,7 +731,7 @@ class EdenTransformer(Transformer):
             with dimensions less than this threshold are not compressed.
         device (str): The device to be used for quantization ('cpu' or 'cuda').
         eden (Eden): The Eden object for quantization.
-        no_comp (Float32NumpyArrayToBytes): The transformer for data that are
+        no_comp (NumpyArrayToBytes): The transformer for data that are
             not compressed.
     """
 
@@ -756,7 +756,7 @@ class EdenTransformer(Transformer):
         )
 
         self.dim_threshold = dim_threshold
-        self.no_comp = Float32NumpyArrayToBytes()
+        self.no_comp = NumpyArrayToBytes()
 
     def forward(self, data, **kwargs):
         """Quantize data.

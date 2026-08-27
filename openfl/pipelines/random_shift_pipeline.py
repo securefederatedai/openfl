@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPipeline, Transformer
+from openfl.pipelines.pipeline import NumpyArrayToBytes, TransformationPipeline, Transformer
 
 
 class RandomShiftTransformer(Transformer):
@@ -73,5 +73,5 @@ class RandomShiftPipeline(TransformationPipeline):
 
     def __init__(self, **kwargs):
         """Initialize."""
-        transformers = [RandomShiftTransformer(), Float32NumpyArrayToBytes()]
+        transformers = [RandomShiftTransformer(), NumpyArrayToBytes()]
         super().__init__(transformers=transformers)

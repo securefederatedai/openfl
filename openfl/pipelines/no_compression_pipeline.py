@@ -4,7 +4,7 @@
 
 """NoCompressionPipeline module."""
 
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPipeline
+from openfl.pipelines.pipeline import NumpyArrayToBytes, TransformationPipeline
 
 
 class NoCompressionPipeline(TransformationPipeline):
@@ -12,4 +12,4 @@ class NoCompressionPipeline(TransformationPipeline):
 
     def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__(transformers=[Float32NumpyArrayToBytes()], **kwargs)
+        super().__init__(transformers=[NumpyArrayToBytes()], **kwargs)

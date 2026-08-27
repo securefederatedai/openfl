@@ -938,6 +938,7 @@ class Aggregator:
                 "int_to_float": proto.int_to_float,
                 "int_list": proto.int_list,
                 "bool_list": proto.bool_list,
+                "dtype": proto.dtype,
             }
             for proto in named_tensor.transformer_metadata
         ]

@@ -69,9 +69,9 @@ class TensorCodec:
             metadata: metadata associated with compressed tensor.
         """
         if require_lossless:
-            compressed_nparray, metadata = self.lossless_pipeline.forward(data, **kwargs)
+            data, metadata = self.lossless_pipeline.forward(data, **kwargs)
         else:
-            compressed_nparray, metadata = self.compression_pipeline.forward(data, **kwargs)
+            data, metadata = self.compression_pipeline.forward(data, **kwargs)
         # Define the compressed tensorkey that should be
         # returned ('trained.delta'->'trained.delta.lossy_compressed')
         tensor_name, origin, round_number, report, tags = tensor_key
@@ -80,7 +80,7 @@ class TensorCodec:
         else:
             new_tags = change_tags(tags, add_field="lossy_compressed")
         compressed_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-        return compressed_tensor_key, compressed_nparray, metadata
+        return compressed_tensor_key, data, metadata
 
     def decompress(
         self,
@@ -121,13 +121,9 @@ class TensorCodec:
             assert "compressed" in tags, "Cannot losslessly decompress lossy tensor"
 
         if require_lossless or "compressed" in tags:
-            decompressed_nparray = self.lossless_pipeline.backward(
-                data, transformer_metadata, **kwargs
-            )
+            data = self.lossless_pipeline.backward(data, transformer_metadata, **kwargs)
         else:
-            decompressed_nparray = self.compression_pipeline.backward(
-                data, transformer_metadata, **kwargs
-            )
+            data = self.compression_pipeline.backward(data, transformer_metadata, **kwargs)
         # Define the decompressed tensorkey that should be returned
         if "lossy_compressed" in tags:
             new_tags = change_tags(
@@ -144,7 +140,7 @@ class TensorCodec:
         else:
             raise NotImplementedError("Decompression is only supported on compressed data")
 
-        return decompressed_tensor_key, decompressed_nparray
+        return decompressed_tensor_key, data
 
     @staticmethod
     def generate_delta(tensor_key, nparray, base_model_nparray):
